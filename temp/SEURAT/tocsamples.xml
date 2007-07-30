@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?NLS TYPE="org.eclipse.help.toc"?>
+
+<toc label="Samples" link_to="toc.xml#samples"> 
+	<topic label="Software Maintenance Examples"  href="html/samples/softwareMaintenanceExamples.html"> 
+	<topic label="Adaptive Maintenance" href="html/samples/softwareMaintenanceExamples/adaptiveMaintenance.html" /> 
+	<topic label="Corrective Maintenance" href="html/samples/softwareMaintenanceExamples/correctiveMaintenance.html" /> 
+	<topic label="Enhancive Maintenance" href="html/samples/softwareMaintenanceExamples/enhanciveMaintenance.html" /> 
+	</topic>
+	
+	<topic label="Inferencing Examples"  href="html/samples/inferencingExamples.html"> 
+	<topic label="Changing Design Priorities" href="html/samples/inferencingExamples/changingDesignPriorities.html" /> 
+	<topic label="Disabling an Assumption" href="html/samples/inferencingExamples/disablingAnAssumption.html" /> 
+	</topic>
+	
+</toc>

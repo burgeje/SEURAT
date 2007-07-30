@@ -1,0 +1,286 @@
+InnoDB: The first specified data file .\ibdata1 did not exist:
+InnoDB: a new database to be created!
+050825 15:29:23  InnoDB: Setting file .\ibdata1 size to 10 MB
+InnoDB: Database physically writes the file full: wait...
+050825 15:29:24  InnoDB: Log file .\ib_logfile0 did not exist: new to be created
+InnoDB: Setting log file .\ib_logfile0 size to 5 MB
+InnoDB: Database physically writes the file full: wait...
+050825 15:29:25  InnoDB: Log file .\ib_logfile1 did not exist: new to be created
+InnoDB: Setting log file .\ib_logfile1 size to 5 MB
+InnoDB: Database physically writes the file full: wait...
+InnoDB: Doublewrite buffer not found: creating new
+InnoDB: Doublewrite buffer created
+InnoDB: Creating foreign key constraint system tables
+InnoDB: Foreign key constraint system tables created
+050825 15:29:42  InnoDB: Started
+c:\mysql\bin\mysqld: ready for connections.
+Version: '4.0.13-max-debug'  socket: ''  port: 3306
+050825 15:30:45  c:\mysql\bin\mysqld: Normal shutdown
+
+050825 15:30:46  InnoDB: Starting shutdown...
+050825 15:30:47  InnoDB: Shutdown completed
+050825 15:30:47  c:\mysql\bin\mysqld: Shutdown Complete
+
+050825 15:43:52  InnoDB: Started
+c:\mysql\bin\mysqld: ready for connections.
+Version: '4.0.13-max-debug'  socket: ''  port: 3306
+050825 15:46:09  c:\mysql\bin\mysqld: Normal shutdown
+
+050825 15:46:10  InnoDB: Starting shutdown...
+050825 15:46:10  InnoDB: Shutdown completed
+050825 15:46:10  c:\mysql\bin\mysqld: Shutdown Complete
+
+050825 15:53:36  InnoDB: Started
+c:\mysql\bin\mysqld: ready for connections.
+Version: '4.0.13-max-debug'  socket: ''  port: 3306
+050825 17:15:08  c:\mysql\bin\mysqld: Normal shutdown
+
+050825 17:15:08  InnoDB: Starting shutdown...
+050825 17:15:09  InnoDB: Shutdown completed
+050825 17:15:09  c:\mysql\bin\mysqld: Shutdown Complete
+
+050826 15:55:02  InnoDB: Started
+c:\mysql\bin\mysqld: ready for connections.
+Version: '4.0.13-max-debug'  socket: ''  port: 3306
+050826 16:55:05  c:\mysql\bin\mysqld: Normal shutdown
+
+050826 16:55:06  InnoDB: Starting shutdown...
+050826 16:55:07  InnoDB: Shutdown completed
+050826 16:55:07  c:\mysql\bin\mysqld: Shutdown Complete
+
+050828  9:15:42  InnoDB: Started
+c:\mysql\bin\mysqld: ready for connections.
+Version: '4.0.13-max-debug'  socket: ''  port: 3306
+050828 12:09:45  c:\mysql\bin\mysqld: Normal shutdown
+
+050828 12:09:45  InnoDB: Starting shutdown...
+050828 12:09:47  InnoDB: Shutdown completed
+050828 12:09:47  c:\mysql\bin\mysqld: Shutdown Complete
+
+050921 11:11:49  InnoDB: Started
+c:\mysql\bin\mysqld: ready for connections.
+Version: '4.0.13-max-debug'  socket: ''  port: 3306
+050921 18:02:16  c:\mysql\bin\mysqld: Normal shutdown
+
+050921 18:02:17  InnoDB: Starting shutdown...
+050921 18:02:18  InnoDB: Shutdown completed
+050921 18:02:18  c:\mysql\bin\mysqld: Shutdown Complete
+
+051030 13:05:46  InnoDB: Started
+c:\mysql\bin\mysqld: ready for connections.
+Version: '4.0.13-max-debug'  socket: ''  port: 3306
+051030 19:50:17  c:\mysql\bin\mysqld: Normal shutdown
+
+051030 19:50:17  InnoDB: Starting shutdown...
+051030 19:50:18  InnoDB: Shutdown completed
+051030 19:50:18  c:\mysql\bin\mysqld: Shutdown Complete
+
+051105 14:54:59  InnoDB: Started
+c:\mysql\bin\mysqld: ready for connections.
+Version: '4.0.13-max-debug'  socket: ''  port: 3306
+051105 21:27:41  c:\mysql\bin\mysqld: Normal shutdown
+
+051105 21:27:42  InnoDB: Starting shutdown...
+051105 21:27:44  InnoDB: Shutdown completed
+051105 21:27:45  c:\mysql\bin\mysqld: Shutdown Complete
+
+051106 15:07:13  InnoDB: Started
+c:\mysql\bin\mysqld: ready for connections.
+Version: '4.0.13-max-debug'  socket: ''  port: 3306
+051106 18:35:27  c:\mysql\bin\mysqld: Normal shutdown
+
+051106 18:35:29  InnoDB: Starting shutdown...
+051106 18:35:29  InnoDB: Shutdown completed
+051106 18:35:30  c:\mysql\bin\mysqld: Shutdown Complete
+
+051107 10:57:03  InnoDB: Started
+c:\mysql\bin\mysqld: ready for connections.
+Version: '4.0.13-max-debug'  socket: ''  port: 3306
+051107 20:18:07  c:\mysql\bin\mysqld: Normal shutdown
+
+051107 20:18:08  InnoDB: Starting shutdown...
+051107 20:18:09  InnoDB: Shutdown completed
+051107 20:18:10  c:\mysql\bin\mysqld: Shutdown Complete
+
+051108  8:54:08  InnoDB: Started
+c:\mysql\bin\mysqld: ready for connections.
+Version: '4.0.13-max-debug'  socket: ''  port: 3306
+051108  9:11:34  c:\mysql\bin\mysqld: Normal shutdown
+
+051108  9:11:34  InnoDB: Starting shutdown...
+051108  9:11:35  InnoDB: Shutdown completed
+051108  9:11:35  c:\mysql\bin\mysqld: Shutdown Complete
+
+051108  9:19:37  InnoDB: Started
+c:\mysql\bin\mysqld: ready for connections.
+Version: '4.0.13-max-debug'  socket: ''  port: 3306
+051108 18:07:20  c:\mysql\bin\mysqld: Normal shutdown
+
+051108 18:07:21  InnoDB: Starting shutdown...
+051108 18:07:22  InnoDB: Shutdown completed
+051108 18:07:23  c:\mysql\bin\mysqld: Shutdown Complete
+
+051108 19:01:41  InnoDB: Started
+c:\mysql\bin\mysqld: ready for connections.
+Version: '4.0.13-max-debug'  socket: ''  port: 3306
+051108 21:59:48  c:\mysql\bin\mysqld: Normal shutdown
+
+051108 21:59:50  InnoDB: Starting shutdown...
+051108 21:59:52  InnoDB: Shutdown completed
+051108 21:59:52  c:\mysql\bin\mysqld: Shutdown Complete
+
+051109  6:48:17  InnoDB: Started
+c:\mysql\bin\mysqld: ready for connections.
+Version: '4.0.13-max-debug'  socket: ''  port: 3306
+051109 18:47:58  c:\mysql\bin\mysqld: Normal shutdown
+
+051109 18:48:07  InnoDB: Starting shutdown...
+051109 18:48:10  InnoDB: Shutdown completed
+051109 18:48:18  c:\mysql\bin\mysqld: Shutdown Complete
+
+051110 17:02:51  InnoDB: Started
+c:\mysql\bin\mysqld: ready for connections.
+Version: '4.0.13-max-debug'  socket: ''  port: 3306
+051110 17:52:18  c:\mysql\bin\mysqld: Normal shutdown
+
+051110 17:52:18  InnoDB: Starting shutdown...
+051110 17:52:20  InnoDB: Shutdown completed
+051110 17:52:20  c:\mysql\bin\mysqld: Shutdown Complete
+
+051111 11:10:47  InnoDB: Started
+c:\mysql\bin\mysqld: ready for connections.
+Version: '4.0.13-max-debug'  socket: ''  port: 3306
+051111 16:59:34  c:\mysql\bin\mysqld: Normal shutdown
+
+051111 16:59:35  InnoDB: Starting shutdown...
+051111 16:59:36  InnoDB: Shutdown completed
+051111 16:59:36  c:\mysql\bin\mysqld: Shutdown Complete
+
+051129 13:41:13  InnoDB: Started
+c:\mysql\bin\mysqld: ready for connections.
+Version: '4.0.13-max-debug'  socket: ''  port: 3306
+051129 17:26:05  c:\mysql\bin\mysqld: Normal shutdown
+
+051129 17:26:06  InnoDB: Starting shutdown...
+051129 17:26:07  InnoDB: Shutdown completed
+051129 17:26:07  c:\mysql\bin\mysqld: Shutdown Complete
+
+060211 14:25:15  InnoDB: Started
+c:\mysql\bin\mysqld: ready for connections.
+Version: '4.0.13-max-debug'  socket: ''  port: 3306
+060211 17:27:47  c:\mysql\bin\mysqld: Normal shutdown
+
+060211 17:27:48  c:\mysql\bin\mysqld: Forcing close of thread 1  user: 'root'
+
+060211 17:27:58  InnoDB: Starting shutdown...
+060211 17:27:59  InnoDB: Shutdown completed
+060211 17:27:59  c:\mysql\bin\mysqld: Shutdown Complete
+
+060430 14:10:48  InnoDB: Started
+c:\mysql\bin\mysqld: ready for connections.
+Version: '4.0.13-max-debug'  socket: ''  port: 3306
+060430 17:07:55  c:\mysql\bin\mysqld: Normal shutdown
+
+060430 17:07:56  InnoDB: Starting shutdown...
+060430 17:07:56  InnoDB: Shutdown completed
+060430 17:07:56  c:\mysql\bin\mysqld: Shutdown Complete
+
+060501  9:19:48  InnoDB: Started
+c:\mysql\bin\mysqld: ready for connections.
+Version: '4.0.13-max-debug'  socket: ''  port: 3306
+060501  9:57:55  c:\mysql\bin\mysqld: Normal shutdown
+
+060501  9:57:56  InnoDB: Starting shutdown...
+060501  9:57:57  InnoDB: Shutdown completed
+060501  9:57:57  c:\mysql\bin\mysqld: Shutdown Complete
+
+060501 10:19:40  InnoDB: Started
+c:\mysql\bin\mysqld: ready for connections.
+Version: '4.0.13-max-debug'  socket: ''  port: 3306
+060501 10:23:13  c:\mysql\bin\mysqld: Normal shutdown
+
+060501 10:23:13  InnoDB: Starting shutdown...
+060501 10:23:15  InnoDB: Shutdown completed
+060501 10:23:15  c:\mysql\bin\mysqld: Shutdown Complete
+
+060503 16:46:28  InnoDB: Started
+c:\mysql\bin\mysqld: ready for connections.
+Version: '4.0.13-max-debug'  socket: ''  port: 3306
+060503 16:59:16  c:\mysql\bin\mysqld: Normal shutdown
+
+060503 16:59:16  InnoDB: Starting shutdown...
+060503 16:59:17  InnoDB: Shutdown completed
+060503 16:59:17  c:\mysql\bin\mysqld: Shutdown Complete
+
+060503 18:24:40  InnoDB: Started
+c:\mysql\bin\mysqld: ready for connections.
+Version: '4.0.13-max-debug'  socket: ''  port: 3306
+060503 18:57:34  c:\mysql\bin\mysqld: Normal shutdown
+
+060503 18:57:34  InnoDB: Starting shutdown...
+060503 18:57:36  InnoDB: Shutdown completed
+060503 18:57:36  c:\mysql\bin\mysqld: Shutdown Complete
+
+060509  9:49:29  InnoDB: Started
+c:\mysql\bin\mysqld: ready for connections.
+Version: '4.0.13-max-debug'  socket: ''  port: 3306
+060509  9:50:24  c:\mysql\bin\mysqld: Normal shutdown
+
+060509  9:50:25  InnoDB: Starting shutdown...
+060509  9:50:27  InnoDB: Shutdown completed
+060509  9:50:27  c:\mysql\bin\mysqld: Shutdown Complete
+
+060525 19:26:43  InnoDB: Started
+c:\mysql\bin\mysqld: ready for connections.
+Version: '4.0.13-max-debug'  socket: ''  port: 3306
+060525 20:13:03  c:\mysql\bin\mysqld: Normal shutdown
+
+060525 20:13:03  InnoDB: Starting shutdown...
+060525 20:13:04  InnoDB: Shutdown completed
+060525 20:13:04  c:\mysql\bin\mysqld: Shutdown Complete
+
+060602 14:21:14  InnoDB: Started
+c:\mysql\bin\mysqld: ready for connections.
+Version: '4.0.13-max-debug'  socket: ''  port: 3306
+060602 15:57:07  c:\mysql\bin\mysqld: Normal shutdown
+
+060602 15:57:07  InnoDB: Starting shutdown...
+060602 15:57:08  InnoDB: Shutdown completed
+060602 15:57:08  c:\mysql\bin\mysqld: Shutdown Complete
+
+060602 17:00:06  InnoDB: Started
+c:\mysql\bin\mysqld: ready for connections.
+Version: '4.0.13-max-debug'  socket: ''  port: 3306
+060602 17:18:41  c:\mysql\bin\mysqld: Normal shutdown
+
+060602 17:18:42  InnoDB: Starting shutdown...
+060602 17:18:44  InnoDB: Shutdown completed
+060602 17:18:44  c:\mysql\bin\mysqld: Shutdown Complete
+
+060603 13:49:52  InnoDB: Started
+c:\mysql\bin\mysqld: ready for connections.
+Version: '4.0.13-max-debug'  socket: ''  port: 3306
+060603 16:16:55  c:\mysql\bin\mysqld: Normal shutdown
+
+060603 16:16:56  InnoDB: Starting shutdown...
+060603 16:16:58  InnoDB: Shutdown completed
+060603 16:16:58  c:\mysql\bin\mysqld: Shutdown Complete
+
+060605 19:02:50  InnoDB: Started
+c:\mysql\bin\mysqld: ready for connections.
+Version: '4.0.13-max-debug'  socket: ''  port: 3306
+060605 20:24:44  c:\mysql\bin\mysqld: Normal shutdown
+
+060605 20:24:44  InnoDB: Starting shutdown...
+060605 20:24:46  InnoDB: Shutdown completed
+060605 20:24:46  c:\mysql\bin\mysqld: Shutdown Complete
+
+060824 16:39:10  InnoDB: Started
+c:\mysql\bin\mysqld: ready for connections.
+Version: '4.0.13-max-debug'  socket: ''  port: 3306
+060824 17:29:33  c:\mysql\bin\mysqld: Normal shutdown
+
+060824 17:29:33  InnoDB: Starting shutdown...
+060824 17:29:33  InnoDB: Shutdown completed
+060824 17:29:33  c:\mysql\bin\mysqld: Shutdown Complete
+

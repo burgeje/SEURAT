@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?NLS TYPE="org.eclipse.help.toc"?>
+
+<toc label="Getting Started" link_to="toc.xml#gettingstarted"> 
+	<topic label="Database Installation"  href="html/gettingstarted/databaseInstallation.html"> 
+	</topic>
+	<topic label="Preferences" href="html/gettingstarted/preferences.html">
+	</topic> 
+	<topic label="Entering New Rationale"  href="html/gettingstarted/enteringNewRationale.html"> 
+		<topic label="Requirement" href="html/gettingstarted/enteringNewRationale/requirement.html" /> 
+		<topic label="Decision" href="html/gettingstarted/enteringNewRationale/decision.html" /> 
+		<topic label="Alternative" href="html/gettingstarted/enteringNewRationale/alternative.html" /> 
+		<topic label="Argument" href="html/gettingstarted/enteringNewRationale/argument.html" />
+		<topic label="Claim" href="html/gettingstarted/enteringNewRationale/claim.html" />
+		<topic label="Assumption" href="html/gettingstarted/enteringNewRationale/assumption.html" />
+		<topic label="Question" href="html/gettingstarted/enteringNewRationale/question.html" />
+		<topic label="Tradeoff" href="html/gettingstarted/enteringNewRationale/tradeoff.html" />
+		<topic label="Co-occurrence" href="html/gettingstarted/enteringNewRationale/co-occurrence.html" />
+		<topic label="Ontology Entry" href="html/gettingstarted/enteringNewRationale/ontologyEntry.html" />			
+	</topic>
+	<topic label="Associating Rationale with Code"  href="html/gettingstarted/associatingRationaleWithCode.html"> 
+	</topic>
+	<topic label="Finding Associated Rationale"  href="html/gettingstarted/findingAssociatedRationale.html"> 
+	</topic>
+	<topic label="Removing Rationale Associations"  href="html/gettingstarted/removingRationaleAssociations.html"> 
+	</topic>
+	<topic label="Rationale Status Displays"  href="html/gettingstarted/rationaleStatusDisplays.html"> 
+	</topic>
+	<topic label="Rationale Queries"  href="html/gettingstarted/rationaleQueries.html"> 
+		<topic label="Finding Rationale Entity" href="html/gettingstarted/rationaleQueries/findRationaleEntity.html" /> 
+		<topic label="Finding Common Arguments" href="html/gettingstarted/rationaleQueries/findCommonArguments.html" />
+		<topic label="Finding Requirements" href="html/gettingstarted/rationaleQueries/findRequirements.html" />
+		<topic label="Finding Status Overrides" href="html/gettingstarted/rationaleQueries/findStatusOverrides.html" />
+		<topic label="Finding Importance Overrides" href="html/gettingstarted/rationaleQueries/findImportanceOverrides.html" />				
+	</topic>
+	<topic label="Using the Rationale"  href="html/gettingstarted/usingtheRationale.html"> 
+		<topic label="Modifying Importance Values" href="html/gettingstarted/usingtheRationale/modifyingImportanceValues.html" /> 
+		<topic label="Disabling Rationale Items" href="html/gettingstarted/usingtheRationale/disablingRationaleItems.html" />
+	</topic>
+	
+</toc>
