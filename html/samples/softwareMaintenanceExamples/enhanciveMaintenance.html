@@ -1,0 +1,48 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+	<title>Enhancive Maintenance</title>
+</head>
+
+<body>
+<h2>Enhancive Maintenance</h2>
+The enhancive maintenance task involves adding a new feature to the system. In 
+this case, it involves implementing a requirement that had initially been 
+deferred: allowing users with administrative privileges to cancel meetings 
+scheduled by other Conference Room System users. This is necessary in case a 
+meeting has to be moved due to a higher priority meeting and the originating 
+user is not around to do it.
+<p>When the requirement &#8220;Administrator can cancel any meeting&#8221; is enabled, it 
+shows up as having been violated in two places in SEURAT. The requirement 
+itself, as shown in the Rationale Explorer in the following figure, has an error 
+icon over it. </p>
+<p>&nbsp;</p>
+<p align="center"><img border="0" src="../../pics/enhanc16.jpg"></p>
+<p>&nbsp;</p>
+<p>There is also an error message on the Rationale Task Display shown in the 
+following figure. </p>
+<p>&nbsp;</p>
+<p align="center"><img border="0" src="../../pics/enhanc17.jpg"></p>
+<p>&nbsp;</p>
+<p>When the maintainer looks at the decision list in SEURAT, there are several 
+that have error icons on them. One is the decision &#8220;who is allowed to cancel 
+meetings&#8221; shown the following figure. This has three alternatives, only one of 
+which does not violate any requirements. That alternative is &#8220;owner or 
+administrator can cancel meetings.&#8221;</p>
+<p>&nbsp;</p>
+<p align="center"><img border="0" src="../../pics/enhanc18.jpg"></p>
+<p>&nbsp;</p>
+<p>The maintainer then needs to find the place in the code that checks if the 
+meeting can be cancelled or not. This can be done the most quickly using the 
+Bookmarks Display. The following figure shows the Bookmarks Display with the 
+alternative &#8220;only owner can cancel meetings&#8221; highlighted. When double-clicked, 
+the editor comes up with the appropriate code. When done with the changes, the 
+maintainer needs to update the rationale so that the correct alternative is 
+selected and the code associations are also correct. </p>
+<p>&nbsp;</p>
+<p align="center"><img border="0" src="../../pics/enhanc19.jpg"></p>
+<p>&nbsp;</p>
+</body>
+</html>

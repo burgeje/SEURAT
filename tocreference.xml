@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?NLS TYPE="org.eclipse.help.toc"?>
+
+<toc label="Reference" link_to="toc.xml#reference"> 
+	<topic label="Useful Links"  href="html/reference/usefulLinks.html" /> 
+	<topic label="Related Papers" href="html/reference/papers.html" /> 
+	<topic label="Icons" href="html/reference/icons.html" /> 
+	<topic label="FAQs" href="html/reference/faq.html" /> 
+</toc>

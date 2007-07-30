@@ -1,0 +1,1785 @@
+package edu.wpi.cs.jburge.SEURAT.views;
+
+import java.awt.Frame;
+import java.io.IOException;
+import java.util.*;
+
+import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Display;
+import org.eclipse.ui.part.*;
+import org.eclipse.jface.viewers.*;
+import org.eclipse.jface.action.*;
+import org.eclipse.jface.dialogs.MessageDialog;
+import org.eclipse.ui.*;
+import org.eclipse.swt.widgets.Menu;
+import org.eclipse.core.resources.IResource;
+import org.eclipse.core.resources.ResourcesPlugin;
+import org.eclipse.swt.SWT;
+import org.eclipse.jdt.core.*;
+
+import edu.wpi.cs.jburge.SEURAT.SEURATPlugin;
+import edu.wpi.cs.jburge.SEURAT.actions.*;
+import edu.wpi.cs.jburge.SEURAT.editors.SelectItem;
+import edu.wpi.cs.jburge.SEURAT.inference.*;
+//import edu.wpi.cs.jburge.SEURAT.queries.EditEntity;
+import edu.wpi.cs.jburge.SEURAT.queries.FindImportanceOverrides;
+import edu.wpi.cs.jburge.SEURAT.queries.FindStatusOverrides;
+import edu.wpi.cs.jburge.SEURAT.queries.FindCommonArguments;
+import edu.wpi.cs.jburge.SEURAT.queries.FindEntity;
+import edu.wpi.cs.jburge.SEURAT.queries.FindRequirements;
+import edu.wpi.cs.jburge.SEURAT.queries.HistoryDisplay;
+import edu.wpi.cs.jburge.SEURAT.queries.RequirementRelationshipDisplay;
+import edu.wpi.cs.jburge.SEURAT.rationaleData.*;
+import edu.wpi.cs.jburge.SEURAT.tasks.RationaleTaskList;
+
+import org.eclipse.core.resources.IFile;
+import edu.wpi.cs.jburge.SEURAT.SEURATResourcePropertiesManager;
+import org.eclipse.jdt.core.dom.CompilationUnit;
+import org.eclipse.core.resources.IWorkspaceRunnable;
+import org.eclipse.core.resources.IMarker;
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.CoreException;
+import org.eclipse.jdt.core.dom.AST;
+import org.eclipse.jface.action.Action;
+
+import SEURAT.xmlIO.RationaleEntry;
+import edu.wpi.cs.jburge.SEURAT.views.TreeParent;
+import edu.wpi.cs.jburge.SEURAT.decorators.*;
+import edu.wpi.cs.jburge.SEURAT.editors.AskQuestionGUI;
+
+/**
+ * @author jburge
+ *
+
+/**
+ * The Rationale Explorer is the primary display and access mechanism for the rationale.
+ * It is essentially a tree view with different icons specifying the different types of 
+ * rationale elements and their status.
+ * <p>
+ * The view uses a label provider to define how model
+ * objects should be presented in the view. 
+ * <p>
+ */
+
+public class RationaleExplorer extends ViewPart implements ISelectionListener, IRationaleUpdateEventListener {
+
+	/**
+	 * The view into the tree of rationale
+	 */
+	private TreeViewer viewer;
+	/**
+	 * Provides the icons that make up our tree
+	 */
+	protected RationaleLabelProvider labelProvider;
+	/**
+	 * ?
+	 */
+	private DrillDownAdapter drillDownAdapter;
+	
+	/**
+	 * the associate action is used to associate code with rationale
+	 */
+	private AssociateArtifactAction associate;
+	
+	/**
+	 * Menu item to restore associations - this is from the query menu
+	 */
+	private Action restoreAssociations;
+	/**
+	 * Find overrides option from the query menu - used to find status overrides
+	 */
+	private Action findOverrides;
+	/**
+	 * Query menu option to find importance overrides
+	 */
+	private Action findImportanceOverrides;
+	//	private Action updateDec;
+	/**
+	 * Menu item to edit an element
+	 */
+	private Action editElement;
+	/**
+	 * Menu item to add a new element
+	 */
+	private Action addElement;
+	/**
+	 * Menu item to add an alternative
+	 */
+	private Action addAlternative;
+	/**
+	 * Menu item to add a decision
+	 */
+	private Action addDecision;
+	/**
+	 * Menu item to add a question
+	 */
+	private Action addQuestion;
+	/**
+	 * Menu item to add a new area of expertise
+	 */
+	private Action addExpertise;
+	/**
+	 * Menu item to add a new argument
+	 */
+	private Action addArgument;
+	/**
+	 * Menu item to delete an element
+	 */
+	private Action deleteElement;
+	/**
+	 * Menu item to find requirement relationships
+	 */
+	private Action findRelationships;
+	/**
+	 * Menu item to display an element's history
+	 */
+	private Action showHistory;
+	/**
+	 * Menu item to associate an ontology entry with a constraint
+	 */
+	private Action associateOntology;
+	/**
+	 * Menu item to associate a constraint with a decision or alternative
+	 */
+	private Action associateConstraint;
+	/**
+	 * Menu item to add a new alternative-constraint relationship
+	 */
+	private Action addAltConstRel;
+	/**
+	 * Menu item to change to a different database
+	 */
+	private Action changeDatabase;
+	/**
+	 * Menu item to create a new set of rationale
+	 */
+	private Action newRationale;
+	/**
+	 * Menu item to input rationale from an XML file
+	 */
+	private Action inputRationale;
+	/**
+	 * Menu item to look for entities of a particular type
+	 */
+	private Action findEntity;
+	/**
+	 * Menu item to find common arguments
+	 */
+	private Action findCommon;
+	/**
+	 * Menu item to find requirements with a specific status
+	 */
+	private Action findRequirement;
+
+	/**
+	 * Points to our display
+	 */
+	private Display ourDisplay;
+	
+//	protected TreeParent invisibleRoot;
+
+	/**
+	 * The Java Element selected
+	 */
+	private IJavaElement navigatorSelection;
+	/**
+	 * The rationale object selected in the tree view (used in associations)
+	 */
+	private Object obj;
+	/**
+	 * The line number of the resource being selected in the Java file 
+	 */
+	private int lineNumber;
+	/**
+	 * The Java resource
+	 */
+	private IResource ourRes;
+
+	/**
+	 * The name of the alternative involved in an association
+	 */
+	private String alternativeName;
+	
+	
+	class NameSorter extends ViewerSorter {
+	}
+	
+	
+	
+	/**
+	 * The constructor.
+	 */
+	public RationaleExplorer() {
+		
+	}
+	
+	/**
+	 * This is a callback that will allow us
+	 * to create the viewer and initialize it.
+	 */
+	public void createPartControl(Composite parent) {
+		viewer = new TreeViewer(parent, SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL);
+		drillDownAdapter = new DrillDownAdapter(viewer);
+		viewer.setContentProvider(new RationaleViewContentProvider());
+		labelProvider = new RationaleLabelProvider();
+		viewer.setLabelProvider(labelProvider);
+		viewer.setSorter(null);
+		viewer.setInput(ResourcesPlugin.getWorkspace());
+		
+		//get our display information so we can use it later
+		ourDisplay = viewer.getControl().getDisplay();
+		
+		//initialize our update manager
+		UpdateManager mgr = UpdateManager.getHandle();
+		mgr.setTree(viewer);
+		makeActions();
+		hookContextMenu();
+		hookDoubleClickAction();
+		contributeToActionBars();
+		
+		viewer.setInput(((RationaleViewContentProvider) viewer.getContentProvider()).initialize());
+		
+		//add an action listener for the workbench window
+		getViewSite().getWorkbenchWindow().getSelectionService().addSelectionListener(this);
+		
+		//add an action listener for this so we can get events
+		SEURATPlugin plugin = SEURATPlugin.getDefault();
+		plugin.addUpdateListener(this);
+		
+		//get the initial selected value
+		selectionChanged(null, getViewSite().getWorkbenchWindow().getSelectionService().getSelection());
+	}
+	
+	/**
+	 * Set up our context menu
+	 *
+	 */
+	private void hookContextMenu() {
+		MenuManager menuMgr = new MenuManager("#PopupMenu");
+		menuMgr.setRemoveAllWhenShown(true);
+		menuMgr.addMenuListener(new IMenuListener() {
+			public void menuAboutToShow(IMenuManager manager) {
+				RationaleExplorer.this.fillContextMenu(manager);
+			}
+		});
+		Menu menu = menuMgr.createContextMenu(viewer.getControl());
+		viewer.getControl().setMenu(menu);
+		getSite().registerContextMenu(menuMgr, viewer);
+	}
+	
+	/**
+	 * Set up our action bars - toolbar, pull down
+	 *
+	 */
+	private void contributeToActionBars() {
+		IActionBars bars = getViewSite().getActionBars();
+		fillLocalPullDown(bars.getMenuManager());
+		fillLocalToolBar(bars.getToolBarManager());
+	}
+	
+	/**
+	 * This method is used to populate the pulldown menu on this view.
+	 * @param manager
+	 */
+	private void fillLocalPullDown(IMenuManager manager) {
+		manager.add(findEntity);
+		manager.add(findCommon);
+		manager.add(findRequirement);
+		manager.add(new Separator());
+		manager.add(findOverrides);
+		manager.add(findImportanceOverrides);
+		manager.add(changeDatabase);
+		manager.add(newRationale);
+		//restoreAssociations exists to re-set the rationale from a database
+		//this would not be used operationally and should be removed.
+		manager.add(restoreAssociations);
+		manager.add(inputRationale);
+//		manager.add(testAction);
+	}
+	
+	/**
+	 * This method is used to populate the context menus for each of the different
+	 * types of rationale elements.
+	 * 
+	 * @param manager
+	 */
+	private void fillContextMenu(IMenuManager manager) {
+		ISelection selection = viewer.getSelection();
+		Object obj = ((IStructuredSelection)selection).getFirstElement();
+		
+//		Object curObj = ((IStructuredSelection)curSel).getFirstElement();
+		
+		if (obj instanceof TreeParent)
+		{
+			TreeParent ourElement = (TreeParent) obj;
+			if (ourElement.getType() == RationaleElementType.ALTERNATIVE)
+			{
+				manager.add(editElement);
+				manager.add(deleteElement);
+				manager.add(associate);
+				manager.add(addQuestion);
+				manager.add(addArgument);
+				manager.add(addDecision);
+				manager.add(addAltConstRel);
+				manager.add(showHistory);
+			}
+			else if (ourElement.getType() == RationaleElementType.REQUIREMENT)
+			{
+				manager.add(editElement);
+				manager.add(deleteElement);
+//				manager.add(addQuestion);
+				manager.add(addArgument);
+				manager.add(findRelationships);
+				manager.add(showHistory);
+			}
+			else if (ourElement.getType() == RationaleElementType.CLAIM)
+			{
+				manager.add(editElement);
+			}
+			else if (ourElement.getType() == RationaleElementType.DECISION)
+			{
+				Decision ourDec = (Decision) RationaleDB.getRationaleElement(ourElement.getName(), RationaleElementType.DECISION);
+				manager.add(editElement);
+				manager.add(deleteElement);
+				//decisions can have alternatives or sub-decisions as children
+				if (ourDec.getAlts())
+					manager.add(addAlternative);
+				else
+					manager.add(addDecision);
+				manager.add(addQuestion);
+				manager.add(associateConstraint);
+				manager.add(showHistory);
+			}
+			else if (ourElement.getType() == RationaleElementType.ASSUMPTION)
+			{
+				manager.add(editElement);
+			}
+			else if (ourElement.getType() == RationaleElementType.EXPERTISE)
+			{
+				manager.add(editElement);
+			}
+			else if (ourElement.getType() == RationaleElementType.ARGUMENT)
+			{
+				manager.add(editElement);
+				manager.add(deleteElement);
+				manager.add(addArgument);
+//				manager.add(addQuestion);
+			}
+			else if (ourElement.getType() == RationaleElementType.ONTENTRY)
+			{
+				manager.add(editElement);
+				manager.add(addElement);
+			}
+			else if (ourElement.getType() == RationaleElementType.DESIGNPRODUCTENTRY)
+			{
+				manager.add(editElement);
+				manager.add(addElement);
+			}
+			else if (ourElement.getType() == RationaleElementType.CONSTRAINT)
+			{
+				manager.add(editElement);
+				manager.add(addElement);
+				manager.add(associateOntology);
+			}
+			else if (ourElement.getType() == RationaleElementType.CONTINGENCY)
+			{
+				manager.add(editElement);
+				manager.add(addElement);
+			}
+			else if (ourElement.getType() == RationaleElementType.DESIGNER)
+			{
+				manager.add(editElement);
+				manager.add(addElement);
+				manager.add(addExpertise);
+			}	
+			else if (ourElement.getType() == RationaleElementType.EXPERTISE)
+			{
+				manager.add(editElement);
+			}
+			else if (ourElement.getType() == RationaleElementType.QUESTION)
+			{
+				manager.add(editElement);
+				manager.add(deleteElement);
+				manager.add(showHistory);
+			}
+			else if (ourElement.getType() == RationaleElementType.ALTCONSTREL)
+			{
+				manager.add(editElement);
+			}
+			else if (ourElement.getType() == RationaleElementType.RATIONALE)
+			{
+				if (ourElement.getName().compareTo("Tradeoffs") == 0)
+				{
+					manager.add(addElement);
+				}
+				else if (ourElement.getName().compareTo("Co-occurrences") == 0)
+				{
+					manager.add(addElement);
+				}
+				else if (ourElement.getName().compareTo("Requirements") == 0)
+				{
+					manager.add(addElement);
+				}
+				else if (ourElement.getName().compareTo("Decisions") == 0)
+				{
+					manager.add(addElement);
+				}
+				else if (ourElement.getName().compareTo("Design-Contingencies") == 0)
+				{
+					manager.add(addElement);
+				}
+				else if (ourElement.getName().compareTo("Designer-Profiles") == 0)
+				{
+					manager.add(addElement);
+				}
+			}
+			else if (ourElement.getType() == RationaleElementType.TRADEOFF)
+			{
+				manager.add(editElement);
+				manager.add(deleteElement);
+			}
+			else if (ourElement.getType() == RationaleElementType.COOCCURRENCE)
+			{
+				manager.add(editElement);
+				manager.add(deleteElement);
+			}
+			
+		}
+		
+		// Other plug-ins can contribute there actions here
+		manager.add(new Separator("Additions"));
+	}
+	
+	private void fillLocalToolBar(IToolBarManager manager) {
+		drillDownAdapter.addNavigationActions(manager);
+	}
+	
+	/**
+	 * This method sets up the actions invoked by chosing menu items
+	 *
+	 */
+	private void makeActions() {
+		
+//		System.out.println("made some actions?");
+		
+		//
+		//associate action - used to associate rationale with a java element
+		//
+		associate = new AssociateArtifactAction(viewer);
+		restoreAssociations = new RestoreAssociations(viewer);
+		
+		//change database
+		changeDatabase = new Action () {
+			public void run() {
+				rebuildTree();				
+			}
+		};
+		changeDatabase.setText("Change Rationale DB");
+		changeDatabase.setToolTipText("Changes the display to show the database set in the preferences.");
+		
+		//new Rationale
+		newRationale = new Action() {
+			public void run() {
+				Frame rf = new Frame();
+				String dbName;
+				AskQuestionGUI ask = new AskQuestionGUI(rf, "Enter rationale name");
+				ask.setVisible(true);
+				if (!ask.getCancel())
+				{
+					dbName = ask.getAnswer();
+				   RationaleDB.createNewDB(dbName);
+				   rebuildTree();
+				}
+
+			}
+		};
+		newRationale.setText("Create New Rationale DB");
+		newRationale.setToolTipText("Creates a new set of rationale");
+		
+		//
+		// input Rationale
+		//
+		inputRationale = new Action() {
+			public void run() {
+				@SuppressWarnings("unused") RationaleEntry re;
+				try {
+					re = new RationaleEntry();
+
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				
+			}
+		}; //end of the action definition		
+		inputRationale.setText("Input Rationale");
+		inputRationale.setToolTipText("Input Rationale from XML Files");
+		
+		
+		
+		//
+		// find Overrides
+		//
+		findOverrides = new Action() {
+			public void run() {
+				FindStatusOverrides ar = new FindStatusOverrides(viewer.getControl().getShell().getDisplay());
+				Vector<RationaleStatus> newStatus = ar.getUpdatedStatus();
+				if (newStatus != null)
+				{
+					//update tasks too
+					RationaleTaskList tlist = RationaleTaskList.getHandle();
+					tlist.addTasks(newStatus);
+					//need to update the rationale tree also
+					//need to update our tree item!
+					UpdateManager mgr = UpdateManager.getHandle();
+					Iterator statusI = newStatus.iterator();
+					//				RationaleDB db = RationaleDB.getHandle();
+					while (statusI.hasNext())
+					{
+						RationaleStatus stat = (RationaleStatus) statusI.next();
+						RationaleElement ourEle = RationaleDB.getRationaleElement(stat.getParent(), stat.getRationaleType());				
+						mgr.addUpdate(stat.getParent(), ourEle.getName(), stat.getRationaleType());					
+					}
+					mgr.makeTreeUpdates();
+				}
+			}
+		}; //end of the action definition		
+		findOverrides.setText("Find Status Overrides");
+		findOverrides.setToolTipText("Displays status items that were overridden");
+		
+		
+		//Search for an entity of a particular type 
+		findEntity = new Action() {
+			public void run() {
+				@SuppressWarnings("unused") FindEntity entityF = new FindEntity(viewer.getControl().getShell().getDisplay());
+				
+			}
+		}; //end of the findEntity action definition		
+		findEntity.setText("Find Rationale Entity");
+		findEntity.setToolTipText("Finds an entity of a specific type");
+		
+		
+		//find Common arguments action
+		findCommon = new Action() {
+			public void run() {
+				@SuppressWarnings("unused") FindCommonArguments entityF = new FindCommonArguments(viewer.getControl().getShell().getDisplay());
+				
+			}
+		}; //end of the find Common definition
+		findCommon.setText("Find Common Arguments");
+		findCommon.setToolTipText("Finds common arguments");
+		
+		//finds requirements - can specify a desired status
+		findRequirement = new Action() {
+			public void run() {
+				@SuppressWarnings("unused") FindRequirements entityF = new FindRequirements(viewer.getControl().getShell().getDisplay());
+				
+			}
+		}; //end of the find requirement action definition	
+		findRequirement.setText("Find Requirements");
+		findRequirement.setToolTipText("Finds requirements by status");
+		
+		//Show history is used to show a tabular display of the change history for an element
+		showHistory = new Action() {
+			public void run() {
+				ISelection selection = viewer.getSelection();
+				Object obj = ((IStructuredSelection)selection).getFirstElement();
+				if (obj instanceof TreeParent)
+				{
+					@SuppressWarnings("unused") HistoryDisplay entityF = new HistoryDisplay(viewer.getControl().getShell(), ((TreeParent) obj).getName(), ((TreeParent) obj).getType() );
+				}
+				
+			}
+		}; //end find History action definition	
+		showHistory.setText("Show History");
+		showHistory.setToolTipText("Show Status History");
+		
+		//
+		// find Importance overrides - looks for values other than default
+		//
+		findImportanceOverrides = new Action() {
+			public void run() {
+				@SuppressWarnings("unused") FindImportanceOverrides ar = new FindImportanceOverrides(viewer
+						.getControl().getShell().getDisplay());
+				
+			}
+		}; // end importance override action definition		
+		findImportanceOverrides.setText("Find Importance Overrides");
+		findImportanceOverrides
+		.setToolTipText("Displays items not using the default importance");
+		
+		//
+		//edit rationale element Action
+		//
+		editElement = new Action() {
+			public void run() {
+				ISelection selection = viewer.getSelection();
+				Object obj = ((IStructuredSelection)selection).getFirstElement();
+				if (obj instanceof TreeParent)
+				{
+					RationaleElement rElement = getElement((TreeParent) obj, false);
+					editElement((TreeParent) obj, rElement, ourDisplay);
+					
+				}
+			}
+			
+		}; //end of the edit element action definition
+		editElement.setText("Edit");
+		editElement.setToolTipText("Edit Rationale");
+		
+		//
+		//add element Action
+		//
+		addElement = new Action() {
+			public void run() {
+				
+				ISelection selection = viewer.getSelection();
+				Object obj = ((IStructuredSelection)selection).getFirstElement();
+				if (obj instanceof TreeParent)
+				{
+					RationaleElement parentElement = getElement((TreeParent) obj, false);
+					RationaleElement rElement = getElement((TreeParent) obj, true);
+					createNewElement(parentElement, rElement, (TreeParent) obj);
+				}			
+			}			
+		}; //end add element action definition
+		addElement.setText("New");
+		addElement.setToolTipText("Add Rationale");
+		
+	
+		//
+		//add alternative element Action
+		//
+		addAlternative = new Action() {
+			public void run() {
+				ISelection selection = viewer.getSelection();
+				Object obj = ((IStructuredSelection)selection).getFirstElement();
+				if (obj instanceof TreeParent)
+				{
+					RationaleElement parentElement = getElement((TreeParent) obj, false);
+					Alternative rElement = new Alternative();
+					createNewElement(parentElement, rElement, (TreeParent) obj);
+				}
+			}
+		};
+		addAlternative.setText("New Alternative");
+		addAlternative.setToolTipText("Add Alternative");
+		
+		//
+		//add decision element Action
+		//
+		addDecision = new Action() {
+			public void run() {
+				
+				ISelection selection = viewer.getSelection();
+				Object obj = ((IStructuredSelection)selection).getFirstElement();
+				if (obj instanceof TreeParent)
+				{
+					RationaleElement parentElement = getElement((TreeParent) obj, false);
+					Decision rElement = new Decision();
+					createNewElement(parentElement, rElement, (TreeParent) obj);
+				}
+			}			
+		}; //end new decision action defn.
+		addDecision.setText("New Decision");
+		addDecision.setToolTipText("Add Decision");
+		
+		//
+		//add question element Action
+		//
+		addQuestion = new Action() {
+			public void run() {
+				ISelection selection = viewer.getSelection();
+				Object obj = ((IStructuredSelection)selection).getFirstElement();
+				if (obj instanceof TreeParent)
+				{
+					RationaleElement parentElement = getElement((TreeParent) obj, false);
+					Question rElement = new Question();
+					createNewElement(parentElement, rElement, (TreeParent) obj);
+				}
+			}
+		}; //end add question action
+		addQuestion.setText("New Question");
+		addQuestion.setToolTipText("Add Question");
+		
+		//
+		//add expertise element Action
+		//
+		addExpertise = new Action() {
+			public void run() {
+				ISelection selection = viewer.getSelection();
+				Object obj = ((IStructuredSelection)selection).getFirstElement();
+				if (obj instanceof TreeParent)
+				{
+					RationaleElement parentElement = getElement((TreeParent) obj, false);
+					RationaleElement rElement = new AreaExp();
+					createNewElement(parentElement, rElement, (TreeParent) obj);
+				}
+			}
+		}; //end of the action definition
+		addExpertise.setText("New Area of Expertise");
+		addExpertise.setToolTipText("Add Area of Expertise");
+		
+		//
+		//add constraint association element Action
+		//
+		addAltConstRel = new Action() {
+			public void run() {
+				ISelection selection = viewer.getSelection();
+				Object obj = ((IStructuredSelection)selection).getFirstElement();
+				if (obj instanceof TreeParent)
+				{
+					RationaleElement parentElement = getElement((TreeParent) obj, false);
+					RationaleElement rElement = new AltConstRel();
+					createNewElement(parentElement, rElement, (TreeParent) obj);
+				}
+			}
+		}; //end constraint assoc. action def.
+		addAltConstRel.setText("Associate Constraint");
+		addAltConstRel.setToolTipText("Associate Constraint");
+
+		//
+		//add argument element Action
+		//
+		addArgument = new Action() {
+			public void run() {
+				ISelection selection = viewer.getSelection();
+				Object obj = ((IStructuredSelection)selection).getFirstElement();
+				if (obj instanceof TreeParent)
+				{
+					RationaleElement parentElement = getElement((TreeParent) obj, false);
+					Argument rElement = new Argument();
+					createNewElement(parentElement, rElement, (TreeParent) obj);
+				}
+			}
+		}; //end add argument action def.
+		addArgument.setText("New Argumemt");
+		addArgument.setToolTipText("Add Argument");
+//		addArgument.setImageDescriptor(PlatformUI.getWorkbench().getSharedImages().
+//		getImageDescriptor(ISharedImages.IMG_OBJS_INFO_TSK));	
+		
+		//add findRelationships Action
+		//
+		findRelationships = new Action() {
+			public void run() {
+				ISelection selection = viewer.getSelection();
+				Object obj = ((IStructuredSelection)selection).getFirstElement();
+				if (obj instanceof TreeParent)
+				{
+					@SuppressWarnings("unused") RequirementRelationshipDisplay findRel = new RequirementRelationshipDisplay(viewer.getControl().getShell(), ((TreeParent) obj).getName());
+				}
+			}
+		};
+		findRelationships.setText("Find Relationships");
+		findRelationships.setToolTipText("Find Related Alternatives");
+		
+		//
+		//delete rationale element Action
+		//
+		deleteElement = new Action() {
+			public void run() {
+				
+				RationaleDB db = RationaleDB.getHandle();
+				ISelection selection = viewer.getSelection();
+				Object obj = ((IStructuredSelection)selection).getFirstElement();
+				if (obj instanceof TreeParent)
+				{
+					RationaleElement rElement = getElement((TreeParent) obj, false);
+					boolean canceled = rElement.delete();
+					if (!canceled)
+					{
+						Vector<RationaleStatus> newStat = rElement.updateOnDelete();
+//						System.out.println("new stat ln (editor) = " + newStat.size());
+						Vector<RationaleStatus> curStatus = null; 
+						UpdateManager manager = UpdateManager.getHandle();
+						curStatus = manager.getInitialStatus();										
+						RationaleTaskList tlist = RationaleTaskList.getHandle();
+						if (newStat != null)
+						{
+							//						System.out.println("updated status");
+							//Before updating the task list, compare the status lists!
+							updateStatus(curStatus, newStat);
+							//update the database
+							db.addStatus(newStat);
+							//update tasks too
+							tlist.addTasks(newStat);
+						}
+						if (curStatus.size() > 0)
+						{
+							db.removeStatus(curStatus);
+							//update our task list as well
+//							System.out.println("removing a task");
+							tlist.removeTasks(curStatus);
+						}
+						
+						//before we update our tree, we need to make sure we 
+						//do any "structural" updates!
+						//			TreeParent newParent = removeElement((TreeParent) obj);
+						TreeParent objDeleted = (TreeParent) obj;
+						
+						//we need to remove ALL occurences of this element
+						RationaleTreeMap map = RationaleTreeMap.getHandle();
+						String key = map.makeKey(objDeleted.getName(), objDeleted.getType());
+						Vector objList = map.getKeys(key);
+						while (objList.size() > 0)
+						{
+							TreeParent nextDel = (TreeParent) objList.firstElement();
+							removeElement(nextDel);
+							objList = map.getKeys(key);
+						}
+						//now make our updates
+						Vector treeUpdates = manager.makeUpdates();
+						//update what is displayed in the tree
+						//how do I update if name changes?
+						//need to iterate through all the items
+						Iterator treeI = treeUpdates.iterator();
+						while (treeI.hasNext())
+						{
+							viewer.update((TreeParent) treeI.next(), null);
+						}
+						
+						//do now?
+						
+						
+					}
+				}
+			}
+			
+		};
+		deleteElement.setText("Delete");
+		deleteElement.setToolTipText("Delete Rationale");
+//		deleteElement.setImageDescriptor(PlatformUI.getWorkbench().getSharedImages().
+//		getImageDescriptor(ISharedImages.IMG_OBJS_INFO_TSK));				
+		
+		//
+		//associate Ontology Action - associates an Argument Ontology
+		//entry with a constraint
+		//
+		associateOntology = new Action() {
+			public void run() {
+				
+				ISelection selection = viewer.getSelection();
+				Object obj = ((IStructuredSelection)selection).getFirstElement();
+				if (obj instanceof TreeParent)
+				{
+					RationaleElement parentElement = getElement((TreeParent) obj, false);
+					associateElement(parentElement, (TreeParent) obj);
+					
+				}
+				
+			}
+			
+		};
+		associateOntology.setText("Associate Ontology");
+		associateOntology.setToolTipText("Associate Ontology");
+		
+		//
+		//associate constraint Action - this associates a constraint with an
+		//alternative or decision
+		//
+		associateConstraint = new Action() {
+			public void run() {
+				
+				ISelection selection = viewer.getSelection();
+				Object obj = ((IStructuredSelection)selection).getFirstElement();
+				if (obj instanceof TreeParent)
+				{
+					RationaleElement parentElement = getElement((TreeParent) obj, false);
+					associateElement(parentElement, (TreeParent) obj);
+					
+				}
+				
+			}
+			
+		};
+		associateConstraint.setText("Associate Constraint");
+		associateConstraint.setToolTipText("Associate Constraint");
+	}
+	
+	/**
+	 * hookDoubleClickAction is used to edit the rationale elements when you 
+	 * double-click them
+	 *
+	 */
+	private void hookDoubleClickAction() {
+		viewer.addDoubleClickListener(new IDoubleClickListener() {
+			public void doubleClick(DoubleClickEvent event) {
+//				doubleClickAction.run();
+				editElement.run();
+			}
+		});
+	}
+	
+	/**
+	 * shows a message to the user
+	 * @param message
+	 */
+/*	private void showMessage(String message) {
+		MessageDialog.openInformation(
+				viewer.getControl().getShell(),
+				"RationaleExplorer",
+				message);
+	} */
+
+	/**
+	 * Passing the focus request to the viewer's control.
+	 */
+	public void setFocus() {
+		viewer.getControl().setFocus();
+	}
+	
+	public void dispose() {
+		getViewSite().getWorkbenchWindow().getSelectionService().
+		removeSelectionListener(this);
+		super.dispose();
+	}
+	/* (non-Javadoc)
+	 * @see org.eclipse.ui.ISelectionListener#selectionChanged(org.eclipse.ui.IWorkbenchPart, org.eclipse.jface.viewers.ISelection)
+	 */
+	
+	/**
+	 * Sets up your selection when a different Java element is chosen
+	 */
+	public void selectionChanged(IWorkbenchPart part, ISelection selection) {
+		if (selection instanceof IStructuredSelection) 
+		{
+			if (((IStructuredSelection) selection).getFirstElement() instanceof IJavaElement) 
+			{
+//				System.out.println("found Java Element");
+				navigatorSelection = (IJavaElement) ((IStructuredSelection) selection).getFirstElement();
+				associate.setSelection(navigatorSelection);
+			}
+			else
+			{
+//				System.out.println("not a java item");
+			}
+		}
+		
+	}
+	
+	/**
+	 * Sets up the new status of a Rationale Element after it (or one of its children) 
+	 * is edited. This is done by taking new status elements and adding them to the database
+	 * and taking old no longer true status values and removing them
+	 * @param curStatus - on entry, this vector contains the previous status values, on exit it contains those that no longer apply
+	 * @param newStatus - on entry, the complete status, on exit, only the new changes to add to the DB
+	 * @return returns a flag indicating if the status changed
+	 */
+	boolean updateStatus(Vector<RationaleStatus> curStatus, Vector<RationaleStatus> newStatus)
+	{
+		boolean different = true;
+		Vector<RationaleStatus> removeCur = new Vector<RationaleStatus>();
+		Vector<RationaleStatus> removeNew = new Vector<RationaleStatus>();
+		
+		Iterator curS = curStatus.iterator();
+		//for each item in curStatus
+		while (curS.hasNext())
+		{
+			RationaleStatus curSt = (RationaleStatus) curS.next();
+			Iterator newS = newStatus.iterator();
+			while (newS.hasNext())
+			{
+				RationaleStatus newSt = (RationaleStatus) newS.next();
+				//if a matching item in newStatus is found,
+				if (curSt.equivalentTo(newSt))
+				{
+					//remove item from current status
+					removeCur.add(curSt);
+					//remove item from new status
+					removeNew.add(newSt);
+				}
+			}
+		}
+		
+		newStatus.removeAll(removeNew);
+		curStatus.removeAll(removeCur);
+
+		//this will leave curStatus with a list of items that should
+		//be removed from the database and from the list
+		//this will leave newStatus with a list of items that should
+		//be added to the database and to the list
+		return different;
+	}
+	
+	/**
+	 * Updates the tree branch (to display new children, etc.)
+	 * @param parent - the top of the branch to refresh
+	 */
+	void refreshBranch(TreeParent parent)
+	{
+		viewer.refresh(parent);
+		Iterator childrenI = parent.getIterator();
+		while (childrenI.hasNext())
+		{
+			refreshBranch((TreeParent) childrenI.next());
+		}
+	}
+	
+	/**
+	 * This method serves as a factory method that either creates a new element of the
+	 * type specified by the treeElement passed in to it or that uses the name of the treeElement
+	 * to get the corresponding RationaleElement from the database
+	 * @param treeElement - either the parent of the new element or the element itself
+	 * @param newElement - a flag indicating if we are creating a new RationaleElement
+	 * @return the RationaleElement created or read from the database
+	 */
+	RationaleElement getElement(TreeParent treeElement, boolean newElement)
+	{
+		RationaleElement ourElement = null;
+		RationaleElementType type = treeElement.getType();
+		String name = treeElement.getName();
+		if (type == RationaleElementType.ASSUMPTION)
+		{
+			ourElement = new Assumption();
+		}
+		else if (type == RationaleElementType.ARGUMENT)
+		{
+			ourElement = new Argument();
+		}
+		else if (type == RationaleElementType.DECISION)
+		{
+			ourElement = new Decision();
+		}
+		else if (type == RationaleElementType.ALTERNATIVE)
+		{
+			ourElement = new Alternative();
+		}
+		else if (type == RationaleElementType.ONTENTRY)
+		{
+			ourElement = new OntEntry();
+		}
+		else if (type == RationaleElementType.DESIGNPRODUCTENTRY)
+		{
+			ourElement = new DesignProductEntry();
+		}
+		else if (type == RationaleElementType.CONSTRAINT)
+		{
+			ourElement = new Constraint();
+		}
+		else if (type == RationaleElementType.CONTINGENCY)
+		{
+			ourElement = new Contingency();
+		}
+		else if (type == RationaleElementType.DESIGNER)
+		{
+			ourElement = new Designer();
+		}
+		else if (type == RationaleElementType.REQUIREMENT)
+		{
+			ourElement = new Requirement();
+		}
+		else if (type == RationaleElementType.CLAIM)
+		{
+			ourElement = new Claim();
+		}
+		else if (type == RationaleElementType.EXPERTISE)
+		{
+			ourElement = new AreaExp();
+		}
+		else if (type == RationaleElementType.ALTCONSTREL)
+		{
+			ourElement = new AltConstRel();
+		}
+		else if (type == RationaleElementType.QUESTION)
+		{
+			ourElement = new Question();
+		}
+		else if (type == RationaleElementType.TRADEOFF)
+		{
+			ourElement = new Tradeoff(true);
+		}
+		else if (type == RationaleElementType.COOCCURRENCE)
+		{
+			ourElement = new Tradeoff(false);
+		}
+		else if (type == RationaleElementType.RATIONALE)
+		{
+			if (name.compareTo("Tradeoffs") == 0)
+			{
+//				System.out.println("found our tradeoff");
+				ourElement = new Tradeoff(true);
+			}
+			else if (name.compareTo("Co-occurrences") == 0)
+			{
+				ourElement = new Tradeoff(false);
+			}
+			else if (name.compareTo("Requirements") == 0)
+			{
+				ourElement = new Requirement();
+			}
+			else if (name.compareTo("Decisions") == 0)
+			{
+				ourElement = new Decision();
+			}
+			else if (name.compareTo("Design-Contingencies") == 0)
+			{
+				ourElement = new Contingency();
+			}
+			else if (name.compareTo("Designer-Profiles") == 0)
+			{
+				ourElement = new Designer();
+			}
+		}
+		if (!newElement)
+		{
+			ourElement.fromDatabase(treeElement.getName());
+		}
+		return ourElement;
+	}
+/*	I'm not sure why this is here - no one seems to call it.
+	boolean updateAll(TreeParent treeElement)
+	{
+		boolean update = true;
+		if ((treeElement.getType() == RationaleElementType.TRADEOFF) ||
+				(treeElement.getType() == RationaleElementType.COOCCURRENCE))
+		{
+			update = false;
+		}
+		return update;
+	}
+*/	
+	/**
+	 * this creates a new element in the rationale tree
+	 * @param parentElement - this is the rationaleElement parent
+	 * @param rElement - this is our new (child) element
+	 * @param obj - this is the parent tree element
+	 */
+	void createNewElement(RationaleElement parentElement, RationaleElement rElement, TreeParent obj)
+	{
+		RationaleDB db = RationaleDB.getHandle();
+		boolean canceled = rElement.create(viewer.getControl().getShell().getDisplay(), parentElement);
+		if (!canceled)
+		{
+			//need to add the new element to the tree...
+//			TreeParent newChild = new TreeParent(rElement.getName(), rElement.getElementType());				
+//			((TreeParent) obj).addChild(newChild);
+			System.out.println("name in createNewElement = " + rElement.getName());
+			addElement((TreeParent) obj, rElement);
+			//we update the parent status, not the new element status
+			//this might not be correct...
+			Vector<RationaleStatus> newStat = null;
+			/*			if (parentElement.getID() > 0)
+			 {
+			 newStat = parentElement.updateStatus();
+			 }
+			 */
+			//try updating our own status - shouldn't that automatically get our parent?
+			newStat = rElement.updateStatus();
+			Vector<RationaleStatus> curStatus = null; 
+			UpdateManager manager = UpdateManager.getHandle();
+			curStatus = manager.getInitialStatus();										
+			RationaleTaskList tlist = RationaleTaskList.getHandle();
+			if (newStat != null)
+			{
+//				System.out.println("updated status");
+				//Before updating the task list, compare the status lists!
+				updateStatus(curStatus, newStat);
+				//update the database
+				db.addStatus(newStat);
+				//update tasks too
+				tlist.addTasks(newStat);
+			}
+			if (curStatus.size() > 0)
+			{
+				db.removeStatus(curStatus);
+				//update our task list as well
+				tlist.removeTasks(curStatus);
+			}
+			
+			//add our new element
+			refreshBranch((TreeParent) obj);
+			
+			Vector treeUpdates = manager.makeUpdates();
+			//update what is displayed in the tree
+			//how do I update if name changes?
+//			System.out.println(rElement.getName() + ": enabled = " + new Boolean(rElement.getEnabled()).toString());
+			//need to iterate through all the items
+			Iterator treeI = treeUpdates.iterator();
+			while (treeI.hasNext())
+			{
+				viewer.update((TreeParent) treeI.next(), null);
+			}
+		}
+		
+	}
+	
+	/**
+	 * This is used to assocate different types of rationale elements
+	 * with each other. For example, a constraint has an ontology element associated. A 
+	 * constraint can be associated with a decision or alternative but the alternative 
+	 * association is handled differently (see action AltConstRel).
+	 * @param parentElement the rationale element (Decision or Constraint)
+	 * @param obj the tree element corresponding to the parent
+	 */
+	void associateElement(RationaleElement parentElement, TreeParent obj)
+	{
+		RationaleDB db = RationaleDB.getHandle();
+		RationaleElement newChild = parentElement.associateElement(viewer.getControl().getShell().getDisplay());
+		if (newChild != null)
+		{
+			addElement((TreeParent) obj, newChild);
+			//we update the parent status, not the new element status
+			//this might not be correct...
+			Vector<RationaleStatus> newStat = null;
+			/*			if (parentElement.getID() > 0)
+			 {
+			 newStat = parentElement.updateStatus();
+			 }
+			 */
+			//try updating our own status - shouldn't that automatically get our parent?
+			newStat = newChild.updateStatus();
+			Vector<RationaleStatus> curStatus = null; 
+			UpdateManager manager = UpdateManager.getHandle();
+			curStatus = manager.getInitialStatus();										
+			RationaleTaskList tlist = RationaleTaskList.getHandle();
+			if (newStat != null)
+			{
+//				System.out.println("updated status");
+				//Before updating the task list, compare the status lists!
+				updateStatus(curStatus, newStat);
+				//update the database
+				db.addStatus(newStat);
+				//update tasks too
+				tlist.addTasks(newStat);
+			}
+			if (curStatus.size() > 0)
+			{
+				db.removeStatus(curStatus);
+				//update our task list as well
+				tlist.removeTasks(curStatus);
+			}
+			
+			//add our new element
+			refreshBranch((TreeParent) obj);
+			
+			Vector treeUpdates = manager.makeUpdates();
+			//update what is displayed in the tree
+			//how do I update if name changes?
+//			System.out.println(rElement.getName() + ": enabled = " + new Boolean(rElement.getEnabled()).toString());
+			//need to iterate through all the items
+			Iterator treeI = treeUpdates.iterator();
+			while (treeI.hasNext())
+			{
+				viewer.update((TreeParent) treeI.next(), null);
+			}
+		}
+		
+	}
+	/**
+	 * Adding a new element to our rationale tree
+	 * @param parent - the parent element in the tree
+	 * @param element - the rationale element being added
+	 * @return the new treeParent that corresponds to the rationaleElement
+	 */
+	TreeParent addElement(TreeParent parent, RationaleElement element)
+	{
+		
+		if (element instanceof Tradeoff)
+		{
+//			System.out.println("adding Tradeoff");
+			return ( (RationaleViewContentProvider) viewer.getContentProvider()).addTradeoff(parent, (Tradeoff) element);		
+		}
+		else if (element instanceof Argument)
+		{
+//			System.out.println("adding Argument");
+			//will need a special argument provider
+			return ( (RationaleViewContentProvider) viewer.getContentProvider()).addArgument(parent, (Argument) element);
+		}
+		else if (element instanceof Claim)
+		{
+			//will need a special claim provider
+			return ( (RationaleViewContentProvider) viewer.getContentProvider()).addClaim(parent, (Claim) element);
+		}
+		/*
+		 else if (element instanceof AltConstRel)
+		 {
+		 return ( (RationaleViewContentProvider) viewer.getContentProvider()).addAltConstRel(parent, (AltConstRel) element);
+		 
+		 } */
+		else
+		{
+			return ( (RationaleViewContentProvider) viewer.getContentProvider()).addNewElement(parent, element);
+		}
+	}
+	
+	/**
+	 * Refreshes the display of a tree element. This is called after an element is
+	 * edited (I believe adding an element has its own refresh). The only types that
+	 * change structure when edited are the Argument (it could have a different argument
+	 * type), Claim (you could select a different Ontology Entry) and cooccurrence and tradeoff elements. Other elements only get children added
+	 * by saying "New" under the parent. That doesn't require a refreshElement call to update
+	 * 
+	 * @param parent - the parent whose children need to be refreshed
+	 * @param element - the element corresponding to the parent (provides the type)
+	 * @return returns the tree parent - the one passed in is discarded and a new one created
+	 */
+	public TreeParent refreshElement (TreeParent parent, RationaleElement element)
+	{
+		TreeParent grandParent = parent.getParent();
+		TreeParent newParent;
+		//now, check to see if there is likely to be a structural change
+		if ((element.getElementType() == RationaleElementType.ARGUMENT) ||
+				(element.getElementType() == RationaleElementType.COOCCURRENCE) ||
+				(element.getElementType() == RationaleElementType.CLAIM) ||
+				(element.getElementType() == RationaleElementType.TRADEOFF))
+		{
+			//for simplicity, we will assume that yes, the structure changed
+			//so, we remove the old element from the tree
+			( (RationaleViewContentProvider) viewer.getContentProvider()).removeElement(parent);
+			//and then, we create a new element based on the RationaleElement just
+			//modified
+			newParent = addElement(grandParent, element);	
+			refreshBranch(grandParent);		
+			return newParent;	
+			
+		}
+		else
+		{
+			return parent;
+		}
+		
+	}
+	
+	/**
+	 * Removes an element from the tree. This is done when something is deleted but
+	 * also done if the underlying tree structure is changed (the old is removed, and a new
+	 * one is generated)
+	 * @param parent the element being removed
+	 * @return the parent of the element that was just removed
+	 */
+	public TreeParent removeElement (TreeParent parent)
+	{
+		TreeParent grandParent = parent.getParent();
+		//shouldn't we remove the item from the map too?
+		RationaleTreeMap map = RationaleTreeMap.getHandle();
+		String key = map.makeKey(parent.getName(), parent.getType());
+		map.removeItem(key, parent);
+		//remove the old element from the tree
+		( (RationaleViewContentProvider) viewer.getContentProvider()).removeElement(parent);
+		//re-draw this branch of the tree
+		refreshBranch(grandParent);		
+		return grandParent;
+		
+	}
+	
+	//
+	
+	/**
+	 * This is the editing code that is called in response to a menu item from
+	 * the tree OR on receipt of an event from the task list.
+	 * @param obj - the selected tree element being edited
+	 * @param rElement - the rationale Element being edited
+	 * @param theDisplay - the parent display
+	 */
+	private void editElement (TreeParent obj, RationaleElement rElement, Display theDisplay)
+	{
+//		boolean canceled = rElement.display();
+		boolean canceled = rElement.display(viewer.getControl().getShell().getDisplay());
+//		System.out.println("canceled? = " + canceled);
+		if (!canceled)
+		{
+			updateTreeElement(obj, rElement);
+		}
+		
+	}
+	
+	/**
+	 * updateTreeElement - updates our tree element after it has been edited. 
+	 * This includes any name changes, any status changes, and adding any new rationale
+	 * tasks to the task list. Yes, this method probably does too much... The database is updated
+	 * with the status changes as well.
+	 * @param obj - the tree element that was just edited
+	 * @param rElement - the corresponding rationale element
+	 */
+	private void updateTreeElement (TreeParent obj, RationaleElement rElement)
+	{
+		RationaleDB db = RationaleDB.getHandle();
+		//need to check to see if the name has changed
+		if (obj.getName().compareTo(rElement.getName()) != 0)
+		{
+//			System.out.println("name has changed");
+			//need to save the old and new names and make the changes
+			updateName(obj.getName(), rElement.getName(), rElement.getElementType());
+		}
+		Vector<RationaleStatus> newStat = rElement.updateStatus();
+		//		System.out.println("new stat ln (editor) = " + newStat.size());
+		Vector<RationaleStatus> curStatus = null; 
+		UpdateManager manager = UpdateManager.getHandle();
+		curStatus = manager.getInitialStatus();										
+		RationaleTaskList tlist = RationaleTaskList.getHandle();
+		if (newStat != null)
+		{
+			System.out.println("updated status");
+			//Before updating the task list, compare the status lists!
+			updateStatus(curStatus, newStat);
+			
+		}
+		if (curStatus.size() > 0)
+		{
+			db.removeStatus(curStatus);
+			//update our task list as well
+//			System.out.println("removing a task");
+			tlist.removeTasks(curStatus);
+		}
+		//moved to after to see if this helps (???)
+		if (newStat != null)
+		{
+			//update the database
+			db.addStatus(newStat);
+			//update tasks too
+			tlist.addTasks(newStat);
+		}
+		
+		//before we update our tree, we need to make sure we 
+		//do any "structural" updates!
+		TreeParent newParent = refreshElement((TreeParent) obj, rElement);
+		//now make our updates
+		Vector treeUpdates = manager.makeUpdates();
+		//update what is displayed in the tree
+		//how do I update if name changes?
+//		System.out.println(rElement.getName() + ": enabled = " + new Boolean(rElement.getEnabled()).toString());
+		newParent.update(rElement.getName(), rElement.getEnabled());
+		//need to iterate through all the items
+		Iterator treeI = treeUpdates.iterator();
+        if (!treeI.hasNext())
+        {
+        	//refresh ourself - needed for root elements with no status
+        	viewer.refresh((TreeParent) obj);
+        }
+		while (treeI.hasNext())
+		{
+			
+//			viewer.update((TreeParent) treeI.next(), null);
+			viewer.refresh((TreeParent) treeI.next());
+		}
+	}
+	
+	/**
+	 * this updates the RationaleTreeMap that uses the name of the rationale elements
+	 * to find all its occurrences in the tree
+	 * @param oldName - the previous name
+	 * @param newName - the new name
+	 * @param type - the rationale element type
+	 */
+	public void updateName(String oldName, String newName, RationaleElementType type)
+	{
+		RationaleTreeMap map = RationaleTreeMap.getHandle();
+		String oldkey = map.makeKey(oldName, type);
+		String newkey = map.makeKey(newName, type);
+		Vector treeElements = map.getKeys(oldkey);
+		//now, iterate through our tree objects and set their name
+		Enumeration updateT = treeElements.elements();
+		//	System.out.println("number of tree elements = " + new Integer(treeElements.size()).toString());
+		while (updateT.hasMoreElements())
+		{
+			TreeObject leaf = (TreeObject) updateT.nextElement();
+			leaf.setName(newName);
+			map.removeItem(oldkey, leaf);
+			map.addItem(newkey, leaf);
+		}
+		
+	}
+	
+	//we are now going to assume that the editing is done by the time
+	//we receive the event
+	/**
+	 * When editing is done from a querie or some other method that does not
+	 * have the treeParent for the edited item, the GUI where the edits were invoked from
+	 * will fire a RationaleUpdateEvent so that we will know that the tree may have
+	 * changed. That is handled here.
+	 * @param e - the rationale update event received. It will contain the element itself.
+	 */
+	public void updateRationaleTree(RationaleUpdateEvent e)
+	{
+		RationaleElement ele = e.getRationaleElement();
+		//get the tree parent corresponding to the element...
+		RationaleTreeMap map = RationaleTreeMap.getHandle();
+		Vector treeObjs = map.getKeys(map.makeKey(ele.getName(), ele.getElementType()));
+		//if there's more than one we don't care, just get the first
+		TreeParent ourObj = (TreeParent) treeObjs.elementAt(0); 
+		updateTreeElement(ourObj, ele);
+		
+	}
+	
+	/**
+	 * This method takes the tree and expands a node when requested by the user. The
+	 * request comes in with a RationaleUpdateEvent
+	 * @param e - the rationale update event
+	 */
+	public void showRationaleNode(RationaleUpdateEvent e)
+	{
+		RationaleElement ele = e.getRationaleElement();
+		//get the tree parent corresponding to the element...
+		RationaleTreeMap map = RationaleTreeMap.getHandle();
+		Vector treeObjs = map.getKeys(map.makeKey(ele.getName(), ele.getElementType()));
+		//if there's more than one we don't care, just get the first
+		viewer.reveal(treeObjs.elementAt(0));
+		viewer.expandToLevel(treeObjs.elementAt(0), 4);
+		
+		
+	}
+	
+	/**
+	 * This method is used to associate the java file with alternative in the ratinale 
+	 * explore in the java direction
+	 */
+	public void associateAlternative (RationaleUpdateEvent e)
+	
+	{
+		//get the Java element selected in the Package Explorer from the RationaleUpdateEvent
+		navigatorSelection = e.getIJavaElement();
+		
+		if (navigatorSelection != null)
+		{
+				
+			ISelection selection = viewer.getSelection();
+
+			obj = ((IStructuredSelection)selection).getFirstElement();
+						
+			//whether an alternative is selected?
+			if (obj !=null && ((TreeParent)obj).getType() == RationaleElementType.ALTERNATIVE )
+			{
+				alternativeName=((TreeParent)obj).getName();	
+			}
+			//if there is no alternative selected, provide a select items of alternative
+			else{
+				SelectItem selectItem = new SelectItem(ourDisplay, RationaleElementType.fromString("Alternative"));
+				alternativeName=selectItem.getNewItem().getName();
+			}
+
+			String assQ = "Associate '" +
+			alternativeName + "' with " +
+				navigatorSelection.getElementName() + "?";				
+					
+				boolean selOk = showQuestion(assQ);
+				if (selOk)
+				{
+					lineNumber = 0;
+
+					ourRes = null;
+					try {
+						
+
+						if (navigatorSelection.getElementType() == IJavaElement.COMPILATION_UNIT)
+						{
+							ourRes = navigatorSelection.getCorrespondingResource(); 
+						}
+						else
+						{
+							ourRes = navigatorSelection.getUnderlyingResource();
+							if (ourRes != null)
+							{
+//***								System.out.println("this one wasn't null?");
+							}
+							//find the enclosing class file
+							IJavaElement nextE = navigatorSelection.getParent();
+							while ((nextE != null) && (nextE.getElementType() != IJavaElement.COMPILATION_UNIT))
+							{
+//***								System.out.println("Name = " + nextE.getElementName());
+//***							System.out.println("Type = " + nextE.getElementType());
+								nextE = nextE.getParent();
+							}
+							try {
+//***							System.out.println("getting our resource");
+	//						ourRes = nextE.getUnderlyingResource();
+							ourRes = nextE.getCorrespondingResource();
+							ourRes = nextE.getResource();
+						} catch (JavaModelException ex)
+						{
+							System.out.println("exception getting resource?");
+						}
+//***							System.out.println("Final name = " + nextE.getElementName());
+//***							System.out.println("Final type = " + nextE.getElementType());
+							if (ourRes == null)
+							{
+//***								System.out.println("see if there's a working copy");
+								//see if we can get the element from the working copy
+								IJavaElement original = ((ICompilationUnit) ((ICompilationUnit) nextE).getWorkingCopy()).getOriginalElement();
+								ourRes = original.getCorrespondingResource();
+
+							}
+						}
+						//						ourRes = navigatorSelection.getUnderlyingResource();
+						if (ourRes == null)
+						{
+//***							System.out.println("why would our resource be null?");
+						}
+//***						System.out.println("FullPath = " + ourRes.getFullPath().toString());
+//***						System.out.println("now checking file extension?");
+						if (ourRes.getFullPath().getFileExtension().compareTo("java") == 0)
+						{
+//***							System.out.println("creating our file?");
+						  IJavaElement myJavaElement = JavaCore.create((IFile) ourRes);						
+//***						System.out.println("created an element?");
+						if (myJavaElement.getElementType() == IJavaElement.COMPILATION_UNIT)
+						 {
+//***						   System.out.println("Compilation Unit");
+						   ICompilationUnit myCompilationUnit = (ICompilationUnit)
+				 myJavaElement;
+				 
+						   IType[] myTypes = myCompilationUnit.getTypes();
+						   ISourceRange range = null;
+						   boolean found = false;
+						   int i = 0;
+						   while ((!found) && i < myTypes.length)
+						   {
+						   	 //selected item was the class itself
+						   	 if (navigatorSelection.getElementType() == IJavaElement.COMPILATION_UNIT)
+						   	 {
+//***						   	 	System.out.println("found the class");
+						   	 	if (myTypes[i].isClass())
+						   	 	{
+						   	 		range = myTypes[i].getSourceRange();
+						   	 		found = true;
+						   	 	}
+						   	 }
+						   	 else if (navigatorSelection.getElementType() == IJavaElement.FIELD)
+						   	 {
+//***						   	 	System.out.println("looking for types");
+								IField[] myFields = myTypes[i].getFields();
+								for (int j = 0; j< myFields.length; j++)
+								{
+									 if (myFields[j].getElementName().compareTo(navigatorSelection.getElementName()) == 0)
+									 {
+//***									 	System.out.println("found a type");
+									 	range = myFields[j].getSourceRange();
+										found = true;
+									 }
+								}
+
+						   	 }
+						   	 else if (navigatorSelection.getElementType() == IJavaElement.METHOD)
+						   	 {
+//***						   	 	System.out.println("looking for a method");
+						   	 	IMethod[] myMethods = myTypes[i].getMethods();
+								for (int j = 0; j< myMethods.length; j++)
+								{
+									 if (myMethods[j].getElementName().compareTo(navigatorSelection.getElementName()) == 0)
+									 {
+//***									 	System.out.println("found a method");
+										range = myMethods[j].getSourceRange();
+										found = true;
+									 }
+								}
+						   	 }
+							    //don't forget to increment!
+	  						    i++;
+						    } //end while
+						    
+						    //now, we need to do some parsing.
+						    if (range != null)
+						    {
+								CompilationUnit parsedUnit = AST.parseCompilationUnit(myCompilationUnit, false);
+								lineNumber = parsedUnit.lineNumber(range.getOffset());
+						    }
+						    else
+						    {
+						    	lineNumber = 0;
+						    }
+						    
+						 }
+						 else
+						 {
+//***						 	System.out.println("not a compilation unit?");
+						 	System.out.println(myJavaElement.getElementType());
+						 }
+						//ok... now what type is our selected item? 
+						System.out.println("got the resource?");
+						if (ourRes == null)
+						{
+							System.out.println("null resource???");
+						}
+						}
+						else
+						{
+							System.out.println("not a java file?");
+						}
+//from the newsgroup - in a runnable?						
+						ResourcesPlugin.getWorkspace().run(new IWorkspaceRunnable()
+						{
+								public void run(IProgressMonitor monitor) {
+									try {
+//***						System.out.println("line number = " + new Integer(lineNumber).toString());
+						IMarker ratM = ourRes.createMarker("SEURAT.ratmarker");
+						String markD = "Alt: '" +
+							alternativeName + "'";
+						ratM.setAttribute(IMarker.MESSAGE, markD);
+//						ratM.setAttribute(IMarker.CHAR_START, 153);
+//						ratM.setAttribute(IMarker.CHAR_END, 154);
+						ratM.setAttribute(IMarker.SEVERITY, 0);
+						ratM.setAttribute(IMarker.LINE_NUMBER, lineNumber);
+						ratM.setAttribute("alternative", alternativeName);
+						SEURATResourcePropertiesManager.addPersistentProperty (ourRes,
+							"Rat", "true");
+							RationaleDB d = RationaleDB.getHandle();
+							d.associateAlternative(alternativeName,
+								navigatorSelection.getHandleIdentifier(),
+								ourRes.getName(),
+								navigatorSelection.getElementName(),
+								markD, lineNumber);
+							
+									}
+									catch (CoreException e) {
+										e.printStackTrace();
+									}
+								}
+								}, null);
+//***						System.out.println("adding persistent property");
+
+						SEURATDecoratorManager.addSuccessResources (ourRes);
+//***						System.out.println("added our property");  
+						// Refresh the label decorations... Change it to DemoDecoratorWithImageCaching if image caching should be used
+//						((TreeParent) obj).setStatus(RationaleErrorLevel.ERROR);
+						viewer.update((TreeParent) obj, null);
+						SEURATLightWeightDecorator.getRatDecorator().refresh();
+//***						System.out.println("refresh");
+
+					}
+					catch (Exception ex)
+					{
+						ex.printStackTrace();
+						System.out.println("an exception occured in AssociateArtifactAction");
+					}
+							
+				}
+				else
+				{
+					System.out.println("selection rejected");
+				}
+			}
+
+		else
+		{
+			System.out.println("No java element selected...");
+		}
+
+
+	}
+	/**
+	 * This method is used to pop-up a question to ask user whether to go on with the job
+	 * It is used for the association.
+	 * @param message
+	 * @return
+	 */
+	private boolean showQuestion(String message) {
+		return MessageDialog.openQuestion(
+			viewer.getControl().getShell(),
+			"RationaleExplorer",
+			message);
+	}
+	/**
+	 * This method is used to rebuild the tree from a different copy of the database
+	 * 
+	 */
+	public void rebuildTree()
+	{
+		RationaleDB.resetConnection();
+		viewer.getTree().removeAll();
+		viewer.getContentProvider().dispose();
+		viewer.setContentProvider(new RationaleViewContentProvider());
+		//this should re-fresh from the new database
+		viewer.setInput(((RationaleViewContentProvider) viewer.getContentProvider()).initialize());
+		RationaleTaskList tlist = RationaleTaskList.getHandle();
+		tlist.resetTable();
+	}
+}
