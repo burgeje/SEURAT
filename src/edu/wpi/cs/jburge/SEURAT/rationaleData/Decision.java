@@ -407,28 +407,7 @@ public class Decision extends RationaleElement implements Serializable
 	   }
    	   
 	   finally { 
-		   // it is a good idea to release
-		   // resources in a finally{} block 
-		   // in reverse-order of their creation 
-		   // if they are no-longer needed 
-
-		   if (rs != null) { 
-			   try {
-				   rs.close(); 
-			   } catch (SQLException sqlEx) { // ignore 
-			   } 
-
-			   rs = null; 
-		   }
-    
-		   if (stmt != null) { 
-			   try { 
-				   stmt.close(); 
-			   } catch (SQLException sqlEx) { // ignore
-				   } 
-
-			   stmt = null; 
-		   } 
+		   RationaleDB.releaseResources(stmt, rs);
 		   }
 		   
 		return ourid;	
@@ -470,28 +449,7 @@ public class Decision extends RationaleElement implements Serializable
 			RationaleDB.reportError(ex,"Error in Decision.fromDatabase(1)", findQuery);
 	   }
 	   finally { 
-		   // it is a good idea to release
-		   // resources in a finally{} block 
-		   // in reverse-order of their creation 
-		   // if they are no-longer needed 
-
-		   if (rs != null) { 
-			   try {
-				   rs.close(); 
-			   } catch (SQLException sqlEx) { // ignore 
-			   } 
-
-			   rs = null; 
-		   }
-    
-		   if (stmt != null) { 
-			   try { 
-				   stmt.close(); 
-			   } catch (SQLException sqlEx) { // ignore
-				   } 
-
-			   stmt = null; 
-		   }
+		   RationaleDB.releaseResources(stmt, rs);
 		 }
 	
 	}
@@ -654,28 +612,7 @@ public class Decision extends RationaleElement implements Serializable
 			
 	   }
 	   finally { 
-		   // it is a good idea to release
-		   // resources in a finally{} block 
-		   // in reverse-order of their creation 
-		   // if they are no-longer needed 
-
-		   if (rs != null) { 
-			   try {
-				   rs.close(); 
-			   } catch (SQLException sqlEx) { // ignore 
-			   } 
-
-			   rs = null; 
-		   }
-    
-		   if (stmt != null) { 
-			   try { 
-				   stmt.close(); 
-			   } catch (SQLException sqlEx) { // ignore
-				   } 
-
-			   stmt = null; 
-		   }
+		   RationaleDB.releaseResources(stmt, rs);
 		   }
 	
 	}
@@ -1044,28 +981,8 @@ public class Decision extends RationaleElement implements Serializable
 	   }
    	   
 	   finally { 
-		   // it is a good idea to release
-		   // resources in a finally{} block 
-		   // in reverse-order of their creation 
-		   // if they are no-longer needed 
+		   RationaleDB.releaseResources(stmt, rs);
 
-		   if (rs != null) { 
-			   try {
-				   rs.close(); 
-			   } catch (SQLException sqlEx) { // ignore 
-			   } 
-
-			   rs = null; 
-		   }
-    
-		   if (stmt != null) { 
-			   try { 
-				   stmt.close(); 
-			   } catch (SQLException sqlEx) { // ignore
-				   } 
-
-			   stmt = null; 
-		   } 
 		   }
 		   
 		return ourid;	

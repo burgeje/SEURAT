@@ -305,35 +305,11 @@ public class OntEntry extends RationaleElement implements Serializable
 				kid.toDatabase(ourid);
 			}
 		} catch (SQLException ex) {
-	   // handle any errors 
-	   System.out.println("SQLException: " + ex.getMessage()); 
-	   System.out.println("SQLState: " + ex.getSQLState()); 
-	   System.out.println("VendorError: " + ex.getErrorCode()); 
+			RationaleDB.reportError(ex, "OntEntry.toDatabase(int)", "SQL Error");
 	   }
    	   
 	   finally { 
-		   // it is a good idea to release
-		   // resources in a finally{} block 
-		   // in reverse-order of their creation 
-		   // if they are no-longer needed 
-
-		   if (rs != null) { 
-			   try {
-				   rs.close(); 
-			   } catch (SQLException sqlEx) { // ignore 
-			   } 
-
-			   rs = null; 
-		   }
-    
-		   if (stmt != null) { 
-			   try { 
-				   stmt.close(); 
-			   } catch (SQLException sqlEx) { // ignore
-				   } 
-
-			   stmt = null; 
-		   } 
+		   RationaleDB.releaseResources(stmt, rs);
 		   }
 		   
 		return ourid;	
@@ -497,14 +473,14 @@ public class OntEntry extends RationaleElement implements Serializable
 		
 		RationaleDB db = RationaleDB.getHandle();
 		Connection conn = db.getConnection();
-
+		 String findQuery = "";
 		this.id = id;
 		
 		Statement stmt = null; 
 		ResultSet rs = null; 
 		try {
 			 stmt = conn.createStatement();
-			 String findQuery; 
+
 				 findQuery = "SELECT *  FROM " +
 				 "OntEntries where id = " +
 				 new Integer(id).toString();
@@ -519,34 +495,10 @@ public class OntEntry extends RationaleElement implements Serializable
 		 }
 
 		} catch (SQLException ex) {
-	   // handle any errors 
-	   System.out.println("SQLException: " + ex.getMessage()); 
-	   System.out.println("SQLState: " + ex.getSQLState()); 
-	   System.out.println("VendorError: " + ex.getErrorCode()); 
+			RationaleDB.reportError(ex, "OntEntry.fromDatabase(int)", findQuery);
 	   }
 	   finally { 
-		   // it is a good idea to release
-		   // resources in a finally{} block 
-		   // in reverse-order of their creation 
-		   // if they are no-longer needed 
-
-		   if (rs != null) { 
-			   try {
-				   rs.close(); 
-			   } catch (SQLException sqlEx) { // ignore 
-			   } 
-
-			   rs = null; 
-		   }
-    
-		   if (stmt != null) { 
-			   try { 
-				   stmt.close(); 
-			   } catch (SQLException sqlEx) { // ignore
-				   } 
-
-			   stmt = null; 
-		   }
+		   RationaleDB.releaseResources(stmt, rs);
 		   }
 	
 	}	
@@ -580,9 +532,10 @@ public class OntEntry extends RationaleElement implements Serializable
 		
 		Statement stmt = null; 
 		ResultSet rs = null; 
+		 String findQuery = "";
 		try {
 			 stmt = conn.createStatement();
-			 String findQuery; 
+
 				 findQuery = "SELECT *  FROM " +
 				 "OntEntries where name = '" +
 				 name + "'";
@@ -601,34 +554,10 @@ public class OntEntry extends RationaleElement implements Serializable
 		 }
 
 		} catch (SQLException ex) {
-	   // handle any errors 
-	   System.out.println("SQLException: " + ex.getMessage()); 
-	   System.out.println("SQLState: " + ex.getSQLState()); 
-	   System.out.println("VendorError: " + ex.getErrorCode()); 
+			RationaleDB.reportError(ex, "OntEntry.fromDatabase(String)", findQuery);
 	   }
 	   finally { 
-		   // it is a good idea to release
-		   // resources in a finally{} block 
-		   // in reverse-order of their creation 
-		   // if they are no-longer needed 
-
-		   if (rs != null) { 
-			   try {
-				   rs.close(); 
-			   } catch (SQLException sqlEx) { // ignore 
-			   } 
-
-			   rs = null; 
-		   }
-    
-		   if (stmt != null) { 
-			   try { 
-				   stmt.close(); 
-			   } catch (SQLException sqlEx) { // ignore
-				   } 
-
-			   stmt = null; 
-		   }
+		   RationaleDB.releaseResources(stmt,rs);
 		   }
 	
 	}	

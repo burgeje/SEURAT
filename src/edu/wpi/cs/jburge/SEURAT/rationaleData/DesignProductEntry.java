@@ -289,35 +289,11 @@ public class DesignProductEntry extends RationaleElement implements Serializable
 				kid.toDatabase(ourid);
 			}
 		} catch (SQLException ex) {
-			// handle any errors 
-			System.out.println("SQLException: " + ex.getMessage()); 
-			System.out.println("SQLState: " + ex.getSQLState()); 
-			System.out.println("VendorError: " + ex.getErrorCode()); 
+			RationaleDB.reportError(ex, "DesignProductEntry.toDatabase", "SQL Error");
 		}
 		
 		finally { 
-			// it is a good idea to release
-			// resources in a finally{} block 
-			// in reverse-order of their creation 
-			// if they are no-longer needed 
-			
-			if (rs != null) { 
-				try {
-					rs.close(); 
-				} catch (SQLException sqlEx) { // ignore 
-				} 
-				
-				rs = null; 
-			}
-			
-			if (stmt != null) { 
-				try { 
-					stmt.close(); 
-				} catch (SQLException sqlEx) { // ignore
-				} 
-				
-				stmt = null; 
-			} 
+			RationaleDB.releaseResources(stmt, rs);
 		}
 		
 		return ourid;	
@@ -338,9 +314,10 @@ public class DesignProductEntry extends RationaleElement implements Serializable
 		
 		Statement stmt = null; 
 		ResultSet rs = null; 
+		String findQuery = ""; 		
 		try {
 			stmt = conn.createStatement();
-			String findQuery; 
+
 			findQuery = "SELECT *  FROM " +
 			"DesignComponents where id = " +
 			new Integer(id).toString();
@@ -355,34 +332,10 @@ public class DesignProductEntry extends RationaleElement implements Serializable
 			}
 			
 		} catch (SQLException ex) {
-			// handle any errors 
-			System.out.println("SQLException: " + ex.getMessage()); 
-			System.out.println("SQLState: " + ex.getSQLState()); 
-			System.out.println("VendorError: " + ex.getErrorCode()); 
+			RationaleDB.reportError(ex, "DesignProductEntry(int)", findQuery);
 		}
 		finally { 
-			// it is a good idea to release
-			// resources in a finally{} block 
-			// in reverse-order of their creation 
-			// if they are no-longer needed 
-			
-			if (rs != null) { 
-				try {
-					rs.close(); 
-				} catch (SQLException sqlEx) { // ignore 
-				} 
-				
-				rs = null; 
-			}
-			
-			if (stmt != null) { 
-				try { 
-					stmt.close(); 
-				} catch (SQLException sqlEx) { // ignore
-				} 
-				
-				stmt = null; 
-			}
+			RationaleDB.releaseResources(stmt, rs);
 		}
 		
 	}		
@@ -395,7 +348,7 @@ public class DesignProductEntry extends RationaleElement implements Serializable
 		
 		RationaleDB db = RationaleDB.getHandle();
 		Connection conn = db.getConnection();
-		
+		String findQuery = ""; 
 		//if this is coming from a textual claim descriptor we will want to 
 		//strip out the "IS" and "NOT" from the name.
 		
@@ -417,7 +370,6 @@ public class DesignProductEntry extends RationaleElement implements Serializable
 		ResultSet rs = null; 
 		try {
 			stmt = conn.createStatement();
-			String findQuery; 
 			findQuery = "SELECT *  FROM " +
 			"DesignComponents where name = '" +
 			name + "'";
@@ -434,34 +386,10 @@ public class DesignProductEntry extends RationaleElement implements Serializable
 			}
 			
 		} catch (SQLException ex) {
-			// handle any errors 
-			System.out.println("SQLException: " + ex.getMessage()); 
-			System.out.println("SQLState: " + ex.getSQLState()); 
-			System.out.println("VendorError: " + ex.getErrorCode()); 
+			RationaleDB.reportError(ex, "DesignProductEntry.fromDatabase(String)", findQuery);
 		}
 		finally { 
-			// it is a good idea to release
-			// resources in a finally{} block 
-			// in reverse-order of their creation 
-			// if they are no-longer needed 
-			
-			if (rs != null) { 
-				try {
-					rs.close(); 
-				} catch (SQLException sqlEx) { // ignore 
-				} 
-				
-				rs = null; 
-			}
-			
-			if (stmt != null) { 
-				try { 
-					stmt.close(); 
-				} catch (SQLException sqlEx) { // ignore
-				} 
-				
-				stmt = null; 
-			}
+			RationaleDB.releaseResources(stmt, rs);
 		}
 		
 	}	

@@ -118,7 +118,7 @@ public class Requirement extends RationaleElement implements Serializable
 		
 		RationaleDB db = RationaleDB.getHandle();
 		Connection conn = db.getConnection();
-
+		String findQuery = "";
 		this.id = reqID;
 		
 		Statement stmt = null; 
@@ -127,7 +127,7 @@ public class Requirement extends RationaleElement implements Serializable
 		try {
 			
 			stmt = conn.createStatement();
-			String findQuery;
+
 			findQuery = "SELECT name FROM " + 
 			"requirements where id = " +
 			new Integer(reqID).toString();
@@ -142,34 +142,10 @@ public class Requirement extends RationaleElement implements Serializable
 			}
 			
 		} catch (SQLException ex) {
-	   // handle any errors 
-	   System.out.println("SQLException: " + ex.getMessage()); 
-	   System.out.println("SQLState: " + ex.getSQLState()); 
-	   System.out.println("VendorError: " + ex.getErrorCode()); 
+			RationaleDB.reportError(ex, "Requirement.fromDatabase(int)", findQuery);
 	   }
 	   finally { 
-		   // it is a good idea to release
-		   // resources in a finally{} block 
-		   // in reverse-order of their creation 
-		   // if they are no-longer needed 
-
-		   if (rs != null) { 
-			   try {
-				   rs.close(); 
-			   } catch (SQLException sqlEx) { // ignore 
-			   } 
-
-			   rs = null; 
-		   }
-    
-		   if (stmt != null) { 
-			   try { 
-				   stmt.close(); 
-			   } catch (SQLException sqlEx) { // ignore
-				   } 
-
-			   stmt = null; 
-		   }
+		   RationaleDB.releaseResources(stmt, rs);
 		   }
 	
 	}
@@ -232,23 +208,6 @@ public class Requirement extends RationaleElement implements Serializable
 	{
 		m_argumentsAgainst.addElement(arg);
 	}
-/* do I need this???	
-	public Vector getList(RationaleElementType type)
-	{
-		if (type.equals(RationaleElementType.REQUIREMENT))
-		{
-			return m_requirements;
-		}
-		else if (type.equals(RationaleElementType.ARGUMENT))
-		{
-			return m_arguments;
-		}
-		else
-		{
-			return null;
-		}
-	}
-*/	
 	
 	public void addRequirement(Requirement newReq)
 	{
@@ -348,35 +307,11 @@ public class Requirement extends RationaleElement implements Serializable
 			}
 			
 		} catch (SQLException ex) {
-	   // handle any errors 
-	   System.out.println("SQLException: " + ex.getMessage()); 
-	   System.out.println("SQLState: " + ex.getSQLState()); 
-	   System.out.println("VendorError: " + ex.getErrorCode()); 
+			RationaleDB.reportError(ex, "Requirement.fromDatabase(String)", "SQL Error");
 	   }
    	   
 	   finally { 
-		   // it is a good idea to release
-		   // resources in a finally{} block 
-		   // in reverse-order of their creation 
-		   // if they are no-longer needed 
-
-		   if (rs != null) { 
-			   try {
-				   rs.close(); 
-			   } catch (SQLException sqlEx) { // ignore 
-			   } 
-
-			   rs = null; 
-		   }
-    
-		   if (stmt != null) { 
-			   try { 
-				   stmt.close(); 
-			   } catch (SQLException sqlEx) { // ignore
-				   } 
-
-			   stmt = null; 
-		   } 
+		   RationaleDB.releaseResources(stmt, rs);
 		   }
 		
 	}
@@ -508,35 +443,12 @@ public class Requirement extends RationaleElement implements Serializable
 
 
 		} catch (SQLException ex) {
-	   // handle any errors 
-	   System.out.println("SQLException: " + ex.getMessage()); 
-	   System.out.println("SQLState: " + ex.getSQLState()); 
-	   System.out.println("VendorError: " + ex.getErrorCode()); 
-   	   }
+			RationaleDB.reportError(ex, "Requirement.toDatabase", "SQL Error");
+  	   }
    	   
 	   finally { 
-		   // it is a good idea to release
-		   // resources in a finally{} block 
-		   // in reverse-order of their creation 
-		   // if they are no-longer needed 
+		   RationaleDB.releaseResources(stmt, rs);
 
-		   if (rs != null) { 
-			   try {
-				   rs.close(); 
-			   } catch (SQLException sqlEx) { // ignore 
-			   } 
-
-			   rs = null; 
-		   }
-    
-		   if (stmt != null) { 
-			   try { 
-				   stmt.close(); 
-			   } catch (SQLException sqlEx) { // ignore
-				   } 
-
-			   stmt = null; 
-		   } 
 		   }
 		   
 		return ourid;	

@@ -147,35 +147,11 @@ public class History implements Serializable
 		ourid = 0; //no reason to keep ID around
 
 		} catch (SQLException ex) {
-	   // handle any errors 
-	   System.out.println("SQLException: " + ex.getMessage()); 
-	   System.out.println("SQLState: " + ex.getSQLState()); 
-	   System.out.println("VendorError: " + ex.getErrorCode()); 
+			RationaleDB.reportError(ex, "History.toDatabase", "SQL error");
 	   }
    	   
 	   finally { 
-		   // it is a good idea to release
-		   // resources in a finally{} block 
-		   // in reverse-order of their creation 
-		   // if they are no-longer needed 
-
-		   if (rs != null) { 
-			   try {
-				   rs.close(); 
-			   } catch (SQLException sqlEx) { // ignore 
-			   } 
-
-			   rs = null; 
-		   } 
-    
-		   if (stmt != null) { 
-			   try { 
-				   stmt.close(); 
-			   } catch (SQLException sqlEx) { // ignore
-				   } 
-
-			   stmt = null; 
-		   } 
+		   RationaleDB.releaseResources(stmt, rs);
 		   }
 		   
 		return ourid;	

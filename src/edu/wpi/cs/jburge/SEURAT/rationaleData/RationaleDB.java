@@ -2491,6 +2491,47 @@ public final class RationaleDB implements Serializable {
 	}
 	
 	/**
+	 * Release our database resources. This is done over and over and over again so
+	 * we have this nifty utility method to cut down on duplicated code. We
+	 * need the two resource version because sometimes we have to nest queries
+	 * @param stmt - the statement to close
+	 * @param rs - the resource to close
+	 * @param rs2 - the other resource to close
+	 */
+	public static void releaseResources(Statement stmt, ResultSet rs, ResultSet rs2) {
+		// it is a good idea to release
+		// resources in a finally{} block 
+		// in reverse-order of their creation 
+		// if they are no-longer needed 
+		
+		if (rs != null) {
+			try {
+				rs.close();
+			} catch (SQLException sqlEx) { // ignore 
+			}
+			
+			rs = null;
+		}
+		
+		if (rs2 != null) {
+			try {
+				rs2.close();
+			} catch (SQLException sqlEx) { // ignore 
+			}
+			
+			rs2 = null;
+		}
+		if (stmt != null) {
+			try {
+				stmt.close();
+			} catch (SQLException sqlEx) { // ignore
+			}
+			
+			stmt = null;
+		}
+	}
+	
+	/**
 	 * Report an error that occured when trying to do something with the database.
 	 * @param ex - the SQL exception that has occured
 	 * @param location - the part of SEURAT that ran into trouble (typically a method name)
