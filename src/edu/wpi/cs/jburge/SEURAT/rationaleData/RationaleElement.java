@@ -20,6 +20,10 @@ public class RationaleElement implements Serializable
 	 */
 	private static final long serialVersionUID = 1L;
 	// class variables
+	/**
+	 * Used so that each element of this type has a new ID. Do we still need
+	 * this when we're working with the database? 
+	 */
 	static int lastID;  //this will increment as each decision is created
 	
 	// instance variables
