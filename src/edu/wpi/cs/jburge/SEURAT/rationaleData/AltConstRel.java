@@ -225,28 +225,7 @@ public class AltConstRel extends RationaleElement implements Serializable
 	   }
    	   
 	   finally { 
-		   // it is a good idea to release
-		   // resources in a finally{} block 
-		   // in reverse-order of their creation 
-		   // if they are no-longer needed 
-
-		   if (rs != null) { 
-			   try {
-				   rs.close(); 
-			   } catch (SQLException sqlEx) { // ignore 
-			   } 
-
-			   rs = null; 
-		   }
-    
-		   if (stmt != null) { 
-			   try { 
-				   stmt.close(); 
-			   } catch (SQLException sqlEx) { // ignore
-				   } 
-
-			   stmt = null; 
-		   } 
+		   RationaleDB.releaseResources(stmt, rs);
 		   }
 		   
 		return ourid;	
@@ -281,7 +260,6 @@ public class AltConstRel extends RationaleElement implements Serializable
 			 if (rs.next())
 			 {
 				name = RationaleDB.decode(rs.getString("name"));
-				rs.close();
 				this.fromDatabase(name);
 		 }
 
@@ -290,28 +268,8 @@ public class AltConstRel extends RationaleElement implements Serializable
 	   RationaleDB.reportError(ex, "AltConstRel fromDB 2", findQuery);
 	   }
 	   finally { 
-		   // it is a good idea to release
-		   // resources in a finally{} block 
-		   // in reverse-order of their creation 
-		   // if they are no-longer needed 
+		   RationaleDB.releaseResources(stmt, rs);
 
-		   if (rs != null) { 
-			   try {
-				   rs.close(); 
-			   } catch (SQLException sqlEx) { // ignore 
-			   } 
-
-			   rs = null; 
-		   }
-    
-		   if (stmt != null) { 
-			   try { 
-				   stmt.close(); 
-			   } catch (SQLException sqlEx) { // ignore
-				   } 
-
-			   stmt = null; 
-		   }
 		   }
 	
 	}	
@@ -355,9 +313,8 @@ public class AltConstRel extends RationaleElement implements Serializable
 				constr.fromDatabase(rs.getInt("constr"));
 				alt = new Alternative();
 				alt.fromDatabase(rs.getInt("alternative"));
-			
-				rs.close();	
-						
+	
+					
 		 }
 
 		} catch (SQLException ex) {
@@ -365,28 +322,7 @@ public class AltConstRel extends RationaleElement implements Serializable
 	  RationaleDB.reportError(ex, "reading AltConstRel from DB", findQuery); 
 	   }
 	   finally { 
-		   // it is a good idea to release
-		   // resources in a finally{} block 
-		   // in reverse-order of their creation 
-		   // if they are no-longer needed 
-
-		   if (rs != null) { 
-			   try {
-				   rs.close(); 
-			   } catch (SQLException sqlEx) { // ignore 
-			   } 
-
-			   rs = null; 
-		   }
-    
-		   if (stmt != null) { 
-			   try { 
-				   stmt.close(); 
-			   } catch (SQLException sqlEx) { // ignore
-				   } 
-
-			   stmt = null; 
-		   }
+		   RationaleDB.releaseResources(stmt, rs);
 		   }
 	
 	}	

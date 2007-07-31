@@ -161,35 +161,11 @@ public class AreaExp extends RationaleElement implements Serializable
 		}
 
 		} catch (SQLException ex) {
-	   // handle any errors 
-	   System.out.println("SQLException: " + ex.getMessage()); 
-	   System.out.println("SQLState: " + ex.getSQLState()); 
-	   System.out.println("VendorError: " + ex.getErrorCode()); 
+			RationaleDB.reportError(ex, "AreaExp.toDatabase", "Bad Query");
 	   }
    	   
 	   finally { 
-		   // it is a good idea to release
-		   // resources in a finally{} block 
-		   // in reverse-order of their creation 
-		   // if they are no-longer needed 
-
-		   if (rs != null) { 
-			   try {
-				   rs.close(); 
-			   } catch (SQLException sqlEx) { // ignore 
-			   } 
-
-			   rs = null; 
-		   }
-    
-		   if (stmt != null) { 
-			   try { 
-				   stmt.close(); 
-			   } catch (SQLException sqlEx) { // ignore
-				   } 
-
-			   stmt = null; 
-		   } 
+		   RationaleDB.releaseResources(stmt, rs);
 		   }
 		   
 		return ourid;	
@@ -205,14 +181,13 @@ public class AreaExp extends RationaleElement implements Serializable
 		
 		RationaleDB db = RationaleDB.getHandle();
 		Connection conn = db.getConnection();
-
+		 String findQuery = "";
 		this.id = id;
 		
 		Statement stmt = null; 
 		ResultSet rs = null; 
 		try {
 			 stmt = conn.createStatement();
-			 String findQuery; 
 				 findQuery = "SELECT *  FROM " +
 				 "AreaExp where id = " +
 				 new Integer(id).toString();
@@ -228,33 +203,11 @@ public class AreaExp extends RationaleElement implements Serializable
 
 		} catch (SQLException ex) {
 	   // handle any errors 
-	   System.out.println("SQLException: " + ex.getMessage()); 
-	   System.out.println("SQLState: " + ex.getSQLState()); 
-	   System.out.println("VendorError: " + ex.getErrorCode()); 
+			RationaleDB.reportError(ex, "AreaExp.fromDatabase(int)", findQuery);
 	   }
 	   finally { 
-		   // it is a good idea to release
-		   // resources in a finally{} block 
-		   // in reverse-order of their creation 
-		   // if they are no-longer needed 
-
-		   if (rs != null) { 
-			   try {
-				   rs.close(); 
-			   } catch (SQLException sqlEx) { // ignore 
-			   } 
-
-			   rs = null; 
-		   }
-    
-		   if (stmt != null) { 
-			   try { 
-				   stmt.close(); 
-			   } catch (SQLException sqlEx) { // ignore
-				   } 
-
-			   stmt = null; 
-		   }
+		   RationaleDB.releaseResources(stmt, rs);
+	
 		   }
 	
 	}		
@@ -295,46 +248,16 @@ public class AreaExp extends RationaleElement implements Serializable
 		 }
 
 		} catch (SQLException ex) {
+			RationaleDB.reportError(ex, "AreaExp.fromDatabase", "Query Problem");
 	   // handle any errors 
-	   System.out.println("SQLException: " + ex.getMessage()); 
-	   System.out.println("SQLState: " + ex.getSQLState()); 
-	   System.out.println("VendorError: " + ex.getErrorCode()); 
 	   }
 	   finally { 
-		   // it is a good idea to release
-		   // resources in a finally{} block 
-		   // in reverse-order of their creation 
-		   // if they are no-longer needed 
-
-		   if (rs != null) { 
-			   try {
-				   rs.close(); 
-			   } catch (SQLException sqlEx) { // ignore 
-			   } 
-
-			   rs = null; 
-		   }
-    
-		   if (stmt != null) { 
-			   try { 
-				   stmt.close(); 
-			   } catch (SQLException sqlEx) { // ignore
-				   } 
-
-			   stmt = null; 
-		   }
+		   RationaleDB.releaseResources(stmt, rs);
 		   }
 	
 	}	
 	
-/*	public boolean display()
-	{
-		Frame lf = new Frame();
-		AreaExpGUI ar = new AreaExpGUI(lf, this, null, false);
-		ar.show();
-		return ar.getCanceled();
-	} */
-	
+
 	/**
 	 * Brings up the editor for the area of expertise
 	 * @param disp - points back to the display
