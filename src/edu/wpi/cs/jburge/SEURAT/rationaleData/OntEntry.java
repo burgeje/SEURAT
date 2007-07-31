@@ -211,18 +211,8 @@ public class OntEntry extends RationaleElement implements Serializable
 
 		try {
 			 stmt = conn.createStatement(); 
-			 /*
-			 String findQuery = "SELECT id  FROM OntEntries where name='" +
-				this.name + "'";
-//***			 System.out.println(findQuery);
-			 rs = stmt.executeQuery(findQuery); 
 
-			if (rs.next())
-			{
-				System.out.println("already there");
-				ourid = rs.getInt("id");
-				*/
-			if (this.id >= 0)
+			if (inDatabase())
 			{
 				
 				//now, update it with the new information
@@ -317,152 +307,58 @@ public class OntEntry extends RationaleElement implements Serializable
 	}	
 
 	/**
-	 * Save one read from the XML into the database. This is redundant.
-	 * @param pid - the parent ID
-	 * @return our ID
-	 */
-	public int toDatabaseXML(int pid)
+	 * Check if our element is already in the database. The check is different
+	 * if you are reading it in from XML because you can do a query on the name.
+	 * Otherwise you can't because you run the risk of the user having changed the
+	 * name.
+	 * @return true if in the database already
+	 */	
+	private boolean inDatabase()
 	{
-		RationaleDB db = RationaleDB.getHandle();
-		Connection conn = db.getConnection();
+		boolean found = false;
+		String findQuery = "";
 		
-		int ourid = 0;
-		
-		//find out if this ontology entry is already in the database
-		Statement stmt = null; 
-		ResultSet rs = null; 
-		
-//		System.out.println("Saving to the database");
-
-		try {
-			 stmt = conn.createStatement(); 
-	
-			 String findQuery = "SELECT id  FROM OntEntries where name='" +
+		if (fromXML)
+		{
+			RationaleDB db = RationaleDB.getHandle();
+			Connection conn = db.getConnection();
+			
+			//find out if this ontology entry is already in the database
+			Statement stmt = null; 
+			ResultSet rs = null; 
+			
+			try {
+				stmt = conn.createStatement(); 
+				findQuery = "SELECT id FROM OntEntries where name='" +
 				this.name + "'";
-//***			 System.out.println(findQuery);
-			 rs = stmt.executeQuery(findQuery); 
-
-			if (rs.next())
-			{
-				//System.out.println("already there");
-				ourid = rs.getInt("id");
-				this.id = ourid;
-
+				System.out.println(findQuery);
+				rs = stmt.executeQuery(findQuery); 
 				
-				//now, update it with the new information
-				String updateOnt = "UPDATE OntEntries " +
-				"SET name = '" +
-				 RationaleDB.escape(this.name) + "', " +
-				"description = '" +
-				 RationaleDB.escape(this.description) + "', " +
-				 "importance = '" + 
-				 this.importance.toString() + "'" +
-					" WHERE " +
-				   "id = " + this.id + " " ;
-//			  System.out.println(updateOnt);
-				stmt.execute(updateOnt);
-			}
-			else 
-			{
-
-				//now, we have determined that the ontolgy entry is new
-
-				String newArgSt = "INSERT INTO OntEntries " +
-				"(name, description, importance) " +
-				"VALUES ('" +
-				RationaleDB.escape(this.name) + "', '" +
-				RationaleDB.escape(this.description) + "', '" +
-				this.importance.toString() + "')"; 
-
-				System.out.println(newArgSt);
-				stmt.execute(newArgSt); 
-
-
-
-			}
-			//now, we need to get our ID
-			String findQuery2 = "SELECT id FROM OntEntries where name='" +
-			   this.name + "'";
-			rs = stmt.executeQuery(findQuery2); 
-//***			System.out.println(findQuery2);
-
-		   if (rs.next())
-		   {
-			   ourid = rs.getInt("id");
-			   rs.close();
-		   }
-		   else
-		   {
-			ourid = 0;
-		   }
-		   
-		   this.id = ourid;
-		   
-			//if the parent ID is not zero, then update the parent-child relationship
-			if (pid > 0)
-			{
-				String findQuery3 = "SELECT * from OntRelationships WHERE " +
-				   "parent = " + new Integer(pid).toString() +
-				   " and child = " + new Integer(ourid).toString();
-//***				   System.out.println(findQuery3);
-				   rs = stmt.executeQuery(findQuery3);
 				if (rs.next())
 				{
-					rs.close();
+					int ourid;
+					ourid = rs.getInt("id");
+					this.id = ourid;
+					found = true;
 				}
-				else
-				{
-					String insertRel = "INSERT INTO OntRelationships (parent, child) " +
-					   "VALUES (" +
-					   new Integer(pid).toString() + ", " +
-					   new Integer(ourid).toString() + ")";
-//***					System.out.println(insertRel);
-					stmt.execute(insertRel);
-				}
-			} //checking parent
-			
-			//now, decode our children
-			Enumeration kids = children.elements();
-			while (kids.hasMoreElements())
-			{
-				OntEntry kid = (OntEntry) kids.nextElement();
-				kid.toDatabase(ourid);
 			}
-		} catch (SQLException ex) {
-	   // handle any errors 
-	   System.out.println("SQLException: " + ex.getMessage()); 
-	   System.out.println("SQLState: " + ex.getSQLState()); 
-	   System.out.println("VendorError: " + ex.getErrorCode()); 
-	   }
-   	   
-	   finally { 
-		   // it is a good idea to release
-		   // resources in a finally{} block 
-		   // in reverse-order of their creation 
-		   // if they are no-longer needed 
-
-		   if (rs != null) { 
-			   try {
-				   rs.close(); 
-			   } catch (SQLException sqlEx) { // ignore 
-			   } 
-
-			   rs = null; 
-		   }
-    
-		   if (stmt != null) { 
-			   try { 
-				   stmt.close(); 
-			   } catch (SQLException sqlEx) { // ignore
-				   } 
-
-			   stmt = null; 
-		   } 
-		   }
-		   
-		return ourid;	
- 
-	}	
+			catch (SQLException ex) {
+				// handle any errors 
+				RationaleDB.reportError(ex, "OntEntry.inDatabase", findQuery); 
+			}
+			finally { 
+				RationaleDB.releaseResources(stmt, rs);
+			}
+		}
+		//If we aren't reading it from the XML, just check the ID
+		//checking the name like above won't work because the user may 
+		//have modified the name!
+		else if (this.getID() >= 0)
+		{
+			found = true;
+		}
+		return found;
+	}
 
 	/**
 	 * Read in the ontology entry from the database, given its ID
@@ -603,6 +499,8 @@ public class OntEntry extends RationaleElement implements Serializable
 	
 	public void fromXML(Element ontE, OntEntry parent)
 	{
+		this.fromXML = true;
+		
 		RationaleDB db = RationaleDB.getHandle();
 		
 		//add idref ***from the XML***

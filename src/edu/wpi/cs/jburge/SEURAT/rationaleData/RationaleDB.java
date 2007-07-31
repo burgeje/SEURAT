@@ -2832,7 +2832,7 @@ public final class RationaleDB implements Serializable {
 		while (reqs.hasMoreElements())
 		{
 			Requirement req = (Requirement) reqs.nextElement();			
-			req.toDatabaseXML(0, RationaleElementType.NONE);
+			req.toDatabase(0, RationaleElementType.NONE);
 		}	
 	}
 	
@@ -2845,7 +2845,7 @@ public final class RationaleDB implements Serializable {
 		while (decs.hasMoreElements())
 		{
 			Decision dec = (Decision) decs.nextElement();
-			dec.toDatabaseXML(0, RationaleElementType.NONE);
+			dec.toDatabase(0, RationaleElementType.NONE);
 			//dec.toDatabase(0, RationaleElementType.NONE);
 		}
 		System.out.println("done adding decisions");

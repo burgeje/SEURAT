@@ -265,12 +265,10 @@ public class Decision extends RationaleElement implements Serializable
 		if (!alts)
 			subsReq = "Yes";
 			
-//		System.out.println("Saving decision to the database");
-
 		try {
 			 stmt = conn.createStatement(); 
 
-				if (this.id >= 0)
+				if (inDatabase(parent,ptype))
 				{
 					//set up Designer update string
 					String updateD;
@@ -721,6 +719,9 @@ public class Decision extends RationaleElement implements Serializable
 	 * @param decN - the XML element.
 	 */
 	public void fromXML(Element decN) {
+		
+		this.fromXML = true;
+		
 		RationaleDB db = RationaleDB.getHandle();
 
 		//add idref ***from the XML***
@@ -813,181 +814,61 @@ public class Decision extends RationaleElement implements Serializable
 	}
 	
 	/**
-	 * This is probably redundant with the regular toDatabase
-	 * @param parent
-	 * @param ptype
-	 * @return
-	 */
-	public int toDatabaseXML(int parent, RationaleElementType ptype)
+	 * Check if our element is already in the database. The check is different
+	 * if you are reading it in from XML because you can do a query on the name.
+	 * Otherwise you can't because you run the risk of the user having changed the
+	 * name.
+	 * @param parentID the parent ID
+	 * @param ptype the parent type
+	 * @return true if in the database already
+	 */	
+	private boolean inDatabase(int parentID, RationaleElementType ptype)
 	{
-		RationaleDB db = RationaleDB.getHandle();
-		Connection conn = db.getConnection();
-		String updateQuery = "";
-		int ourid = this.id;		
+		boolean found = false;
+		String findQuery = "";
 		
-		Statement stmt = null; 
-		ResultSet rs = null; 
-
-		String subsReq = "No";
-		if (!alts)
-			subsReq = "Yes";
+		if (fromXML)
+		{
+			RationaleDB db = RationaleDB.getHandle();
+			Connection conn = db.getConnection();
 			
-		try {
+			//find out if this decision is already in the database
+			Statement stmt = null; 
+			ResultSet rs = null; 
 			
-			// find out if this requirement is already in the database 
-			stmt = conn.createStatement(); 
-			String findQuery = "SELECT id, parent FROM decisions where name='" +
-			this.name + "'";
-			System.out.println(findQuery);
-			rs = stmt.executeQuery(findQuery); 			 
-			 
+			try {
+				stmt = conn.createStatement(); 
+				findQuery = "SELECT id, parent FROM decisions where name='" +
+				this.name + "'";
+				System.out.println(findQuery);
+				rs = stmt.executeQuery(findQuery); 
+				
 				if (rs.next())
 				{
-					System.out.println("already there");
+					int ourid;
 					ourid = rs.getInt("id");
 					this.id = ourid;
-					//set up Designer update string
-					String updateD;
-					if (designer == null)
-						updateD = "D.designer = null";
-					else
-						updateD = "D.designer = " + designer.getID();
-					
-					 updateQuery = "UPDATE decisions D " +
-					   "SET D.parent = " + new Integer(parent).toString() +
-					   ", D.ptype = '" + ptype.toString() + 
-					   "', D.phase = '" + devPhase.toString() +
-					   "', D.description = '" + RationaleDB.escape(description) +
-					   "', D.type = '" + type.toString() +
-					   "', D.name = '" + RationaleDB.escape(name) +
-					   "', D.status = '" + status.toString() + 
-					   "', D.subdecreq = '" + subsReq +
-					   "', " + updateD +
-						" WHERE " +
-					   "D.id = " + ourid + " " ;
-					stmt.execute(updateQuery);
-	
+					found = true;
+				}
 			}
-		else 
-		{
-		
-			//now, we have determined that the decision is new
-			String parentSt = new Integer(this.parent).toString();
-			String updateD;
-			if (designer == null)
-				updateD = "null";
-			else
-				updateD = new Integer(designer.getID()).toString();
-
-			updateQuery = "INSERT INTO Decisions "+
-			   "(name, description, type, status, phase, subdecreq, parent, ptype, designer) " +
-			   "VALUES ('" +
-			   RationaleDB.escape(this.name) + "', '" +
-			   RationaleDB.escape(this.description) + "', '" +
-			   this.type.toString() + "', '" +
-			   this.status.toString() + "', '" +
-			   this.devPhase.toString() + "', '" +
-			   subsReq + "', " +
-			   parentSt + ", '" +
-			   ptype.toString() + "', " +
-			   updateD + ")";
-
-			stmt.execute(updateQuery); 
-			
+			catch (SQLException ex) {
+				// handle any errors 
+				RationaleDB.reportError(ex, "Decision.inDatabase", findQuery); 
+			}
+			finally { 
+				RationaleDB.releaseResources(stmt, rs);
+			}
 		}
-		//in either case, we want to update any sub-requirements in case
-		//they are new!
-			//now, we need to get our ID
-			updateQuery = "SELECT id FROM decisions where name='" +
-			   RationaleDB.escape(this.name) + "'";
-			rs = stmt.executeQuery(updateQuery); 
-
-		   if (rs.next())
-		   {
-			   ourid = rs.getInt("id");
-			   rs.close();
-		   }
-		   else
-		   {
-			ourid = 0;
-		   }
-		   this.id = ourid;
-		   
-		   Enumeration alts = alternatives.elements();
-		   while (alts.hasMoreElements())
-		   {
-			   Alternative alt = (Alternative) alts.nextElement();
-//			   System.out.println("Saving alternative from decision");
-			   alt.toDatabaseXML(ourid, RationaleElementType.DECISION);
-		   }
-			
-		   Enumeration decs = subDecisions.elements();
-		   while (decs.hasMoreElements())
-		   {
-			   Decision dec = (Decision) decs.nextElement();
-			   dec.toDatabaseXML(ourid, RationaleElementType.DECISION);
-		   }
-			
-		   Enumeration quests = questions.elements();
-		   while (quests.hasMoreElements())
-		   {
-			   Question quest = (Question) quests.nextElement();
-			   quest.toDatabaseXML(ourid, RationaleElementType.DECISION);
-		   }
-			
-		   //finally, the history
-			
-		   Enumeration hist = history.elements();
-		   while (hist.hasMoreElements())
-		   {
-			   History his = (History) hist.nextElement();
-			   his.toDatabaseXML(ourid, RationaleElementType.DECISION);
-		   }
-		   
+		//If we aren't reading it from the XML, just check the ID
+		//checking the name like above won't work because the user may 
+		//have modified the name!
+		else if (this.getID() >= 0)
+		{
+			found = true;
+		}
+		return found;
+	}
 	
-		   //need to update our relationships with the constraints
-			Enumeration conkids = this.constraints.elements();
-			while (conkids.hasMoreElements())
-			{
-				Constraint kid = (Constraint) conkids.nextElement();
-			//if the parent ID is not zero, then update the parent-child relationship
 
-				updateQuery = "SELECT * from ConDecRelationships WHERE " +
-				   "constr = " + new Integer(kid.getID()).toString() +
-				   " and decision = " + new Integer(ourid).toString();
-
-				   rs = stmt.executeQuery(updateQuery);
-				if (rs.next())
-				{
-					rs.close();
-				}
-				else
-				{
-					String insertRel = "INSERT INTO ConDecRelationships (constr, decision) " +
-					   "VALUES (" +
-					   new Integer(kid.getID()).toString() + ", " +
-					   new Integer(ourid).toString() + ")";
-					System.out.println(insertRel);
-					stmt.execute(insertRel);
-				}
-				kid.toDatabase(ourid);
-			} //checking parent
-
-
-		} catch (SQLException ex) {
-	   // handle any errors 
-			RationaleDB.reportError(ex,"Error in Decision.toDatabase", updateQuery);
-
-	   }
-   	   
-	   finally { 
-		   RationaleDB.releaseResources(stmt, rs);
-
-		   }
-		   
-		return ourid;	
- 
-	}	
-	
 	
 }

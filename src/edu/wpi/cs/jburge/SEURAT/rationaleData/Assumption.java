@@ -94,32 +94,18 @@ public class Assumption extends RationaleElement implements Serializable
 		
 		int ourid = 0;
 		
-		//find out if this requirement is already in the database
 		Statement stmt = null; 
 		ResultSet rs = null; 
 		
-//***		System.out.println("Saving to the database");
-
 		try {
 			 stmt = conn.createStatement(); 
-			 /*
-			 String findQuery = "SELECT id  FROM assumptions where name='" +
-				this.name + "'";
-//***			 System.out.println(findQuery);
-			 rs = stmt.executeQuery(findQuery);
-			 */ 
-
 			String enabledStr;
 			if (enabled)
 				enabledStr = "True";
 			else
 				enabledStr = "False";
 				
-/*
-			if (rs.next())
-			{
-			*/
-			if (this.id >= 0)
+			if (inDatabase())
 			{
 //***				System.out.println("already there");
 //				ourid = rs.getInt("id");
@@ -331,6 +317,8 @@ public class Assumption extends RationaleElement implements Serializable
 	 */
 	public void fromXML(Element asN)
 	{
+		this.fromXML = true;
+		
 		RationaleDB db = RationaleDB.getHandle();
 		
 		//add idref ***from the XML***
@@ -353,125 +341,58 @@ public class Assumption extends RationaleElement implements Serializable
 		//and last....
 		db.addRef(idref, this);	//important to use the ref from the XML file!
 	}
-	
 	/**
-	 * Write the assumption to the database. Why do we need a special method for XML?
-	 * @return the id in the database
+	 * Check if our element is already in the database. The check is different
+	 * if you are reading it in from XML because you can do a query on the name.
+	 * Otherwise you can't because you run the risk of the user having changed the
+	 * name.
+	 * @return true if in the database already
 	 */
-	public int toDatabaseXML()
+	private boolean inDatabase()
 	{
-		RationaleDB db = RationaleDB.getHandle();
-		Connection conn = db.getConnection();
+		boolean found = false;
+		String findQuery = "";
 		
-		int ourid = 0;
-		
-		//find out if this requirement is already in the database
-		Statement stmt = null; 
-		ResultSet rs = null; 
-		
-//***		System.out.println("Saving to the database");
-
-		try {
-			 stmt = conn.createStatement(); 
-
-			 String findQuery = "SELECT id  FROM assumptions where name='" +
-				this.name + "'";
-
-			 rs = stmt.executeQuery(findQuery);
-
-
-			String enabledStr;
-			if (enabled)
-				enabledStr = "True";
-			else
-				enabledStr = "False";
-
-
-			if (rs.next())
-			{			
-				ourid = rs.getInt("id");
-				this.id = ourid;	
-
-//***				System.out.println("already there");
-//				ourid = rs.getInt("id");
-				String updateAssump = "UPDATE assumptions A " +
-					"SET A.name = '" + RationaleDB.escape(this.name) +
-					"', A.description = '" + RationaleDB.escape(this.description) +
-					"', A.importance = '" + this.importance.toString() +
-					"', A.enabled = '" + enabledStr +
-					"' WHERE " +
-					"A.id = " + ourid + " ";
-//				System.out.println(updateAssump);
-			 	stmt.execute(updateAssump);
-			}
-		else 
+		if (fromXML)
 		{
-		
-			//now, we have determined that the assumption is new
+			RationaleDB db = RationaleDB.getHandle();
+			Connection conn = db.getConnection();
 			
-			String newArgSt = "INSERT INTO Assumptions " +
-			   "(name, description, importance, enabled) " +
-			   "VALUES ('" +
-			   RationaleDB.escape(this.name) + "', '" +
-			   RationaleDB.escape(this.description) + "', '" +
-			   "Moderate" + "', " +
-			   "'" + enabledStr + "')";
-
-//***			   System.out.println(newArgSt);
-			stmt.execute(newArgSt); 
+			//find out if this alternative is already in the database
+			Statement stmt = null; 
+			ResultSet rs = null; 
 			
-		
-			
+			try {
+				stmt = conn.createStatement(); 
+				findQuery = "SELECT id FROM assumptions where name='" +
+				this.name + "'";
+				System.out.println(findQuery);
+				rs = stmt.executeQuery(findQuery); 
+				
+				if (rs.next())
+				{
+					int ourid;
+					ourid = rs.getInt("id");
+					this.id = ourid;
+					found = true;
+				}
+			}
+			catch (SQLException ex) {
+				// handle any errors 
+				RationaleDB.reportError(ex, "Assumptions.inDatabase", findQuery); 
+			}
+			finally { 
+				RationaleDB.releaseResources(stmt, rs);
+			}
 		}
-			//now, we need to get our ID
-			String findQuery2 = "SELECT id FROM assumptions where name='" +
-			   this.name + "'";
-			rs = stmt.executeQuery(findQuery2); 
-//***			System.out.println(findQuery2);
+		//If we aren't reading it from the XML, just check the ID
+		//checking the name like above won't work because the user may 
+		//have modified the name!
+		else if (this.getID() >= 0)
+		{
+			found = true;
+		}
+		return found;
+	}
 
-		   if (rs.next())
-		   {
-			   ourid = rs.getInt("id");
-			   rs.close();
-		   }
-		   else
-		   {
-			ourid = 0;
-		   }
-		   this.id = ourid;
-		} catch (SQLException ex) {
-	   // handle any errors 
-	   System.out.println("SQLException: " + ex.getMessage()); 
-	   System.out.println("SQLState: " + ex.getSQLState()); 
-	   System.out.println("VendorError: " + ex.getErrorCode()); 
-	   }
-   	   
-	   finally { 
-		   // it is a good idea to release
-		   // resources in a finally{} block 
-		   // in reverse-order of their creation 
-		   // if they are no-longer needed 
-
-		   if (rs != null) { 
-			   try {
-				   rs.close(); 
-			   } catch (SQLException sqlEx) { // ignore 
-			   } 
-
-			   rs = null; 
-		   }
-    
-		   if (stmt != null) { 
-			   try { 
-				   stmt.close(); 
-			   } catch (SQLException sqlEx) { // ignore
-				   } 
-
-			   stmt = null; 
-		   } 
-		   }
-		   
-		return ourid;	
- 
-	}	
 }

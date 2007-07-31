@@ -161,19 +161,8 @@ public class Claim extends RationaleElement implements Serializable
 		try {
 			stmt = conn.createStatement(); 
 			
-			/*
-			 String findQuery = "SELECT id  FROM claims where name='" +
-			 this.name + "'";
-			 //***			 System.out.println(findQuery);
-			  rs = stmt.executeQuery(findQuery); 
-			  
-			  if (rs.next())
-			  {
-			  */
-			if (this.id >= 0)
+			if (inDatabase())
 			{
-//				***				System.out.println("already there");
-//				ourid = rs.getInt("id");
 				
 				//now we need up update our ontology entry, and that's it!
 				String findQuery3 = "SELECT id FROM OntEntries where name='" +
@@ -430,6 +419,7 @@ public class Claim extends RationaleElement implements Serializable
 	 */
 	public void fromXML(Element claimN)
 	{
+		this.fromXML = true;
 		RationaleDB db = RationaleDB.getHandle();
 		
 		//add idref ***from the XML***
@@ -483,164 +473,59 @@ public class Claim extends RationaleElement implements Serializable
 	}
 	
 	/**
-	 * Saves a claim read from the XML to the database. It is unclear why this 
-	 * is necessary (won't the normal toDatabase work just fine?)
-	 * @return the integer ID
-	 */
-	public int toDatabaseXML()
+	 * Check if our element is already in the database. The check is different
+	 * if you are reading it in from XML because you can do a query on the name.
+	 * Otherwise you can't because you run the risk of the user having changed the
+	 * name.
+	 * @return true if in the database already
+	 */	
+	private boolean inDatabase()
 	{
-		RationaleDB db = RationaleDB.getHandle();
-		Connection conn = db.getConnection();
+		boolean found = false;
+		String findQuery = "";
 		
-		int ourid = 0;
-		
-		//find out if this requirement is already in the database
-		Statement stmt = null; 
-		ResultSet rs = null; 
-		
-//		System.out.println("Saving to the database");
-		
-		try {
-			stmt = conn.createStatement(); 
+		if (fromXML)
+		{
+			RationaleDB db = RationaleDB.getHandle();
+			Connection conn = db.getConnection();
 			
+			//find out if this element is already in the database
+			Statement stmt = null; 
+			ResultSet rs = null; 
 			
-			String findQuery = "SELECT id  FROM claims where name='" +
-			this.name + "'";
-			rs = stmt.executeQuery(findQuery); 
-			
-			if (rs.next())
-			{
-				ourid = rs.getInt("id");
-				this.id = ourid;
+			try {
+				stmt = conn.createStatement(); 
+				findQuery = "SELECT id FROM claims where name='" +
+				this.name + "'";
+				System.out.println(findQuery);
+				rs = stmt.executeQuery(findQuery); 
 				
-				//now we need up update our ontology entry, and that's it!
-				String findQuery3 = "SELECT id FROM OntEntries where name='" +
-				RationaleDB.escape(this.ontology.getName()) + "'";
-				rs = stmt.executeQuery(findQuery3); 
-//				***			System.out.println(findQuery3);
-				int ontid;
 				if (rs.next())
 				{
-					ontid = rs.getInt("id");
-					rs.close();
+					int ourid;
+					ourid = rs.getInt("id");
+					this.id = ourid;
+					found = true;
 				}
-				else
-				{
-					ontid = 0;
-				}
-				
-				//now, update it with the new information
-				String updateOnt = "UPDATE Claims " +
-				"SET name = '" +
-				RationaleDB.escape(this.name) + "', " +
-				"description = '" +
-				RationaleDB.escape(this.description) + "', " +
-				"importance = '" + 
-				this.importance.toString() + "', " +
-				"direction = '" +
-				this.direction.toString() + "', " +
-				"enabled = '" +
-				"true', " +
-				"ontology = " + new Integer(ontid).toString() +
-				" WHERE " +
-				"id = " + this.id + " " ;
-//				System.out.println(updateOnt);
-				stmt.execute(updateOnt);
 			}
-			else 
-			{
-				
-				//now, we have determined that the claim is new
-				
-				String newArgSt = "INSERT INTO Claims " +
-				"(name, description, direction, importance, enabled) " +
-				"VALUES ('" +
-				RationaleDB.escape(this.name) + "', '" +
-				RationaleDB.escape(this.description) + "', '" +
-				this.direction.toString() + "', '" +
-				this.importance.toString() + "', " +
-				"'True')";
-				
-//				***			   System.out.println(newArgSt);
-				stmt.execute(newArgSt); 
-				
-				
-				
+			catch (SQLException ex) {
+				// handle any errors 
+				RationaleDB.reportError(ex, "Claim.inDatabase", findQuery); 
 			}
-			//now, we need to get our ID
-			String findQuery2 = "SELECT id FROM claims where name='" +
-			RationaleDB.escape(this.name) + "'";
-			rs = stmt.executeQuery(findQuery2); 
-//			***			System.out.println(findQuery2);
-			
-			if (rs.next())
-			{
-				ourid = rs.getInt("id");
-				rs.close();
+			finally { 
+				RationaleDB.releaseResources(stmt, rs);
 			}
-			else
-			{
-				ourid = 0;
-			}
-			this.id = ourid;
-			
-			//now we need up update our ontology entry, and that's it!
-			String findQuery3 = "SELECT id FROM OntEntries where name='" +
-			RationaleDB.escape(this.ontology.getName()) + "'";
-			rs = stmt.executeQuery(findQuery3); 
-//			***			System.out.println(findQuery3);
-			int ontid;
-			if (rs.next())
-			{
-				ontid = rs.getInt("id");
-				rs.close();
-			}
-			else
-			{
-				ontid = 0;
-			}
-			String updateOnt = "UPDATE Claims C " +
-			"SET C.ontology = " + new Integer(ontid).toString() +
-			" WHERE " +
-			"C.id = " + ourid + " " ;
-//			***			  System.out.println(updateOnt);
-			stmt.execute(updateOnt);
-			
-		} catch (SQLException ex) {
-			// handle any errors 
-			System.out.println("SQLException: " + ex.getMessage()); 
-			System.out.println("SQLState: " + ex.getSQLState()); 
-			System.out.println("VendorError: " + ex.getErrorCode()); 
 		}
-		
-		finally { 
-			// it is a good idea to release
-			// resources in a finally{} block 
-			// in reverse-order of their creation 
-			// if they are no-longer needed 
-			
-			if (rs != null) { 
-				try {
-					rs.close(); 
-				} catch (SQLException sqlEx) { // ignore 
-				} 
-				
-				rs = null; 
-			}
-			
-			if (stmt != null) { 
-				try { 
-					stmt.close(); 
-				} catch (SQLException sqlEx) { // ignore
-				} 
-				
-				stmt = null; 
-			} 
+		//If we aren't reading it from the XML, just check the ID
+		//checking the name like above won't work because the user may 
+		//have modified the name!
+		else if (this.getID() >= 0)
+		{
+			found = true;
 		}
-		
-		return ourid;	
-		
-	}	
+		return found;
+	}
+
 }
 
 

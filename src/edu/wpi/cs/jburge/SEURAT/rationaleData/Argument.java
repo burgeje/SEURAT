@@ -571,30 +571,7 @@ public class Argument extends RationaleElement implements Serializable
 		try {
 			stmt = conn.createStatement(); 
 			
-			String prevType = "";
-			String findQuery = "Select ptype FROM arguments where name = '" +			RationaleDB.escape(this.name) + "' and parent = " +
-			this.parent;
-//			System.out.println(findQuery);
-			rs = stmt.executeQuery(findQuery);
-			if (rs.next())
-			{
-				prevType = rs.getString("ptype");
-			}
-			
-			
-			/*
-			 String findQuery = "SELECT id, parent FROM arguments where name='" +
-			 this.name + "'";
-			 //***			 System.out.println(findQuery);
-			  rs = stmt.executeQuery(findQuery); 
-			  
-			  if (rs.next())
-			  {
-			  //***				System.out.println("already there");
-			   ourid = rs.getInt("id");
-			   int prevParent = rs.getInt("parent"); 
-			   rs.close(); */
-			
+		
 			String updateD;
 			if (designer == null)
 				updateD = "null";
@@ -602,14 +579,8 @@ public class Argument extends RationaleElement implements Serializable
 				updateD = new Integer(designer.getID()).toString();
 			
 			
-			if (this.getID() >= 0)
+			if (inDatabase(parent,ptype))
 			{
-				if (ptype.toString().compareTo(prevType) != 0)
-				{
-					String notMatching = "types don't match: was " + prevType +
-					" now is " + ptype.toString();
-					throw new RuntimeException(notMatching);
-				}
 				String updateParent = "UPDATE arguments D " +
 				"SET D.parent = " + new Integer(parent).toString() +
 				", D.ptype = '" + ptype.toString() +
@@ -1166,6 +1137,7 @@ public class Argument extends RationaleElement implements Serializable
 	 */
 	public void fromXML(Element argN)
 	{
+		this.fromXML = true;
 		RationaleDB db = RationaleDB.getHandle();
 		
 		//add idref ***from the XML***
@@ -1312,195 +1284,61 @@ public class Argument extends RationaleElement implements Serializable
 			child = (Element) child.getNextSibling();
 		}
 	}
-	
-	/**
-	 * Save our argument to the database - why is this special for XML?
-	 * @param parent - the parent element
-	 * @param ptype - the type of the parent element
-	 * @return the id for our element
-	 */
-	public int toDatabaseXML(int parent, RationaleElementType ptype)
-	{
-		RationaleDB db = RationaleDB.getHandle();
-		Connection conn = db.getConnection();
-		
-		int ourid = 0;
-		
-		//find out if this requirement is already in the database
-		Statement stmt = null; 
-		ResultSet rs = null; 
-		
-		System.out.println("Saving to the database");
-		
-		try {
-			stmt = conn.createStatement(); 
-			String findQuery = "SELECT id, parent FROM arguments where name='" +
-			this.name + "'";
-			System.out.println(findQuery);
-			rs = stmt.executeQuery(findQuery); 
-			
-			if (rs.next())
-			{
-				System.out.println("already there");
-				ourid = rs.getInt("id");
-				int prevParent = rs.getInt("parent");
-				rs.close();
-				if ((prevParent <= 0) && (parent > 0))
-				{
-					String updateParent = "UPDATE arguments D " +
-					"SET D.parent = " + new Integer(parent).toString() +
-					", D.ptype = '" + ptype.toString() +
-					"' WHERE " +
-					"D.id = " + ourid + " " ;
-					System.out.println(updateParent);
-					stmt.execute(updateParent);
-				}
-				
-			}
-			else 
-			{
-				
-				//now, we have determined that the requirement is new
-				String parentRSt = new Integer(parent).toString();
-				
-				String newArgSt = "INSERT INTO Arguments " +
-				"(name, description, type, plausibility, importance, amount, ptype, parent) " +
-				"VALUES ('" +
-				RationaleDB.escape(this.name) + "', '" +
-				RationaleDB.escape(this.description) + "', '" +
-				this.type.toString() + "', '" +
-				this.plausibility.toString() + "', '" +
-				this.importance.toString() + "', " +
-				new Integer(this.amount).toString() + ", '" +
-				ptype.toString() + "', " +
-				parentRSt + ")";
-				
-				System.out.println(newArgSt);
-				stmt.execute(newArgSt); 
-				
-			}
-			//in either case, we want to update any sub-requirements in case
-			//they are new!
-			//now, we need to get our ID
-			String findQuery2 = "SELECT id FROM arguments where name='" +
-			this.name + "'";
-			rs = stmt.executeQuery(findQuery2); 
-			System.out.println(findQuery2);
-			
-			if (rs.next())
-			{
-				ourid = rs.getInt("id");
-				rs.close();
-			}
-			else
-			{
-				ourid = 0;
-				System.out.println("Error - could not find ID!");
-			}
-			
-			//now, we need to either find, or create, our argument subject
-			//now the hard part - what is our argument about?
-			if (assumption != null)
-			{
-				//create the assumption
-				int asmid = assumption.toDatabaseXML();
-				String setReq = "UPDATE Arguments A " +
-				"SET A.assumption = " + new Integer(asmid).toString() +
-				", A.argtype = '" + RationaleElementType.ASSUMPTION +
-				"' WHERE A.id = " + new Integer(ourid).toString() +
-				" ";   
-				System.out.println(setReq);
-				stmt.execute(setReq);
-			}
-			else if (alternative != null)
-			{
-				/*		   		   //get the ID for our alternative (presumably it exists)
-				 String findAlt = "SELECT id from Alternatives where name = '" +
-				 alternative.getName() + "'";
-				 rs = stmt.executeQuery(findAlt); 
-				 System.out.println(findAlt);
-				 int altid = 0;
-				 if (rs.next())
-				 {
-				 altid = rs.getInt("id");
-				 rs.close();
-				 } */
-				int altid = alternative.toDatabaseXML(0, RationaleElementType.NONE);
-				String setReq = "UPDATE Arguments A " +
-				"SET A.alternative = " + new Integer(altid).toString() +
-				", A.argtype = '" + RationaleElementType.ALTERNATIVE +
-				"' WHERE A.id = " + new Integer(ourid).toString() +
-				" ";   
-				System.out.println(setReq);
-				stmt.execute(setReq);
-				
-			}
-			else if (claim != null)
-			{
-				//create the claim - if it exists, this returns the id
-				int clmid = claim.toDatabaseXML();
-				String setReq = "UPDATE Arguments A " +
-				"SET A.claim = " + new Integer(clmid).toString() +
-				", A.argtype = '" + RationaleElementType.CLAIM +
-				"' WHERE A.id = " + new Integer(ourid).toString() +
-				" ";   
-				System.out.println(setReq);
-				stmt.execute(setReq);
-				
-				
-			}
-			else if (requirement != null)
-			{
-				/*			   //get the ID for the requirement
-				 String findReq = "SELECT id from Requirements where name = '" +
-				 requirement.getName() + "'";
-				 rs = stmt.executeQuery(findReq); 
-				 System.out.println(findReq);
-				 int reqid = 0;
-				 if (rs.next())
-				 {
-				 reqid = rs.getInt("id");
-				 rs.close();
-				 }
-				 */
-				int reqid = requirement.toDatabaseXML(0, RationaleElementType.NONE);
-				String setReq = "UPDATE Arguments A " +
-				"SET A.requirement = " + new Integer(reqid).toString() +
-				", A.argtype = '" + RationaleElementType.REQUIREMENT +
-				"' WHERE A.id = " + new Integer(ourid).toString() +
-				" ";   		
-				stmt.execute(setReq);
-				System.out.println(setReq);
-			}
-			else
-			{
-				System.out.println("ERROR! Argument did not have a type");
-			}
-			
-			Enumeration args = arguments.elements();
-			while (args.hasMoreElements()) {
-				Argument arg = (Argument) args.nextElement();
-				arg.toDatabaseXML(ourid, RationaleElementType.ARGUMENT);
-			}
-			
-			Enumeration quests = questions.elements();
-			while (quests.hasMoreElements()) {
-				Question quest = (Question) quests.nextElement();
-				quest.toDatabaseXML(ourid, RationaleElementType.ARGUMENT);
-			}
-			
-			
-			
-		} catch (SQLException ex) {
-			RationaleDB.reportError(ex, "Argument.toDatabaseXML", "Query error");
-		}
-		
-		finally { 
-			RationaleDB.releaseResources(stmt, rs);
 
+	/**
+	 * Check if our element is already in the database. The check is different
+	 * if you are reading it in from XML because you can do a query on the name.
+	 * Otherwise you can't because you run the risk of the user having changed the
+	 * name.
+	 * @param parentID the parent ID
+	 * @param ptype the parent type
+	 * @return true if in the database already
+	 */
+	private boolean inDatabase(int parentID, RationaleElementType ptype)
+	{
+		boolean found = false;
+		String findQuery = "";
+		
+		if (fromXML)
+		{
+			RationaleDB db = RationaleDB.getHandle();
+			Connection conn = db.getConnection();
+			
+			//find out if this argument is already in the database
+			Statement stmt = null; 
+			ResultSet rs = null; 
+			
+			try {
+				stmt = conn.createStatement(); 
+				findQuery = "SELECT id, parent FROM arguments where name='" +
+				this.name + "'";
+				System.out.println(findQuery);
+				rs = stmt.executeQuery(findQuery); 
+				
+				if (rs.next())
+				{
+					int ourid;
+					ourid = rs.getInt("id");
+					this.id = ourid;
+					found = true;
+				}
+			}
+			catch (SQLException ex) {
+				// handle any errors 
+				RationaleDB.reportError(ex, "Argument.inDatabase", findQuery); 
+			}
+			finally { 
+				RationaleDB.releaseResources(stmt, rs);
+			}
 		}
-		
-		return ourid;	
-		
-	}	
+		//If we aren't reading it from the XML, just check the ID
+		//checking the name like above won't work because the user may 
+		//have modified the name!
+		else if (this.getID() >= 0)
+		{
+			found = true;
+		}
+		return found;
+	}
+
 }

@@ -28,7 +28,7 @@ import edu.wpi.cs.jburge.SEURAT.inference.AlternativeInferences;
  */
 public class Alternative extends RationaleElement implements Serializable {
 	// class variables
-
+	
 	/**
 	 * Auto generated
 	 */
@@ -89,7 +89,7 @@ public class Alternative extends RationaleElement implements Serializable {
 	 * Questions that have to be answered in order to evaluate the alternative
 	 */
 	Vector<Question> questions;
-
+	
 	/**
 	 * Our constructor. Initially our status is "at issue"
 	 *
@@ -110,11 +110,11 @@ public class Alternative extends RationaleElement implements Serializable {
 	{
 		return RationaleElementType.ALTERNATIVE;
 	}
-
+	
 	public double getEvaluation() {
 		return evaluation;
 	}
-
+	
 	public void setEvaluation(double ev) {
 		evaluation = ev;
 	}
@@ -122,7 +122,7 @@ public class Alternative extends RationaleElement implements Serializable {
 	public int getParent() {
 		return parent;
 	}
-
+	
 	public RationaleElementType getPtype() {
 		return ptype;
 	}
@@ -137,19 +137,19 @@ public class Alternative extends RationaleElement implements Serializable {
 	public Contingency getContingency() {
 		return contingency;
 	}
-
+	
 	public void setContingency(Contingency contingency) {
 		this.contingency = contingency;
 	}
-
+	
 	public Designer getDesigner() {
 		return designer;
 	}
-
+	
 	public void setDesigner(Designer designer) {
 		this.designer = designer;
 	}
-
+	
 	public Vector getArgumentsFor() {
 		return argumentsFor;
 	}
@@ -198,7 +198,7 @@ public class Alternative extends RationaleElement implements Serializable {
 	public void delQuestion(Question quest) {
 		questions.remove(quest);
 	}
-
+	
 	/**
 	 * Generic function to get a list of sub-elements of a particular type -
 	 * decisions, arguments, or questions.
@@ -227,7 +227,7 @@ public class Alternative extends RationaleElement implements Serializable {
 		args.addAll(relationships);
 		return args;
 	}
-
+	
 	public double getImportanceVal()
 	{
 		if (status == AlternativeStatus.ADOPTED)
@@ -244,7 +244,7 @@ public class Alternative extends RationaleElement implements Serializable {
 	{
 		return artifacts;
 	}
-
+	
 	/**
 	 * Based on the arguments for and against our alternative, calculate the
 	 * argument score. This also involves going to the DB to see if there is
@@ -277,7 +277,7 @@ public class Alternative extends RationaleElement implements Serializable {
 		dependent = db.getDependentAlternatives(this, ArgType.PRESUPPOSES);
 		depI = dependent.iterator();
 		while (depI.hasNext())
-			{
+		{
 			Alternative depA = (Alternative) depI.next();
 			if (depA.getStatus() == AlternativeStatus.ADOPTED)
 			{
@@ -286,7 +286,7 @@ public class Alternative extends RationaleElement implements Serializable {
 		}
 		
 		
-				
+		
 //		System.out.println("setting our evaluation = " + new Double(result).toString());
 		setEvaluation(result);
 		return result;
@@ -298,7 +298,7 @@ public class Alternative extends RationaleElement implements Serializable {
 		return getOntEntryArgs(argI);
 		
 	}
-
+	
 	public Vector getOntEntriesAgainst()
 	{
 		Iterator argI = argumentsAgainst.iterator();
@@ -337,10 +337,10 @@ public class Alternative extends RationaleElement implements Serializable {
 //			System.out.println("Relationships: " + relationships.size());
 			argI = relationships.iterator();
 		}
-/*		else if (typeWanted == ArgType.PRESUPPOSEDBY)
-		{
-			argI = argumentsFor.iterator();
-		} */
+		/*		else if (typeWanted == ArgType.PRESUPPOSEDBY)
+		 {
+		 argI = argumentsFor.iterator();
+		 } */
 		else
 		{
 			argI = argumentsAgainst.iterator();
@@ -383,7 +383,7 @@ public class Alternative extends RationaleElement implements Serializable {
 		}
 		return ourClaims;
 	}
-
+	
 	/**
 	 * Save our alternative to the database.
 	 * @param parentID - the parent of the alternative
@@ -408,142 +408,126 @@ public class Alternative extends RationaleElement implements Serializable {
 			updateC = new Integer(contingency.getID()).toString();
 		
 		evaluation = this.evaluate(); // might as well make sure we are up to date!
-
+		
 		try {
-			 stmt = conn.createStatement(); 
-/*			 
-			 String findQuery = "SELECT id, parent FROM alternatives where name='" +
-				this.name + "'";
-			 System.out.println(findQuery);
-			 rs = stmt.executeQuery(findQuery); 
-			 
+			stmt = conn.createStatement(); 
 
-			if (rs.next())
+			if (inDatabase(parentID, ptype))
 			{
-			*/
-			if (this.getID() >= 0)
-			{
-/*
-				ourid = rs.getInt("id");
-				int ourParent = rs.getInt("parent");
+				String updateParent = "UPDATE alternatives R " +
+				"SET R.parent = " + new Integer(parentID).toString() +
+				", R.ptype = '" + ptype.toString() +
+				"', R.name = '" + RationaleDB.escape(this.name) +
+				"', R.description = '" + RationaleDB.escape(this.description) +
+				"', R.status = '" + status.toString() +
+				"', R.evaluation = " + new Double(evaluation).toString() +
+				", R.designType = " + updateC +
+				" WHERE " +
+				"R.id = " + this.id + " " ;
+//				System.out.println(updateParent);
+				stmt.execute(updateParent);
 				
-//***				System.out.println(ourParent);
-				rs.close();
-				*/
-					String updateParent = "UPDATE alternatives R " +
-					   "SET R.parent = " + new Integer(parentID).toString() +
-					   ", R.ptype = '" + ptype.toString() +
-					   "', R.name = '" + RationaleDB.escape(this.name) +
-					   "', R.description = '" + RationaleDB.escape(this.description) +
-					   "', R.status = '" + status.toString() +
-					   "', R.evaluation = " + new Double(evaluation).toString() +
-					   ", R.designType = " + updateC +
-						" WHERE " +
-					   "R.id = " + this.id + " " ;
-//					   System.out.println(updateParent);
-					stmt.execute(updateParent);
-
 //				return ourid;
 			}
-		else 
-		{
-		
-			//now, we have determined that the requirement is new
-			String parentSt;
-			if (this.parent < 0)
+			else 
 			{
-				parentSt = "NULL";
-			}
-			else
-			{
-				parentSt = new Integer(this.parent).toString();
-			}
-			
-			String updateD;
-
-			if (designer == null)
-				updateD = "null";
-			else
-				updateD = new Integer(designer.getID()).toString();
-			
-
-			
-			
-			String newAltSt = "INSERT INTO Alternatives "+
-			   "(name, description, status, ptype, parent, evaluation, designer, designType) " +
-			   "VALUES ('" +
-			   RationaleDB.escape(this.name) + "', '" +
-			   RationaleDB.escape(this.description) + "', '" +
-			   this.status.toString() + "', '" +
-			   ptype.toString() + "', " +
-			   parentSt + ", " +
+				
+				//now, we have determined that the requirement is new
+				String parentSt;
+				if (this.parent < 0)
+				{
+					parentSt = "NULL";
+				}
+				else
+				{
+					parentSt = new Integer(this.parent).toString();
+				}
+				
+				String updateD;
+				
+				if (designer == null)
+					updateD = "null";
+				else
+					updateD = new Integer(designer.getID()).toString();
+				
+				
+				
+				
+				String newAltSt = "INSERT INTO Alternatives "+
+				"(name, description, status, ptype, parent, evaluation, designer, designType) " +
+				"VALUES ('" +
+				RationaleDB.escape(this.name) + "', '" +
+				RationaleDB.escape(this.description) + "', '" +
+				this.status.toString() + "', '" +
+				ptype.toString() + "', " +
+				parentSt + ", " +
 				new Double(evaluation).toString() + ", " +
 				updateD + "," + updateC + ")";
-//***			   System.out.println(newAltSt);
-			stmt.execute(newAltSt); 
-			
-		}
-		//in either case, we want to update any sub-requirements in case
-		//they are new!
+//				***			   System.out.println(newAltSt);
+				stmt.execute(newAltSt); 
+				
+			}
+			//in either case, we want to update any sub-requirements in case
+			//they are new!
 			//now, we need to get our ID
 			String findQuery2 = "SELECT id FROM alternatives where name='" +
-			   RationaleDB.escape(this.name) + "'";
+			RationaleDB.escape(this.name) + "'";
 			rs = stmt.executeQuery(findQuery2); 
-
-		   if (rs.next())
-		   {
-			   ourid = rs.getInt("id");
-			   rs.close();
-		   }
-		   else
-		   {
-			ourid = 0;
-		   }
-		   this.id = ourid;
-		   
-		   Enumeration args = getAllArguments().elements();
-		   while (args.hasMoreElements()) {
-			   Argument arg = (Argument) args.nextElement();
-//			   System.out.println("Saving arg from alternative");
-			  arg.toDatabase(ourid, RationaleElementType.ALTERNATIVE);
-		   }
-
-		   Enumeration quests = questions.elements();
-		   while (quests.hasMoreElements()) {
-			   Question quest = (Question) quests.nextElement();
-			   quest.toDatabase(ourid, RationaleElementType.ALTERNATIVE);
-		   }
-
-		   Enumeration decs = subDecisions.elements();
-		   while (decs.hasMoreElements()) {
-			   Decision dec = (Decision) decs.nextElement();
-			   dec.toDatabase(ourid, RationaleElementType.ALTERNATIVE);
-		   }
 			
-		   //finally, the history
+			if (rs.next())
+			{
+				ourid = rs.getInt("id");
+				rs.close();
+			}
+			else
+			{
+				ourid = 0;
+			}
+			this.id = ourid;
 			
-		   Enumeration hist = history.elements();
-		   while (hist.hasMoreElements())
-		   {
-			   History his = (History) hist.nextElement();
-			   his.toDatabase(ourid, RationaleElementType.ALTERNATIVE);
-		   }
-		
- 
-
+			Enumeration args = getAllArguments().elements();
+			while (args.hasMoreElements()) {
+				Argument arg = (Argument) args.nextElement();
+//				System.out.println("Saving arg from alternative");
+				arg.toDatabase(ourid, RationaleElementType.ALTERNATIVE);
+			}
+			
+			Enumeration quests = questions.elements();
+			while (quests.hasMoreElements()) {
+				Question quest = (Question) quests.nextElement();
+				quest.toDatabase(ourid, RationaleElementType.ALTERNATIVE);
+			}
+			
+			Enumeration decs = subDecisions.elements();
+			while (decs.hasMoreElements()) {
+				Decision dec = (Decision) decs.nextElement();
+				dec.toDatabase(ourid, RationaleElementType.ALTERNATIVE);
+			}
+			
+			//finally, the history
+			
+			Enumeration hist = history.elements();
+			while (hist.hasMoreElements())
+			{
+				History his = (History) hist.nextElement();
+				his.toDatabase(ourid, RationaleElementType.ALTERNATIVE);
+			}
+			
+			
+			
 		} catch (SQLException ex) {
-	   // handle any errors 
+			// handle any errors 
 			RationaleDB.reportError(ex, "Alternative.toDatabase", "Bad query");
-	   }
-   	   
-	   finally { 
-		   RationaleDB.releaseResources(stmt, rs);
-		   }
-		   
+		}
+		
+		finally { 
+			RationaleDB.releaseResources(stmt, rs);
+		}
+		
 		return ourid;	
- 
+		
 	}	
-
+	
 	/**
 	 * Read in our alternative from the database
 	 * @param id - the database ID
@@ -553,37 +537,37 @@ public class Alternative extends RationaleElement implements Serializable {
 		
 		RationaleDB db = RationaleDB.getHandle();
 		Connection conn = db.getConnection();
-
+		
 		this.id = id;
 		
 		Statement stmt = null; 
 		ResultSet rs = null; 
-		 String findQuery = "";
+		String findQuery = "";
 		try {
-			 stmt = conn.createStatement();
-
-				 findQuery = "SELECT *  FROM " +
-				 "alternatives where id = " +
-				 new Integer(id).toString();
-//***			System.out.println(findQuery);
-			 rs = stmt.executeQuery(findQuery);
-			 
-			 if (rs.next())
-			 {
+			stmt = conn.createStatement();
+			
+			findQuery = "SELECT *  FROM " +
+			"alternatives where id = " +
+			new Integer(id).toString();
+//			***			System.out.println(findQuery);
+			rs = stmt.executeQuery(findQuery);
+			
+			if (rs.next())
+			{
 				name = RationaleDB.decode(rs.getString("name"));
 				rs.close();
 				this.fromDatabase(name);
-		 }
-
+			}
+			
 		} catch (SQLException ex) {
-	   // handle any errors 
+			// handle any errors 
 			RationaleDB.reportError(ex, "Alternative.fromDatabase(int)", 
 					findQuery);
-	   }
-	   finally { 
-		   RationaleDB.releaseResources(stmt, rs);
-		   }
-	
+		}
+		finally { 
+			RationaleDB.releaseResources(stmt, rs);
+		}
+		
 	}	
 	
 	/**
@@ -595,23 +579,23 @@ public class Alternative extends RationaleElement implements Serializable {
 		
 		RationaleDB db = RationaleDB.getHandle();
 		Connection conn = db.getConnection();
-
+		
 		this.name = name;
 		name = RationaleDB.escape(name);
 		
 		Statement stmt = null; 
 		ResultSet rs = null; 
-		 String findQuery = "";
+		String findQuery = "";
 		try {
-			 stmt = conn.createStatement();
-				 findQuery = "SELECT *  FROM " +
-				 "alternatives where name = '" +
-				 name + "'";
-//***			System.out.println(findQuery);
-			 rs = stmt.executeQuery(findQuery);
-			 
-			 if (rs.next())
-			 {
+			stmt = conn.createStatement();
+			findQuery = "SELECT *  FROM " +
+			"alternatives where name = '" +
+			name + "'";
+//			***			System.out.println(findQuery);
+			rs = stmt.executeQuery(findQuery);
+			
+			if (rs.next())
+			{
 				id = rs.getInt("id");
 				description = RationaleDB.decode(rs.getString("description"));
 				ptype = RationaleElementType.fromString(rs.getString("ptype"));
@@ -650,7 +634,7 @@ public class Alternative extends RationaleElement implements Serializable {
 				"type = 'ADDRESSES' or " +
 				"type = 'SATISFIES' or " +
 				"type = 'PRE-SUPPOSED-BY')";
-//***				System.out.println(findFor);
+//				***				System.out.println(findFor);
 				rs = stmt.executeQuery(findFor); 
 				Vector<Integer> aFor = new Vector<Integer>();
 				Vector<Integer> aAgainst = new Vector<Integer>();
@@ -660,7 +644,7 @@ public class Alternative extends RationaleElement implements Serializable {
 					aFor.addElement(new Integer(rs.getInt("id")));
 				}
 				rs.close();
-			
+				
 				//Now, the arguments against
 				String findAgainst = "SELECT id FROM Arguments where " +
 				"ptype = 'Alternative' and " +
@@ -669,9 +653,9 @@ public class Alternative extends RationaleElement implements Serializable {
 				"(type = 'DENIES' or " +
 				"type = 'VIOLATES' or " +
 				"type = 'OPPOSED-BY')";
-//***				System.out.println(findAgainst);
+//				***				System.out.println(findAgainst);
 				rs = stmt.executeQuery(findAgainst); 
-
+				
 				while (rs.next())
 				{
 					aAgainst.addElement(new Integer(rs.getInt("id")));
@@ -686,9 +670,9 @@ public class Alternative extends RationaleElement implements Serializable {
 				new Integer(this.id).toString() + " and " +
 				"(type = 'OPPOSED' or " +
 				"type = 'PRE-SUPPOSES')";
-//***				System.out.println(findRel);
+//				***				System.out.println(findRel);
 				rs = stmt.executeQuery(findRel); 
-
+				
 				while (rs.next())
 				{
 					aRel.addElement(new Integer(rs.getInt("id")));
@@ -724,13 +708,13 @@ public class Alternative extends RationaleElement implements Serializable {
 					if (arg.getParent() == this.id)
 						relationships.add(arg);
 				}
-
-
+				
+				
 				Vector<String> decNames = new Vector<String>();
 				String findQuery2 = "SELECT name from DECISIONS where " +
-					"ptype = '" + RationaleElementType.DECISION.toString() +
-					"' and parent = " + new Integer(id).toString();
-//***				System.out.println(findQuery2);
+				"ptype = '" + RationaleElementType.DECISION.toString() +
+				"' and parent = " + new Integer(id).toString();
+//				***				System.out.println(findQuery2);
 				rs = stmt.executeQuery(findQuery2);	
 				while (rs.next())				
 				{
@@ -743,71 +727,71 @@ public class Alternative extends RationaleElement implements Serializable {
 					subDec.fromDatabase((String) decs.nextElement());
 					subDecisions.add(subDec);
 				}				
-
-			//need to do questions too 
-			Vector<String> questNames = new Vector<String>();
-			String findQuery3 = "SELECT name from QUESTIONS where " +
+				
+				//need to do questions too 
+				Vector<String> questNames = new Vector<String>();
+				String findQuery3 = "SELECT name from QUESTIONS where " +
 				"ptype = '" + RationaleElementType.ALTERNATIVE.toString() +
 				"' and parent = " + new Integer(id).toString();
-//***			System.out.println(findQuery3);
-			rs = stmt.executeQuery(findQuery3);
-			while (rs.next())
-			{
-				questNames.add(RationaleDB.decode(rs.getString("name")));
-			}
-			Enumeration quests = questNames.elements();
-			while (quests.hasMoreElements())
-			{
-				Question quest = new Question();
-				quest.fromDatabase((String) quests.nextElement());
-				questions.add(quest);
-			}
-			
-			//Last, but not least, look for any associations
-			String findQuery4 = "SELECT artName from ASSOCIATIONS where " +
+//				***			System.out.println(findQuery3);
+				rs = stmt.executeQuery(findQuery3);
+				while (rs.next())
+				{
+					questNames.add(RationaleDB.decode(rs.getString("name")));
+				}
+				Enumeration quests = questNames.elements();
+				while (quests.hasMoreElements())
+				{
+					Question quest = new Question();
+					quest.fromDatabase((String) quests.nextElement());
+					questions.add(quest);
+				}
+				
+				//Last, but not least, look for any associations
+				String findQuery4 = "SELECT artName from ASSOCIATIONS where " +
 				"alternative = " + Integer.toString(id);
-			rs = stmt.executeQuery(findQuery4);
-			while (rs.next())
-			{
-				artifacts.add(rs.getString("artName"));
+				rs = stmt.executeQuery(findQuery4);
+				while (rs.next())
+				{
+					artifacts.add(rs.getString("artName"));
+				}
+				
+				//no, not last - need history too
+				String findQuery5 = "SELECT * from HISTORY where ptype = 'Alternative' and " +
+				"parent = " + Integer.toString(id);
+//				***			  System.out.println(findQuery5);
+				rs = stmt.executeQuery(findQuery5);
+				while (rs.next())
+				{
+					History nextH = new History();
+					nextH.setStatus(rs.getString("status"));
+					nextH.setReason(RationaleDB.decode(rs.getString("reason")));
+					nextH.dateStamp = rs.getTimestamp("date");
+//					nextH.dateStamp = rs.getDate("date");
+					history.add(nextH);
+				}
+				
+				
 			}
 			
-			//no, not last - need history too
-			String findQuery5 = "SELECT * from HISTORY where ptype = 'Alternative' and " +
-			  "parent = " + Integer.toString(id);
-//***			  System.out.println(findQuery5);
-			rs = stmt.executeQuery(findQuery5);
-			while (rs.next())
-			{
-				History nextH = new History();
-				nextH.setStatus(rs.getString("status"));
-				nextH.setReason(RationaleDB.decode(rs.getString("reason")));
-				nextH.dateStamp = rs.getTimestamp("date");
-//				nextH.dateStamp = rs.getDate("date");
-				history.add(nextH);
-			}
-			
-							
-		 }
-
 		} catch (SQLException ex) {
-	   // handle any errors 
-	  RationaleDB.reportError(ex, "Alternative.fromDatabase(String)", "Error in a query"); 
-	   }
-	   finally { 
-		   RationaleDB.releaseResources(stmt, rs);
-		   }
-	
+			// handle any errors 
+			RationaleDB.reportError(ex, "Alternative.fromDatabase(String)", "Error in a query"); 
+		}
+		finally { 
+			RationaleDB.releaseResources(stmt, rs);
+		}
+		
 	}
-/*
-	public boolean display()
-	{
-		Frame lf = new Frame();
-		AlternativeGUI ar = new AlternativeGUI(lf, this, false);
-		ar.show();
-		return ar.getCanceled();
-	}
-*/	
+	/*
+	 public boolean display()
+	 {
+	 Frame lf = new Frame();
+	 AlternativeGUI ar = new AlternativeGUI(lf, this, false);
+	 ar.show();
+	 return ar.getCanceled();
+	 }
+	 */	
 	/**
 	 * Used to edit our alternative - invokes the editor display
 	 * @param display - points back to the display
@@ -824,7 +808,7 @@ public class Alternative extends RationaleElement implements Serializable {
 		return ar.getCanceled(); //can I do this?
 		
 	}
-
+	
 	/**
 	 * Used to bring up an editor and create a new alternative
 	 * @param disp - points back to the display
@@ -842,20 +826,20 @@ public class Alternative extends RationaleElement implements Serializable {
 		EditAlternative ar = new EditAlternative(disp, this, true);
 		return ar.getCanceled(); //can I do this?
 	}
-/*	public boolean create(RationaleElement parent)
-	{
-		System.out.println("create alternative");
-		if (parent != null)
-		{
-			this.parent = parent.getID();
-			this.ptype = parent.getElementType();
-		}
-		Frame lf = new Frame();
-		AlternativeGUI ar = new AlternativeGUI(lf,  this, true);
-		ar.show();
-		return ar.getCanceled();
-	} */
-
+	/*	public boolean create(RationaleElement parent)
+	 {
+	 System.out.println("create alternative");
+	 if (parent != null)
+	 {
+	 this.parent = parent.getID();
+	 this.ptype = parent.getElementType();
+	 }
+	 Frame lf = new Frame();
+	 AlternativeGUI ar = new AlternativeGUI(lf,  this, true);
+	 ar.show();
+	 return ar.getCanceled();
+	 } */
+	
 	/**
 	 * Delete our alternative from the database. This will only happen if there
 	 * are no dependencies (no arguments, questions, or sub-decisions)
@@ -866,16 +850,16 @@ public class Alternative extends RationaleElement implements Serializable {
 		//need to have a way to inform if delete did not happen
 		//can't delete if there are dependencies...
 		if ((this.argumentsAgainst.size() > 0) ||
-			(this.argumentsFor.size() > 0) ||
-			(this.relationships.size() > 0) ||
-			(this.questions.size() > 0) ||
-			(this.subDecisions.size() > 0))
-			{
-				MessageDialog.openError(new Shell(),	"Delete Error",	"Can't delete when there are sub-elements.");
-
-				return true;
-			}
+				(this.argumentsFor.size() > 0) ||
+				(this.relationships.size() > 0) ||
+				(this.questions.size() > 0) ||
+				(this.subDecisions.size() > 0))
+		{
+			MessageDialog.openError(new Shell(),	"Delete Error",	"Can't delete when there are sub-elements.");
 			
+			return true;
+		}
+		
 		if (this.artifacts.size() > 0)
 		{
 			MessageDialog.openError(new Shell(),	"Delete Error",	"Can't delete when code is associated!");
@@ -904,7 +888,7 @@ public class Alternative extends RationaleElement implements Serializable {
 		Vector<RationaleStatus> newStat = inf.updateAlternative( this);
 		return newStat;
 	}
-
+	
 	/**
 	 * Update status when the element is deleted.
 	 * @return new status values
@@ -938,20 +922,21 @@ public class Alternative extends RationaleElement implements Serializable {
 	 * @param altN - the alternative in XML
 	 */
 	public void fromXML(Element altN) {
+		this.fromXML = true;
 		RationaleDB db = RationaleDB.getHandle();
-
+		
 		//add idref ***from the XML***
 		String idref = altN.getAttribute("id");
-
+		
 		//get our name
 		name = altN.getAttribute("name");
-
+		
 		//get our status
 		status = AlternativeStatus.fromString(altN.getAttribute("status"));
-
+		
 		//get our evaluation
 		evaluation = Float.parseFloat(altN.getAttribute("evaluation"));
-
+		
 		Node descN = altN.getFirstChild();
 		//get the description
 		//the text is actually the child of the element, odd...
@@ -961,16 +946,16 @@ public class Alternative extends RationaleElement implements Serializable {
 			String data = text.getData();
 			setDescription(data);
 		}
-
+		
 		//and last....
 		db.addRef(idref, this); //important to use the ref from the XML file!
-
+		
 		Element child = (Element) descN.getNextSibling();
-
+		
 		while (child != null) {
-
+			
 			String nextName;
-
+			
 			nextName = child.getNodeName();
 			//here we check the type, then process
 			if (nextName.compareTo("DR:argument") == 0) {
@@ -996,21 +981,21 @@ public class Alternative extends RationaleElement implements Serializable {
 				Text refText = (Text) childRef;
 				String stRef = refText.getData();
 				addArgument((Argument) db.getRef(stRef));
-
+				
 			} else if (nextName.compareTo("decref") == 0) {
 				Node childRef = child.getFirstChild(); //now, get the text
 				//decode the reference
 				Text refText = (Text) childRef;
 				String stRef = refText.getData();
 				addSubDecision((Decision) db.getRef(stRef));
-
+				
 			} else if (nextName.compareTo("questref") == 0) {
 				Node childRef = child.getFirstChild(); //now, get the text
 				//decode the reference
 				Text refText = (Text) childRef;
 				String stRef = refText.getData();
 				addQuestion((Question) db.getRef(stRef));
-
+				
 			} else {
 				System.out.println("unrecognized element under alternative!");
 			}
@@ -1018,177 +1003,60 @@ public class Alternative extends RationaleElement implements Serializable {
 			child = (Element) child.getNextSibling();
 		} 
 	}
-	
 	/**
-	 * Save the alternative to the database. Not sure why this is different if it was
-	 * create from XML or not.
-	 * @param parentID - the id of the parent
-	 * @param ptype - the type of the parent
-	 * @return the database ID for the alternative
-	 */
-	public int toDatabaseXML(int parentID, RationaleElementType ptype)
+	 * Check if our element is already in the database. The check is different
+	 * if you are reading it in from XML because you can do a query on the name.
+	 * Otherwise you can't because you run the risk of the user having changed the
+	 * name.
+	 * @param parentID the parent ID
+	 * @param ptype the parent type
+	 * @return true if in the database already
+	 */	
+	private boolean inDatabase(int parentID, RationaleElementType ptype)
 	{
-		RationaleDB db = RationaleDB.getHandle();
-		Connection conn = db.getConnection();
+		boolean found = false;
+		String findQuery = "";
 		
-		int ourid = 0;
-		
-		//find out if this requirement is already in the database
-		Statement stmt = null; 
-		ResultSet rs = null; 
-		
-		String updateC;
-		if (contingency == null)
-			updateC = "null";
-		else
-			updateC = new Integer(contingency.getID()).toString();
-		
-		evaluation = this.evaluate();
-		
-		System.out.println("Saving to alternative to the database");
-
-		try {
-			 stmt = conn.createStatement(); 
-			 String findQuery = "SELECT id, parent FROM alternatives where name='" +
-				this.name + "'";
-			 System.out.println(findQuery);
-			 rs = stmt.executeQuery(findQuery); 
-
-			if (rs.next())
-			{
-				System.out.println("already there");
-				ourid = rs.getInt("id");
-				this.id = ourid;
-				int ourParent = rs.getInt("parent");
-				System.out.println(ourParent);
-				rs.close();
-
-					String updateParent = "UPDATE alternatives R " +
-					   "SET R.parent = " + new Integer(parentID).toString() +
-					   ", R.ptype = '" + ptype.toString() +
-					   "', R.name = '" + RationaleDB.escape(this.name) +
-					   "', R.description = '" + RationaleDB.escape(this.description) +
-					   "', R.status = '" + status.toString() +
-					   "', R.evaluation = " + new Double(evaluation).toString() +
-					   ", R.designType = " + updateC +
-						"' WHERE " +
-					   "R.id = " + ourid + " " ;
-					   System.out.println(updateParent);
-					stmt.execute(updateParent);
-
-			}
-		else 
+		if (fromXML)
 		{
-		
-			//now, we have determined that the alternative is new
-			String parentSt;
-			if (parentID < 0)
-			{
-				parentSt = "NULL";
+			RationaleDB db = RationaleDB.getHandle();
+			Connection conn = db.getConnection();
+			
+			//find out if this alternative is already in the database
+			Statement stmt = null; 
+			ResultSet rs = null; 
+			
+			try {
+				stmt = conn.createStatement(); 
+				findQuery = "SELECT id, parent FROM alternatives where name='" +
+				this.name + "'";
+				System.out.println(findQuery);
+				rs = stmt.executeQuery(findQuery); 
+				
+				if (rs.next())
+				{
+					int ourid;
+					ourid = rs.getInt("id");
+					this.id = ourid;
+					found = true;
+				}
 			}
-			else
-			{
-				parentSt = new Integer(parentID).toString();
+			catch (SQLException ex) {
+				// handle any errors 
+				RationaleDB.reportError(ex, "Alternative.inDatabase", findQuery); 
 			}
-			
-			String updateD;
-
-			if (designer == null)
-				updateD = "null";
-			else
-				updateD = new Integer(designer.getID()).toString();
-			
-			String newAltSt = "INSERT INTO Alternatives "+
-			   "(name, description, status, ptype, parent, evaluation, designer, designType) " +
-			   "VALUES ('" +
-			   RationaleDB.escape(this.name) + "', '" +
-			   RationaleDB.escape(this.description) + "', '" +
-			   this.status.toString() + "', '" +
-			   ptype.toString() + "', " +
-			   parentSt + ", " +
-				new Double(evaluation).toString() + ", " +
-				updateD + "," + updateC + ")";
-			   System.out.println(newAltSt);
-			stmt.execute(newAltSt); 
-			
+			finally { 
+				RationaleDB.releaseResources(stmt, rs);
+			}
 		}
-		//in either case, we want to update any sub-requirements in case
-		//they are new!
-			//now, we need to get our ID
-			String findQuery2 = "SELECT id FROM alternatives where name='" +
-			   this.name + "'";
-			rs = stmt.executeQuery(findQuery2); 
+		//If we aren't reading it from the XML, just check the ID
+		//checking the name like above won't work because the user may 
+		//have modified the name!
+		else if (this.getID() >= 0)
+		{
+			found = true;
+		}
+		return found;
+	}
 
-		   if (rs.next())
-		   {
-			   ourid = rs.getInt("id");
-			   rs.close();
-		   }
-		   else
-		   {
-			ourid = 0;
-		   }
-		   
-		   Enumeration args = arguments.elements();
-		   while (args.hasMoreElements()) {
-			   Argument arg = (Argument) args.nextElement();
-			  arg.toDatabaseXML(ourid, RationaleElementType.ALTERNATIVE);
-		   }
-
-		   Enumeration quests = questions.elements();
-		   while (quests.hasMoreElements()) {
-			   Question quest = (Question) quests.nextElement();
-			   quest.toDatabaseXML(ourid, RationaleElementType.ALTERNATIVE);
-		   }
-
-		   Enumeration decs = subDecisions.elements();
-		   while (decs.hasMoreElements()) {
-			   Decision dec = (Decision) decs.nextElement();
-			   dec.toDatabaseXML(ourid, RationaleElementType.ALTERNATIVE);
-		   }
-			
-		   Enumeration hist = history.elements();
-		   while (hist.hasMoreElements())
-		   {
-			   History his = (History) hist.nextElement();
-			   his.toDatabaseXML(ourid, RationaleElementType.ALTERNATIVE);
-		   }
-		
- 
-
-		} catch (SQLException ex) {
-	   // handle any errors 
-	   System.out.println("SQLException: " + ex.getMessage()); 
-	   System.out.println("SQLState: " + ex.getSQLState()); 
-	   System.out.println("VendorError: " + ex.getErrorCode()); 
-	   }
-   	   
-	   finally { 
-		   // it is a good idea to release
-		   // resources in a finally{} block 
-		   // in reverse-order of their creation 
-		   // if they are no-longer needed 
-
-		   if (rs != null) { 
-			   try {
-				   rs.close(); 
-			   } catch (SQLException sqlEx) { // ignore 
-			   } 
-
-			   rs = null; 
-		   }
-    
-		   if (stmt != null) { 
-			   try { 
-				   stmt.close(); 
-			   } catch (SQLException sqlEx) { // ignore
-				   } 
-
-			   stmt = null; 
-		   } 
-		   }
-		   
-		return ourid;	
- 
-	}	
 }

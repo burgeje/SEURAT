@@ -147,24 +147,8 @@ public class Question extends RationaleElement implements Serializable
 
 		try {
 			 stmt = conn.createStatement(); 
-			 /*
-			 String findQuery = "SELECT id, parent FROM questions where name='" +
-				this.name + "'";
-			 System.out.println(findQuery);
-			 rs = stmt.executeQuery(findQuery); 
 
-			if (rs.next())
-			{
-//***				System.out.println("already there");
-				ourid = rs.getInt("id");
-				int prevParent = rs.getInt("parent");
-
-				rs.close();
-				
-				if (parent > 0)
-				{
-				*/
-				if (this.id >= 0)
+				if (inDatabase(parent,ptype))
 				{
 					String updateParent = "UPDATE questions " +
 						"SET name = '" +
@@ -184,12 +168,6 @@ public class Question extends RationaleElement implements Serializable
 //					   System.out.println(updateParent);
 					stmt.execute(updateParent);
 				}
-/*				else
-				{
-					System.out.println("parent is zero");
-				}
-				*/
-//			} 
 	
 		else 
 		{
@@ -389,6 +367,9 @@ public class Question extends RationaleElement implements Serializable
 	}
 	
 	public void fromXML(Element qN) {
+		
+		this.fromXML = true;
+		
 		RationaleDB db = RationaleDB.getHandle();
 
 		//add idref ***from the XML***
@@ -454,119 +435,62 @@ public class Question extends RationaleElement implements Serializable
 			}
 		}
 	}
-	
-	public int toDatabaseXML(int parent, RationaleElementType ptype)
+
+	/**
+	 * Check if our element is already in the database. The check is different
+	 * if you are reading it in from XML because you can do a query on the name.
+	 * Otherwise you can't because you run the risk of the user having changed the
+	 * name.
+	 * @param parentID the parent ID
+	 * @param ptype the parent type
+	 * @return true if in the database already
+	 */
+	private boolean inDatabase(int parentID, RationaleElementType ptype)
 	{
-		RationaleDB db = RationaleDB.getHandle();
-		Connection conn = db.getConnection();
+		boolean found = false;
+		String findQuery = "";
 		
-		int ourid = 0;
-		
-		//find out if this question is already in the database
-		Statement stmt = null; 
-		ResultSet rs = null; 
-		
-		System.out.println("Saving to the database");
-
-		try {
-			 stmt = conn.createStatement(); 
-			 String findQuery = "SELECT id, parent FROM questions where name='" +
+		if (fromXML)
+		{
+			RationaleDB db = RationaleDB.getHandle();
+			Connection conn = db.getConnection();
+			
+			//find out if this question is already in the database
+			Statement stmt = null; 
+			ResultSet rs = null; 
+			
+			try {
+				stmt = conn.createStatement(); 
+				findQuery = "SELECT id, parent FROM questions where name='" +
 				this.name + "'";
-			 System.out.println(findQuery);
-			 rs = stmt.executeQuery(findQuery); 
-
-			if (rs.next())
-			{
-				System.out.println("already there");
-				ourid = rs.getInt("id");
-				int prevParent = rs.getInt("parent");
-
-				rs.close();
-				if ((prevParent <= 0) && (parent > 0))
+				System.out.println(findQuery);
+				rs = stmt.executeQuery(findQuery); 
+				
+				if (rs.next())
 				{
-					String updateParent = "UPDATE questions D " +
-					   "SET D.parentr = " + new Integer(parent).toString() +
-					   "D.ptype = '" + ptype.toString() +
-						"' WHERE " +
-					   "D.id = " + ourid + " " ;
-					   System.out.println(updateParent);
-					stmt.execute(updateParent);
+					int ourid;
+					ourid = rs.getInt("id");
+					this.id = ourid;
+					found = true;
 				}
 			}
-	
-		else 
-		{
-		
-			//now, we have determined that the requirement is new
-			String parentRSt = new Integer(parent).toString();		
-			String newQuestSt = "INSERT INTO Questions "+
-			   "(name, description, status, proc, answer, ptype, parent) " +
-			   "VALUES ('" +
-			   RationaleDB.escape(this.name) + "', '" +
-			   RationaleDB.escape(this.description) + "', '" +
-			   this.status.toString() + "', '" +
-			   RationaleDB.escape(this.procedure) + "', '" +
-			   RationaleDB.escape(this.answer) + "', '" +
-			   ptype.toString() + "', " +
-			   parentRSt + ")";
-
-			   System.out.println(newQuestSt);
-			stmt.execute(newQuestSt); 
-			
+			catch (SQLException ex) {
+				// handle any errors 
+				RationaleDB.reportError(ex, "Question.inDatabase", findQuery); 
+			}
+			finally { 
+				RationaleDB.releaseResources(stmt, rs);
+			}
 		}
-		//in either case, we want to update any sub-requirements in case
-		//they are new!
-			//now, we need to get our ID
-			String findQuery2 = "SELECT id FROM questions where name='" +
-			   this.name + "'";
-			rs = stmt.executeQuery(findQuery2); 
+		//If we aren't reading it from the XML, just check the ID
+		//checking the name like above won't work because the user may 
+		//have modified the name!
+		else if (this.getID() >= 0)
+		{
+			found = true;
+		}
+		return found;
+	}
 
-		   if (rs.next())
-		   {
-			   ourid = rs.getInt("id");
-			   rs.close();
-		   }
-		   else
-		   {
-			ourid = 0;
-		   }
-		   
-
-
-		} catch (SQLException ex) {
-	   // handle any errors 
-	   System.out.println("SQLException: " + ex.getMessage()); 
-	   System.out.println("SQLState: " + ex.getSQLState()); 
-	   System.out.println("VendorError: " + ex.getErrorCode()); 
-	   }
-   	   
-	   finally { 
-		   // it is a good idea to release
-		   // resources in a finally{} block 
-		   // in reverse-order of their creation 
-		   // if they are no-longer needed 
-
-		   if (rs != null) { 
-			   try {
-				   rs.close(); 
-			   } catch (SQLException sqlEx) { // ignore 
-			   } 
-
-			   rs = null; 
-		   }
-    
-		   if (stmt != null) { 
-			   try { 
-				   stmt.close(); 
-			   } catch (SQLException sqlEx) { // ignore
-				   } 
-
-			   stmt = null; 
-		   } 
-		   }
-		   
-		return ourid;	
- 
-	}	
 }
 

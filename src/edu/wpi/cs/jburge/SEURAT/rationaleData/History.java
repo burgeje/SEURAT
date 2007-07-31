@@ -41,6 +41,10 @@ public class History implements Serializable
 	Date dateStamp;
 
 	/**
+	 * Flag indicating if this was read from XML
+	 */
+	boolean fromXML;
+	/**
 	 * Our constructor
 	 *
 	 */
@@ -48,7 +52,7 @@ public class History implements Serializable
 	{
 		//this might be a good time to put on the date stamp?
 		dateStamp = new Date(); //this will set date to the creation date/time
-
+		fromXML = false;
 	} 
 	
 	/**
@@ -164,80 +168,11 @@ public class History implements Serializable
 	 */
 	public void fromXML(Element hN)
 	{
+		this.fromXML = true;
 		status = hN.getAttribute("status");
 		reason = hN.getAttribute("reason");
 		dateStamp = new Date(hN.getAttribute("datestamp"));
 	}
 
-	/**
-	 * Stores to the database.
-	 * @param parent
-	 * @param ptype
-	 * @return
-	 */
-	public int toDatabaseXML(int parent, RationaleElementType ptype)
-	{
-		RationaleDB db = RationaleDB.getHandle();
-		Connection conn = db.getConnection();
-		
-		int ourid = 0;
-		
-		//find out if this question is already in the database
-		Statement stmt = null; 
-//		ResultSet rs = null; 
-		
-		try {
-			stmt = conn.createStatement(); 
-			Timestamp ourTime = new Timestamp(dateStamp.getTime());
-			String parentRSt = new Integer(parent).toString();		
-			String newQuestSt = "INSERT INTO History "+
-			   "(ptype, parent, date, reason, status) " +
-			   "VALUES ('" +
-			   ptype.toString() + "', " +
-			   parentRSt + ", '" +
-			   ourTime.toString() + "', '" +
-			   RationaleDB.escape(this.reason) + "', '" +
-			   this.status + "')";
 
-			   System.out.println(newQuestSt);
-			stmt.execute(newQuestSt); 
-			
-		ourid = 0; //no reason to keep ID around
-
-		} catch (SQLException ex) {
-	   // handle any errors 
-	   System.out.println("SQLException: " + ex.getMessage()); 
-	   System.out.println("SQLState: " + ex.getSQLState()); 
-	   System.out.println("VendorError: " + ex.getErrorCode()); 
-	   }
-   	   
-	   finally { 
-		   // it is a good idea to release
-		   // resources in a finally{} block 
-		   // in reverse-order of their creation 
-		   // if they are no-longer needed 
-
-/*		   if (rs != null) { 
-			   try {
-				   rs.close(); 
-			   } catch (SQLException sqlEx) { // ignore 
-			   } 
-
-			   rs = null; 
-		   } */
-    
-		   if (stmt != null) { 
-			   try { 
-				   stmt.close(); 
-			   } catch (SQLException sqlEx) { // ignore
-				   } 
-
-			   stmt = null; 
-		   } 
-		   }
-		   
-		return ourid;	
- 
-	}	
-	
 }

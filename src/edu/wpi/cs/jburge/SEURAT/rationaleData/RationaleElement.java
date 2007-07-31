@@ -47,6 +47,12 @@ public class RationaleElement implements Serializable
 	 * in inferencing.
 	 */
 	boolean enabled;
+	/**
+	 * Identifies if we are reading this element in from XML and need to
+	 * check to make sure we aren't duplicating it
+	 *
+	 */
+	boolean fromXML;
 
 	RationaleElement()
 	{
@@ -56,6 +62,7 @@ public class RationaleElement implements Serializable
 		description = new String("");
 		history = new Stack<History>();
 		enabled = true;
+		fromXML = false;
 	} 
 	
 	public int getID()

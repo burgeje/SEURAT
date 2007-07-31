@@ -334,15 +334,8 @@ public class Requirement extends RationaleElement implements Serializable
 			
 		try {
 			stmt = conn.createStatement(); 
-			/*
-			String findQuery = "SELECT id FROM requirements where name='" +
-			   this.name + "'";
-			 System.out.println(findQuery);
-			rs = stmt.executeQuery(findQuery); 
 
-		   if (rs.next())
-		   { */
-		   if (this.id >= 0)
+		   if (inDatabase(parentID, ptype))
 		   {
 				String updateParent = "UPDATE Requirements "+
 				   "SET name = '" +
@@ -455,173 +448,62 @@ public class Requirement extends RationaleElement implements Serializable
  
 	}	
 	
-	
-	
-	// test for XML input (new method to test whether an requirement is already there)
-	public int toDatabaseXML(int parentID, RationaleElementType ptype)
+	/**
+	 * Check if our element is already in the database. The check is different
+	 * if you are reading it in from XML because you can do a query on the name.
+	 * Otherwise you can't because you run the risk of the user having changed the
+	 * name.
+	 * @param parentID the parent ID
+	 * @param ptype the parent type
+	 * @return true if in the database already
+	 */
+	private boolean inDatabase(int parentID, RationaleElementType ptype)
 	{
-		RationaleDB db = RationaleDB.getHandle();
-		Connection conn = db.getConnection();
+		boolean found = false;
+		String findQuery = "";
 		
-		int ourid = this.id;
-		
-		//find out if this requirement is already in the database
-		Statement stmt = null; 
-		ResultSet rs = null; 
-
-		String enabledStr;
-		if (enabled)
-			enabledStr = "True";
-		else
-			enabledStr = "False";
+		if (fromXML)
+		{
+			RationaleDB db = RationaleDB.getHandle();
+			Connection conn = db.getConnection();
 			
-		try {
-			stmt = conn.createStatement(); 
-			String findQuery = "SELECT id, parent FROM requirements where name='" +
-			this.name + "'";
-			System.out.println(findQuery);
-			rs = stmt.executeQuery(findQuery); 			 
-
-			if (rs.next())
-			{
-				System.out.println("already there");
-				ourid = rs.getInt("id");
-				this.id = ourid;
-				String updateParent = "UPDATE Requirements "+
-				"SET name = '" +
-				RationaleDB.escape(this.name) + "', " +
-				"description = '" +
-				RationaleDB.escape(this.description) + "', " +
-				"type = '" +
-				this.m_type.toString() + "', " +
-				"status = '" +
-				this.m_status.toString() + "', " +
-				"enabled = '" +
-				enabledStr + "' " +
-				" WHERE " +
-				"id = " + ourid + " " ;
-
-//				System.out.println(updateParent);
-				stmt.execute(updateParent);
-			}
-//				return ourid;
-			else 
-			{
-
-				//now, we have determined that the requirement is new
-				String parentSt;
-				String parentTSt;
-				System.out.println("parent ID is "+parentID + "new version test");
-				if ((parentID < 0) || (ptype == null))
+			//find out if this argument is already in the database
+			Statement stmt = null; 
+			ResultSet rs = null; 
+			
+			try {
+				stmt = conn.createStatement(); 
+				findQuery = "SELECT id, parent FROM requirements where name='" +
+				this.name + "'";
+				System.out.println(findQuery);
+				rs = stmt.executeQuery(findQuery); 
+				
+				if (rs.next())
 				{
-					parentSt = "NULL";
-					parentTSt = "None";
+					int ourid;
+					ourid = rs.getInt("id");
+					this.id = ourid;
+					found = true;
 				}
-				else
-				{
-					parentSt = new Integer(parentID).toString();
-					parentTSt = ptype.toString();
-				}
-				String newReqSt = "INSERT INTO Requirements "+
-				"(name, description, type, status, ptype, parent, enabled) " +
-				"VALUES ('" +
-				RationaleDB.escape(this.name) + "', '" +
-				RationaleDB.escape(this.description) + "', '" +
-				this.m_type.toString() + "', '" +
-				this.m_status.toString() + "', '" +
-				parentTSt + "', " +
-				parentSt + ", '" +
-				enabledStr + "')";
-//				System.out.println(newReqSt);
-				stmt.execute(newReqSt); 
-
 			}
-		
-			//now, we need to get our ID
-			String findQuery2 = "SELECT id FROM requirements where name='" +
-			this.name + "'";
-			rs = stmt.executeQuery(findQuery2); 
-
-			if (rs.next())
-			{
-				ourid = rs.getInt("id");
-				rs.close();
+			catch (SQLException ex) {
+				// handle any errors 
+				RationaleDB.reportError(ex, "Requirement.inDatabase", findQuery); 
 			}
-			else
-			{
-				ourid = 0;
+			finally { 
+				RationaleDB.releaseResources(stmt, rs);
 			}
-			this.id = ourid;
-			
-			// arguments under the requirements
-			Enumeration args = m_arguments.elements();
-			while (args.hasMoreElements())
-			{
-				Argument arg = (Argument) args.nextElement();
-				arg.toDatabaseXML(ourid, RationaleElementType.REQUIREMENT);
-			}
-
-			//now, any sub-requirements
-			Enumeration reqs = m_requirements.elements();
-			while (reqs.hasMoreElements())
-			{
-				System.out.println("adding Sub-requirements");
-				System.out.println(ourid);
-				Requirement req = (Requirement) reqs.nextElement();
-				req.toDatabaseXML(ourid, RationaleElementType.REQUIREMENT);
-			}
-			
-			Enumeration hist = history.elements();
-			while (hist.hasMoreElements())
-			{
-//				System.out.println("printing history");
-				History his = (History) hist.nextElement();
-				his.toDatabaseXML(ourid, RationaleElementType.REQUIREMENT);
-//				System.out.println("printed history");
-			}
-		} catch (SQLException ex) {
-			// handle any errors 
-			System.out.println("SQLException: " + ex.getMessage()); 
-			System.out.println("SQLState: " + ex.getSQLState()); 
-			System.out.println("VendorError: " + ex.getErrorCode()); 
 		}
-
-		finally { 
-			// it is a good idea to release
-			// resources in a finally{} block 
-			// in reverse-order of their creation 
-			// if they are no-longer needed 
-
-			if (rs != null) { 
-				try {
-					rs.close(); 
-				} catch (SQLException sqlEx) { // ignore 
-				} 
-
-				rs = null; 
-			}
-
-			if (stmt != null) { 
-				try { 
-					stmt.close(); 
-				} catch (SQLException sqlEx) { // ignore
-				} 
-
-				stmt = null; 
-			} 
+		//If we aren't reading it from the XML, just check the ID
+		//checking the name like above won't work because the user may 
+		//have modified the name!
+		else if (this.getID() >= 0)
+		{
+			found = true;
 		}
-
-		return ourid;	
-
+		return found;
 	}	
-	/*
-	public boolean display()
-	{
-		Frame lf = new Frame();
-		RequirementGUI ar = new RequirementGUI(lf, this, false);
-		ar.show();
-		return ar.getCanceled();
-	} */
+	
 	
 	public boolean display(Display disp)
 	{
@@ -715,6 +597,8 @@ public class Requirement extends RationaleElement implements Serializable
 	
 	public void fromXML(Element reqNode)
 	{
+		this.fromXML = true;
+		
 		RationaleDB db = RationaleDB.getHandle();
 		
 		//add idref ***from the XML***
