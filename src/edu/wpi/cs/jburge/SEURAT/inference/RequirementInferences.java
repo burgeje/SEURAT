@@ -45,6 +45,7 @@ public class RequirementInferences {
 		Statement stmt = null; 
 		ResultSet rs = null; 
 		ReqStatus rstat = ReqStatus.UNDECIDED;
+		String findArgQuery = "";
 	//	boolean error = false;
 		try {
 			stmt = conn.createStatement();
@@ -59,7 +60,7 @@ public class RequirementInferences {
 				//have satisfied requirements w/o rationale
 //				req.setStatus(ReqStatus.UNDECIDED);
 				//check to see if the requirement was violated
-				String findArgQuery = "Select * From arguments where " +
+				findArgQuery = "Select * From arguments where " +
 				"argtype = 'requirement' and " +
 				"requirement = " + req.getID() + " and " +
 				"type = 'Violates'";
@@ -182,7 +183,7 @@ public class RequirementInferences {
 			else
 			{
 				//check to see if the requirement was violated
-				String findArgQuery = "Select * From arguments where " +
+				 findArgQuery = "Select * From arguments where " +
 				"argtype = 'requirement' and " +
 				"requirement = " + req.getID();
 //				***			System.out.println(findArgQuery);
@@ -208,35 +209,12 @@ public class RequirementInferences {
 			}
 			
 		} catch (SQLException ex) {
-			// handle any errors 
-			System.out.println("SQLException: " + ex.getMessage()); 
-			System.out.println("SQLState: " + ex.getSQLState()); 
-			System.out.println("VendorError: " + ex.getErrorCode()); 
+			RationaleDB.reportError(ex, "RequirementInferences.updateRequirement",
+					findArgQuery);
 		}
 		
 		finally { 
-			// it is a good idea to release
-			// resources in a finally{} block 
-			// in reverse-order of their creation 
-			// if they are no-longer needed 
-			
-			if (rs != null) { 
-				try {
-					rs.close(); 
-				} catch (SQLException sqlEx) { // ignore 
-				} 
-				
-				rs = null; 
-			}
-			
-			if (stmt != null) { 
-				try { 
-					stmt.close(); 
-				} catch (SQLException sqlEx) { // ignore
-				} 
-				
-				stmt = null; 
-			} 
+			RationaleDB.releaseResources(stmt, rs);
 		}
 		return status;
 	}
@@ -251,11 +229,12 @@ public class RequirementInferences {
 		
 		Statement stmt = null; 
 		ResultSet rs = null; 
+		String findArgQuery = "";
 	//	boolean error = false;
 		try {
 			stmt = conn.createStatement();
 			//check to see if the requirement was violated
-			String findArgQuery = "Select * From arguments where " +
+			findArgQuery = "Select * From arguments where " +
 			"argtype = 'requirement' and " +
 			"requirement = " + req.getID() + " and " +
 			"type = '" + type.toString() + "'";
@@ -271,35 +250,12 @@ public class RequirementInferences {
 			}
 			
 		} catch (SQLException ex) {
-			// handle any errors 
-			System.out.println("SQLException: " + ex.getMessage()); 
-			System.out.println("SQLState: " + ex.getSQLState()); 
-			System.out.println("VendorError: " + ex.getErrorCode()); 
+			RationaleDB.reportError(ex, "RequirementInferences.getArguments", 
+					findArgQuery);
 		}
 		
 		finally { 
-			// it is a good idea to release
-			// resources in a finally{} block 
-			// in reverse-order of their creation 
-			// if they are no-longer needed 
-			
-			if (rs != null) { 
-				try {
-					rs.close(); 
-				} catch (SQLException sqlEx) { // ignore 
-				} 
-				
-				rs = null; 
-			}
-			
-			if (stmt != null) { 
-				try { 
-					stmt.close(); 
-				} catch (SQLException sqlEx) { // ignore
-				} 
-				
-				stmt = null; 
-			} 
+			RationaleDB.releaseResources(stmt, rs);
 		}
 		return args;
 	}

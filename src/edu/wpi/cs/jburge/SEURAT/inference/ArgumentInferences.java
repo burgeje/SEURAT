@@ -103,33 +103,10 @@ public class ArgumentInferences {
 			
 
 		} catch (SQLException ex) {
-	   // handle any errors 
-	   System.out.println("SQLException: " + ex.getMessage()); 
-	   System.out.println("SQLState: " + ex.getSQLState()); 
-	   System.out.println("VendorError: " + ex.getErrorCode()); 
+			RationaleDB.reportError(ex, "ArgumentInferences.updateArgument", "Check both queries");
 	   }
 	   finally { 
-		   // it is a good idea to release
-		   // resources in a finally{} block 
-		   // in reverse-order of their creation 
-		   // if they are no-longer needed 
-		   if (rs != null) { 
-			   try {
-				   rs.close(); 
-			   } catch (SQLException sqlEx) { // ignore 
-			   } 
-
-			   rs = null; 
-		   }
-    
-		   if (stmt != null) { 
-			   try { 
-				   stmt.close(); 
-			   } catch (SQLException sqlEx) { // ignore
-				   } 
-
-			   stmt = null; 
-		   }
+		   RationaleDB.releaseResources(stmt, rs);
 	   }
 
 		UpdateManager manager = UpdateManager.getHandle();
@@ -159,6 +136,7 @@ public class ArgumentInferences {
 		Statement stmt = null; 
 		ResultSet rs = null; 
 		ResultSet rs2 = null;
+		String findArgQuery = "";
 		//boolean error = false;
 		try 
 		{
@@ -172,7 +150,7 @@ public class ArgumentInferences {
 			{
 				searchType = type.toString();
 			}
-			String findArgQuery = "Select name From arguments where " +
+			findArgQuery = "Select name From arguments where " +
 				"argtype = '" + searchType + "'";
 //***			System.out.println(findArgQuery);
 			rs = stmt.executeQuery(findArgQuery);
@@ -264,41 +242,11 @@ public class ArgumentInferences {
 				}
 			}
 		} catch (SQLException ex) {
-	   // handle any errors 
-	   System.out.println("SQLException: " + ex.getMessage()); 
-	   System.out.println("SQLState: " + ex.getSQLState()); 
-	   System.out.println("VendorError: " + ex.getErrorCode()); 
+			RationaleDB.reportError(ex, "Argument Inferences.argumentStatistics",
+					findArgQuery);
 	   }
 	   finally { 
-		   // it is a good idea to release
-		   // resources in a finally{} block 
-		   // in reverse-order of their creation 
-		   // if they are no-longer needed 
-		   if (rs != null) { 
-			   try {
-				   rs.close(); 
-			   } catch (SQLException sqlEx) { // ignore 
-			   } 
-
-			   rs = null; 
-		   }
-		if (rs2 != null) { 
-			try {
-				rs2.close(); 
-			} catch (SQLException sqlEx) { // ignore 
-			} 
-
-			rs2 = null; 
-		}
-    
-		   if (stmt != null) { 
-			   try { 
-				   stmt.close(); 
-			   } catch (SQLException sqlEx) { // ignore
-				   } 
-
-			   stmt = null; 
-		   }
+		   RationaleDB.releaseResources(stmt, rs, rs2);
 	   }
 
 		commonArgVector.addAll(commonArgs.values());

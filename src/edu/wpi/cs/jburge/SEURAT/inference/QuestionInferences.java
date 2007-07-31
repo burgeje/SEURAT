@@ -42,10 +42,10 @@ public class QuestionInferences {
 		
 		Statement stmt = null; 
 		ResultSet rs = null; 
-	//	boolean error = false;
+		 String findQuery = "";
 		try {
 			 stmt = conn.createStatement();
-			 String findQuery; 
+
 			 
 			 if (quest.getPtype() == RationaleElementType.DECISION)
 			 {
@@ -86,34 +86,12 @@ public class QuestionInferences {
 			 
 		 
 		} catch (SQLException ex) {
-	   // handle any errors 
-	   System.out.println("SQLException: " + ex.getMessage()); 
-	   System.out.println("SQLState: " + ex.getSQLState()); 
-	   System.out.println("VendorError: " + ex.getErrorCode()); 
+			RationaleDB.reportError(ex, "QuestionInferences.updateQuestion",
+					findQuery);
 	   }
 	   finally { 
-		   // it is a good idea to release
-		   // resources in a finally{} block 
-		   // in reverse-order of their creation 
-		   // if they are no-longer needed 
+		   RationaleDB.releaseResources(stmt, rs);
 
-		   if (rs != null) { 
-			   try {
-				   rs.close(); 
-			   } catch (SQLException sqlEx) { // ignore 
-			   } 
-
-			   rs = null; 
-		   }
-    
-		   if (stmt != null) { 
-			   try { 
-				   stmt.close(); 
-			   } catch (SQLException sqlEx) { // ignore
-				   } 
-
-			   stmt = null; 
-		   }
 		   }
 		UpdateManager manager = UpdateManager.getHandle();
 		manager.addUpdate(quest.getID(), quest.getName(), RationaleElementType.QUESTION);
@@ -132,10 +110,11 @@ public class QuestionInferences {
 		
 		Statement stmt = null; 
 		ResultSet rs = null; 
+		 String findQuery = null;
 	//	boolean error = false;
 		try {
 			 stmt = conn.createStatement();
-			 String findQuery; 
+
 			 
 			 if (quest.getPtype() == RationaleElementType.DECISION)
 			 {
@@ -176,34 +155,11 @@ public class QuestionInferences {
 			 
 		 
 		} catch (SQLException ex) {
-	   // handle any errors 
-	   System.out.println("SQLException: " + ex.getMessage()); 
-	   System.out.println("SQLState: " + ex.getSQLState()); 
-	   System.out.println("VendorError: " + ex.getErrorCode()); 
+			RationaleDB.reportError(ex, "QuestionInferences.updateOnDelete",
+					findQuery);
 	   }
 	   finally { 
-		   // it is a good idea to release
-		   // resources in a finally{} block 
-		   // in reverse-order of their creation 
-		   // if they are no-longer needed 
-
-		   if (rs != null) { 
-			   try {
-				   rs.close(); 
-			   } catch (SQLException sqlEx) { // ignore 
-			   } 
-
-			   rs = null; 
-		   }
-    
-		   if (stmt != null) { 
-			   try { 
-				   stmt.close(); 
-			   } catch (SQLException sqlEx) { // ignore
-				   } 
-
-			   stmt = null; 
-		   }
+		   RationaleDB.releaseResources(stmt, rs);
 		   }
 		   
 		UpdateManager manager = UpdateManager.getHandle();

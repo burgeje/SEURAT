@@ -54,10 +54,11 @@ public class AlternativeInferences {
 		
 		Statement stmt = null; 
 		ResultSet rs = null; 
+		String findQuery = "";
 		//boolean error = false;
 		try {
 			stmt = conn.createStatement();
-			String findQuery; 
+
 			
 			if (alt.getPtype() == RationaleElementType.DECISION)
 			{
@@ -79,34 +80,11 @@ public class AlternativeInferences {
 			} 	
 			
 		} catch (SQLException ex) {
-			// handle any errors 
-			System.out.println("SQLException: " + ex.getMessage()); 
-			System.out.println("SQLState: " + ex.getSQLState()); 
-			System.out.println("VendorError: " + ex.getErrorCode()); 
+			RationaleDB.reportError(ex, "AlternativeInferences.UpdateOnDelete",
+					findQuery);
 		}
 		finally { 
-			// it is a good idea to release
-			// resources in a finally{} block 
-			// in reverse-order of their creation 
-			// if they are no-longer needed 
-			
-			if (rs != null) { 
-				try {
-					rs.close(); 
-				} catch (SQLException sqlEx) { // ignore 
-				} 
-				
-				rs = null; 
-			}
-			
-			if (stmt != null) { 
-				try { 
-					stmt.close(); 
-				} catch (SQLException sqlEx) { // ignore
-				} 
-				
-				stmt = null; 
-			}
+			RationaleDB.releaseResources(stmt, rs);			
 		}
 		UpdateManager manager = UpdateManager.getHandle();
 		manager.addUpdate(alt.getID(), alt.getName(), RationaleElementType.ALTERNATIVE);
@@ -122,6 +100,7 @@ public class AlternativeInferences {
 	 * @return a vector of the new alternative status that needs to be displayed
 	 */
 	public Vector<RationaleStatus> updateAlternative(Alternative alt) {
+		String findQuery = ""; 
 		Vector<RationaleStatus> newStatus  = new Vector<RationaleStatus>();
 		alt.evaluate(); //this is actually done when it is re-written...
 //		System.out.println("Saving alternative after update");
@@ -153,7 +132,7 @@ public class AlternativeInferences {
 		//boolean error = false;
 		try {
 			stmt = conn.createStatement();
-			String findQuery; 
+
 			
 			if (alt.getPtype() == RationaleElementType.DECISION)
 			{
@@ -305,33 +284,11 @@ public class AlternativeInferences {
 			
 		} catch (SQLException ex) {
 			// handle any errors 
-			System.out.println("SQLException: " + ex.getMessage()); 
-			System.out.println("SQLState: " + ex.getSQLState()); 
-			System.out.println("VendorError: " + ex.getErrorCode()); 
+			RationaleDB.reportError(ex, "AlternativeInferences.updateAlternative",
+					findQuery);
 		}
 		finally { 
-			// it is a good idea to release
-			// resources in a finally{} block 
-			// in reverse-order of their creation 
-			// if they are no-longer needed 
-			
-			if (rs != null) { 
-				try {
-					rs.close(); 
-				} catch (SQLException sqlEx) { // ignore 
-				} 
-				
-				rs = null; 
-			}
-			
-			if (stmt != null) { 
-				try { 
-					stmt.close(); 
-				} catch (SQLException sqlEx) { // ignore
-				} 
-				
-				stmt = null; 
-			}
+			RationaleDB.releaseResources(stmt, rs);
 		}
 		UpdateManager manager = UpdateManager.getHandle();
 		manager.addUpdate(alt.getID(), alt.getName(), RationaleElementType.ALTERNATIVE);
