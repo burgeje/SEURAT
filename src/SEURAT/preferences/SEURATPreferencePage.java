@@ -19,10 +19,8 @@ import edu.wpi.cs.jburge.SEURAT.SEURATPlugin;
  * be accessed directly via the preference store.
  */
 
-public class SEURATPreferencePage
-	extends FieldEditorPreferencePage
-	implements IWorkbenchPreferencePage {
-
+public class SEURATPreferencePage extends FieldEditorPreferencePage implements IWorkbenchPreferencePage {
+	
 	public SEURATPreferencePage() {
 		super(GRID);
 		setPreferenceStore(SEURATPlugin.getDefault().getPreferenceStore());
@@ -45,7 +43,7 @@ public class SEURATPreferencePage
 		addField(new DirectoryFieldEditor(PreferenceConstants.P_PATH, 
 				"&Database bin directory:", getFieldEditorParent()));
 	}
-
+	
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.IWorkbenchPreferencePage#init(org.eclipse.ui.IWorkbench)
 	 */

@@ -27,31 +27,31 @@ import edu.wpi.cs.jburge.SEURAT.rationaleData.RationaleDB;
  */
 public class RationaleEntry extends JPanel{
 	
-  	/**
+	/**
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
 	public static String ratFile;
-  
-    public RationaleEntry() 
-         throws IOException 
-    {
-    	Frame df = new Frame();
-    	FileDialog d = new FileDialog(df, "Select Rationale File");
-    	d.setFile("*.xml");
-    	d.setDirectory(".");
-    	d.setVisible(true);
-    //	d.show();
-    	ratFile = "*.*";
-        ratFile = d.getFile();
-        
-        if (ratFile.indexOf(".") <= 0)
-        {
-        	ratFile = ratFile + ".info";
-        }
-        
-        RationaleDB.setFile(ratFile);  
-    	RationaleDB.loadRationaleDB();;
-    }
+	
+	public RationaleEntry() 
+	throws IOException 
+	{
+		Frame df = new Frame();
+		FileDialog d = new FileDialog(df, "Select Rationale File");
+		d.setFile("*.xml");
+		d.setDirectory(".");
+		d.setVisible(true);
+		//	d.show();
+		ratFile = "*.*";
+		ratFile = d.getFile();
+		
+		if (ratFile.indexOf(".") <= 0)
+		{
+			ratFile = ratFile + ".info";
+		}
+		
+		RationaleDB.setFile(ratFile);  
+		RationaleDB.loadRationaleDB();;
+	}
 }
 

@@ -14,35 +14,35 @@ import org.eclipse.ui.IWorkbenchPart;
  *
  */
 public class RemoveAssociationUsingBookmark implements IObjectActionDelegate {
-
+	
 	/**
 	 * Constructor for Action1.
 	 */
 	public RemoveAssociationUsingBookmark() {
 		super();
 	}
-
+	
 	/**
 	 * @see IObjectActionDelegate#setActivePart(IAction, IWorkbenchPart)
 	 */
 	public void setActivePart(IAction action, IWorkbenchPart targetPart) {
 	}
-
+	
 	/**
 	 * @see IActionDelegate#run(IAction)
 	 */
 	public void run(IAction action) {
 		Shell shell = new Shell();
 		MessageDialog.openInformation(
-			shell,
-			"SEURAT Plug-in",
-			"Remove Association was executed.");
+				shell,
+				"SEURAT Plug-in",
+		"Remove Association was executed.");
 	}
-
+	
 	/**
 	 * @see IActionDelegate#selectionChanged(IAction, ISelection)
 	 */
 	public void selectionChanged(IAction action, ISelection selection) {
 	}
-
+	
 }
