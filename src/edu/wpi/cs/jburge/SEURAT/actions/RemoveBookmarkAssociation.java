@@ -29,23 +29,23 @@ import edu.wpi.cs.jburge.SEURAT.rationaleData.RationaleDB;
  * This currently is not working - the menu item is not showing up for unknown reasons.
  */
 public class RemoveBookmarkAssociation extends ActionDelegate implements IViewActionDelegate {
-
+	
 	/**
 	 * The selected item in the Java Package explorer
 	 */
 	IStructuredSelection selection;
 	
-/**
- * Update the selection if it changes
- * @param action - not used
- * @param selection - the new selected item from the Package Explorer
- */		
+	/**
+	 * Update the selection if it changes
+	 * @param action - not used
+	 * @param selection - the new selected item from the Package Explorer
+	 */		
 	public void selectionChanged (IAction action, ISelection selection) {
 		if (selection instanceof IStructuredSelection) {
 			this.selection = (IStructuredSelection) selection;
 		}
 		
-		}
+	}
 	/**
 	 * Run the action when requested from the popup menu
 	 */
@@ -59,11 +59,11 @@ public class RemoveBookmarkAssociation extends ActionDelegate implements IViewAc
 				if (ourMarker.getType().compareTo("SEURAT.ratmarker") == 0)
 				{
 					IResource ourResource = ourMarker.getResource();
-/*					boolean proceed = showQuestion("Do you want to delete all associations and bookmarks for this resource (file)?");
-					if (!proceed)
-					{
-						return;
-					} */
+					/*					boolean proceed = showQuestion("Do you want to delete all associations and bookmarks for this resource (file)?");
+					 if (!proceed)
+					 {
+					 return;
+					 } */
 					//remove the association from the database
 					RationaleDB d = RationaleDB.getHandle();
 					d.removeAssociation(ourResource.getName(), (String) ourMarker.getAttribute(IMarker.MESSAGE), ourMarker.getAttribute(IMarker.LINE_NUMBER, 0));
@@ -76,14 +76,14 @@ public class RemoveBookmarkAssociation extends ActionDelegate implements IViewAc
 					if (allMarkers.length == 0)
 					{
 						SEURATResourcePropertiesManager.addPersistentProperty (ourResource,
-							"Rat", "false");
+								"Rat", "false");
 						SEURATDecoratorManager.addSuccessResources (ourResource);
 					}
 					else
 					{
 						System.out.println("still markers left...");
 					}
-
+					
 				}
 			}
 			catch (Exception exp)
@@ -91,13 +91,13 @@ public class RemoveBookmarkAssociation extends ActionDelegate implements IViewAc
 				System.out.println("exception removing marker");
 				System.out.println(exp);
 			}
-
-
+			
+			
 			
 		}
-//***		System.out.println(selection.getFirstElement().getClass());
+//		***		System.out.println(selection.getFirstElement().getClass());
 	}
-
+	
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.IViewActionDelegate#init(org.eclipse.ui.IViewPart)
 	 */
@@ -105,6 +105,6 @@ public class RemoveBookmarkAssociation extends ActionDelegate implements IViewAc
 		// TODO Auto-generated method stub
 		
 	}
-
-
+	
+	
 }

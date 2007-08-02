@@ -22,28 +22,28 @@ import edu.wpi.cs.jburge.SEURAT.views.UpdateType;
  *
  */
 public class AssociateAlternative extends ActionDelegate implements IViewActionDelegate{
-
+	
 	/**
 	 * The item that has been selected in the Package Explorer
 	 */
 	IStructuredSelection selection;
-
-/**
- * Detects when the selected item has changed. In this case, the selected
- * item refers to the java element in the package explorer.
- */
+	
+	/**
+	 * Detects when the selected item has changed. In this case, the selected
+	 * item refers to the java element in the package explorer.
+	 */
 	public void selectionChanged (IAction action, ISelection selection) {
 		if (selection instanceof IStructuredSelection) {
 			this.selection = (IStructuredSelection) selection;
 		}
 	}
-/**
- * Executes the action. We get the selected java element and use it to create
- * a rationale update event to kick off the association (we need to somehow get from
- * the code to the rationale tree so we know what rationale element we are
- * associating with! 
- * @param action - the action
- */	
+	/**
+	 * Executes the action. We get the selected java element and use it to create
+	 * a rationale update event to kick off the association (we need to somehow get from
+	 * the code to the rationale tree so we know what rationale element we are
+	 * associating with! 
+	 * @param action - the action
+	 */	
 	public void run (IAction action) 
 	{
 		IJavaElement navigatorSelection;
@@ -62,7 +62,7 @@ public class AssociateAlternative extends ActionDelegate implements IViewActionD
 	}
 	
 	public void init(IViewPart view) {
-	
+		
 	}
 	
 }
