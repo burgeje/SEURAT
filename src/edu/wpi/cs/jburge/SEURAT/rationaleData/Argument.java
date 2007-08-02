@@ -571,7 +571,7 @@ public class Argument extends RationaleElement implements Serializable
 		try {
 			stmt = conn.createStatement(); 
 			
-		
+			
 			String updateD;
 			if (designer == null)
 				updateD = "null";
@@ -744,7 +744,7 @@ public class Argument extends RationaleElement implements Serializable
 		
 		finally { 
 			RationaleDB.releaseResources(stmt, rs);
-
+			
 		}
 		
 		return ourid;	
@@ -984,7 +984,7 @@ public class Argument extends RationaleElement implements Serializable
 		}
 		finally { 
 			RationaleDB.releaseResources(stmt, rs);
-
+			
 		}
 		
 	}	
@@ -1284,7 +1284,7 @@ public class Argument extends RationaleElement implements Serializable
 			child = (Element) child.getNextSibling();
 		}
 	}
-
+	
 	/**
 	 * Check if our element is already in the database. The check is different
 	 * if you are reading it in from XML because you can do a query on the name.
@@ -1340,5 +1340,5 @@ public class Argument extends RationaleElement implements Serializable
 		}
 		return found;
 	}
-
+	
 }

@@ -46,7 +46,7 @@ public class Tradeoff extends RationaleElement implements Serializable
 	 * longer to implement isn't necessarily more flexible. 
 	 */
 	boolean symmetric;
-
+	
 	public Tradeoff()
 	{
 		super();
@@ -120,7 +120,7 @@ public class Tradeoff extends RationaleElement implements Serializable
 	{
 		return tradeoff;
 	}
-
+	
 	/**
 	 * Check to see if two tradeoffs/co-occurences are equivalent to each other.
 	 * Is there any risk of this getting called to compare a tradeoff
@@ -132,10 +132,10 @@ public class Tradeoff extends RationaleElement implements Serializable
 	{
 		boolean eq = false;
 		if ((trade.getOnt1().toString().equals(ont1.toString())) &&
-			(trade.getOnt2().toString().equals(ont2.toString())))
+				(trade.getOnt2().toString().equals(ont2.toString())))
 			eq = true;
 		else if ((trade.getOnt1().toString().equals(ont2.toString())) &&
-			(trade.getOnt2().toString().equals(ont1.toString())))
+				(trade.getOnt2().toString().equals(ont1.toString())))
 			eq = true;
 		return eq;
 	}
@@ -149,7 +149,7 @@ public class Tradeoff extends RationaleElement implements Serializable
 	{
 		symmetric = sym;
 	}
-
+	
 	/**
 	 * Write our tradeoff to the database
 	 * @return
@@ -161,142 +161,142 @@ public class Tradeoff extends RationaleElement implements Serializable
 		
 		int ourid = 0;
 		
-
+		
 		
 		//find out if this tradeoff is already in the database
 		Statement stmt = null; 
 		ResultSet rs = null; 
 		
 //		System.out.println("Saving to the database");
-
+		
 		try {
-			 stmt = conn.createStatement(); 
-			 		
-		 //now we need to find our ontology entries, and that's it!
-		 String findQuery3 = "SELECT id FROM OntEntries where name='" +
+			stmt = conn.createStatement(); 
+			
+			//now we need to find our ontology entries, and that's it!
+			String findQuery3 = "SELECT id FROM OntEntries where name='" +
 			RationaleDB.escape(this.ont1.getName()) + "'";
-		  rs = stmt.executeQuery(findQuery3); 
-//		  ***			System.out.println(findQuery3);
-		  int ontid1;
-		 if (rs.next())
-		 {
-			 ontid1 = rs.getInt("id");
-//			 rs.close();
-		 }
-		 else
-		 {
-		  ontid1 = 0;
-		 }
-				
-		 //now we need to find our ontology entries
-		 String findQuery4 = "SELECT id FROM OntEntries where name='" +
-			RationaleDB.escape(this.ont2.getName()) + "'";
-		  rs = stmt.executeQuery(findQuery4); 
-//***			System.out.println(findQuery4);
-		  int ontid2;
-		 if (rs.next())
-		 {
-			 ontid2 = rs.getInt("id");
-//			 rs.close();
-		 }
-		 else
-		 {
-		  ontid2 = 0;
-		 }
-				
-		 String trade;
-		 if (tradeoff)
-		 {
-			 trade = "Tradeoff";
-		 }
-		 else
-		 {
-			 trade = "Co-Occurrence";
-		 }
-		 String sym;
-		 sym = new Boolean(symmetric).toString();
-
-/*
-			 String findQuery = "SELECT id  FROM tradeoffs where name='" +
-				this.name + "'";
-			 System.out.println(findQuery);
-			 rs = stmt.executeQuery(findQuery); 
-
+			rs = stmt.executeQuery(findQuery3); 
+//			***			System.out.println(findQuery3);
+			int ontid1;
 			if (rs.next())
 			{
-				System.out.println("already there");
-				ourid = rs.getInt("id");
+				ontid1 = rs.getInt("id");
 //				rs.close();
- */
- 
-		if (this.id > 0)
-		{				
+			}
+			else
+			{
+				ontid1 = 0;
+			}
+			
+			//now we need to find our ontology entries
+			String findQuery4 = "SELECT id FROM OntEntries where name='" +
+			RationaleDB.escape(this.ont2.getName()) + "'";
+			rs = stmt.executeQuery(findQuery4); 
+//			***			System.out.println(findQuery4);
+			int ontid2;
+			if (rs.next())
+			{
+				ontid2 = rs.getInt("id");
+//				rs.close();
+			}
+			else
+			{
+				ontid2 = 0;
+			}
+			
+			String trade;
+			if (tradeoff)
+			{
+				trade = "Tradeoff";
+			}
+			else
+			{
+				trade = "Co-Occurrence";
+			}
+			String sym;
+			sym = new Boolean(symmetric).toString();
+			
+			/*
+			 String findQuery = "SELECT id  FROM tradeoffs where name='" +
+			 this.name + "'";
+			 System.out.println(findQuery);
+			 rs = stmt.executeQuery(findQuery); 
+			 
+			 if (rs.next())
+			 {
+			 System.out.println("already there");
+			 ourid = rs.getInt("id");
+			 //				rs.close();
+			  */
+			
+			if (this.id > 0)
+			{				
 				//now, update it with the new information
 				String updateOnt = "UPDATE Tradeoffs " +
 				"SET name = '" +
-				 RationaleDB.escape(this.name) + "', " +
+				RationaleDB.escape(this.name) + "', " +
 				"description = '" +
-				 RationaleDB.escape(this.description) + "', " +
-				 "type = '" + 
-				 trade + "', " +
-				 "symmetric = '" +
-				 sym + "', " +
-				   "ontology1 = " + new Integer(ontid1).toString() + ", " +
-				   "ontology2 = " + new Integer(ontid2).toString() +
-					" WHERE " +
-				   "id = " + this.id + " " ;
-//			  System.out.println(updateOnt);
+				RationaleDB.escape(this.description) + "', " +
+				"type = '" + 
+				trade + "', " +
+				"symmetric = '" +
+				sym + "', " +
+				"ontology1 = " + new Integer(ontid1).toString() + ", " +
+				"ontology2 = " + new Integer(ontid2).toString() +
+				" WHERE " +
+				"id = " + this.id + " " ;
+//				System.out.println(updateOnt);
 				stmt.execute(updateOnt);
-	//			System.out.println("sucessfully added?");
+				//			System.out.println("sucessfully added?");
 			}
 			else 
 			{
-		
-			//now, we have determined that the tradeoff is new
+				
+				//now, we have determined that the tradeoff is new
+				
+				String newArgSt = "INSERT INTO Tradeoffs " +
+				"(name, description, type, symmetric, ontology1, ontology2) " +
+				"VALUES ('" +
+				RationaleDB.escape(this.name) + "', '" +
+				RationaleDB.escape(this.description) + "', '" +
+				trade + "', '" +
+				sym + "', " +
+				new Integer(ontid1).toString() + ", " +
+				new Integer(ontid2).toString() + ")";
+				
+//				System.out.println(newArgSt);
+				stmt.execute(newArgSt); 
+//				System.out.println("inserted stuff");
+				
+//				now, we need to get our ID
+				String findQuery2 = "SELECT id FROM tradeoffs where name='" +
+				RationaleDB.escape(this.name) + "'";
+				rs = stmt.executeQuery(findQuery2); 
+				
+				if (rs.next())
+				{
+					ourid = rs.getInt("id");
+					rs.close();
+				}
+				else
+				{
+					ourid = 0;
+				}
+				this.id = ourid;
+				
+			}
 			
-			String newArgSt = "INSERT INTO Tradeoffs " +
-			   "(name, description, type, symmetric, ontology1, ontology2) " +
-			   "VALUES ('" +
-			   RationaleDB.escape(this.name) + "', '" +
-			   RationaleDB.escape(this.description) + "', '" +
-			   trade + "', '" +
-			   sym + "', " +
-			   new Integer(ontid1).toString() + ", " +
-			   new Integer(ontid2).toString() + ")";
-
-//			   System.out.println(newArgSt);
-			stmt.execute(newArgSt); 
-//			System.out.println("inserted stuff");
 			
-//			now, we need to get our ID
-			String findQuery2 = "SELECT id FROM tradeoffs where name='" +
-			   RationaleDB.escape(this.name) + "'";
-			rs = stmt.executeQuery(findQuery2); 
-
-		   if (rs.next())
-		   {
-			   ourid = rs.getInt("id");
-			   rs.close();
-		   }
-		   else
-		   {
-			ourid = 0;
-		   }
-		   this.id = ourid;
-			
-		}
-
-		
 		} catch (SQLException ex) {
 			RationaleDB.reportError(ex, "Tradeoff.toDatabase", "SQL Error");
-	   }
-   	   
-	   finally { 
-		   RationaleDB.releaseResources(stmt, rs);
-		   }
-		   
+		}
+		
+		finally { 
+			RationaleDB.releaseResources(stmt, rs);
+		}
+		
 		return ourid;	
- 
+		
 	}	
 	
 	/**
@@ -307,26 +307,26 @@ public class Tradeoff extends RationaleElement implements Serializable
 		
 		RationaleDB db = RationaleDB.getHandle();
 		Connection conn = db.getConnection();
-
+		
 		this.name = name;
 		name = RationaleDB.escape(name);
 		
 		Statement stmt = null; 
 		ResultSet rs = null; 
 		try {
-			 stmt = conn.createStatement();
-			 String findQuery; 
-				 findQuery = "SELECT *  FROM " +
-				 "tradeoffs where name = '" +
-				 name + "'";
-//***			System.out.println(findQuery);
-			 rs = stmt.executeQuery(findQuery);
-			 
-			 int ont1ID;
-			 int ont2ID;
-			 
-			 if (rs.next())
-			 {
+			stmt = conn.createStatement();
+			String findQuery; 
+			findQuery = "SELECT *  FROM " +
+			"tradeoffs where name = '" +
+			name + "'";
+//			***			System.out.println(findQuery);
+			rs = stmt.executeQuery(findQuery);
+			
+			int ont1ID;
+			int ont2ID;
+			
+			if (rs.next())
+			{
 				
 				id = rs.getInt("id");
 				description = RationaleDB.decode(rs.getString("description"));
@@ -343,17 +343,17 @@ public class Tradeoff extends RationaleElement implements Serializable
 				
 				ont1ID = rs.getInt("ontology1");
 				ont2ID = rs.getInt("ontology2");
-
+				
 				//now, find the ontology entry
 				rs.close();
-			
+				
 				//Now, the arguments against
 				String findOntology = "SELECT name FROM OntEntries where " +
 				"id = " +
 				new Integer(ont1ID).toString(); 
-//***				System.out.println(findOntology);
+//				***				System.out.println(findOntology);
 				rs = stmt.executeQuery(findOntology); 
-
+				
 				if (rs.next())
 				{
 					String ontName = RationaleDB.decode(rs.getString("name"));
@@ -367,9 +367,9 @@ public class Tradeoff extends RationaleElement implements Serializable
 				findOntology = "SELECT name FROM OntEntries where " +
 				"id = " +
 				new Integer(ont2ID).toString(); 
-//***				System.out.println(findOntology);
+//				***				System.out.println(findOntology);
 				rs = stmt.executeQuery(findOntology); 
-
+				
 				if (rs.next())
 				{
 					String ontName = RationaleDB.decode(rs.getString("name"));
@@ -378,19 +378,19 @@ public class Tradeoff extends RationaleElement implements Serializable
 					
 				}
 				rs.close();			
-						
-		 }
-
+				
+			}
+			
 		} catch (SQLException ex) {
 			RationaleDB.reportError(ex, "Tradeoff.fromDatabase", "SQL error");
-	   }
-	   finally { 
-		   RationaleDB.releaseResources(stmt, rs);
-		   }
-	
-	}	
+		}
+		finally { 
+			RationaleDB.releaseResources(stmt, rs);
+		}
 		
-
+	}	
+	
+	
 	/**
 	 * Display our tradeoff using the tradeoff editor
 	 * @param disp - points back to the display
@@ -420,7 +420,7 @@ public class Tradeoff extends RationaleElement implements Serializable
 		
 	}
 	
-
+	
 	/**
 	 * Delete our tradeoff. 
 	 * 
@@ -441,7 +441,7 @@ public class Tradeoff extends RationaleElement implements Serializable
 	{
 		//don't update status of the parent element!
 		if ((this.name.compareTo("Tradeoffs") == 0) ||
-			(this.name.compareTo("Co-occurrences") == 0))
+				(this.name.compareTo("Co-occurrences") == 0))
 		{
 			return null;
 		}
@@ -450,7 +450,7 @@ public class Tradeoff extends RationaleElement implements Serializable
 		TradeoffInferences inf = new TradeoffInferences();
 		newStat = inf.updateTradeoffStatus(this);
 		return newStat;
-
+		
 	}
 	
 	/**

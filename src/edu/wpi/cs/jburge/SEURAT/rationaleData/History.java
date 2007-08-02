@@ -20,7 +20,7 @@ import org.w3c.dom.Element;
  */
 public class History implements Serializable
 {
-
+	
 	/**
 	 * 
 	 */
@@ -39,7 +39,7 @@ public class History implements Serializable
 	 * The date/time of the change
 	 */
 	Date dateStamp;
-
+	
 	/**
 	 * Flag indicating if this was read from XML
 	 */
@@ -67,7 +67,7 @@ public class History implements Serializable
 		//figure out date
 		dateStamp = new Date();
 	}
-
+	
 	public String getStatus()
 	{
 		return status;
@@ -92,7 +92,7 @@ public class History implements Serializable
 		return dateStamp;
 	}
 	
-
+	
 	public String toString()
 	{
 		return dateStamp + ": " + "Status = " + status + "Reason: " + reason;
@@ -118,8 +118,8 @@ public class History implements Serializable
 		
 //		System.out.println("Saving to the database");
 //		System.out.println(DateFormat.getDateTimeInstance(DateFormat.SHORT,
-//			DateFormat.SHORT).format(dateStamp));
-
+//		DateFormat.SHORT).format(dateStamp));
+		
 		try {
 			stmt = conn.createStatement(); 
 			Timestamp ourTime = new Timestamp(dateStamp.getTime());
@@ -127,41 +127,41 @@ public class History implements Serializable
 			
 			//make sure the history is not there already!
 			String checkPresence = "SELECT * FROM History where " +
-			   "ptype = '" + ptype.toString() + "' and " +
-			   "parent = " + parentRSt + " and " +
-			   "date = '" + ourTime.toString() + "'";
+			"ptype = '" + ptype.toString() + "' and " +
+			"parent = " + parentRSt + " and " +
+			"date = '" + ourTime.toString() + "'";
 			rs = stmt.executeQuery(checkPresence);
 			if (!rs.next())
 			{
 				String newQuestSt = "INSERT INTO History "+
-				   "(ptype, parent, date, reason, status) " +
-				   "VALUES ('" +
-				   ptype.toString() + "', " +
-				   parentRSt + ", '" +
-				   ourTime.toString() + "', '" +
-				   RationaleDB.escape(this.reason) + "', '" +
-				   this.status + "')";
-
-//				   System.out.println(newQuestSt);
+				"(ptype, parent, date, reason, status) " +
+				"VALUES ('" +
+				ptype.toString() + "', " +
+				parentRSt + ", '" +
+				ourTime.toString() + "', '" +
+				RationaleDB.escape(this.reason) + "', '" +
+				this.status + "')";
+				
+//				System.out.println(newQuestSt);
 				stmt.execute(newQuestSt); 
-//	  ***			System.out.println("query ok?");	
+//				***			System.out.println("query ok?");	
 			}
-
 			
-		ourid = 0; //no reason to keep ID around
-
+			
+			ourid = 0; //no reason to keep ID around
+			
 		} catch (SQLException ex) {
 			RationaleDB.reportError(ex, "History.toDatabase", "SQL error");
-	   }
-   	   
-	   finally { 
-		   RationaleDB.releaseResources(stmt, rs);
-		   }
-		   
+		}
+		
+		finally { 
+			RationaleDB.releaseResources(stmt, rs);
+		}
+		
 		return ourid;	
- 
+		
 	}		
-
+	
 	/**
 	 * Reads history information from XML
 	 * @param hN - the XML element containing the history
@@ -173,6 +173,6 @@ public class History implements Serializable
 		reason = hN.getAttribute("reason");
 		dateStamp = new Date(hN.getAttribute("datestamp"));
 	}
-
-
+	
+	
 }

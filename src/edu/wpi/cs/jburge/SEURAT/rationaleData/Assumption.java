@@ -31,7 +31,7 @@ import edu.wpi.cs.jburge.SEURAT.inference.AssumptionInferences;
  */
 public class Assumption extends RationaleElement implements Serializable
 {
-
+	
 	/**
 	 * 
 	 */
@@ -45,26 +45,26 @@ public class Assumption extends RationaleElement implements Serializable
 	public Assumption()
 	{
 		super();
-
+		
 	} 
 	
-
+	
 	public RationaleElementType getElementType()
 	{
 		return RationaleElementType.ASSUMPTION;
 	}
 	/* Why did we need to override things we should inherit?
-	public void setDescription(String desc)
-	{
-		description = desc;
-	}
-	
-	public String getDescription()
-	{
-		return description;
-	}
-	
-	*/
+	 public void setDescription(String desc)
+	 {
+	 description = desc;
+	 }
+	 
+	 public String getDescription()
+	 {
+	 return description;
+	 }
+	 
+	 */
 	
 	/**
 	 * Get our importance. If the assumption is disabled, return zero.
@@ -98,74 +98,74 @@ public class Assumption extends RationaleElement implements Serializable
 		ResultSet rs = null; 
 		
 		try {
-			 stmt = conn.createStatement(); 
+			stmt = conn.createStatement(); 
 			String enabledStr;
 			if (enabled)
 				enabledStr = "True";
 			else
 				enabledStr = "False";
-				
+			
 			if (inDatabase())
 			{
-//***				System.out.println("already there");
+//				***				System.out.println("already there");
 //				ourid = rs.getInt("id");
 				String updateAssump = "UPDATE assumptions A " +
-					"SET A.name = '" + RationaleDB.escape(this.name) +
-					"', A.description = '" + RationaleDB.escape(this.description) +
-					"', A.importance = '" + this.importance.toString() +
-					"', A.enabled = '" + enabledStr +
-					"' WHERE " +
-					"A.id = " + this.id + " ";
+				"SET A.name = '" + RationaleDB.escape(this.name) +
+				"', A.description = '" + RationaleDB.escape(this.description) +
+				"', A.importance = '" + this.importance.toString() +
+				"', A.enabled = '" + enabledStr +
+				"' WHERE " +
+				"A.id = " + this.id + " ";
 //				System.out.println(updateAssump);
-			 	stmt.execute(updateAssump);
+				stmt.execute(updateAssump);
 			}
-		else 
-		{
-		
-			//now, we have determined that the assumption is new
-			
-			String newArgSt = "INSERT INTO Assumptions " +
-			   "(name, description, importance, enabled) " +
-			   "VALUES ('" +
-			   RationaleDB.escape(this.name) + "', '" +
-			   RationaleDB.escape(this.description) + "', '" +
-			   "Moderate" + "', " +
-			   "'" + enabledStr + "')";
-
-//***			   System.out.println(newArgSt);
-			stmt.execute(newArgSt); 
-			
-		
-			
-		}
+			else 
+			{
+				
+				//now, we have determined that the assumption is new
+				
+				String newArgSt = "INSERT INTO Assumptions " +
+				"(name, description, importance, enabled) " +
+				"VALUES ('" +
+				RationaleDB.escape(this.name) + "', '" +
+				RationaleDB.escape(this.description) + "', '" +
+				"Moderate" + "', " +
+				"'" + enabledStr + "')";
+				
+//				***			   System.out.println(newArgSt);
+				stmt.execute(newArgSt); 
+				
+				
+				
+			}
 			//now, we need to get our ID
 			String findQuery2 = "SELECT id FROM assumptions where name='" +
-			   this.name + "'";
+			this.name + "'";
 			rs = stmt.executeQuery(findQuery2); 
-//***			System.out.println(findQuery2);
-
-		   if (rs.next())
-		   {
-			   ourid = rs.getInt("id");
-			   rs.close();
-		   }
-		   else
-		   {
-			ourid = 0;
-		   }
-		   this.id = ourid;
+//			***			System.out.println(findQuery2);
+			
+			if (rs.next())
+			{
+				ourid = rs.getInt("id");
+				rs.close();
+			}
+			else
+			{
+				ourid = 0;
+			}
+			this.id = ourid;
 		} catch (SQLException ex) {
 			RationaleDB.reportError(ex, "Assumption.toDatabase", "SQL Error");
-	   }
-   	   
-	   finally { 
-		   RationaleDB.releaseResources(stmt, rs);
-		   }
-		   
+		}
+		
+		finally { 
+			RationaleDB.releaseResources(stmt, rs);
+		}
+		
 		return ourid;	
- 
+		
 	}	
-
+	
 	/**
 	 * Read in the assumption from the database
 	 * @param id - the id in the database
@@ -175,34 +175,34 @@ public class Assumption extends RationaleElement implements Serializable
 		
 		RationaleDB db = RationaleDB.getHandle();
 		Connection conn = db.getConnection();
-		 String findQuery = "";
+		String findQuery = "";
 		this.id = id;
 		
 		Statement stmt = null; 
 		ResultSet rs = null; 
 		try {
-			 stmt = conn.createStatement();
-
-				 findQuery = "SELECT *  FROM " +
-				 "assumptions where id = " +
-				 new Integer(id).toString();
-//***			System.out.println(findQuery);
-			 rs = stmt.executeQuery(findQuery);
-			 
-			 if (rs.next())
-			 {
+			stmt = conn.createStatement();
+			
+			findQuery = "SELECT *  FROM " +
+			"assumptions where id = " +
+			new Integer(id).toString();
+//			***			System.out.println(findQuery);
+			rs = stmt.executeQuery(findQuery);
+			
+			if (rs.next())
+			{
 				name = RationaleDB.decode(rs.getString("name"));
 				rs.close();
 				this.fromDatabase(name);
-		 }
-
+			}
+			
 		} catch (SQLException ex) {
 			RationaleDB.reportError(ex, "Assumption.fromDatabase(int)", findQuery);
-	   }
-	   finally { 
-		   RationaleDB.releaseResources(stmt, rs);
-		   }
-	
+		}
+		finally { 
+			RationaleDB.releaseResources(stmt, rs);
+		}
+		
 	}		
 	
 	/**
@@ -214,54 +214,54 @@ public class Assumption extends RationaleElement implements Serializable
 		
 		RationaleDB db = RationaleDB.getHandle();
 		Connection conn = db.getConnection();
-
+		
 		this.name = name;
 		name = RationaleDB.escape(name);
-		 String findQuery = ""; 		
+		String findQuery = ""; 		
 		Statement stmt = null; 
 		ResultSet rs = null; 
 		try {
-			 stmt = conn.createStatement();
-
-				 findQuery = "SELECT *  FROM " +
-				 "assumptions where name = '" +
-				 name + "'";
-//***			System.out.println(findQuery);
-			 rs = stmt.executeQuery(findQuery);
-			 
-			 if (rs.next())
-			 {
+			stmt = conn.createStatement();
+			
+			findQuery = "SELECT *  FROM " +
+			"assumptions where name = '" +
+			name + "'";
+//			***			System.out.println(findQuery);
+			rs = stmt.executeQuery(findQuery);
+			
+			if (rs.next())
+			{
 				
 				id = rs.getInt("id");
 				description = RationaleDB.decode(rs.getString("description"));
 				enabled = rs.getBoolean("enabled");
 				importance = (Importance) Importance.fromString(rs.getString("importance"));
-
+				
 				rs.close();
+				
+				
+				
+			}
 			
-	
-						
-		 }
-
 		} catch (SQLException ex) {
 			RationaleDB.reportError(ex, "Assumption.fromDatabase(String)", findQuery);
-	   }
-	   finally { 
-		   RationaleDB.releaseResources(stmt, rs);
+		}
+		finally { 
+			RationaleDB.releaseResources(stmt, rs);
+			
+		}
 		
-		   }
-	
 	}	
-/*	
-	public boolean create(RationaleElement parent)
-	{
-		System.out.println("create decision");
-		Frame lf = new Frame();
-		AssumptionGUI ar = new AssumptionGUI(lf,  this);
-		ar.show();
-		return ar.getCanceled();
-	}
-	*/
+	/*	
+	 public boolean create(RationaleElement parent)
+	 {
+	 System.out.println("create decision");
+	 Frame lf = new Frame();
+	 AssumptionGUI ar = new AssumptionGUI(lf,  this);
+	 ar.show();
+	 return ar.getCanceled();
+	 }
+	 */
 	/**
 	 * Create a new assumption by displaying the assumption editor
 	 * @param disp - points to the display
@@ -271,22 +271,22 @@ public class Assumption extends RationaleElement implements Serializable
 	public boolean create(Display disp, RationaleElement parent)
 	{
 //		System.out.println("create assumption");
-
+		
 		EditAssumption ar = new EditAssumption(disp, this, true);
 		String msg = "Edited assumption " + this.getName() + " " + ar.getCanceled();
 		DataLog d = DataLog.getHandle();
 		d.writeData(msg);
 		return ar.getCanceled(); //can I do this?
 	}
-/*	public boolean display()
-	{
-		Frame lf = new Frame();
-		AssumptionGUI ar = new AssumptionGUI(lf, this);
-		ar.show();
-		return ar.getCanceled();
-	}
-	*/
-
+	/*	public boolean display()
+	 {
+	 Frame lf = new Frame();
+	 AssumptionGUI ar = new AssumptionGUI(lf, this);
+	 ar.show();
+	 return ar.getCanceled();
+	 }
+	 */
+	
 	/**
 	 * Displays an assumption by bringing up the editing display.
 	 * @param disp - points to the display
@@ -308,7 +308,7 @@ public class Assumption extends RationaleElement implements Serializable
 		AssumptionInferences inf = new AssumptionInferences();
 		Vector<RationaleStatus> newStat = inf.updateAssumption( this);
 		return newStat;
-
+		
 	}
 	
 	/**
@@ -323,19 +323,19 @@ public class Assumption extends RationaleElement implements Serializable
 		
 		//add idref ***from the XML***
 		String idref = asN.getAttribute("id");
-	
+		
 		//get our name
 		name = asN.getAttribute("name");
-
+		
 		Node descN = asN.getFirstChild();
 		//get the description
 		//the text is actually the child of the element, odd...
 		Node descT = descN.getFirstChild();
 		if (descT instanceof Text) 
 		{
-		  Text text = (Text) descT;
-		  String data = text.getData();
-		  setDescription(data);
+			Text text = (Text) descT;
+			String data = text.getData();
+			setDescription(data);
 		}
 		
 		//and last....
@@ -394,5 +394,5 @@ public class Assumption extends RationaleElement implements Serializable
 		}
 		return found;
 	}
-
+	
 }

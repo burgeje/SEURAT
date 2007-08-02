@@ -6,9 +6,9 @@
  * area of expertise. The two attributes are the design component 
  * (design product entry) and the level.
  */
- 
+
 package edu.wpi.cs.jburge.SEURAT.rationaleData;
- 
+
 
 import instrumentation.DataLog;
 
@@ -33,7 +33,7 @@ import edu.wpi.cs.jburge.SEURAT.editors.EditAltConstRel;
 public class AltConstRel extends RationaleElement implements Serializable 
 {
 	// class variables
-
+	
 	/**
 	 * version ID needed for serialization
 	 */
@@ -57,8 +57,8 @@ public class AltConstRel extends RationaleElement implements Serializable
 	 */
 	String units;
 	
-
-
+	
+	
 	/**
 	 * The constructor.
 	 */
@@ -69,7 +69,7 @@ public class AltConstRel extends RationaleElement implements Serializable
 		constr = new Constraint();
 	}
 	
-
+	
 	/**
 	 * Get the units
 	 * @return units
@@ -77,7 +77,7 @@ public class AltConstRel extends RationaleElement implements Serializable
 	public String getUnits() {
 		return units;
 	}
-
+	
 	/**
 	 * Set the units
 	 * @param units - the units
@@ -85,7 +85,7 @@ public class AltConstRel extends RationaleElement implements Serializable
 	public void setUnits(String units) {
 		this.units = units;
 	}
-
+	
 	/**
 	 * Get the type
 	 * @return type
@@ -94,8 +94,8 @@ public class AltConstRel extends RationaleElement implements Serializable
 	{
 		return RationaleElementType.ALTCONSTREL;
 	}
-
-
+	
+	
 	/**
 	 * Get the amount
 	 * @return amount
@@ -103,7 +103,7 @@ public class AltConstRel extends RationaleElement implements Serializable
 	public float getAmount() {
 		return amount;
 	}
-
+	
 	/**
 	 * Set the amount
 	 * @param amount - the amount
@@ -111,7 +111,7 @@ public class AltConstRel extends RationaleElement implements Serializable
 	public void setAmount(float amount) {
 		this.amount = amount;
 	}
-
+	
 	/**
 	 * Get the associated constraint
 	 * @return the constraint
@@ -119,7 +119,7 @@ public class AltConstRel extends RationaleElement implements Serializable
 	public Constraint getConstr() {
 		return constr;
 	}
-
+	
 	/**
 	 * Set our constraint
 	 * @param constr - the constraint
@@ -127,7 +127,7 @@ public class AltConstRel extends RationaleElement implements Serializable
 	public void setConstr(Constraint constr) {
 		this.constr = constr;
 	}
-
+	
 	/**
 	 * Get the alternative from the relationship
 	 * @return - the alternative
@@ -135,7 +135,7 @@ public class AltConstRel extends RationaleElement implements Serializable
 	public Alternative getAlt() {
 		return alt;
 	}
-
+	
 	/**
 	 * Set our alternative
 	 * @param alt - the alternative
@@ -162,9 +162,9 @@ public class AltConstRel extends RationaleElement implements Serializable
 		ResultSet rs = null; 
 		
 //		System.out.println("Saving to the database");
-
+		
 		try {
-			 stmt = conn.createStatement(); 
+			stmt = conn.createStatement(); 
 			if (this.id >= 0)
 			{
 				
@@ -172,17 +172,17 @@ public class AltConstRel extends RationaleElement implements Serializable
 				updateOnt = "UPDATE AltConstRel " +
 				"SET name = '" + RationaleDB.escape(this.name) + 
 				"', alternative = " +
-				 pid + ", " +
+				pid + ", " +
 				"constr  = " +
-				 constr.getID() + ", " +
-				  "amount = " + 
-				  this.amount +
-				  ", units = '" +
-				  this.units + 
-					"' WHERE " +
-				   "alternative = " + alt.getID() + " AND constr = " + 
-				   constr.getID() + ";";
-			  System.out.println(updateOnt);
+				constr.getID() + ", " +
+				"amount = " + 
+				this.amount +
+				", units = '" +
+				this.units + 
+				"' WHERE " +
+				"alternative = " + alt.getID() + " AND constr = " + 
+				constr.getID() + ";";
+				System.out.println(updateOnt);
 				stmt.execute(updateOnt);
 			}
 			else if (pid == 0)
@@ -190,48 +190,48 @@ public class AltConstRel extends RationaleElement implements Serializable
 				//now, update it with the new information
 				updateOnt = "UPDATE AltConstRel " +
 				"SET name = '" + RationaleDB.escape(this.name) + 
-				  "' units = '" +
-				  RationaleDB.escape(this.units) +
-				  "' amount = " +
-				  this.amount +
-					" WHERE " +
-				   "id = " + 
-				   this.getID() + ";";
-			  System.out.println(updateOnt);
+				"' units = '" +
+				RationaleDB.escape(this.units) +
+				"' amount = " +
+				this.amount +
+				" WHERE " +
+				"id = " + 
+				this.getID() + ";";
+				System.out.println(updateOnt);
 				stmt.execute(updateOnt);
 			}
-		else 
-		{
-		
-			//now, we have determined that the ontolgy entry is new
+			else 
+			{
+				
+				//now, we have determined that the ontolgy entry is new
+				
+				updateOnt = "INSERT INTO AltConstRel " +
+				"(name, alternative, constr, amount, units) " +
+				"VALUES ('" +
+				RationaleDB.escape(name) + "', " +
+				alt.getID() + ", " +
+				constr.getID() + ", " +
+				amount + ", '" +
+				RationaleDB.escape(units) + "')"; 
+				
+				System.out.println(updateOnt);
+				stmt.execute(updateOnt); 
+				
+			}
 			
-			updateOnt = "INSERT INTO AltConstRel " +
-			   "(name, alternative, constr, amount, units) " +
-			   "VALUES ('" +
-			   RationaleDB.escape(name) + "', " +
-			   alt.getID() + ", " +
-			   constr.getID() + ", " +
-			   amount + ", '" +
-			   RationaleDB.escape(units) + "')"; 
-
-			   System.out.println(updateOnt);
-			stmt.execute(updateOnt); 
-			
-		}
-
 		} catch (SQLException ex) {
-	   // handle any errors 
-	   RationaleDB.reportError(ex, "Writing AltConstRel to DB", updateOnt);
-	   }
-   	   
-	   finally { 
-		   RationaleDB.releaseResources(stmt, rs);
-		   }
-		   
+			// handle any errors 
+			RationaleDB.reportError(ex, "Writing AltConstRel to DB", updateOnt);
+		}
+		
+		finally { 
+			RationaleDB.releaseResources(stmt, rs);
+		}
+		
 		return ourid;	
- 
+		
 	}	
-
+	
 	/**
 	 * Given an ID, get the relationship from the database.
 	 * @param id - our ID
@@ -241,37 +241,37 @@ public class AltConstRel extends RationaleElement implements Serializable
 		
 		RationaleDB db = RationaleDB.getHandle();
 		Connection conn = db.getConnection();
-
+		
 		this.id = id;
 		
 		Statement stmt = null; 
 		ResultSet rs = null;
-		 String findQuery = "";
+		String findQuery = "";
 //		boolean error = false;
 		try {
-			 stmt = conn.createStatement();
-
-				 findQuery = "SELECT *  FROM " +
-				 "AltConstRel where id = " +
-				 new Integer(id).toString();
-//***			System.out.println(findQuery);
-			 rs = stmt.executeQuery(findQuery);
-			 
-			 if (rs.next())
-			 {
+			stmt = conn.createStatement();
+			
+			findQuery = "SELECT *  FROM " +
+			"AltConstRel where id = " +
+			new Integer(id).toString();
+//			***			System.out.println(findQuery);
+			rs = stmt.executeQuery(findQuery);
+			
+			if (rs.next())
+			{
 				name = RationaleDB.decode(rs.getString("name"));
 				this.fromDatabase(name);
-		 }
-
+			}
+			
 		} catch (SQLException ex) {
-	   // handle any errors 
-	   RationaleDB.reportError(ex, "AltConstRel fromDB 2", findQuery);
-	   }
-	   finally { 
-		   RationaleDB.releaseResources(stmt, rs);
-
-		   }
-	
+			// handle any errors 
+			RationaleDB.reportError(ex, "AltConstRel fromDB 2", findQuery);
+		}
+		finally { 
+			RationaleDB.releaseResources(stmt, rs);
+			
+		}
+		
 	}	
 	
 	/**
@@ -284,7 +284,7 @@ public class AltConstRel extends RationaleElement implements Serializable
 		RationaleDB db = RationaleDB.getHandle();
 		Connection conn = db.getConnection();
 		
-//***		System.out.println("ont name = " + name);
+//		***		System.out.println("ont name = " + name);
 		
 		this.name = name;
 		name = RationaleDB.escape(name);
@@ -293,17 +293,17 @@ public class AltConstRel extends RationaleElement implements Serializable
 		ResultSet rs = null; 
 //		boolean error = false;
 		try {
-			 stmt = conn.createStatement();
-				 findQuery = "SELECT *  FROM " +
-				 "AltConstRel where name = '" +
-				 name + "'";
+			stmt = conn.createStatement();
+			findQuery = "SELECT *  FROM " +
+			"AltConstRel where name = '" +
+			name + "'";
 			System.out.println(findQuery);
-			 rs = stmt.executeQuery(findQuery);
-			 
-//			 int ontologyID;
-			 
-			 if (rs.next())
-			 {
+			rs = stmt.executeQuery(findQuery);
+			
+//			int ontologyID;
+			
+			if (rs.next())
+			{
 				
 				id = rs.getInt("id"); //ID equals the alternative
 				name = RationaleDB.decode(rs.getString("name"));
@@ -313,27 +313,27 @@ public class AltConstRel extends RationaleElement implements Serializable
 				constr.fromDatabase(rs.getInt("constr"));
 				alt = new Alternative();
 				alt.fromDatabase(rs.getInt("alternative"));
-	
-					
-		 }
-
+				
+				
+			}
+			
 		} catch (SQLException ex) {
-	   // handle any errors 
-	  RationaleDB.reportError(ex, "reading AltConstRel from DB", findQuery); 
-	   }
-	   finally { 
-		   RationaleDB.releaseResources(stmt, rs);
-		   }
-	
+			// handle any errors 
+			RationaleDB.reportError(ex, "reading AltConstRel from DB", findQuery); 
+		}
+		finally { 
+			RationaleDB.releaseResources(stmt, rs);
+		}
+		
 	}	
 	
-/*	public boolean display()
-	{
-		Frame lf = new Frame();
-		AltConstRelGUI ar = new AltConstRelGUI(lf, this, null, false);
-		ar.show();
-		return ar.getCanceled();
-	} */
+	/*	public boolean display()
+	 {
+	 Frame lf = new Frame();
+	 AltConstRelGUI ar = new AltConstRelGUI(lf, this, null, false);
+	 ar.show();
+	 return ar.getCanceled();
+	 } */
 	
 	/**
 	 * Used to display the editor for this relationship. This is how you
@@ -360,14 +360,14 @@ public class AltConstRel extends RationaleElement implements Serializable
 	{
 		System.out.println("create AltConstRel");
 		System.out.println("id = " + parent.getID());
-
+		
 		EditAltConstRel ar = new EditAltConstRel(disp, this, (Alternative) parent, true);
 		System.out.println("name in create = " + this.getName());
 //		((Alternative) parent).toDatabase();
 		return ar.getCanceled(); //can I do this?
 	}
 	
-
+	
 	/**
 	 * We don't use this yet. 
 	 */
@@ -378,10 +378,10 @@ public class AltConstRel extends RationaleElement implements Serializable
 //		Vector newStat = inf.updateConstraint( this);
 		
 //		return newStat;
-        return null;
+		return null;
 	}
-
-
-
+	
+	
+	
 	
 }

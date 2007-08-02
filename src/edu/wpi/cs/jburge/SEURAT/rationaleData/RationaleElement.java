@@ -53,7 +53,7 @@ public class RationaleElement implements Serializable
 	 *
 	 */
 	boolean fromXML;
-
+	
 	RationaleElement()
 	{
 		id = -1;
@@ -75,7 +75,7 @@ public class RationaleElement implements Serializable
 		return lastID;
 	}
 	
-
+	
 	public void setID(int newID)
 	{
 		id = newID;
@@ -94,7 +94,7 @@ public class RationaleElement implements Serializable
 	{
 		description = desc;
 	}
-
+	
 	public String getName()
 	{
 		return name;
@@ -140,7 +140,7 @@ public class RationaleElement implements Serializable
 	{
 		return null;
 	}
-
+	
 	/**
 	 * Retrieve the element from the database. This must be implemented by the subclasses.
 	 * @param id the database primary key
@@ -159,11 +159,11 @@ public class RationaleElement implements Serializable
 	{
 	}
 	
-/*	public boolean display()
-	{
-		return true;
-	}
-	*/
+	/*	public boolean display()
+	 {
+	 return true;
+	 }
+	 */
 	
 	/**
 	 * Displays the element in the editor. This must be implemented by the subclasses.
@@ -237,7 +237,7 @@ public class RationaleElement implements Serializable
 	{
 		return RationaleElementType.RATIONALE;
 	}
-
+	
 	/**
 	 * Creates the element history from an XML file. This is a 
 	 * recursive method.  
@@ -257,5 +257,5 @@ public class RationaleElement implements Serializable
 		}
 	}
 	
-
+	
 }

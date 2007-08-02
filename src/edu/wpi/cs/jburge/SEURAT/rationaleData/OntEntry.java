@@ -3,9 +3,9 @@
 /*
  * OntEntry class
  */
- 
- package edu.wpi.cs.jburge.SEURAT.rationaleData;
- 
+
+package edu.wpi.cs.jburge.SEURAT.rationaleData;
+
 
 import instrumentation.DataLog;
 
@@ -35,7 +35,7 @@ import edu.wpi.cs.jburge.SEURAT.inference.OntologyInferences;
 public class OntEntry extends RationaleElement implements Serializable 
 {
 	// class variables
-
+	
 	/**
 	 * 
 	 */
@@ -64,7 +64,7 @@ public class OntEntry extends RationaleElement implements Serializable
 	 * Our child entries (those lower than us in the hierarchy)
 	 */
 	Vector<OntEntry> children;
-
+	
 	/**
 	 * constructor called from the XML parsing code
 	 */
@@ -75,7 +75,7 @@ public class OntEntry extends RationaleElement implements Serializable
 		children = new Vector<OntEntry>();
 		parents = new Vector<OntEntry>();		
 	}
-
+	
 	/**
 	 * The standard constructor
 	 * @param nam - the ontology entry name
@@ -103,7 +103,7 @@ public class OntEntry extends RationaleElement implements Serializable
 	{
 		return RationaleElementType.ONTENTRY;
 	}
-
+	
 	/**
 	 * Create a new ontology entry and add it to this one as a child
 	 * @param nam - the new entry's name
@@ -117,7 +117,7 @@ public class OntEntry extends RationaleElement implements Serializable
 		this.incRefs();
 		return newEntry;
 	}
-
+	
 	/**
 	 * Add an existing ontology entry as a child
 	 * @param child
@@ -144,7 +144,7 @@ public class OntEntry extends RationaleElement implements Serializable
 	{
 		parents.addElement(parnt);
 	}
-
+	
 	public Importance getImportance()
 	{
 		return importance;
@@ -189,8 +189,8 @@ public class OntEntry extends RationaleElement implements Serializable
 	{
 		return nRefs;
 	}
-
-
+	
+	
 	/**
 	 * save the ontology entry to the database.
 	 * @param pid - the parent ID
@@ -208,70 +208,70 @@ public class OntEntry extends RationaleElement implements Serializable
 		ResultSet rs = null; 
 		
 //		System.out.println("Saving to the database");
-
+		
 		try {
-			 stmt = conn.createStatement(); 
-
+			stmt = conn.createStatement(); 
+			
 			if (inDatabase())
 			{
 				
 				//now, update it with the new information
 				String updateOnt = "UPDATE OntEntries " +
 				"SET name = '" +
-				 RationaleDB.escape(this.name) + "', " +
+				RationaleDB.escape(this.name) + "', " +
 				"description = '" +
-				 RationaleDB.escape(this.description) + "', " +
-				 "importance = '" + 
-				 this.importance.toString() + "'" +
-					" WHERE " +
-				   "id = " + this.id + " " ;
-//			  System.out.println(updateOnt);
+				RationaleDB.escape(this.description) + "', " +
+				"importance = '" + 
+				this.importance.toString() + "'" +
+				" WHERE " +
+				"id = " + this.id + " " ;
+//				System.out.println(updateOnt);
 				stmt.execute(updateOnt);
 			}
-		else 
-		{
-		
-			//now, we have determined that the ontolgy entry is new
-			
-			String newArgSt = "INSERT INTO OntEntries " +
-			   "(name, description, importance) " +
-			   "VALUES ('" +
-			   RationaleDB.escape(this.name) + "', '" +
-			   RationaleDB.escape(this.description) + "', '" +
-			   this.importance.toString() + "')"; 
-
-			   System.out.println(newArgSt);
-			stmt.execute(newArgSt); 
-			
-		
-			
-		}
+			else 
+			{
+				
+				//now, we have determined that the ontolgy entry is new
+				
+				String newArgSt = "INSERT INTO OntEntries " +
+				"(name, description, importance) " +
+				"VALUES ('" +
+				RationaleDB.escape(this.name) + "', '" +
+				RationaleDB.escape(this.description) + "', '" +
+				this.importance.toString() + "')"; 
+				
+				System.out.println(newArgSt);
+				stmt.execute(newArgSt); 
+				
+				
+				
+			}
 			//now, we need to get our ID
 			String findQuery2 = "SELECT id FROM OntEntries where name='" +
-			   this.name + "'";
+			this.name + "'";
 			rs = stmt.executeQuery(findQuery2); 
-//***			System.out.println(findQuery2);
-
-		   if (rs.next())
-		   {
-			   ourid = rs.getInt("id");
-			   rs.close();
-		   }
-		   else
-		   {
-			ourid = 0;
-		   }
-		   
-		   this.id = ourid;
-		   
+//			***			System.out.println(findQuery2);
+			
+			if (rs.next())
+			{
+				ourid = rs.getInt("id");
+				rs.close();
+			}
+			else
+			{
+				ourid = 0;
+			}
+			
+			this.id = ourid;
+			
 			//if the parent ID is not zero, then update the parent-child relationship
 			if (pid > 0)
 			{
 				String findQuery3 = "SELECT * from OntRelationships WHERE " +
-				   "parent = " + new Integer(pid).toString() +
-				   " and child = " + new Integer(ourid).toString();
-//***				   System.out.println(findQuery3);
-				   rs = stmt.executeQuery(findQuery3);
+				"parent = " + new Integer(pid).toString() +
+				" and child = " + new Integer(ourid).toString();
+//				***				   System.out.println(findQuery3);
+				rs = stmt.executeQuery(findQuery3);
 				if (rs.next())
 				{
 					rs.close();
@@ -279,10 +279,10 @@ public class OntEntry extends RationaleElement implements Serializable
 				else
 				{
 					String insertRel = "INSERT INTO OntRelationships (parent, child) " +
-					   "VALUES (" +
-					   new Integer(pid).toString() + ", " +
-					   new Integer(ourid).toString() + ")";
-//***					System.out.println(insertRel);
+					"VALUES (" +
+					new Integer(pid).toString() + ", " +
+					new Integer(ourid).toString() + ")";
+//					***					System.out.println(insertRel);
 					stmt.execute(insertRel);
 				}
 			} //checking parent
@@ -296,16 +296,16 @@ public class OntEntry extends RationaleElement implements Serializable
 			}
 		} catch (SQLException ex) {
 			RationaleDB.reportError(ex, "OntEntry.toDatabase(int)", "SQL Error");
-	   }
-   	   
-	   finally { 
-		   RationaleDB.releaseResources(stmt, rs);
-		   }
-		   
+		}
+		
+		finally { 
+			RationaleDB.releaseResources(stmt, rs);
+		}
+		
 		return ourid;	
- 
+		
 	}	
-
+	
 	/**
 	 * Check if our element is already in the database. The check is different
 	 * if you are reading it in from XML because you can do a query on the name.
@@ -359,7 +359,7 @@ public class OntEntry extends RationaleElement implements Serializable
 		}
 		return found;
 	}
-
+	
 	/**
 	 * Read in the ontology entry from the database, given its ID
 	 * @param id - the id
@@ -369,34 +369,34 @@ public class OntEntry extends RationaleElement implements Serializable
 		
 		RationaleDB db = RationaleDB.getHandle();
 		Connection conn = db.getConnection();
-		 String findQuery = "";
+		String findQuery = "";
 		this.id = id;
 		
 		Statement stmt = null; 
 		ResultSet rs = null; 
 		try {
-			 stmt = conn.createStatement();
-
-				 findQuery = "SELECT *  FROM " +
-				 "OntEntries where id = " +
-				 new Integer(id).toString();
-//***			System.out.println(findQuery);
-			 rs = stmt.executeQuery(findQuery);
-			 
-			 if (rs.next())
-			 {
+			stmt = conn.createStatement();
+			
+			findQuery = "SELECT *  FROM " +
+			"OntEntries where id = " +
+			new Integer(id).toString();
+//			***			System.out.println(findQuery);
+			rs = stmt.executeQuery(findQuery);
+			
+			if (rs.next())
+			{
 				name = RationaleDB.decode(rs.getString("name"));
 				rs.close();
 				this.fromDatabase(name);
-		 }
-
+			}
+			
 		} catch (SQLException ex) {
 			RationaleDB.reportError(ex, "OntEntry.fromDatabase(int)", findQuery);
-	   }
-	   finally { 
-		   RationaleDB.releaseResources(stmt, rs);
-		   }
-	
+		}
+		finally { 
+			RationaleDB.releaseResources(stmt, rs);
+		}
+		
 	}	
 	
 	/**
@@ -408,7 +408,7 @@ public class OntEntry extends RationaleElement implements Serializable
 		
 		RationaleDB db = RationaleDB.getHandle();
 		Connection conn = db.getConnection();
-
+		
 		//if this is coming from a textual claim descriptor we will want to 
 		//strip out the "IS" and "NOT" from the name.
 		
@@ -421,50 +421,50 @@ public class OntEntry extends RationaleElement implements Serializable
 			name = name.substring(4);
 		}
 		
-//***		System.out.println("ont name = " + name);
+//		***		System.out.println("ont name = " + name);
 		
 		this.name = name;
 		name = RationaleDB.escape(name);
 		
 		Statement stmt = null; 
 		ResultSet rs = null; 
-		 String findQuery = "";
+		String findQuery = "";
 		try {
-			 stmt = conn.createStatement();
-
-				 findQuery = "SELECT *  FROM " +
-				 "OntEntries where name = '" +
-				 name + "'";
-//***			System.out.println(findQuery);
-			 rs = stmt.executeQuery(findQuery);
-			 
-			 if (rs.next())
-			 {
+			stmt = conn.createStatement();
+			
+			findQuery = "SELECT *  FROM " +
+			"OntEntries where name = '" +
+			name + "'";
+//			***			System.out.println(findQuery);
+			rs = stmt.executeQuery(findQuery);
+			
+			if (rs.next())
+			{
 				
 				id = rs.getInt("id");
 				description = rs.getString("description");
 				importance = (Importance) Importance.fromString(rs.getString("importance"));
-
+				
 				rs.close();	
-						
-		 }
-
+				
+			}
+			
 		} catch (SQLException ex) {
 			RationaleDB.reportError(ex, "OntEntry.fromDatabase(String)", findQuery);
-	   }
-	   finally { 
-		   RationaleDB.releaseResources(stmt,rs);
-		   }
-	
+		}
+		finally { 
+			RationaleDB.releaseResources(stmt,rs);
+		}
+		
 	}	
 	
-/*	public boolean display()
-	{
-		Frame lf = new Frame();
-		OntEntryGUI ar = new OntEntryGUI(lf, this, null, false);
-		ar.show();
-		return ar.getCanceled();
-	} */
+	/*	public boolean display()
+	 {
+	 Frame lf = new Frame();
+	 OntEntryGUI ar = new OntEntryGUI(lf, this, null, false);
+	 ar.show();
+	 return ar.getCanceled();
+	 } */
 	
 	public boolean display(Display disp)
 	{
@@ -481,7 +481,7 @@ public class OntEntry extends RationaleElement implements Serializable
 		System.out.println("create ontentry");
 		System.out.println("id = " + parent.getID());
 		this.addParent((OntEntry) parent);
-
+		
 		EditOntEntry ar = new EditOntEntry(disp, this, (OntEntry) parent, true);
 		System.out.println("name in create = " + this.getName());
 		return ar.getCanceled(); //can I do this?
@@ -494,7 +494,7 @@ public class OntEntry extends RationaleElement implements Serializable
 		Vector<RationaleStatus> newStat = inf.updateOntEntry( this);
 		
 		return newStat;
-
+		
 	}
 	
 	public void fromXML(Element ontE, OntEntry parent)
@@ -505,11 +505,11 @@ public class OntEntry extends RationaleElement implements Serializable
 		
 		//add idref ***from the XML***
 		String idref = ontE.getAttribute("id");
-
+		
 		
 		//get our name
 		name = ontE.getAttribute("name");
-
+		
 		//set our parent
 		if (parent != null)
 			addParent(parent);
@@ -519,19 +519,19 @@ public class OntEntry extends RationaleElement implements Serializable
 		
 		//get description
 		Node  childE = ontE.getFirstChild();
-	
+		
 		//the text is actually the child of the element, odd...
 		Node descN = childE.getFirstChild();
 		if (descN instanceof Text) 
 		{
-		  Text text = (Text) descN;
-		  String data = text.getData();
-		  setDescription(data);
+			Text text = (Text) descN;
+			String data = text.getData();
+			setDescription(data);
 		}
-/*		else
-		{
-			System.out.println("Couldn't find description node");
-		} */
+		/*		else
+		 {
+		 System.out.println("Couldn't find description node");
+		 } */
 		
 		//now get all our children
 		childE = (Element) childE.getNextSibling();
@@ -566,17 +566,17 @@ public class OntEntry extends RationaleElement implements Serializable
 			else
 			{
 				OntEntry child = new OntEntry();
-
+				
 				addChild(child); //add our new kid
-			
+				
 				//now, recursively call ourselves
 				child.fromXML((Element) childOnt, this);
-
+				
 			}
 			
 			//finally, go to the next child
 			childE = (Element) childE.getNextSibling();
-	
+			
 		}
 		
 //		System.out.println(idref);

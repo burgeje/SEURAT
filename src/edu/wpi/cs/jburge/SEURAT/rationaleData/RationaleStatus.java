@@ -10,7 +10,7 @@ import java.sql.*;
  *
  */
 public class RationaleStatus {
-
+	
 	/**
 	 * The id of our parent rationale element (whose status we are giving)
 	 */
@@ -40,7 +40,7 @@ public class RationaleStatus {
 	 * the Rationale Task List
 	 */
 	private boolean override;
-
+	
 	/**
 	 * Rationale status constructor
 	 * @param tstatus - the error level
@@ -51,27 +51,27 @@ public class RationaleStatus {
 	 * @param stype - the type of error
 	 */
 	public RationaleStatus(RationaleErrorLevel tstatus, String tdescription, RationaleElementType ttype,
-		 java.util.Date date, int pid, RationaleStatusType stype)
-		{
-			super();
-			setDescription(tdescription);
-			setStatus(tstatus);
-			setRationaleType(ttype);
-			this.pid = pid;
-			this.stype = stype;
-			this.override = false;
-		}
+			java.util.Date date, int pid, RationaleStatusType stype)
+	{
+		super();
+		setDescription(tdescription);
+		setStatus(tstatus);
+		setRationaleType(ttype);
+		this.pid = pid;
+		this.stype = stype;
+		this.override = false;
+	}
 	
 	public boolean equivalentTo(RationaleStatus stat)
 	{
 		//need to compare item, parent, and description (in case name changes)
 		boolean equiv = false;
 		if ((stat.getStatusType() == stype) &&
-			(stat.getParent() == pid) &&
-			(stat.getDescription().compareTo(description) == 0))
-			{
-				equiv = true;
-			}
+				(stat.getParent() == pid) &&
+				(stat.getDescription().compareTo(description) == 0))
+		{
+			equiv = true;
+		}
 		return equiv;
 	}
 	/**
@@ -90,17 +90,17 @@ public class RationaleStatus {
 	public RationaleErrorLevel getStatus() {
 		return status;
 	}
-
-
+	
+	
 	public String getDescription() {
 		return description;
 	}
-
-
+	
+	
 	public RationaleElementType getRationaleType() {
 		return type;
 	}
-
+	
 	public int getParent() {
 		return pid;
 	}
@@ -108,11 +108,11 @@ public class RationaleStatus {
 	public java.util.Date getDate() {
 		return dateStamp;
 	}
-
+	
 	public void setStatus(RationaleErrorLevel stat) {
 		status = stat;
 	}
-
+	
 	public void setOverride(boolean ov) {
 		override = ov;
 	}
@@ -120,19 +120,19 @@ public class RationaleStatus {
 	public boolean getOverride() {
 		return override;
 	}
-
+	
 	public void setDescription(String string) {
 		description = string;
 	}
-
-
+	
+	
 	/**
 	 * Get our description
 	 */
-    public String toString()
-    {
-    	return description;
-    }
+	public String toString()
+	{
+		return description;
+	}
 	public void setRationaleType(RationaleElementType rat) {
 		type = rat;
 	}
@@ -160,16 +160,16 @@ public class RationaleStatus {
 		ResultSet rs = null; 
 		
 		System.out.println("Saving Status to the database");
-
+		
 		try {
-			 stmt = conn.createStatement(); 
-			 String findQuery = "SELECT parent, ptype, description, status FROM status where parent ='" +
-				this.pid + "' and ptype = '" +
-				this.type + "' and status = '" + 
-				this.stype + "'";
-//***			 System.out.println(findQuery);
-			 rs = stmt.executeQuery(findQuery); 
-
+			stmt = conn.createStatement(); 
+			String findQuery = "SELECT parent, ptype, description, status FROM status where parent ='" +
+			this.pid + "' and ptype = '" +
+			this.type + "' and status = '" + 
+			this.stype + "'";
+//			***			 System.out.println(findQuery);
+			rs = stmt.executeQuery(findQuery); 
+			
 			if (rs.next())
 			{
 				newStatus = false;
@@ -178,57 +178,57 @@ public class RationaleStatus {
 				{
 					over = "Yes";
 				}
-			   String stat = rs.getString("status");
-			   String updateQuery;
-			   updateQuery = "UPDATE Status " +
-					   "SET Override = '" + over + "' " +
-					   "WHERE status = '" + stat +
-					   "' AND parent = " + this.pid +
-				   " and ptype = '" + this.type + "';";
-			   stmt.execute(updateQuery);
-		
+				String stat = rs.getString("status");
+				String updateQuery;
+				updateQuery = "UPDATE Status " +
+				"SET Override = '" + over + "' " +
+				"WHERE status = '" + stat +
+				"' AND parent = " + this.pid +
+				" and ptype = '" + this.type + "';";
+				stmt.execute(updateQuery);
+				
 			}
-
-	
-		else 
-		{
-		
-			//now, we have determined that the status item is new
-			String parentRSt = new Integer(parent).toString();
-			System.out.println("parent");	
 			
-			Timestamp time = new Timestamp((new java.util.Date()).getTime());
-			System.out.println(this.description);
-			System.out.println(this.status.toString());
-			System.out.println(this.type.toString());
-			System.out.println(this.stype.toString());
-			String newStatSt = "INSERT INTO Status "+
-			   "(date, description, type, ptype, parent, status, override) " +
-			   "VALUES ('" +
-			   time.toString() + "', '" +
-			   RationaleDB.escape(this.description) + "', '" +
-			   this.status.toString() + "', '" +
-//			   RationaleDB.escape(this.rationale) + "', '" +
-			   this.type.toString() + "', " +
-			   parentRSt + ", '" +
+			
+			else 
+			{
+				
+				//now, we have determined that the status item is new
+				String parentRSt = new Integer(parent).toString();
+				System.out.println("parent");	
+				
+				Timestamp time = new Timestamp((new java.util.Date()).getTime());
+				System.out.println(this.description);
+				System.out.println(this.status.toString());
+				System.out.println(this.type.toString());
+				System.out.println(this.stype.toString());
+				String newStatSt = "INSERT INTO Status "+
+				"(date, description, type, ptype, parent, status, override) " +
+				"VALUES ('" +
+				time.toString() + "', '" +
+				RationaleDB.escape(this.description) + "', '" +
+				this.status.toString() + "', '" +
+//				RationaleDB.escape(this.rationale) + "', '" +
+				this.type.toString() + "', " +
+				parentRSt + ", '" +
 				stype.toString() + "', '" +
 				"No')";
-
-			   System.out.println(newStatSt);
-			stmt.execute(newStatSt); 
+				
+				System.out.println(newStatSt);
+				stmt.execute(newStatSt); 
+				
+			}
 			
-		}
-
 		} catch (SQLException ex) {
 			RationaleDB.reportError(ex, "RationaleStatus.toDatabase", "SQL error");
-	   }
-   	   
-	   finally { 
-		   RationaleDB.releaseResources(stmt, rs);
-		   }
-
+		}
+		
+		finally { 
+			RationaleDB.releaseResources(stmt, rs);
+		}
+		
 		return newStatus; 
 	}	
-
-
+	
+	
 }

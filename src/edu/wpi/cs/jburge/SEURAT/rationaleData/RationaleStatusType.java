@@ -1,17 +1,17 @@
 
 
-	package edu.wpi.cs.jburge.SEURAT.rationaleData;
+package edu.wpi.cs.jburge.SEURAT.rationaleData;
 
-  import java.util.*;
-  import java.io.*;
+import java.util.*;
+import java.io.*;
 
-  /**
-   * Defines the type of error that has occured
-   * @author burgeje
-   *
-   */
- public final class RationaleStatusType implements Serializable
- {
+/**
+ * Defines the type of error that has occured
+ * @author burgeje
+ *
+ */
+public final class RationaleStatusType implements Serializable
+{
 	/**
 	 * 
 	 */
@@ -20,35 +20,35 @@
 	public final int ord;
 	private RationaleStatusType prev;
 	private RationaleStatusType next;
-
+	
 	private static int upperBound = 0;
 	private static RationaleStatusType first = null;
 	private static RationaleStatusType last = null;
-    
+	
 	private RationaleStatusType(String anID) {
 		this.id = anID;
-
+		
 		this.ord = upperBound++;
 		if (first == null) first = this;
 		if (last != null) {
-		  this.prev = last;
-		  last.next = this;
+			this.prev = last;
+			last.next = this;
 		}
 		last = this; 
 	} 
-
+	
 	public static Enumeration elements() {
-	  return new Enumeration() {
-		private RationaleStatusType curr = first;
-		public boolean hasMoreElements() {
-		  return curr != null;
-		}
-		public Object nextElement() {
-		  RationaleStatusType c = curr;
-		  curr = curr.next();
-		  return c;
-		}
-	  };
+		return new Enumeration() {
+			private RationaleStatusType curr = first;
+			public boolean hasMoreElements() {
+				return curr != null;
+			}
+			public Object nextElement() {
+				RationaleStatusType c = curr;
+				curr = curr.next();
+				return c;
+			}
+		};
 	} 
 	public String toString() {return this.id; } 
 	public static int size() { return upperBound; } 
@@ -68,34 +68,34 @@
 		}
 		return null;
 	}
-
+	
 	/**
 	 * There isn't a selected alternative
 	 */
 	public static final RationaleStatusType NONE_SELECTED = new 
-RationaleStatusType("None_Selected");
+	RationaleStatusType("None_Selected");
 	/**
 	 * An alternative is selected that is not as well supported as
 	 * other alternatives
 	 */
 	public static final RationaleStatusType LESS_SUPPORTED = new 
-RationaleStatusType("Less_Supported");
+	RationaleStatusType("Less_Supported");
 	/**
 	 * An alternative is selected that has no arguments in its favor
 	 */
 	public static final RationaleStatusType NOT_SUPPORTED = new 
-RationaleStatusType("Not_Supported");
+	RationaleStatusType("Not_Supported");
 	/**
 	 * A requirement has been violated (this error is attached to
 	 * the requirement)
 	 */
 	public static final RationaleStatusType REQ_VIOLATION = new 
-RationaleStatusType("Requirement_Violation");
+	RationaleStatusType("Requirement_Violation");
 	/**
 	 * An alternative is selected that violates a requirement
 	 */
 	public static final RationaleStatusType ALT_REQ_VIOLATION = new
-RationaleStatusType("Alt_Violates_Requirement");
+	RationaleStatusType("Alt_Violates_Requirement");
 	/**
 	 * A tradeoff has been violated.
 	 */
@@ -157,6 +157,6 @@ RationaleStatusType("Alt_Violates_Requirement");
 	public static final RationaleStatusType SUBDECISIONS_MISSING = new
 	RationaleStatusType("Subdecisions_Missing");
 	
-
-
-  }
+	
+	
+}

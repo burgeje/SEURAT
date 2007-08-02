@@ -29,7 +29,7 @@ import edu.wpi.cs.jburge.SEURAT.editors.EditDesigner;
  */
 public class Designer extends RationaleElement implements Serializable
 {
-
+	
 	/**
 	 * 
 	 */
@@ -47,7 +47,7 @@ public class Designer extends RationaleElement implements Serializable
 	 * or they could be a product designer, or...
 	 */
 	String projPosition;
-
+	
 	/**
 	 * How much experience does the designer have at their current job (would
 	 * position make more sense?)
@@ -61,24 +61,24 @@ public class Designer extends RationaleElement implements Serializable
 	 * What are their areas of expertise?
 	 */
 	Vector<AreaExp> expertise;
-
-
+	
+	
 	public String getCorpPosition() {
 		return corpPosition;
 	}
-
+	
 	public void setCorpPosition(String corpPosition) {
 		this.corpPosition = corpPosition;
 	}
-
+	
 	public Vector getExpertise() {
 		return expertise;
 	}
-
+	
 	public void setExpertise(Vector<AreaExp> expertise) {
 		this.expertise = expertise;
 	}
-
+	
 	public void addArea(AreaExp area)
 	{
 		this.expertise.add(area);
@@ -86,27 +86,27 @@ public class Designer extends RationaleElement implements Serializable
 	public int getExprHere() {
 		return exprHere;
 	}
-
+	
 	public void setExprHere(int exprHere) {
 		this.exprHere = exprHere;
 	}
-
+	
 	public int getExprTotal() {
 		return exprTotal;
 	}
-
+	
 	public void setExprTotal(int exprTotal) {
 		this.exprTotal = exprTotal;
 	}
-
+	
 	public String getProjPosition() {
 		return projPosition;
 	}
-
+	
 	public void setProjPosition(String projPosition) {
 		this.projPosition = projPosition;
 	}
-
+	
 	/** 
 	 * Our constructor
 	 *
@@ -118,7 +118,7 @@ public class Designer extends RationaleElement implements Serializable
 		corpPosition = "";
 		projPosition = "";
 		
-
+		
 	} 
 	
 	public RationaleElementType getElementType()
@@ -141,87 +141,87 @@ public class Designer extends RationaleElement implements Serializable
 		Statement stmt = null; 
 		ResultSet rs = null; 
 		
-//***		System.out.println("Saving to the database");
-
+//		***		System.out.println("Saving to the database");
+		
 		try {
-			 stmt = conn.createStatement(); 
-			 /*
+			stmt = conn.createStatement(); 
+			/*
 			 String findQuery = "SELECT id  FROM Contingencies where name='" +
-				this.name + "'";
-//***			 System.out.println(findQuery);
-			 rs = stmt.executeQuery(findQuery);
-			 */ 
-
+			 this.name + "'";
+			 //***			 System.out.println(findQuery);
+			  rs = stmt.executeQuery(findQuery);
+			  */ 
 			
-/*
-			if (rs.next())
-			{
-			*/
+			
+			/*
+			 if (rs.next())
+			 {
+			 */
 			if (this.id >= 0)
 			{
-//***				System.out.println("already there");
+//				***				System.out.println("already there");
 //				ourid = rs.getInt("id");
 				String updateAssump = "UPDATE DesignerProfiles A " +
-					"SET A.name = '" + RationaleDB.escape(this.name) +
-					"', A.corpPosition = '" + RationaleDB.escape(this.corpPosition) +
-					"', A.projPosition = '" + RationaleDB.escape(this.projPosition) +
-					"', A.exprHere = " + this.exprHere +
-					", A.exprTotal = " + this.exprTotal +
-					" WHERE " +
-					"A.id = " + this.id + " ";
+				"SET A.name = '" + RationaleDB.escape(this.name) +
+				"', A.corpPosition = '" + RationaleDB.escape(this.corpPosition) +
+				"', A.projPosition = '" + RationaleDB.escape(this.projPosition) +
+				"', A.exprHere = " + this.exprHere +
+				", A.exprTotal = " + this.exprTotal +
+				" WHERE " +
+				"A.id = " + this.id + " ";
 //				System.out.println(updateAssump);
-			 	stmt.execute(updateAssump);
+				stmt.execute(updateAssump);
 			}
-		else 
-		{
-		
-			//now, we have determined that the Designer is new
-			
-			String newArgSt = "INSERT INTO DesignerProfiles " +
-			   "(name, corpPosition, projPosition, exprHere, exprTotal) " +
-			   "VALUES ('" +
-			   RationaleDB.escape(this.name) + 
-			   "', '" + RationaleDB.escape(this.corpPosition) +
-			   "', '" + RationaleDB.escape(this.projPosition) +
-			   "', " + this.exprHere +
-			   ", " + this.exprTotal + ")";
-
-//***			   System.out.println(newArgSt);
-			stmt.execute(newArgSt); 
-			
-		
-			
-		}
+			else 
+			{
+				
+				//now, we have determined that the Designer is new
+				
+				String newArgSt = "INSERT INTO DesignerProfiles " +
+				"(name, corpPosition, projPosition, exprHere, exprTotal) " +
+				"VALUES ('" +
+				RationaleDB.escape(this.name) + 
+				"', '" + RationaleDB.escape(this.corpPosition) +
+				"', '" + RationaleDB.escape(this.projPosition) +
+				"', " + this.exprHere +
+				", " + this.exprTotal + ")";
+				
+//				***			   System.out.println(newArgSt);
+				stmt.execute(newArgSt); 
+				
+				
+				
+			}
 			//now, we need to get our ID
 			String findQuery2 = "SELECT id FROM DesignerProfiles where name='" +
-			   this.name + "'";
+			this.name + "'";
 			rs = stmt.executeQuery(findQuery2); 
-//***			System.out.println(findQuery2);
-
-		   if (rs.next())
-		   {
-			   ourid = rs.getInt("id");
-			   rs.close();
-		   }
-		   else
-		   {
-			ourid = 0;
-		   }
-		   this.id = ourid;
-		   
-
+//			***			System.out.println(findQuery2);
+			
+			if (rs.next())
+			{
+				ourid = rs.getInt("id");
+				rs.close();
+			}
+			else
+			{
+				ourid = 0;
+			}
+			this.id = ourid;
+			
+			
 		} catch (SQLException ex) {
 			RationaleDB.reportError(ex, "Designer.toDatabase", "SQL error");
-	   }
-   	   
-	   finally { 
-		   RationaleDB.releaseResources(stmt, rs);
-		   }
-		   
+		}
+		
+		finally { 
+			RationaleDB.releaseResources(stmt, rs);
+		}
+		
 		return ourid;	
- 
+		
 	}	
-
+	
 	/**
 	 * Read our designer from the database, given their ID
 	 * @param id - the unique id
@@ -231,35 +231,35 @@ public class Designer extends RationaleElement implements Serializable
 		
 		RationaleDB db = RationaleDB.getHandle();
 		Connection conn = db.getConnection();
-
+		
 		this.id = id;
 		
 		Statement stmt = null; 
 		ResultSet rs = null; 
-		 String findQuery = "";
+		String findQuery = "";
 		try {
-			 stmt = conn.createStatement();
-
-				 findQuery = "SELECT *  FROM " +
-				 "DesignerProfiles where id = " +
-				 new Integer(id).toString();
-//***			System.out.println(findQuery);
-			 rs = stmt.executeQuery(findQuery);
-			 
-			 if (rs.next())
-			 {
+			stmt = conn.createStatement();
+			
+			findQuery = "SELECT *  FROM " +
+			"DesignerProfiles where id = " +
+			new Integer(id).toString();
+//			***			System.out.println(findQuery);
+			rs = stmt.executeQuery(findQuery);
+			
+			if (rs.next())
+			{
 				name = RationaleDB.decode(rs.getString("name"));
 				rs.close();
 				this.fromDatabase(name);
-		 }
-
+			}
+			
 		} catch (SQLException ex) {
 			RationaleDB.reportError(ex, "Designer.fromDatabase(int)", findQuery);
-	   }
-	   finally { 
-		   RationaleDB.releaseResources(stmt, rs);
-		   }
-	
+		}
+		finally { 
+			RationaleDB.releaseResources(stmt, rs);
+		}
+		
 	}		
 	
 	/**
@@ -271,39 +271,39 @@ public class Designer extends RationaleElement implements Serializable
 		
 		RationaleDB db = RationaleDB.getHandle();
 		Connection conn = db.getConnection();
-
+		
 		this.name = name;
 		name = RationaleDB.escape(name);
 		
 		Statement stmt = null; 
 		ResultSet rs = null; 
 		try {
-			 stmt = conn.createStatement();
-			 String findQuery; 
-				 findQuery = "SELECT *  FROM " +
-				 "DesignerProfiles where name = '" +
-				 name + "'";
-//***			System.out.println(findQuery);
-			 rs = stmt.executeQuery(findQuery);
-			 
-			 if (rs != null)
-			 {
+			stmt = conn.createStatement();
+			String findQuery; 
+			findQuery = "SELECT *  FROM " +
+			"DesignerProfiles where name = '" +
+			name + "'";
+//			***			System.out.println(findQuery);
+			rs = stmt.executeQuery(findQuery);
+			
+			if (rs != null)
+			{
 				while (rs.next())
 				{
-				id = rs.getInt("id");
-				corpPosition = RationaleDB.decode(rs.getString("corpPosition"));
-				projPosition = RationaleDB.decode(rs.getString("projPosition"));
-				exprHere = rs.getInt("exprHere");
-				exprTotal = rs.getInt("exprTotal");
+					id = rs.getInt("id");
+					corpPosition = RationaleDB.decode(rs.getString("corpPosition"));
+					projPosition = RationaleDB.decode(rs.getString("projPosition"));
+					exprHere = rs.getInt("exprHere");
+					exprTotal = rs.getInt("exprTotal");
 				}
 				rs.close();
-						
+				
 				//also need to read in the areas too
 				String findQuery3 = "SELECT * from AreaExp WHERE " +
-				   "des = " + new Integer(id).toString();
-
-//***				   System.out.println(findQuery3);
-				   rs = stmt.executeQuery(findQuery3);
+				"des = " + new Integer(id).toString();
+				
+//				***				   System.out.println(findQuery3);
+				rs = stmt.executeQuery(findQuery3);
 				if (rs != null)
 				{
 					while (rs.next())
@@ -315,18 +315,18 @@ public class Designer extends RationaleElement implements Serializable
 					}
 					rs.close();
 				}
-
-		 }
-
+				
+			}
+			
 		} catch (SQLException ex) {
 			RationaleDB.reportError(ex, "Designer.fromDatabase(String)", "SQL Error");
-	   }
-	   finally { 
-		   RationaleDB.releaseResources(stmt, rs);
-		   }
-	
+		}
+		finally { 
+			RationaleDB.releaseResources(stmt, rs);
+		}
+		
 	}	
-
+	
 	/**
 	 * Create a new designer by bringing up the designer editor.
 	 * @param disp - points to the display
@@ -336,14 +336,14 @@ public class Designer extends RationaleElement implements Serializable
 	public boolean create(Display disp, RationaleElement parent)
 	{
 //		System.out.println("create Designer");
-
+		
 		EditDesigner ar = new EditDesigner(disp, this, true);
 		String msg = "Edited Designer " + this.getName() + " " + ar.getCanceled();
 		DataLog d = DataLog.getHandle();
 		d.writeData(msg);
 		return ar.getCanceled(); //can I do this?
 	}
-
+	
 	/**
 	 * Displays the designer using the designer editor.
 	 * @param disp - points back to the display
@@ -362,8 +362,8 @@ public class Designer extends RationaleElement implements Serializable
 	public Vector<RationaleStatus> updateStatus()
 	{
 //		DesignerInferences inf = new ContingencyInferences();
-	//	Vector newStat = inf.updateAssumption( this);
+		//	Vector newStat = inf.updateAssumption( this);
 		//return newStat;
-        return null;
+		return null;
 	}
 }

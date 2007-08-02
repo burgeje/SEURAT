@@ -411,7 +411,7 @@ public class Alternative extends RationaleElement implements Serializable {
 		
 		try {
 			stmt = conn.createStatement(); 
-
+			
 			if (inDatabase(parentID, ptype))
 			{
 				String updateParent = "UPDATE alternatives R " +
@@ -1058,5 +1058,5 @@ public class Alternative extends RationaleElement implements Serializable {
 		}
 		return found;
 	}
-
+	
 }

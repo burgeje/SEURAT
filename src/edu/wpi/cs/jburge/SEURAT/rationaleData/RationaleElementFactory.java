@@ -13,7 +13,7 @@ package edu.wpi.cs.jburge.SEURAT.rationaleData;
  * @author jburge
  */
 public final class RationaleElementFactory {
-
+	
 	/**
 	 * 
 	 */
@@ -21,7 +21,7 @@ public final class RationaleElementFactory {
 		super();
 		// TODO Auto-generated constructor stub
 	}
-
+	
 	/**
 	 * The paramterized factory method
 	 * @param type - the type of RationaleElement we need
@@ -99,5 +99,5 @@ public final class RationaleElementFactory {
 			return null; //shouldn't happen!
 		}
 	}
-
+	
 }

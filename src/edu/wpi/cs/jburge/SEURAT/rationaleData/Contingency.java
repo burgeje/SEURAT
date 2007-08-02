@@ -170,7 +170,7 @@ public class Contingency extends RationaleElement implements Serializable
 		
 		finally { 
 			RationaleDB.releaseResources(stmt, rs);
-
+			
 		}
 		
 		return ourid;	
@@ -193,7 +193,7 @@ public class Contingency extends RationaleElement implements Serializable
 		ResultSet rs = null; 
 		try {
 			stmt = conn.createStatement();
-
+			
 			findQuery = "SELECT *  FROM " +
 			"Contingencies where id = " +
 			new Integer(id).toString();
@@ -235,7 +235,7 @@ public class Contingency extends RationaleElement implements Serializable
 		ResultSet rs = null; 
 		try {
 			stmt = conn.createStatement();
-
+			
 			findQuery = "SELECT *  FROM " +
 			"Contingencies where name = '" +
 			name + "'";

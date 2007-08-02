@@ -1,8 +1,8 @@
 /*
  * Decisions class
  */
- 
- package edu.wpi.cs.jburge.SEURAT.rationaleData;
+
+package edu.wpi.cs.jburge.SEURAT.rationaleData;
 
 import instrumentation.DataLog;
 
@@ -35,7 +35,7 @@ import edu.wpi.cs.jburge.SEURAT.inference.DecisionInferences;
 public class Decision extends RationaleElement implements Serializable
 {
 	// class variables
-
+	
 	/**
 	 * 
 	 */
@@ -79,12 +79,12 @@ public class Decision extends RationaleElement implements Serializable
 	 * Any constraints on this decision (weight limitations, etc.)
 	 */
 	Vector<Constraint> constraints;
-
+	
 	DecisionStatus status;		//don't know if maybe this should be an integer?
 	Vector<Alternative> alternatives;    //the decision will have alternatives *or* sub-decisions
-    Vector<Decision> subDecisions;
+	Vector<Decision> subDecisions;
 	Vector<Question> questions;       
-
+	
 	public Decision()
 	{
 		super();
@@ -96,12 +96,12 @@ public class Decision extends RationaleElement implements Serializable
 		constraints = new Vector<Constraint>();
 	} 
 	
-
-    public RationaleElementType getElementType()
-    {
-    	return RationaleElementType.DECISION;
-    }
-    
+	
+	public RationaleElementType getElementType()
+	{
+		return RationaleElementType.DECISION;
+	}
+	
 	public DecisionType getType()
 	{
 		return type;
@@ -110,7 +110,7 @@ public class Decision extends RationaleElement implements Serializable
 	{
 		type = dtp;
 	}
-
+	
 	public DecisionStatus getStatus()
 	{
 		return status;
@@ -186,7 +186,7 @@ public class Decision extends RationaleElement implements Serializable
 	public Vector getConstraints() {
 		return constraints;
 	}
-
+	
 	public void addConstraint(Constraint con)
 	{
 		constraints.addElement(con);
@@ -194,11 +194,11 @@ public class Decision extends RationaleElement implements Serializable
 	public void setConstraints(Vector<Constraint> constraints) {
 		this.constraints = constraints;
 	}
-
+	
 	public Designer getDesigner() {
 		return designer;
 	}
-
+	
 	public void setDesigner(Designer designer) {
 		this.designer = designer;
 	}
@@ -260,127 +260,127 @@ public class Decision extends RationaleElement implements Serializable
 		//find out if this requirement is already in the database
 		Statement stmt = null; 
 		ResultSet rs = null; 
-
+		
 		String subsReq = "No";
 		if (!alts)
 			subsReq = "Yes";
-			
-		try {
-			 stmt = conn.createStatement(); 
-
-				if (inDatabase(parent,ptype))
-				{
-					//set up Designer update string
-					String updateD;
-					if (designer == null)
-						updateD = "D.designer = null";
-					else
-						updateD = "D.designer = " + designer.getID();
-					
-					 updateQuery = "UPDATE decisions D " +
-					   "SET D.parent = " + new Integer(parent).toString() +
-					   ", D.ptype = '" + ptype.toString() + 
-					   "', D.phase = '" + devPhase.toString() +
-					   "', D.description = '" + RationaleDB.escape(description) +
-					   "', D.type = '" + type.toString() +
-					   "', D.name = '" + RationaleDB.escape(name) +
-					   "', D.status = '" + status.toString() + 
-					   "', D.subdecreq = '" + subsReq +
-					   "', " + updateD +
-						" WHERE " +
-					   "D.id = " + this.id + " " ;
-					stmt.execute(updateQuery);
-	
-			}
-		else 
-		{
 		
-			//now, we have determined that the decision is new
-			String parentSt = new Integer(this.parent).toString();
-			String updateD;
-			if (designer == null)
-				updateD = "null";
-			else
-				updateD = new Integer(designer.getID()).toString();
-
-			updateQuery = "INSERT INTO Decisions "+
-			   "(name, description, type, status, phase, subdecreq, parent, ptype, designer) " +
-			   "VALUES ('" +
-			   RationaleDB.escape(this.name) + "', '" +
-			   RationaleDB.escape(this.description) + "', '" +
-			   this.type.toString() + "', '" +
-			   this.status.toString() + "', '" +
-			   this.devPhase.toString() + "', '" +
-			   subsReq + "', " +
-			   parentSt + ", '" +
-			   ptype.toString() + "', " +
-			   updateD + ")";
-
-			stmt.execute(updateQuery); 
+		try {
+			stmt = conn.createStatement(); 
 			
-		}
-		//in either case, we want to update any sub-requirements in case
-		//they are new!
+			if (inDatabase(parent,ptype))
+			{
+				//set up Designer update string
+				String updateD;
+				if (designer == null)
+					updateD = "D.designer = null";
+				else
+					updateD = "D.designer = " + designer.getID();
+				
+				updateQuery = "UPDATE decisions D " +
+				"SET D.parent = " + new Integer(parent).toString() +
+				", D.ptype = '" + ptype.toString() + 
+				"', D.phase = '" + devPhase.toString() +
+				"', D.description = '" + RationaleDB.escape(description) +
+				"', D.type = '" + type.toString() +
+				"', D.name = '" + RationaleDB.escape(name) +
+				"', D.status = '" + status.toString() + 
+				"', D.subdecreq = '" + subsReq +
+				"', " + updateD +
+				" WHERE " +
+				"D.id = " + this.id + " " ;
+				stmt.execute(updateQuery);
+				
+			}
+			else 
+			{
+				
+				//now, we have determined that the decision is new
+				String parentSt = new Integer(this.parent).toString();
+				String updateD;
+				if (designer == null)
+					updateD = "null";
+				else
+					updateD = new Integer(designer.getID()).toString();
+				
+				updateQuery = "INSERT INTO Decisions "+
+				"(name, description, type, status, phase, subdecreq, parent, ptype, designer) " +
+				"VALUES ('" +
+				RationaleDB.escape(this.name) + "', '" +
+				RationaleDB.escape(this.description) + "', '" +
+				this.type.toString() + "', '" +
+				this.status.toString() + "', '" +
+				this.devPhase.toString() + "', '" +
+				subsReq + "', " +
+				parentSt + ", '" +
+				ptype.toString() + "', " +
+				updateD + ")";
+				
+				stmt.execute(updateQuery); 
+				
+			}
+			//in either case, we want to update any sub-requirements in case
+			//they are new!
 			//now, we need to get our ID
 			updateQuery = "SELECT id FROM decisions where name='" +
-			   RationaleDB.escape(this.name) + "'";
+			RationaleDB.escape(this.name) + "'";
 			rs = stmt.executeQuery(updateQuery); 
-
-		   if (rs.next())
-		   {
-			   ourid = rs.getInt("id");
-			   rs.close();
-		   }
-		   else
-		   {
-			ourid = 0;
-		   }
-		   this.id = ourid;
-		   
-		   Enumeration alts = alternatives.elements();
-		   while (alts.hasMoreElements())
-		   {
-			   Alternative alt = (Alternative) alts.nextElement();
-//			   System.out.println("Saving alternative from decision");
-			   alt.toDatabase(ourid, RationaleElementType.DECISION);
-		   }
 			
-		   Enumeration decs = subDecisions.elements();
-		   while (decs.hasMoreElements())
-		   {
-			   Decision dec = (Decision) decs.nextElement();
-			   dec.toDatabase(ourid, RationaleElementType.DECISION);
-		   }
+			if (rs.next())
+			{
+				ourid = rs.getInt("id");
+				rs.close();
+			}
+			else
+			{
+				ourid = 0;
+			}
+			this.id = ourid;
 			
-		   Enumeration quests = questions.elements();
-		   while (quests.hasMoreElements())
-		   {
-			   Question quest = (Question) quests.nextElement();
-			   quest.toDatabase(ourid, RationaleElementType.DECISION);
-		   }
+			Enumeration alts = alternatives.elements();
+			while (alts.hasMoreElements())
+			{
+				Alternative alt = (Alternative) alts.nextElement();
+//				System.out.println("Saving alternative from decision");
+				alt.toDatabase(ourid, RationaleElementType.DECISION);
+			}
 			
-		   //finally, the history
+			Enumeration decs = subDecisions.elements();
+			while (decs.hasMoreElements())
+			{
+				Decision dec = (Decision) decs.nextElement();
+				dec.toDatabase(ourid, RationaleElementType.DECISION);
+			}
 			
-		   Enumeration hist = history.elements();
-		   while (hist.hasMoreElements())
-		   {
-			   History his = (History) hist.nextElement();
-			   his.toDatabase(ourid, RationaleElementType.DECISION);
-		   }
-		   
-	
-		   //need to update our relationships with the constraints
+			Enumeration quests = questions.elements();
+			while (quests.hasMoreElements())
+			{
+				Question quest = (Question) quests.nextElement();
+				quest.toDatabase(ourid, RationaleElementType.DECISION);
+			}
+			
+			//finally, the history
+			
+			Enumeration hist = history.elements();
+			while (hist.hasMoreElements())
+			{
+				History his = (History) hist.nextElement();
+				his.toDatabase(ourid, RationaleElementType.DECISION);
+			}
+			
+			
+			//need to update our relationships with the constraints
 			Enumeration conkids = this.constraints.elements();
 			while (conkids.hasMoreElements())
 			{
 				Constraint kid = (Constraint) conkids.nextElement();
-			//if the parent ID is not zero, then update the parent-child relationship
-
+				//if the parent ID is not zero, then update the parent-child relationship
+				
 				updateQuery = "SELECT * from ConDecRelationships WHERE " +
-				   "constr = " + new Integer(kid.getID()).toString() +
-				   " and decision = " + new Integer(ourid).toString();
-
-				   rs = stmt.executeQuery(updateQuery);
+				"constr = " + new Integer(kid.getID()).toString() +
+				" and decision = " + new Integer(ourid).toString();
+				
+				rs = stmt.executeQuery(updateQuery);
 				if (rs.next())
 				{
 					rs.close();
@@ -388,30 +388,30 @@ public class Decision extends RationaleElement implements Serializable
 				else
 				{
 					String insertRel = "INSERT INTO ConDecRelationships (constr, decision) " +
-					   "VALUES (" +
-					   new Integer(kid.getID()).toString() + ", " +
-					   new Integer(ourid).toString() + ")";
+					"VALUES (" +
+					new Integer(kid.getID()).toString() + ", " +
+					new Integer(ourid).toString() + ")";
 					System.out.println(insertRel);
 					stmt.execute(insertRel);
 				}
 				kid.toDatabase(ourid);
 			} //checking parent
-
-
+			
+			
 		} catch (SQLException ex) {
-	   // handle any errors 
+			// handle any errors 
 			RationaleDB.reportError(ex,"Error in Decision.toDatabase", updateQuery);
-
-	   }
-   	   
-	   finally { 
-		   RationaleDB.releaseResources(stmt, rs);
-		   }
-		   
+			
+		}
+		
+		finally { 
+			RationaleDB.releaseResources(stmt, rs);
+		}
+		
 		return ourid;	
- 
+		
 	}	
-
+	
 	/**
 	 * Get our alternative from the database, given its unique id
 	 * @param id - the decision ID
@@ -420,38 +420,38 @@ public class Decision extends RationaleElement implements Serializable
 	{
 		RationaleDB db = RationaleDB.getHandle();
 		Connection conn = db.getConnection();
-
+		
 		this.id = decID;
 		
 		Statement stmt = null; 
 		ResultSet rs = null; 
 		String findQuery = ""; 
-		 try {
-			 stmt = conn.createStatement();
-
-				 findQuery = "SELECT name  FROM " +
-				 "decisions where id = " +
-				 new Integer(decID).toString();
-//***			System.out.println(findQuery);
-			 rs = stmt.executeQuery(findQuery);
-			 
-			 if (rs.next())
-			 {
+		try {
+			stmt = conn.createStatement();
+			
+			findQuery = "SELECT name  FROM " +
+			"decisions where id = " +
+			new Integer(decID).toString();
+//			***			System.out.println(findQuery);
+			rs = stmt.executeQuery(findQuery);
+			
+			if (rs.next())
+			{
 				name = RationaleDB.decode(rs.getString("name"));
 				rs.close();
 				this.fromDatabase(name);
-			 }
-			 
+			}
+			
 		} catch (SQLException ex) {
-	   // handle any errors 
+			// handle any errors 
 			RationaleDB.reportError(ex,"Error in Decision.fromDatabase(1)", findQuery);
-	   }
-	   finally { 
-		   RationaleDB.releaseResources(stmt, rs);
-		 }
-	
+		}
+		finally { 
+			RationaleDB.releaseResources(stmt, rs);
+		}
+		
 	}
-
+	
 	/**
 	 * Get the decision from the database, given its name
 	 * @param decision name
@@ -461,22 +461,22 @@ public class Decision extends RationaleElement implements Serializable
 		String findQuery = "";
 		RationaleDB db = RationaleDB.getHandle();
 		Connection conn = db.getConnection();
-
+		
 		this.name = name;
 		name = RationaleDB.escape(name);
 		
 		Statement stmt = null; 
 		ResultSet rs = null; 
 		try {
-			 stmt = conn.createStatement();
-				 findQuery = "SELECT *  FROM " +
-				 "decisions where name = '" +
-				 name + "'";
-//***			System.out.println(findQuery);
-			 rs = stmt.executeQuery(findQuery);
-			 
-			 if (rs.next())
-			 {
+			stmt = conn.createStatement();
+			findQuery = "SELECT *  FROM " +
+			"decisions where name = '" +
+			name + "'";
+//			***			System.out.println(findQuery);
+			rs = stmt.executeQuery(findQuery);
+			
+			if (rs.next())
+			{
 				id = rs.getInt("id");
 				description = RationaleDB.decode(rs.getString("description"));
 				type = (DecisionType) DecisionType.fromString(rs.getString("type"));
@@ -495,7 +495,7 @@ public class Decision extends RationaleElement implements Serializable
 				{
 					alts = true;
 				}
-
+				
 				try {
 					int desID = rs.getInt("designer");
 					designer = new Designer();
@@ -505,117 +505,117 @@ public class Decision extends RationaleElement implements Serializable
 					designer = null; //nothing...
 				}
 				
-					
+				
+			}
+			rs.close();
+			//need to read in the rest - recursive routines?
+			if (!alts)
+			{
+				Vector<String> decNames = new Vector<String>();
+				findQuery = "SELECT name from DECISIONS where " +
+				"ptype = '" + RationaleElementType.DECISION.toString() +
+				"' and parent = " + new Integer(id).toString();
+//				***					System.out.println(findQuery2);
+				rs = stmt.executeQuery(findQuery);	
+				while (rs.next())				
+				{
+					decNames.add(RationaleDB.decode(rs.getString("name")));
+				}
+				Enumeration decs = decNames.elements();
+				while (decs.hasMoreElements())
+				{
+					Decision subDec = new Decision();
+					subDec.fromDatabase((String) decs.nextElement());
+					subDecisions.add(subDec);
+				}
+				
+			}
+			else
+			{
+				Vector<String> altNames = new Vector<String>();
+				findQuery = "SELECT name from ALTERNATIVES where " +
+				"ptype = '" + RationaleElementType.DECISION.toString() +
+				"' and parent = " + new Integer(id).toString();
+//				***					System.out.println(findQuery2);
+				rs = stmt.executeQuery(findQuery);	
+				while (rs.next())				
+				{
+					altNames.add(RationaleDB.decode(rs.getString("name")));
+				}
+				Enumeration alts = altNames.elements();
+				while (alts.hasMoreElements())
+				{
+					Alternative alt = new Alternative();
+					alt.fromDatabase((String) alts.nextElement());
+					alternatives.add(alt);
+				}
+				
+			}
+			
+			//need to do questions too 
+			Vector<String> questNames = new Vector<String>();
+			findQuery = "SELECT name from QUESTIONS where " +
+			"ptype = '" + RationaleElementType.DECISION.toString() +
+			"' and parent = " + new Integer(id).toString();
+//			***				System.out.println(findQuery3);
+			rs = stmt.executeQuery(findQuery);
+			while (rs.next())
+			{
+				questNames.add(RationaleDB.decode(rs.getString("name")));
+			}
+			Enumeration quests = questNames.elements();
+			while (quests.hasMoreElements())
+			{
+				Question quest = new Question();
+				quest.fromDatabase((String) quests.nextElement());
+				questions.add(quest);
+			}
+			
+			//no, not last - need history too
+			findQuery = "SELECT * from HISTORY where ptype = 'Decision' and " +
+			"parent = " + Integer.toString(id);
+//			***			  System.out.println(findQuery5);
+			rs = stmt.executeQuery(findQuery);
+			while (rs.next())
+			{
+				History nextH = new History();
+				nextH.setStatus(rs.getString("status"));
+				nextH.setReason(RationaleDB.decode(rs.getString("reason")));
+				nextH.dateStamp = rs.getTimestamp("date");
+//				nextH.dateStamp = rs.getDate("date");
+				history.add(nextH);
+			}
+			
+			
+			//now, get our constraints
+			findQuery = "SELECT * from ConDecRelationships WHERE " +
+			"decision = " + new Integer(id).toString();
+			
+			rs = stmt.executeQuery(findQuery);
+			if (rs != null)
+			{
+				while (rs.next())
+				{
+					int ontID = rs.getInt("constr");
+					Constraint cont = new Constraint();
+					cont.fromDatabase(ontID);
+					this.addConstraint(cont);
 				}
 				rs.close();
-				//need to read in the rest - recursive routines?
-				if (!alts)
-				{
-					Vector<String> decNames = new Vector<String>();
-					findQuery = "SELECT name from DECISIONS where " +
-						"ptype = '" + RationaleElementType.DECISION.toString() +
-						"' and parent = " + new Integer(id).toString();
-//***					System.out.println(findQuery2);
-					rs = stmt.executeQuery(findQuery);	
-					while (rs.next())				
-					{
-						decNames.add(RationaleDB.decode(rs.getString("name")));
-					}
-					Enumeration decs = decNames.elements();
-					while (decs.hasMoreElements())
-					{
-						Decision subDec = new Decision();
-						subDec.fromDatabase((String) decs.nextElement());
-						subDecisions.add(subDec);
-					}
-					
-				}
-				else
-				{
-					Vector<String> altNames = new Vector<String>();
-					findQuery = "SELECT name from ALTERNATIVES where " +
-						"ptype = '" + RationaleElementType.DECISION.toString() +
-						"' and parent = " + new Integer(id).toString();
-//***					System.out.println(findQuery2);
-					rs = stmt.executeQuery(findQuery);	
-					while (rs.next())				
-					{
-						altNames.add(RationaleDB.decode(rs.getString("name")));
-					}
-					Enumeration alts = altNames.elements();
-					while (alts.hasMoreElements())
-					{
-						Alternative alt = new Alternative();
-						alt.fromDatabase((String) alts.nextElement());
-						alternatives.add(alt);
-					}
-					
-				}
-				
-				//need to do questions too 
-				Vector<String> questNames = new Vector<String>();
-				findQuery = "SELECT name from QUESTIONS where " +
-					"ptype = '" + RationaleElementType.DECISION.toString() +
-					"' and parent = " + new Integer(id).toString();
-//***				System.out.println(findQuery3);
-				rs = stmt.executeQuery(findQuery);
-				while (rs.next())
-				{
-					questNames.add(RationaleDB.decode(rs.getString("name")));
-				}
-				Enumeration quests = questNames.elements();
-				while (quests.hasMoreElements())
-				{
-					Question quest = new Question();
-					quest.fromDatabase((String) quests.nextElement());
-					questions.add(quest);
-				}
-				
-				//no, not last - need history too
-				 findQuery = "SELECT * from HISTORY where ptype = 'Decision' and " +
-				  "parent = " + Integer.toString(id);
-//	  ***			  System.out.println(findQuery5);
-				rs = stmt.executeQuery(findQuery);
-				while (rs.next())
-				{
-					History nextH = new History();
-					nextH.setStatus(rs.getString("status"));
-					nextH.setReason(RationaleDB.decode(rs.getString("reason")));
-					nextH.dateStamp = rs.getTimestamp("date");
-//					nextH.dateStamp = rs.getDate("date");
-					history.add(nextH);
-				}
-				
-				
-				//now, get our constraints
-				findQuery = "SELECT * from ConDecRelationships WHERE " +
-				   "decision = " + new Integer(id).toString();
-
-				   rs = stmt.executeQuery(findQuery);
-				if (rs != null)
-				{
-					while (rs.next())
-					{
-						int ontID = rs.getInt("constr");
-						Constraint cont = new Constraint();
-						cont.fromDatabase(ontID);
-						this.addConstraint(cont);
-					}
-					rs.close();
-				}
-				
+			}
+			
 		} catch (SQLException ex) {
-	   // handle any errors 
+			// handle any errors 
 			RationaleDB.reportError(ex,"Error in Decision.fromDatabase", findQuery);
 			
-	   }
-	   finally { 
-		   RationaleDB.releaseResources(stmt, rs);
-		   }
-	
+		}
+		finally { 
+			RationaleDB.releaseResources(stmt, rs);
+		}
+		
 	}
 	
-
+	
 	/**
 	 * Display our decision by bringing up the decision editor.
 	 * @param disp - points back to our display
@@ -647,7 +647,7 @@ public class Decision extends RationaleElement implements Serializable
 		System.out.println("name in create = " + this.getName());
 		return ar.getCanceled(); //can I do this?
 	}
-
+	
 	/**
 	 * Deletes a decision from SEURAT and the database. This only works
 	 * if there aren't any associated alternatives, questions, or subdecisions.
@@ -657,14 +657,14 @@ public class Decision extends RationaleElement implements Serializable
 		//need to have a way to inform if delete did not happen
 		//can't delete if there are dependencies...
 		if ((this.alternatives.size() > 0) ||
-			(this.questions.size() > 0) ||
-			(this.subDecisions.size() > 0))
-			{
-				MessageDialog.openError(new Shell(),	"Delete Error",	"Can't delete when there are sub-elements.");
-				return true;
-			}
+				(this.questions.size() > 0) ||
+				(this.subDecisions.size() > 0))
+		{
+			MessageDialog.openError(new Shell(),	"Delete Error",	"Can't delete when there are sub-elements.");
+			return true;
+		}
 		RationaleDB db = RationaleDB.getHandle();
-
+		
 		db.deleteRationaleElement(this);
 		return false;
 		
@@ -701,7 +701,7 @@ public class Decision extends RationaleElement implements Serializable
 		return newStat;
 	}
 	
-
+	
 	/**
 	 * If we delete a decision, the status of other elements may change so
 	 * we need to run the appropriate inferences.
@@ -723,22 +723,22 @@ public class Decision extends RationaleElement implements Serializable
 		this.fromXML = true;
 		
 		RationaleDB db = RationaleDB.getHandle();
-
+		
 		//add idref ***from the XML***
 		String idref = decN.getAttribute("id");
-
+		
 		//get our name
 		name = decN.getAttribute("name");
-
+		
 		//get our status
 		status = DecisionStatus.fromString(decN.getAttribute("status"));
-
+		
 		//get our type
 		type = DecisionType.fromString(decN.getAttribute("type"));
-
+		
 		//get our phase
 		devPhase = Phase.fromString(decN.getAttribute("phase"));
-
+		
 		Node descN = decN.getFirstChild();
 		//get the description
 		//the text is actually the child of the element, odd...
@@ -748,16 +748,16 @@ public class Decision extends RationaleElement implements Serializable
 			String data = text.getData();
 			setDescription(data);
 		}
-
+		
 		//and last....
 		db.addRef(idref, this); //important to use the ref from the XML file!
-
+		
 		Element child = (Element) descN.getNextSibling();
-
+		
 		while (child != null) {
-
+			
 			String nextName;
-
+			
 			nextName = child.getNodeName();
 			//here we check the type, then process
 			if (nextName.compareTo("DR:alternative") == 0) {
@@ -781,7 +781,7 @@ public class Decision extends RationaleElement implements Serializable
 				History hist = new History();
 				historyFromXML(child);
 				updateHistory(hist);
-
+				
 			} else if (nextName.compareTo("altref") == 0) {
 				Node childRef = child.getFirstChild(); //now, get the text
 				//decode the reference
@@ -789,7 +789,7 @@ public class Decision extends RationaleElement implements Serializable
 				String stRef = refText.getData();
 				alts = true;
 				addAlternative((Alternative) db.getRef(stRef));
-
+				
 			} else if (nextName.compareTo("decref") == 0) {
 				Node childRef = child.getFirstChild(); //now, get the text
 				//decode the reference
@@ -797,14 +797,14 @@ public class Decision extends RationaleElement implements Serializable
 				String stRef = refText.getData();
 				alts = false;
 				addSubDecision((Decision) db.getRef(stRef));
-
+				
 			} else if (nextName.compareTo("questref") == 0) {
 				Node childRef = child.getFirstChild(); //now, get the text
 				//decode the reference
 				Text refText = (Text) childRef;
 				String stRef = refText.getData();
 				addQuestion((Question) db.getRef(stRef));
-
+				
 			} else {
 				System.out.println("unrecognized element under argument!");
 			}
@@ -869,6 +869,6 @@ public class Decision extends RationaleElement implements Serializable
 		return found;
 	}
 	
-
+	
 	
 }

@@ -317,7 +317,7 @@ public class DesignProductEntry extends RationaleElement implements Serializable
 		String findQuery = ""; 		
 		try {
 			stmt = conn.createStatement();
-
+			
 			findQuery = "SELECT *  FROM " +
 			"DesignComponents where id = " +
 			new Integer(id).toString();

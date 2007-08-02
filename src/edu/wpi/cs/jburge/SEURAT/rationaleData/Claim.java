@@ -263,7 +263,7 @@ public class Claim extends RationaleElement implements Serializable
 		
 		finally { 
 			RationaleDB.releaseResources(stmt, rs);
-
+			
 		}
 		
 		return ourid;	
@@ -286,7 +286,7 @@ public class Claim extends RationaleElement implements Serializable
 		ResultSet rs = null; 
 		try {
 			stmt = conn.createStatement();
-
+			
 			findQuery = "SELECT *  FROM " +
 			"claims where id = " +
 			new Integer(id).toString();
@@ -325,7 +325,7 @@ public class Claim extends RationaleElement implements Serializable
 		ResultSet rs = null; 
 		try {
 			stmt = conn.createStatement();
-
+			
 			findQuery = "SELECT *  FROM " +
 			"claims where name = '" +
 			RationaleDB.escape(name)+ "'";
@@ -525,7 +525,7 @@ public class Claim extends RationaleElement implements Serializable
 		}
 		return found;
 	}
-
+	
 }
 
 

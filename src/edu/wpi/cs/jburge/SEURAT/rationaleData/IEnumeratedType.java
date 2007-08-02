@@ -23,5 +23,5 @@ public interface IEnumeratedType {
 	IEnumeratedType prev();
 	IEnumeratedType next();
 	abstract IEnumeratedType fromString(String rt);
-
+	
 }

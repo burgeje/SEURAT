@@ -33,7 +33,7 @@ public class Requirement extends RationaleElement implements Serializable
 	 */
 	private static final long serialVersionUID = -8527639694978991643L;
 	// class variables
-
+	
 	// instance variables
 	/**
 	 * Type of requirement: functional or non-functional (FR or NFR)
@@ -67,17 +67,17 @@ public class Requirement extends RationaleElement implements Serializable
 	/**
 	 * List of the names of arguments against this alternative
 	 */
-    Vector<String> m_argumentsFor;
-    /**
-     * List of all the arguments relating to this requirement
-     */
-    Vector<Argument> m_arguments;
-    
-    /**
-     * List of sub-requirements
-     */
+	Vector<String> m_argumentsFor;
+	/**
+	 * List of all the arguments relating to this requirement
+	 */
+	Vector<Argument> m_arguments;
+	
+	/**
+	 * List of sub-requirements
+	 */
 	Vector<Requirement> m_requirements;
-
+	
 	/**
 	 * Constructor. Sets the initial status to undecided and creates ampty
 	 * vectors for the arguments for and against, and other arguments (dependencies),
@@ -93,13 +93,13 @@ public class Requirement extends RationaleElement implements Serializable
 		m_arguments = new Vector<Argument>();
 		m_requirements = new Vector<Requirement>();
 	} 
-
+	
 	/*
-	public Requirement(String name)
-	{
-		this.name = name;
-	}
-	*/
+	 public Requirement(String name)
+	 {
+	 this.name = name;
+	 }
+	 */
 	
 	public Requirement(String newDescription, String newArtifact, ReqType newType)
 	{
@@ -127,27 +127,27 @@ public class Requirement extends RationaleElement implements Serializable
 		try {
 			
 			stmt = conn.createStatement();
-
+			
 			findQuery = "SELECT name FROM " + 
 			"requirements where id = " +
 			new Integer(reqID).toString();
-//***		    System.out.println(findQuery);
+//			***		    System.out.println(findQuery);
 			rs = stmt.executeQuery(findQuery);
-			 
+			
 			if (rs.next())
 			{
-		   		name = RationaleDB.decode(rs.getString("name"));
-		   		rs.close();
-		   		this.fromDatabase(name);
+				name = RationaleDB.decode(rs.getString("name"));
+				rs.close();
+				this.fromDatabase(name);
 			}
 			
 		} catch (SQLException ex) {
 			RationaleDB.reportError(ex, "Requirement.fromDatabase(int)", findQuery);
-	   }
-	   finally { 
-		   RationaleDB.releaseResources(stmt, rs);
-		   }
-	
+		}
+		finally { 
+			RationaleDB.releaseResources(stmt, rs);
+		}
+		
 	}
 	public int getParent()
 	{
@@ -222,7 +222,7 @@ public class Requirement extends RationaleElement implements Serializable
 	{
 		m_arguments.addElement(newArg);
 	}
-
+	
 	public void fromDatabase(String rName)
 	{
 		RationaleDB db = RationaleDB.getHandle();
@@ -235,12 +235,12 @@ public class Requirement extends RationaleElement implements Serializable
 		ResultSet rs = null;
 		
 		try {
-			 stmt = conn.createStatement(); 
-			 String findQuery = "SELECT * FROM requirements where name='" +
-				rName + "'";
-//***			 System.out.println(findQuery);
-			 rs = stmt.executeQuery(findQuery); 
-
+			stmt = conn.createStatement(); 
+			String findQuery = "SELECT * FROM requirements where name='" +
+			rName + "'";
+//			***			 System.out.println(findQuery);
+			rs = stmt.executeQuery(findQuery); 
+			
 			if (rs.next())
 			{
 				this.id = rs.getInt("id");
@@ -264,9 +264,9 @@ public class Requirement extends RationaleElement implements Serializable
 			"type = 'ADDRESSES' or " +
 			"type = 'SATISFIES' or " +
 			"type = 'PRE-SUPPOSED-BY')";
-//***			System.out.println(findFor);
+//			***			System.out.println(findFor);
 			rs = stmt.executeQuery(findFor); 
-
+			
 			while (rs.next())
 			{
 				m_argumentsFor.addElement(RationaleDB.decode(rs.getString("name")));
@@ -281,9 +281,9 @@ public class Requirement extends RationaleElement implements Serializable
 			"(type = 'DENIES' or " +
 			"type = 'VIOLATES' or " +
 			"type = 'OPPOSED-BY')";
-//***			System.out.println(findAgainst);
+//			***			System.out.println(findAgainst);
 			rs = stmt.executeQuery(findAgainst); 
-
+			
 			while (rs.next())
 			{
 				m_argumentsAgainst.addElement(RationaleDB.decode(rs.getString("name")));
@@ -293,8 +293,8 @@ public class Requirement extends RationaleElement implements Serializable
 			//find history
 			//no, not last - need history too
 			String findQuery5 = "SELECT * from HISTORY where ptype = 'Requirement' and " +
-			  "parent = " + Integer.toString(id);
-//***			  System.out.println(findQuery5);
+			"parent = " + Integer.toString(id);
+//			***			  System.out.println(findQuery5);
 			rs = stmt.executeQuery(findQuery5);
 			while (rs.next())
 			{
@@ -308,11 +308,11 @@ public class Requirement extends RationaleElement implements Serializable
 			
 		} catch (SQLException ex) {
 			RationaleDB.reportError(ex, "Requirement.fromDatabase(String)", "SQL Error");
-	   }
-   	   
-	   finally { 
-		   RationaleDB.releaseResources(stmt, rs);
-		   }
+		}
+		
+		finally { 
+			RationaleDB.releaseResources(stmt, rs);
+		}
 		
 	}
 	public int toDatabase(int parentID, RationaleElementType ptype)
@@ -325,127 +325,127 @@ public class Requirement extends RationaleElement implements Serializable
 		//find out if this requirement is already in the database
 		Statement stmt = null; 
 		ResultSet rs = null; 
-
+		
 		String enabledStr;
 		if (enabled)
 			enabledStr = "True";
 		else
 			enabledStr = "False";
-			
+		
 		try {
 			stmt = conn.createStatement(); 
-
-		   if (inDatabase(parentID, ptype))
-		   {
+			
+			if (inDatabase(parentID, ptype))
+			{
 				String updateParent = "UPDATE Requirements "+
-				   "SET name = '" +
-					RationaleDB.escape(this.name) + "', " +				   "description = '" +					RationaleDB.escape(this.description) + "', " +
-					"type = '" +
-					this.m_type.toString() + "', " +				   "status = '" +
-					this.m_status.toString() + "', " +				   "enabled = '" +
-				   enabledStr + "' " +
-					" WHERE " +
-			   		"id = " + this.id + " " ;
-
-//			   System.out.println(updateParent);
+				"SET name = '" +
+				RationaleDB.escape(this.name) + "', " +				"description = '" +				RationaleDB.escape(this.description) + "', " +
+				"type = '" +
+				this.m_type.toString() + "', " +				"status = '" +
+				this.m_status.toString() + "', " +				"enabled = '" +
+				enabledStr + "' " +
+				" WHERE " +
+				"id = " + this.id + " " ;
+				
+//				System.out.println(updateParent);
 				stmt.execute(updateParent);
 			}
-//				return ourid;
-		else 
-		{
-		
-			//now, we have determined that the requirement is new
-			String parentSt;
-			String parentTSt;
-			System.out.println("parent ID is "+parentID);
-			if ((parentID < 0) || (ptype == null))
+//			return ourid;
+			else 
 			{
-				parentSt = "NULL";
-				parentTSt = "None";
+				
+				//now, we have determined that the requirement is new
+				String parentSt;
+				String parentTSt;
+				System.out.println("parent ID is "+parentID);
+				if ((parentID < 0) || (ptype == null))
+				{
+					parentSt = "NULL";
+					parentTSt = "None";
+				}
+				else
+				{
+					parentSt = new Integer(parentID).toString();
+					parentTSt = ptype.toString();
+				}
+				String newReqSt = "INSERT INTO Requirements "+
+				"(name, description, type, status, ptype, parent, enabled) " +
+				"VALUES ('" +
+				RationaleDB.escape(this.name) + "', '" +
+				RationaleDB.escape(this.description) + "', '" +
+				this.m_type.toString() + "', '" +
+				this.m_status.toString() + "', '" +
+				parentTSt + "', " +
+				parentSt + ", '" +
+				enabledStr + "')";
+//				System.out.println(newReqSt);
+				stmt.execute(newReqSt); 
+				
+			}
+			
+			//now, we need to get our ID
+			String findQuery2 = "SELECT id FROM requirements where name='" +
+			this.name + "'";
+			rs = stmt.executeQuery(findQuery2); 
+			
+			if (rs.next())
+			{
+				ourid = rs.getInt("id");
+				rs.close();
 			}
 			else
 			{
-				parentSt = new Integer(parentID).toString();
-				parentTSt = ptype.toString();
+				ourid = 0;
 			}
-			String newReqSt = "INSERT INTO Requirements "+
-			   "(name, description, type, status, ptype, parent, enabled) " +
-			   "VALUES ('" +
-			   RationaleDB.escape(this.name) + "', '" +
-			   RationaleDB.escape(this.description) + "', '" +
-			   this.m_type.toString() + "', '" +
-			   this.m_status.toString() + "', '" +
-			   parentTSt + "', " +
-			   parentSt + ", '" +
-			   enabledStr + "')";
-//			   System.out.println(newReqSt);
-			stmt.execute(newReqSt); 
+			this.id = ourid;
+			
+			/* This should be done elsewhere???   no, this should be fixed...
+			 //in either case, we want to update any sub-requirements in case
+			  //they are new!
+			   
+			   
+			   Enumeration args = m_arguments.elements();
+			   while (args.hasMoreElements())
+			   {
+			   Argument arg = (Argument) args.nextElement();
+			   arg.toDatabase(ourid, RationaleElementType.REQUIREMENT);
+			   }
+			   
+			   //now, any sub-requirements
+			    Enumeration reqs = m_requirements.elements();
+			    while (reqs.hasMoreElements())
+			    {
+			    System.out.println("adding Sub-requirements");
+			    System.out.println(ourid);
+			    Requirement req = (Requirement) reqs.nextElement();
+			    req.toDatabase(ourid, RationaleElementType.REQUIREMENT);
+			    }
+			    
+			    */			
+			//finally, the history
+			
+			Enumeration hist = history.elements();
+			while (hist.hasMoreElements())
+			{
+//				System.out.println("printing history");
+				History his = (History) hist.nextElement();
+				his.toDatabase(ourid, RationaleElementType.REQUIREMENT);
+//				System.out.println("printed history");
+			}
+			
+			
+			
+		} catch (SQLException ex) {
+			RationaleDB.reportError(ex, "Requirement.toDatabase", "SQL Error");
+		}
+		
+		finally { 
+			RationaleDB.releaseResources(stmt, rs);
 			
 		}
 		
-			//now, we need to get our ID
-			String findQuery2 = "SELECT id FROM requirements where name='" +
-			   this.name + "'";
-			rs = stmt.executeQuery(findQuery2); 
-
-		   if (rs.next())
-		   {
-			   ourid = rs.getInt("id");
-			   rs.close();
-		   }
-		   else
-		   {
-		   	ourid = 0;
-		   }
-		   this.id = ourid;
-		   
-		   /* This should be done elsewhere???   no, this should be fixed...
-		   //in either case, we want to update any sub-requirements in case
-		   //they are new!
-
-		   
-		   Enumeration args = m_arguments.elements();
-		   while (args.hasMoreElements())
-		   {
-			   Argument arg = (Argument) args.nextElement();
-			   arg.toDatabase(ourid, RationaleElementType.REQUIREMENT);
-		   }
-		
-		   //now, any sub-requirements
-		   Enumeration reqs = m_requirements.elements();
-		   while (reqs.hasMoreElements())
-		   {
-		   	   System.out.println("adding Sub-requirements");
-		   	   System.out.println(ourid);
-			   Requirement req = (Requirement) reqs.nextElement();
-			   req.toDatabase(ourid, RationaleElementType.REQUIREMENT);
-		   }
-
-			*/			
-		   //finally, the history
-			
-		   Enumeration hist = history.elements();
-		   while (hist.hasMoreElements())
-		   {
-//		   	   System.out.println("printing history");
-			   History his = (History) hist.nextElement();
-			   his.toDatabase(ourid, RationaleElementType.REQUIREMENT);
-//			   System.out.println("printed history");
-		   }
-		
-
-
-		} catch (SQLException ex) {
-			RationaleDB.reportError(ex, "Requirement.toDatabase", "SQL Error");
-  	   }
-   	   
-	   finally { 
-		   RationaleDB.releaseResources(stmt, rs);
-
-		   }
-		   
 		return ourid;	
- 
+		
 	}	
 	
 	/**
@@ -516,7 +516,7 @@ public class Requirement extends RationaleElement implements Serializable
 		return ar.getCanceled(); //can I do this?
 		
 	}
-
+	
 	public boolean create(Display disp, RationaleElement parent)
 	{
 //		System.out.println("create requirement");
@@ -533,34 +533,34 @@ public class Requirement extends RationaleElement implements Serializable
 		return ar.getCanceled(); //can I do this?
 	}
 	/*	
-	public boolean create(RationaleElement parent)
-	{
-		System.out.println("create requirement");
-		if (parent != null)
-		{
-			this.m_parent = parent.getID();
-			this.m_ptype = parent.getElementType().toString();
-		}
-		else
-		{
-			this.m_parent = 0;
-		}
-		Frame lf = new Frame();
-		RequirementGUI ar = new RequirementGUI(lf,  this, true);
-		ar.show();
-		return ar.getCanceled();
-	} */
+	 public boolean create(RationaleElement parent)
+	 {
+	 System.out.println("create requirement");
+	 if (parent != null)
+	 {
+	 this.m_parent = parent.getID();
+	 this.m_ptype = parent.getElementType().toString();
+	 }
+	 else
+	 {
+	 this.m_parent = 0;
+	 }
+	 Frame lf = new Frame();
+	 RequirementGUI ar = new RequirementGUI(lf,  this, true);
+	 ar.show();
+	 return ar.getCanceled();
+	 } */
 	
 	public boolean delete()
 	{
 		//need to have a way to inform if delete did not happen
 		//can't delete if there are dependencies...
 		if ((this.m_argumentsAgainst.size() > 0) ||
-			(this.m_argumentsFor.size() > 0))
-			{
-				MessageDialog.openError(new Shell(),	"Delete Error",	"Can't delete when there are sub-elements.");
-				return true;
-			}
+				(this.m_argumentsFor.size() > 0))
+		{
+			MessageDialog.openError(new Shell(),	"Delete Error",	"Can't delete when there are sub-elements.");
+			return true;
+		}
 		RationaleDB db = RationaleDB.getHandle();
 		
 		int argCount = db.countArgReferences(this);
@@ -584,7 +584,7 @@ public class Requirement extends RationaleElement implements Serializable
 		RequirementInferences inf = new RequirementInferences();
 		Vector<RationaleStatus> newStat = inf.updateRequirement( this);
 		return newStat;
-
+		
 	}
 	
 	public Vector<RationaleStatus> updateOnDelete()
@@ -603,7 +603,7 @@ public class Requirement extends RationaleElement implements Serializable
 		
 		//add idref ***from the XML***
 		String idref = reqNode.getAttribute("id");
-	
+		
 		//get our name
 		name = reqNode.getAttribute("name");
 		
@@ -615,7 +615,7 @@ public class Requirement extends RationaleElement implements Serializable
 		
 		//get our artifact
 		m_artifact = reqNode.getAttribute("artifact");
-
+		
 		//and last....
 		db.addRef(idref, this);	//important to use the ref from the XML file!
 		
@@ -625,9 +625,9 @@ public class Requirement extends RationaleElement implements Serializable
 		Node descT = descN.getFirstChild();
 		if (descT instanceof Text) 
 		{
-		  Text text = (Text) descT;
-		  String data = text.getData();
-		  setDescription(data);
+			Text text = (Text) descT;
+			String data = text.getData();
+			setDescription(data);
 		}
 		
 		//now, we loop until all children are done.
@@ -677,17 +677,17 @@ public class Requirement extends RationaleElement implements Serializable
 				//decode the reference
 				Text refText = (Text) childRef;
 				String stRef = refText.getData();
-	//			addDecision((Decision)db.getRef(stRef));
-
+				//			addDecision((Decision)db.getRef(stRef));
+				
 			} 
 			
 			nextChild = (Element) nextChild.getNextSibling();
 		}
-	
+		
 		
 	}
 	
-
-			
-}
 	
+	
+}
+

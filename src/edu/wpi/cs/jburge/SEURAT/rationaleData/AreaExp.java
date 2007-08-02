@@ -6,9 +6,9 @@
  * area of expertise. The two attributes are the design component 
  * (design product entry) and the level.
  */
- 
+
 package edu.wpi.cs.jburge.SEURAT.rationaleData;
- 
+
 
 import instrumentation.DataLog;
 
@@ -35,7 +35,7 @@ import edu.wpi.cs.jburge.SEURAT.editors.EditAreaExp;
 public class AreaExp extends RationaleElement implements Serializable 
 {
 	// class variables
-
+	
 	/**
 	 * 
 	 */
@@ -50,8 +50,8 @@ public class AreaExp extends RationaleElement implements Serializable
 	 * figure out what levels we want to be availabe and create a type!
 	 */
 	int level;
-
-
+	
+	
 	//constructor called from the XML parsing code
 	public AreaExp()
 	{
@@ -62,7 +62,7 @@ public class AreaExp extends RationaleElement implements Serializable
 	public AreaExp(String nam, AreaExp parnt)
 	{
 		super();
-
+		
 		component = new DesignProductEntry();
 	} 
 	
@@ -70,8 +70,8 @@ public class AreaExp extends RationaleElement implements Serializable
 	{
 		return RationaleElementType.EXPERTISE;
 	}
-
-
+	
+	
 	public int getLevel()
 	{
 		return level;
@@ -85,12 +85,12 @@ public class AreaExp extends RationaleElement implements Serializable
 	public DesignProductEntry getComponent() {
 		return component;
 	}
-
+	
 	public void setComponent(DesignProductEntry component) {
 		this.component = component;
 	}
-
-
+	
+	
 	/**
 	 * Save our area of expertise to the database
 	 * @param pid - the ID
@@ -108,9 +108,9 @@ public class AreaExp extends RationaleElement implements Serializable
 		ResultSet rs = null; 
 		
 //		System.out.println("Saving to the database");
-
+		
 		try {
-			 stmt = conn.createStatement(); 
+			stmt = conn.createStatement(); 
 			if (this.id >= 0)
 			{
 				
@@ -118,15 +118,15 @@ public class AreaExp extends RationaleElement implements Serializable
 				String updateOnt = "UPDATE AreaExp " +
 				"SET name = '" + RationaleDB.escape(this.name) + 
 				"', des = " +
-				 pid + ", " +
+				pid + ", " +
 				"area  = " +
-				 component.getID() + ", " +
-				  "level = " + 
-				  this.level +
-					" WHERE " +
-				   "des = " + pid + " AND area = " + 
-				   component.getID() + ";";
-			  System.out.println(updateOnt);
+				component.getID() + ", " +
+				"level = " + 
+				this.level +
+				" WHERE " +
+				"des = " + pid + " AND area = " + 
+				component.getID() + ";";
+				System.out.println(updateOnt);
 				stmt.execute(updateOnt);
 			}
 			else if (pid == 0)
@@ -134,44 +134,44 @@ public class AreaExp extends RationaleElement implements Serializable
 				//now, update it with the new information
 				String updateOnt = "UPDATE AreaExp " +
 				"SET name = '" + RationaleDB.escape(this.name) + 
-				  "level = " + 
-				  this.level +
-					" WHERE " +
-				   "id = " + 
-				   this.getID() + ";";
-			  System.out.println(updateOnt);
+				"level = " + 
+				this.level +
+				" WHERE " +
+				"id = " + 
+				this.getID() + ";";
+				System.out.println(updateOnt);
 				stmt.execute(updateOnt);
 			}
-		else 
-		{
-		
-			//now, we have determined that the ontolgy entry is new
+			else 
+			{
+				
+				//now, we have determined that the ontolgy entry is new
+				
+				String newArgSt = "INSERT INTO AreaExp " +
+				"(name, des, area, level) " +
+				"VALUES ('" +
+				RationaleDB.escape(name) + "', " +
+				pid + ", " +
+				component.getID() + ", " +
+				level + ")"; 
+				
+				System.out.println(newArgSt);
+				stmt.execute(newArgSt); 
+				
+			}
 			
-			String newArgSt = "INSERT INTO AreaExp " +
-			   "(name, des, area, level) " +
-			   "VALUES ('" +
-			   RationaleDB.escape(name) + "', " +
-			   pid + ", " +
-			   component.getID() + ", " +
-			   level + ")"; 
-
-			   System.out.println(newArgSt);
-			stmt.execute(newArgSt); 
-			
-		}
-
 		} catch (SQLException ex) {
 			RationaleDB.reportError(ex, "AreaExp.toDatabase", "Bad Query");
-	   }
-   	   
-	   finally { 
-		   RationaleDB.releaseResources(stmt, rs);
-		   }
-		   
+		}
+		
+		finally { 
+			RationaleDB.releaseResources(stmt, rs);
+		}
+		
 		return ourid;	
- 
+		
 	}	
-
+	
 	/**
 	 * Read in an area of expertise from the database
 	 * @param id - the database id
@@ -181,35 +181,35 @@ public class AreaExp extends RationaleElement implements Serializable
 		
 		RationaleDB db = RationaleDB.getHandle();
 		Connection conn = db.getConnection();
-		 String findQuery = "";
+		String findQuery = "";
 		this.id = id;
 		
 		Statement stmt = null; 
 		ResultSet rs = null; 
 		try {
-			 stmt = conn.createStatement();
-				 findQuery = "SELECT *  FROM " +
-				 "AreaExp where id = " +
-				 new Integer(id).toString();
-//***			System.out.println(findQuery);
-			 rs = stmt.executeQuery(findQuery);
-			 
-			 if (rs.next())
-			 {
+			stmt = conn.createStatement();
+			findQuery = "SELECT *  FROM " +
+			"AreaExp where id = " +
+			new Integer(id).toString();
+//			***			System.out.println(findQuery);
+			rs = stmt.executeQuery(findQuery);
+			
+			if (rs.next())
+			{
 				name = RationaleDB.decode(rs.getString("name"));
 				rs.close();
 				this.fromDatabase(name);
-		 }
-
+			}
+			
 		} catch (SQLException ex) {
-	   // handle any errors 
+			// handle any errors 
 			RationaleDB.reportError(ex, "AreaExp.fromDatabase(int)", findQuery);
-	   }
-	   finally { 
-		   RationaleDB.releaseResources(stmt, rs);
-	
-		   }
-	
+		}
+		finally { 
+			RationaleDB.releaseResources(stmt, rs);
+			
+		}
+		
 	}		
 	public void fromDatabase(String name)
 	{
@@ -217,7 +217,7 @@ public class AreaExp extends RationaleElement implements Serializable
 		RationaleDB db = RationaleDB.getHandle();
 		Connection conn = db.getConnection();
 		
-//***		System.out.println("ont name = " + name);
+//		***		System.out.println("ont name = " + name);
 		
 		this.name = name;
 		name = RationaleDB.escape(name);
@@ -225,39 +225,39 @@ public class AreaExp extends RationaleElement implements Serializable
 		Statement stmt = null; 
 		ResultSet rs = null; 
 		try {
-			 stmt = conn.createStatement();
-			 String findQuery; 
-				 findQuery = "SELECT *  FROM " +
-				 "AreaExp where name = '" +
-				 name + "'";
-//***			System.out.println(findQuery);
-			 rs = stmt.executeQuery(findQuery);
-			 
-			 if (rs.next())
-			 {
+			stmt = conn.createStatement();
+			String findQuery; 
+			findQuery = "SELECT *  FROM " +
+			"AreaExp where name = '" +
+			name + "'";
+//			***			System.out.println(findQuery);
+			rs = stmt.executeQuery(findQuery);
+			
+			if (rs.next())
+			{
 				
 				id = rs.getInt("id");
 				name = RationaleDB.decode(rs.getString("name"));
 				level = rs.getInt("level");
-
+				
 				component = new DesignProductEntry();
 				component.fromDatabase(rs.getInt("area"));		
-			
+				
 				rs.close();	
-						
-		 }
-
+				
+			}
+			
 		} catch (SQLException ex) {
 			RationaleDB.reportError(ex, "AreaExp.fromDatabase", "Query Problem");
-	   // handle any errors 
-	   }
-	   finally { 
-		   RationaleDB.releaseResources(stmt, rs);
-		   }
-	
+			// handle any errors 
+		}
+		finally { 
+			RationaleDB.releaseResources(stmt, rs);
+		}
+		
 	}	
 	
-
+	
 	/**
 	 * Brings up the editor for the area of expertise
 	 * @param disp - points back to the display
@@ -283,14 +283,14 @@ public class AreaExp extends RationaleElement implements Serializable
 	{
 		System.out.println("create AreaExp");
 		System.out.println("id = " + parent.getID());
-
+		
 		EditAreaExp ar = new EditAreaExp(disp, this, (Designer) parent, true);
 		System.out.println("name in create = " + this.getName());
 		((Designer) parent).toDatabase();
 		return ar.getCanceled(); //can I do this?
 	}
 	
-
+	
 	/**
 	 * Doesn't do anything yet.
 	 */
@@ -301,10 +301,10 @@ public class AreaExp extends RationaleElement implements Serializable
 //		Vector newStat = inf.updateConstraint( this);
 		
 //		return newStat;
-        return null;
+		return null;
 	}
-
-
-
+	
+	
+	
 	
 }
