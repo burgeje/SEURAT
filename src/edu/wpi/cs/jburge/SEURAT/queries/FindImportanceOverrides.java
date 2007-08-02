@@ -33,7 +33,7 @@ import edu.wpi.cs.jburge.SEURAT.views.UpdateType;
  * @author jburge
  */
 public class FindImportanceOverrides {
-
+	
 	/**
 	 * The shell
 	 */
@@ -59,13 +59,13 @@ public class FindImportanceOverrides {
 	public FindImportanceOverrides(Display display) {
 		
 		class MyAdapter implements MouseListener {
-
+			
 			public void mouseDoubleClick(MouseEvent e) {
 			}
-
+			
 			public void mouseDown(MouseEvent e) {
 			}
-
+			
 			public void mouseUp(MouseEvent e) {
 			}
 		}
@@ -77,7 +77,7 @@ public class FindImportanceOverrides {
 		gridLayout.numColumns = 6;
 		gridLayout.makeColumnsEqualWidth = true;
 		shell.setLayout(gridLayout);
-
+		
 		new Label(shell, SWT.NONE).setText(" ");
 		new Label(shell, SWT.NONE).setText("Arguments:");
 		new Label(shell, SWT.NONE).setText(" ");
@@ -91,36 +91,36 @@ public class FindImportanceOverrides {
 		GridData gridData = new GridData(GridData.HORIZONTAL_ALIGN_FILL);
 		gridData.horizontalSpan = 3;
 		argumentList.addMouseListener(new MyAdapter(){
-				public void mouseDoubleClick(MouseEvent e){
+			public void mouseDoubleClick(MouseEvent e){
 				String name = argumentList.getItem(argumentList.getSelectionIndex());
 				RationaleElement ele = 
 					RationaleDB.getRationaleElement(name, RationaleElementType.ARGUMENT);
 				boolean canceled = ele.display(shell.getDisplay());
 				if (!canceled)
 				{
-				RationaleUpdateEvent evt = new RationaleUpdateEvent(this);
-				evt.fireUpdateEvent(ele, shell.getDisplay(), UpdateType.UPDATE);
-				
-				argumentList.removeAll();
-				RationaleDB db = RationaleDB.getHandle();
-				Vector overStatus = db.getOverridenArguments();
-				Enumeration listE = overStatus.elements();
-
-				while (listE.hasMoreElements())
-				{
-					argumentList.add( ((Argument) listE.nextElement()).toString());
-				}			
+					RationaleUpdateEvent evt = new RationaleUpdateEvent(this);
+					evt.fireUpdateEvent(ele, shell.getDisplay(), UpdateType.UPDATE);
+					
+					argumentList.removeAll();
+					RationaleDB db = RationaleDB.getHandle();
+					Vector overStatus = db.getOverridenArguments();
+					Enumeration listE = overStatus.elements();
+					
+					while (listE.hasMoreElements())
+					{
+						argumentList.add( ((Argument) listE.nextElement()).toString());
+					}			
 				}
-				}
+			}
 		});
-			
+		
 		
 		
 		RationaleDB db = RationaleDB.getHandle();
 		
 		Vector overridenStatus = db.getOverridenArguments();
 		Enumeration listE = overridenStatus.elements();
-
+		
 		while (listE.hasMoreElements())
 		{
 			argumentList.add( ((Argument) listE.nextElement()).toString());
@@ -133,7 +133,7 @@ public class FindImportanceOverrides {
 		
 		
 		//list 2: claims
-
+		
 		claimList = new List(shell, SWT.SINGLE | SWT.V_SCROLL | SWT.H_SCROLL);
 		gridData = new GridData(GridData.HORIZONTAL_ALIGN_FILL);
 		gridData.horizontalSpan = 3;
@@ -146,26 +146,26 @@ public class FindImportanceOverrides {
 				boolean canceled = ele.display(shell.getDisplay());
 				if (!canceled)
 				{
-				RationaleUpdateEvent evt = new RationaleUpdateEvent(this);
-				evt.fireUpdateEvent(ele, shell.getDisplay(), UpdateType.UPDATE);
-				
-				//update our list?
-				claimList.removeAll();
-				RationaleDB db = RationaleDB.getHandle();
-				Vector overStatus = db.getOverridenClaims();
-				Enumeration listE = overStatus.elements();
-
-				while (listE.hasMoreElements())
-				{
-					claimList.add( ((Claim) listE.nextElement()).toString());
-				}
+					RationaleUpdateEvent evt = new RationaleUpdateEvent(this);
+					evt.fireUpdateEvent(ele, shell.getDisplay(), UpdateType.UPDATE);
+					
+					//update our list?
+					claimList.removeAll();
+					RationaleDB db = RationaleDB.getHandle();
+					Vector overStatus = db.getOverridenClaims();
+					Enumeration listE = overStatus.elements();
+					
+					while (listE.hasMoreElements())
+					{
+						claimList.add( ((Claim) listE.nextElement()).toString());
+					}
 				}
 			}
-	});
+		});
 		
 		overridenStatus = db.getOverridenClaims();
 		listE = overridenStatus.elements();
-
+		
 		while (listE.hasMoreElements())
 		{
 			claimList.add( ((Claim) listE.nextElement()).toString());
@@ -182,32 +182,32 @@ public class FindImportanceOverrides {
 		Button editArgB = new Button(shell, SWT.PUSH);
 		editArgB.setText("Edit");
 		gridData = new GridData(GridData.VERTICAL_ALIGN_BEGINNING| GridData.HORIZONTAL_ALIGN_FILL);
-
+		
 		editArgB.setLayoutData(gridData);
 		editArgB.addSelectionListener(new SelectionAdapter() {
-
-		   public void widgetSelected(SelectionEvent event) {
-			String name = argumentList.getItem(argumentList.getSelectionIndex());
-			RationaleElement ele = 
-				RationaleDB.getRationaleElement(name, RationaleElementType.ARGUMENT);
-			boolean canceled = ele.display(shell.getDisplay());
-			if (!canceled)
-			{
-			RationaleUpdateEvent evt = new RationaleUpdateEvent(this);
-			evt.fireUpdateEvent(ele, shell.getDisplay(), UpdateType.UPDATE);
 			
-			argumentList.removeAll();
-			RationaleDB db = RationaleDB.getHandle();
-			Vector overStatus = db.getOverridenArguments();
-			Enumeration listE = overStatus.elements();
-
-			while (listE.hasMoreElements())
-			{
-				argumentList.add( ((Argument) listE.nextElement()).toString());
+			public void widgetSelected(SelectionEvent event) {
+				String name = argumentList.getItem(argumentList.getSelectionIndex());
+				RationaleElement ele = 
+					RationaleDB.getRationaleElement(name, RationaleElementType.ARGUMENT);
+				boolean canceled = ele.display(shell.getDisplay());
+				if (!canceled)
+				{
+					RationaleUpdateEvent evt = new RationaleUpdateEvent(this);
+					evt.fireUpdateEvent(ele, shell.getDisplay(), UpdateType.UPDATE);
+					
+					argumentList.removeAll();
+					RationaleDB db = RationaleDB.getHandle();
+					Vector overStatus = db.getOverridenArguments();
+					Enumeration listE = overStatus.elements();
+					
+					while (listE.hasMoreElements())
+					{
+						argumentList.add( ((Argument) listE.nextElement()).toString());
+					}
+				}
+				
 			}
-			}
-
-		   }
 		});
 		
 		new Label(shell, SWT.NONE).setText(" ");
@@ -216,35 +216,35 @@ public class FindImportanceOverrides {
 		Button editClaimB = new Button(shell, SWT.PUSH);
 		editClaimB.setText("Edit");
 		gridData = new GridData(GridData.VERTICAL_ALIGN_BEGINNING| GridData.HORIZONTAL_ALIGN_FILL);
-
+		
 		editClaimB.setLayoutData(gridData);
 		editClaimB.addSelectionListener(new SelectionAdapter() {
-
-		   public void widgetSelected(SelectionEvent event) {
-			String name = claimList.getItem(claimList.getSelectionIndex());
-			RationaleElement ele = 
-				RationaleDB.getRationaleElement(name, RationaleElementType.CLAIM);
-			boolean canceled = ele.display(shell.getDisplay());
-			if (!canceled)
-			{
-			RationaleUpdateEvent evt = new RationaleUpdateEvent(this);
-			evt.fireUpdateEvent(ele, shell.getDisplay(), UpdateType.UPDATE);
 			
-			//update our list?
-			claimList.removeAll();
-			RationaleDB db = RationaleDB.getHandle();
-			Vector overStatus = db.getOverridenClaims();
-			Enumeration listE = overStatus.elements();
-
-			while (listE.hasMoreElements())
-			{
-				claimList.add( ((Claim) listE.nextElement()).toString());
+			public void widgetSelected(SelectionEvent event) {
+				String name = claimList.getItem(claimList.getSelectionIndex());
+				RationaleElement ele = 
+					RationaleDB.getRationaleElement(name, RationaleElementType.CLAIM);
+				boolean canceled = ele.display(shell.getDisplay());
+				if (!canceled)
+				{
+					RationaleUpdateEvent evt = new RationaleUpdateEvent(this);
+					evt.fireUpdateEvent(ele, shell.getDisplay(), UpdateType.UPDATE);
+					
+					//update our list?
+					claimList.removeAll();
+					RationaleDB db = RationaleDB.getHandle();
+					Vector overStatus = db.getOverridenClaims();
+					Enumeration listE = overStatus.elements();
+					
+					while (listE.hasMoreElements())
+					{
+						claimList.add( ((Claim) listE.nextElement()).toString());
+					}
+				}
+				
 			}
-			}
-
-		   }
 		});
-
+		
 		new Label(shell, SWT.NONE).setText(" ");
 		new Label(shell, SWT.NONE).setText(" ");
 		new Label(shell, SWT.NONE).setText(" ");
@@ -255,25 +255,25 @@ public class FindImportanceOverrides {
 		Button cancelB = new Button(shell, SWT.PUSH);
 		cancelB.setText("Exit");
 		GridData gridData2 = new GridData(GridData.HORIZONTAL_ALIGN_FILL);
-	//	cancelB.setSize(searchB.getSize());
+		//	cancelB.setSize(searchB.getSize());
 //		gridData2.horizontalIndent = 5;
 		cancelB.setLayoutData(gridData2);
 		cancelB.addSelectionListener(new SelectionAdapter() {
-
-		   public void widgetSelected(SelectionEvent event) {
-			shell.close();
-			shell.dispose();
-
-		   }
+			
+			public void widgetSelected(SelectionEvent event) {
+				shell.close();
+				shell.dispose();
+				
+			}
 		});
 		
 		
 		shell.pack();
 		shell.open();
 		while (!shell.isDisposed()) {
-		   if (!display.readAndDispatch()) display.sleep();
+			if (!display.readAndDispatch()) display.sleep();
 		}
-       
+		
 	}
-
+	
 }

@@ -34,7 +34,7 @@ import edu.wpi.cs.jburge.SEURAT.views.UpdateType;
  */
 
 public class CommonArgumentDisplay {
-
+	
 	/**
 	 * The shell
 	 */
@@ -60,8 +60,8 @@ public class CommonArgumentDisplay {
 	 * The arguments
 	 */
 	private Vector argList; 
-
-
+	
+	
 	/**
 	 * The names of our table columns
 	 */
@@ -69,47 +69,47 @@ public class CommonArgumentDisplay {
 	private final String TOTAL_COLUMN 	        = "Total";
 	private final String FOR_COLUMN 			= "For";
 	private final String AGAINST_COLUMN 		= "Against";
-
+	
 	// Set column names
 	private String[] columnNames = new String[] { 
 			ARGUMENT_COLUMN, 
 			TOTAL_COLUMN,
 			FOR_COLUMN,
 			AGAINST_COLUMN
-			};
-
-
+	};
+	
+	
 	/**
 	 * The constructor of our display
 	 * @param parent - the composite
 	 * @param typeName - the name of the argument type
 	 * @param argList - the arguments being displayed
 	 */
-		public CommonArgumentDisplay(Composite parent, String typeName, Vector argList) {
+	public CommonArgumentDisplay(Composite parent, String typeName, Vector argList) {
 		
-
-			
-			this.argList = argList;
-
+		
+		
+		this.argList = argList;
+		
 		shell = new Shell();
 		shell.setText("Common Argument Display");
-
+		
 		// Set layout for shell
 		GridLayout layout = new GridLayout();
 		shell.setLayout(layout);
 		
 		this.typeName = typeName;
-	
+		
 		// Create a composite to hold the children
 		Composite composite = new Composite(shell, SWT.NONE);
 		this.addChildControls(composite);
-
-        shell.pack(); //do I need this?
+		
+		shell.pack(); //do I need this?
 		// Ask the shell to display its content
 		shell.open();
 		this.run(shell);
 	}
-
+	
 	/**
 	 * Run and wait for a close event
 	 * @param shell Instance of Shell
@@ -118,7 +118,7 @@ public class CommonArgumentDisplay {
 		
 		// Add a listener for the close button
 		closeButton.addSelectionListener(new SelectionAdapter() {
-       	
+			
 			// Close the view i.e. dispose of the composite's parent
 			public void widgetSelected(SelectionEvent e) {
 				table.getParent().getParent().dispose();
@@ -131,7 +131,7 @@ public class CommonArgumentDisplay {
 				display.sleep();
 		}
 	}
-
+	
 	/**
 	 * Release resources
 	 */
@@ -140,22 +140,22 @@ public class CommonArgumentDisplay {
 		// Tell the label provider to release its ressources
 		tableViewer.getLabelProvider().dispose();
 	}
-
+	
 	/**
 	 * Create a new shell, add the widgets, open the shell
 	 * @return the shell that was created	 
 	 */
 	private void addChildControls(Composite composite) {
-
+		
 		// Create a composite to hold the children
 		GridData gridData = new GridData (GridData.HORIZONTAL_ALIGN_FILL | GridData.FILL_BOTH);
 		composite.setLayoutData (gridData);
-
+		
 		// Set numColumns to 3 for the buttons 
 		GridLayout layout = new GridLayout(3, false);
 		layout.marginWidth = 4;
 		composite.setLayout (layout);
-
+		
 		// Create the table 
 		createTable(composite);
 		
@@ -164,20 +164,20 @@ public class CommonArgumentDisplay {
 		tableViewer.setContentProvider(new CommonArgumentContentProvider());
 		tableViewer.setLabelProvider(new CommonArgumentLabelProvider());
 		tableViewer.setInput(argList);
-
+		
 		// Add the buttons
 		createButtons(composite);
 	}
-
+	
 	/**
 	 * Create the Table
 	 */
 	private void createTable(Composite parent) {
 		int style = SWT.SINGLE | SWT.BORDER | SWT.H_SCROLL | SWT.V_SCROLL | 
-					SWT.FULL_SELECTION | SWT.HIDE_SELECTION;
-
-	//	final int NUMBER_COLUMNS = 4;
-
+		SWT.FULL_SELECTION | SWT.HIDE_SELECTION;
+		
+		//	final int NUMBER_COLUMNS = 4;
+		
 		table = new Table(parent, style);
 		
 		GridData gridData = new GridData(GridData.FILL_BOTH);
@@ -188,17 +188,17 @@ public class CommonArgumentDisplay {
 		int listHeight = table.getItemHeight() * 6;
 		Rectangle trim = table.computeTrim(0, 0, 0, listHeight);
 		gridData.heightHint = trim.height;
-					
+		
 		table.setLinesVisible(true);
 		table.setHeaderVisible(true);
-
+		
 		// 1st column with image/checkboxes - NOTE: The SWT.CENTER has no effect!!
 		TableColumn column = new TableColumn(table, SWT.CENTER, 0);		
 		column.setText(typeName);
 		column.setWidth(200);
 		// Add listener to column so tasks are sorted by description when clicked 
 		column.addSelectionListener(new SelectionAdapter() {
-       	
+			
 			public void widgetSelected(SelectionEvent e) {
 				tableViewer.setSorter(new CommonArgumentSorter(CommonArgumentSorter.ARGUMENT));
 			}
@@ -210,61 +210,61 @@ public class CommonArgumentDisplay {
 		column.setWidth(40);
 		// Add listener to column so tasks are sorted by description when clicked 
 		column.addSelectionListener(new SelectionAdapter() {
-       	
+			
 			public void widgetSelected(SelectionEvent e) {
 				tableViewer.setSorter(new CommonArgumentSorter(CommonArgumentSorter.TOTAL));
 			}
 		});
-
-
+		
+		
 		// 3rd column with task Owner
 		column = new TableColumn(table, SWT.LEFT, 2);
 		column.setText(FOR_COLUMN);
 		column.setWidth(40);
 		// Add listener to column so tasks are sorted by owner when clicked
 		column.addSelectionListener(new SelectionAdapter() {
-       	
+			
 			public void widgetSelected(SelectionEvent e) {
 				tableViewer.setSorter(new CommonArgumentSorter(CommonArgumentSorter.FOR));
 			}
 		});
-
+		
 		// 4th column with task PercentComplete 
 		column = new TableColumn(table, SWT.CENTER, 3);
 		column.setText(AGAINST_COLUMN);
 		column.setWidth(40);
 		//  Add listener to column so tasks are sorted by percent when clicked
 		column.addSelectionListener(new SelectionAdapter() {
-       	
+			
 			public void widgetSelected(SelectionEvent e) {
 				tableViewer.setSorter(new CommonArgumentSorter(CommonArgumentSorter.AGAINST));
 			}
 		});
 	}
-
+	
 	/**
 	 * Create the TableViewer 
 	 */
 	private void createTableViewer() {
-
+		
 		tableViewer = new TableViewer(table);
 		tableViewer.setUseHashlookup(true);
 		
 		tableViewer.setColumnProperties(columnNames);
 		
 	}
-
+	
 	/**
 	 * Close the window and dispose of resources
 	 */
 	public void close() {
 		Shell shell = table.getShell();
-
+		
 		if (shell != null && !shell.isDisposed())
 			shell.dispose();
 	}
-
-
+	
+	
 	/**
 	 * InnerClass that acts as a proxy for the CommonArgumentList 
 	 * providing content for the Table. 
@@ -272,29 +272,29 @@ public class CommonArgumentDisplay {
 	class CommonArgumentContentProvider implements IStructuredContentProvider  {
 		public void inputChanged(Viewer v, Object oldInput, Object newInput) {
 		}
-
+		
 		public void dispose() {
 //			argList.removeChangeListener(this);
 		}
-
+		
 		// Return the tasks as an array of Objects
 		public Object[] getElements(Object parent) {
 			return argList.toArray();
 		}
-
+		
 		/* (non-Javadoc)
 		 * @see IargListViewer#addTask(ExampleTask)
 		 */
 		public void addTask(CommonArgument task) {
 			tableViewer.add(task);
 		}
-
+		
 	}
 	
 	class CommonArgumentLabelProvider 
-		extends LabelProvider
-		implements ITableLabelProvider {
-
+	extends LabelProvider
+	implements ITableLabelProvider {
+		
 		/**
 		 * Get the text in the requested column
 		 * @param element - the argument
@@ -304,35 +304,35 @@ public class CommonArgumentDisplay {
 			String result = "";
 			CommonArgument task = (CommonArgument) element;
 			switch (columnIndex) {
-				case 0:  // COMPLETED_COLUMN
-					result = task.getArgumentName();
-					break;
-				case 1 :
-					result = task.getTotal();
-					break;
-				case 2 :
-					result = task.getForCount();
-					break;
-				case 3 :
-					result = task.getAgainstCount();;
-					break;
-				default :
-					break; 	
+			case 0:  // COMPLETED_COLUMN
+				result = task.getArgumentName();
+				break;
+			case 1 :
+				result = task.getTotal();
+				break;
+			case 2 :
+				result = task.getForCount();
+				break;
+			case 3 :
+				result = task.getAgainstCount();;
+				break;
+			default :
+				break; 	
 			}
 			return result;
 		}
-
+		
 		/**
 		 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
 		 */
 		public Image getColumnImage(Object element, int columnIndex) {
 			return null; //no image columns
 		}
-
+		
 	} //end inner class
 	
 	class CommonArgumentSorter extends ViewerSorter {
-
+		
 		/**
 		 * Constructor argument values that indicate to sort items by 
 		 * description, owner or percent complete.
@@ -341,10 +341,10 @@ public class CommonArgumentDisplay {
 		public final static int TOTAL 				= 2;
 		public final static int FOR 	= 3;
 		public final static int AGAINST = 4;
-
+		
 		// Criteria that the instance uses 
 		private int criteria;
-
+		
 		/**
 		 * Creates a resource sorter that will use the given sort criteria.
 		 *
@@ -355,29 +355,29 @@ public class CommonArgumentDisplay {
 			super();
 			this.criteria = criteria;
 		}
-
+		
 		/* (non-Javadoc)
 		 * Method declared on ViewerSorter.
 		 */
 		public int compare(Viewer viewer, Object o1, Object o2) {
-
+			
 			CommonArgument task1 = (CommonArgument) o1;
 			CommonArgument task2 = (CommonArgument) o2;
-
+			
 			switch (criteria) {
-				case ARGUMENT :
-					return compareText(task1.getArgumentName(), task2.getArgumentName());
-				case TOTAL :
-					return compareNumbers(Integer.parseInt(task1.getTotal()), Integer.parseInt(task2.getTotal()));
-				case FOR :
-					return compareNumbers(Integer.parseInt(task1.getForCount()), Integer.parseInt(task2.getForCount()));
-				case AGAINST :
+			case ARGUMENT :
+				return compareText(task1.getArgumentName(), task2.getArgumentName());
+			case TOTAL :
+				return compareNumbers(Integer.parseInt(task1.getTotal()), Integer.parseInt(task2.getTotal()));
+			case FOR :
+				return compareNumbers(Integer.parseInt(task1.getForCount()), Integer.parseInt(task2.getForCount()));
+			case AGAINST :
 				return compareNumbers(Integer.parseInt(task1.getAgainstCount()), Integer.parseInt(task2.getAgainstCount()));				
-				default:
-					return 0;
+			default:
+				return 0;
 			}
 		}
-
+		
 		/**
 		 * Returns a number reflecting the collation order of the given tasks
 		 * based on the percent completed.
@@ -394,7 +394,7 @@ public class CommonArgumentDisplay {
 			result = result < 0 ? -1 : (result > 0) ? 1 : 0;  
 			return result;
 		}
-
+		
 		/**
 		 * Returns a number reflecting the collation order of two textx
 		 * strings
@@ -408,7 +408,7 @@ public class CommonArgumentDisplay {
 		protected int compareText(String str1, String str2) {
 			return collator.compare(str1, str2);
 		}
-
+		
 		public int getCriteria() {
 			return criteria;
 		}
@@ -421,7 +421,7 @@ public class CommonArgumentDisplay {
 	private void createButtons(Composite parent) {
 		
 		new Label(parent, SWT.NONE).setText(" ");
-
+		
 		// Create and configure the "Add" button
 		Button add = new Button(parent, SWT.PUSH | SWT.CENTER);
 		add.setText("Edit");
@@ -431,8 +431,8 @@ public class CommonArgumentDisplay {
 		gridData.widthHint = 80;
 		add.setLayoutData(gridData);
 		add.addSelectionListener(new SelectionAdapter() {
-       	
-       		// Edit our argument
+			
+			// Edit our argument
 			public void widgetSelected(SelectionEvent e) {
 				CommonArgument arg = (CommonArgument) ((IStructuredSelection) 
 						tableViewer.getSelection()).getFirstElement();
@@ -442,15 +442,15 @@ public class CommonArgumentDisplay {
 				boolean canceled = ele.display(shell.getDisplay());
 				if (!canceled)
 				{
-				RationaleUpdateEvent evt = new RationaleUpdateEvent(this);
-				evt.fireUpdateEvent(ele, shell.getDisplay(), UpdateType.UPDATE);
+					RationaleUpdateEvent evt = new RationaleUpdateEvent(this);
+					evt.fireUpdateEvent(ele, shell.getDisplay(), UpdateType.UPDATE);
 				}
 				shell.close();
 				shell.dispose();
 				
 			}
 		});
-	
+		
 		//	Create and configure the "Close" button
 		closeButton = new Button(parent, SWT.PUSH | SWT.CENTER);
 		closeButton.setText("Close");
@@ -460,23 +460,23 @@ public class CommonArgumentDisplay {
 		closeButton.setLayoutData(gridData); 
 		
 	}
-
+	
 	public java.util.List getColumnNames() {
 		return Arrays.asList(columnNames);
 	}
-
+	
 	public ISelection getSelection() {
 		return tableViewer.getSelection();
 	}
-
+	
 	public Vector getArgList() {
 		return argList;	
 	}
-
+	
 	public Control getControl() {
 		return table.getParent();
 	}
-
+	
 	public Button getCloseButton() {
 		return closeButton;
 	}

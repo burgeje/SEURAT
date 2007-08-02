@@ -54,7 +54,7 @@ public class FindCommonArguments {
 		argumentType.add(RationaleElementType.ASSUMPTION.toString());
 		argumentType.add(RationaleElementType.CLAIM.toString());
 		argumentType.add(RationaleElementType.ONTENTRY.toString());
-
+		
 		argumentType.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_FILL));
 		
 		selAltB = new Button(shell, SWT.CHECK);
@@ -69,20 +69,20 @@ public class FindCommonArguments {
 //		gridData.horizontalIndent = 5;
 		findB.setLayoutData(gridData);
 		findB.addSelectionListener(new SelectionAdapter() {
-
-		   public void widgetSelected(SelectionEvent event) {
-			Vector ourArguments;		
-			int selI = argumentType.getSelectionIndex();
-			RationaleElementType ourEle = RationaleElementType.fromString(argumentType.getItem(selI));
-			ArgumentInferences inf = new ArgumentInferences();
-			ourArguments = inf.argumentStatistics(ourEle, selAltB.getSelection());
-			@SuppressWarnings("unused") CommonArgumentDisplay cd = new CommonArgumentDisplay(shell, ourEle.toString(), ourArguments);
-/* -- we might want to do more than one query?
-			shell.close();
-			shell.dispose();
-			*/
-
-		   }
+			
+			public void widgetSelected(SelectionEvent event) {
+				Vector ourArguments;		
+				int selI = argumentType.getSelectionIndex();
+				RationaleElementType ourEle = RationaleElementType.fromString(argumentType.getItem(selI));
+				ArgumentInferences inf = new ArgumentInferences();
+				ourArguments = inf.argumentStatistics(ourEle, selAltB.getSelection());
+				@SuppressWarnings("unused") CommonArgumentDisplay cd = new CommonArgumentDisplay(shell, ourEle.toString(), ourArguments);
+				/* -- we might want to do more than one query?
+				 shell.close();
+				 shell.dispose();
+				 */
+				
+			}
 		});
 		
 		Button cancelB = new Button(shell, SWT.PUSH);
@@ -91,12 +91,12 @@ public class FindCommonArguments {
 //		gridData2.horizontalIndent = 5;
 		cancelB.setLayoutData(gridData2);
 		cancelB.addSelectionListener(new SelectionAdapter() {
-
-		   public void widgetSelected(SelectionEvent event) {
-			shell.close();
-			shell.dispose();
-
-		   }
+			
+			public void widgetSelected(SelectionEvent event) {
+				shell.close();
+				shell.dispose();
+				
+			}
 		});
 		
 		//We want the buttons to be of equal size...
@@ -105,9 +105,9 @@ public class FindCommonArguments {
 		shell.pack();
 		shell.open();
 		while (!shell.isDisposed()) {
-		   if (!display.readAndDispatch()) display.sleep();
+			if (!display.readAndDispatch()) display.sleep();
 		}
-       
+		
 	}
-
+	
 }

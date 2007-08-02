@@ -43,7 +43,7 @@ public class FindStatusOverrides {
 	int selectionIndex;
 	
 	Vector<RationaleStatus> updatedStatus;
-
+	
 	/**
 	 * Constructor.
 	 * 
@@ -63,14 +63,14 @@ public class FindStatusOverrides {
 		shell.setLayout(gridLayout);
 		
 		entityList = new List(shell, SWT.SINGLE | SWT.V_SCROLL | SWT.H_SCROLL);
-         
+		
 		GridData gridData = new GridData(SWT.FILL, SWT.BEGINNING, true, true);
 		gridData.horizontalSpan = 5;
 		
 		RationaleDB db = RationaleDB.getHandle();
 		Vector overridenStatus = db.getOverrides();
 		Enumeration listE = overridenStatus.elements();
-
+		
 		while (listE.hasMoreElements())
 		{
 			entityList.add( ((RationaleStatus) listE.nextElement()).toString());
@@ -84,64 +84,64 @@ public class FindStatusOverrides {
 		gridData.heightHint = trim.height;
 		gridData.widthHint = trim.width;
 		entityList.setLayoutData(gridData);
-		        		
+		
 		new Label(shell, SWT.NONE).setText(" ");	
 		new Label(shell, SWT.NONE).setText(" ");	
 		new Label(shell, SWT.NONE).setText(" ");	
 		Button editB = new Button(shell, SWT.PUSH);
-
+		
 		editB.setText("Remove");
 		gridData = new GridData(GridData.HORIZONTAL_ALIGN_FILL);
 		editB.setLayoutData(gridData);
 		editB.addSelectionListener(new SelectionAdapter() {
-
-		   public void widgetSelected(SelectionEvent event) {
-		
-			String name = entityList.getItem(entityList.getSelectionIndex());
-			RationaleDB db = RationaleDB.getHandle();
-			Vector<RationaleStatus> overridenStatus = db.getOverrides();
-			Enumeration listE = overridenStatus.elements();
-			boolean found = false;
-
-			RationaleStatus ourStatus = null;
-			while (!found && (listE.hasMoreElements()))
-			{	
-				ourStatus = (RationaleStatus) listE.nextElement();
-				if (ourStatus.toString().compareTo(name) == 0)
-				{
-					found = true;
+			
+			public void widgetSelected(SelectionEvent event) {
+				
+				String name = entityList.getItem(entityList.getSelectionIndex());
+				RationaleDB db = RationaleDB.getHandle();
+				Vector<RationaleStatus> overridenStatus = db.getOverrides();
+				Enumeration listE = overridenStatus.elements();
+				boolean found = false;
+				
+				RationaleStatus ourStatus = null;
+				while (!found && (listE.hasMoreElements()))
+				{	
+					ourStatus = (RationaleStatus) listE.nextElement();
+					if (ourStatus.toString().compareTo(name) == 0)
+					{
+						found = true;
+					}
 				}
+				
+				ourStatus.setOverride(false);
+				updatedStatus.add(ourStatus);
+				entityList.remove(name);
+				ourStatus.toDatabase(ourStatus.getParent());
 			}
-
-			ourStatus.setOverride(false);
-			updatedStatus.add(ourStatus);
-			entityList.remove(name);
-			ourStatus.toDatabase(ourStatus.getParent());
-		   }
 		});
 		
 		Button cancelB = new Button(shell, SWT.PUSH);
 		cancelB.setText("Exit");
 		GridData gridData2 = new GridData(GridData.HORIZONTAL_ALIGN_FILL);
-	//	cancelB.setSize(searchB.getSize());
+		//	cancelB.setSize(searchB.getSize());
 //		gridData2.horizontalIndent = 5;
 		cancelB.setLayoutData(gridData2);
 		cancelB.addSelectionListener(new SelectionAdapter() {
-
-		   public void widgetSelected(SelectionEvent event) {
-			shell.close();
-			shell.dispose();
-
-		   }
+			
+			public void widgetSelected(SelectionEvent event) {
+				shell.close();
+				shell.dispose();
+				
+			}
 		});
 		
 		
 		shell.pack();
 		shell.open();
 		while (!shell.isDisposed()) {
-		   if (!display.readAndDispatch()) display.sleep();
+			if (!display.readAndDispatch()) display.sleep();
 		}
-       
+		
 	}
 	
 	/**
@@ -153,5 +153,5 @@ public class FindStatusOverrides {
 	{
 		return updatedStatus;
 	}
-
+	
 }

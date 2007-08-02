@@ -44,7 +44,7 @@ import edu.wpi.cs.jburge.SEURAT.views.UpdateType;
  */
 
 public class RequirementStatusDisplay {
-
+	
 	/**
 	 * Poinst to the shell
 	 */
@@ -66,26 +66,26 @@ public class RequirementStatusDisplay {
 	 * The information for the requirement
 	 */
 	private Vector<RequirementInformation> reqInfoList; 
-
+	
 	/**
 	 * The property names to head up the columns
 	 */
 	private final String REQUIREMENT_COLUMN			= "Requirement";
 	private final String ALTERNATIVE_COLUMN 		= "Alternative";
-
+	
 	// Set column names
 	private String[] columnNames = new String[] { 
 			REQUIREMENT_COLUMN,
 			ALTERNATIVE_COLUMN, 
-			};
-
-
+	};
+	
+	
 	/**
 	 * The status display constructor
 	 * @param parent - the composit the widgets are put into
 	 * @param stat - the requirement status we are interested in
 	 */
-		public RequirementStatusDisplay(Composite parent, ReqStatus stat) {
+	public RequirementStatusDisplay(Composite parent, ReqStatus stat) {
 		
 		shell = new Shell();
 		shell.setText(stat.toString() + " Requirements");
@@ -118,25 +118,25 @@ public class RequirementStatusDisplay {
 				args = null;
 			}
 			reqInfoList.addAll(createList(ourReq, args));
-
+			
 		}
-
-
+		
+		
 		// Set layout for shell
 		GridLayout layout = new GridLayout();
 		shell.setLayout(layout);
-	
+		
 		// Create a composite to hold the children
 		Composite composite = new Composite(shell, SWT.NONE);
 		this.addChildControls(composite);
-
-
+		
+		
 		shell.pack(); //do I need this?
 		// Ask the shell to display its content
 		shell.open();
 		this.run(shell);
 	}
-
+	
 	/**
 	 * Run and wait for a close event
 	 * @param shell Instance of Shell
@@ -145,7 +145,7 @@ public class RequirementStatusDisplay {
 		
 		// Add a listener for the close button
 		closeButton.addSelectionListener(new SelectionAdapter() {
-       	
+			
 			// Close the view i.e. dispose of the composite's parent
 			public void widgetSelected(SelectionEvent e) {
 				table.getParent().getParent().dispose();
@@ -158,7 +158,7 @@ public class RequirementStatusDisplay {
 				display.sleep();
 		}
 	}
-
+	
 	/**
 	 * Release resources
 	 */
@@ -167,22 +167,22 @@ public class RequirementStatusDisplay {
 		// Tell the label provider to release its ressources
 		tableViewer.getLabelProvider().dispose();
 	}
-
+	
 	/**
 	 * Create a new shell, add the widgets, open the shell
 	 * @return the shell that was created	 
 	 */
 	private void addChildControls(Composite composite) {
-
+		
 		// Create a composite to hold the children
 		GridData gridData = new GridData (GridData.HORIZONTAL_ALIGN_FILL | GridData.FILL_BOTH);
 		composite.setLayoutData (gridData);
-
+		
 		// Set numColumns to 3 for the buttons 
 		GridLayout layout = new GridLayout(3, false);
 		layout.marginWidth = 4;
 		composite.setLayout (layout);
-
+		
 		// Create the table 
 		createTable(composite);
 		
@@ -191,18 +191,18 @@ public class RequirementStatusDisplay {
 		tableViewer.setContentProvider(new RequirementStatusContentProvider());
 		tableViewer.setLabelProvider(new RequirementStatusLabelProvider());
 		tableViewer.setInput(reqInfoList);
-
+		
 		// Add the buttons
 		createButtons(composite);
 	}
-
+	
 	/**
 	 * Create the Table
 	 */
 	private void createTable(Composite parent) {
 		int style = SWT.SINGLE | SWT.BORDER | SWT.H_SCROLL | SWT.V_SCROLL | 
-					SWT.FULL_SELECTION | SWT.HIDE_SELECTION;
-
+		SWT.FULL_SELECTION | SWT.HIDE_SELECTION;
+		
 		table = new Table(parent, style);
 		
 		GridData gridData = new GridData(GridData.FILL_BOTH);
@@ -213,17 +213,17 @@ public class RequirementStatusDisplay {
 		int listHeight = table.getItemHeight() * 12;
 		Rectangle trim = table.computeTrim(0, 0, 0, listHeight);
 		gridData.heightHint = trim.height;
-					
+		
 		table.setLinesVisible(true);
 		table.setHeaderVisible(true);
-
+		
 		// 1st column 
 		TableColumn column = new TableColumn(table, SWT.CENTER, 0);		
 		column.setText(REQUIREMENT_COLUMN);
 		column.setWidth(200);
 		// Add listener to column so items are sorted by requirement name when clicked 
 		column.addSelectionListener(new SelectionAdapter() {
-       	
+			
 			public void widgetSelected(SelectionEvent e) {
 				tableViewer.setSorter(new RequirementStatusSorter(RequirementStatusSorter.REQUIREMENT));
 			}
@@ -235,34 +235,34 @@ public class RequirementStatusDisplay {
 		column.setWidth(200);
 		// Add listener to column so alternatives are sorted by name when clicked 
 		column.addSelectionListener(new SelectionAdapter() {
-       	
+			
 			public void widgetSelected(SelectionEvent e) {
 				tableViewer.setSorter(new RequirementStatusSorter(RequirementStatusSorter.ALTERNATIVE));
 			}
 		});
-
+		
 	}
-
+	
 	/**
 	 * Create the TableViewer 
 	 */
 	private void createTableViewer() {
-
+		
 		tableViewer = new TableViewer(table);
 		tableViewer.setUseHashlookup(true);
 		
 		tableViewer.setColumnProperties(columnNames);
-
+		
 		// Set the default sorter for the viewer 
 		tableViewer.setSorter(new RequirementStatusSorter(RequirementStatusSorter.REQUIREMENT));
 	}
-
+	
 	/*
 	 * Close the window and dispose of resources
 	 */
 	public void close() {
 		Shell shell = table.getShell();
-
+		
 		if (shell != null && !shell.isDisposed())
 			shell.dispose();
 	}
@@ -297,13 +297,13 @@ public class RequirementStatusDisplay {
 				rel.setAlternative(alt.getName());
 				ourList.add(rel);
 			}
-		
+			
 		}
 		
 		return ourList;
 		
 	}
-
+	
 	/** Inner class that holds the data to be displayed in the table
 	 * 
 	 * @author jburge
@@ -318,20 +318,20 @@ public class RequirementStatusDisplay {
 		public String getName() {
 			return name;
 		}
-
+		
 		public String getAlternative() {
 			return alternative;
 		}
-
+		
 		public void setName(String name) {
 			this.name = name;
 		}
-
+		
 		public void setAlternative(String alternative) {
 			this.alternative = alternative;
 		}
-
-
+		
+		
 	}
 	
 	/**
@@ -341,29 +341,29 @@ public class RequirementStatusDisplay {
 	class RequirementStatusContentProvider implements IStructuredContentProvider  {
 		public void inputChanged(Viewer v, Object oldInput, Object newInput) {
 		}
-
+		
 		public void dispose() {
 		}
-
+		
 		// Return the tasks as an array of Objects
 		public Object[] getElements(Object parent) {
 			return reqInfoList.toArray();
 		}
-
+		
 		/* (non-Javadoc)
 		 * @see IargListViewer#addTask(ExampleTask)
 		 */
 		public void addTask(RequirementInformation task) {
 			tableViewer.add(task);
 		}
-
+		
 	}
 	
 	class RequirementStatusLabelProvider 
-		extends LabelProvider
-		implements ITableLabelProvider {
-
-
+	extends LabelProvider
+	implements ITableLabelProvider {
+		
+		
 		/**
 		 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnText(java.lang.Object, int)
 		 */
@@ -371,44 +371,44 @@ public class RequirementStatusDisplay {
 			String result = "";
 			RequirementInformation task = (RequirementInformation) element;
 			switch (columnIndex) {
-				case 0:  // COMPLETED_COLUMN
-					result = task.getName();
-					break;
-				case 1 :
-					result = task.getAlternative();
-					break;
-				default :
-					break; 	
+			case 0:  // COMPLETED_COLUMN
+				result = task.getName();
+				break;
+			case 1 :
+				result = task.getAlternative();
+				break;
+			default :
+				break; 	
 			}
 			return result;
 		}
-
+		
 		/**
 		 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
 		 */
 		public Image getColumnImage(Object element, int columnIndex) {
 			return null; //no image columns
 		}
-
+		
 	} //end inner class
-
+	
 	/**
 	 * Sorts our requirements
 	 * @author burgeje
 	 *
 	 */
 	class RequirementStatusSorter extends ViewerSorter {
-
+		
 		/**
 		 * Constructor argument values that indicate to sort items by 
 		 * description, owner or percent complete.
 		 */
 		public final static int ALTERNATIVE 		= 1;
 		public final static int REQUIREMENT 				= 2;
-
+		
 		// Criteria that the instance uses 
 		private int criteria;
-
+		
 		/**
 		 * Creates a resource sorter that will use the given sort criteria.
 		 *
@@ -418,26 +418,26 @@ public class RequirementStatusDisplay {
 			super();
 			this.criteria = criteria;
 		}
-
+		
 		/* Compare our elements
 		 * Method declared on ViewerSorter.
 		 */
 		public int compare(Viewer viewer, Object o1, Object o2) {
-
+			
 			RequirementInformation task1 = (RequirementInformation) o1;
 			RequirementInformation task2 = (RequirementInformation) o2;
-
+			
 			switch (criteria) {
-				case REQUIREMENT :
-					return compareText(task1.getName(), task2.getName());
-				case ALTERNATIVE :
-					return compareText(task1.getAlternative(), task2.getAlternative());
-				default:
-					return 0;
+			case REQUIREMENT :
+				return compareText(task1.getName(), task2.getName());
+			case ALTERNATIVE :
+				return compareText(task1.getAlternative(), task2.getAlternative());
+			default:
+				return 0;
 			}
 		}
-
-
+		
+		
 		/**
 		 * Returns a number reflecting the collation order of the given strings
 		 *
@@ -451,7 +451,7 @@ public class RequirementStatusDisplay {
 		protected int compareText(String str1, String str2) {
 			return collator.compare(str1, str2);
 		}
-
+		
 		/**
 		 * Returns the sort criteria of this sorter.
 		 *
@@ -476,7 +476,7 @@ public class RequirementStatusDisplay {
 		gridData.widthHint = 80;
 		add.setLayoutData(gridData);
 		add.addSelectionListener(new SelectionAdapter() {
-       	
+			
 			// Edit our requirement
 			public void widgetSelected(SelectionEvent e) {
 				RequirementInformation altS = (RequirementInformation) ((IStructuredSelection) 
@@ -486,16 +486,16 @@ public class RequirementStatusDisplay {
 				boolean canceled = req.display(shell.getDisplay());
 				if (!canceled)
 				{
-
-				RationaleUpdateEvent evt = new RationaleUpdateEvent(this);
-				evt.fireUpdateEvent(req, shell.getDisplay(), UpdateType.UPDATE);
+					
+					RationaleUpdateEvent evt = new RationaleUpdateEvent(this);
+					evt.fireUpdateEvent(req, shell.getDisplay(), UpdateType.UPDATE);
 				}
 				shell.close();
 				shell.dispose();
 				
 			}
 		});
-	
+		
 		// Create and configure the "Show" button
 		Button show = new Button(parent, SWT.PUSH | SWT.CENTER);
 		show.setText("Show");
@@ -504,7 +504,7 @@ public class RequirementStatusDisplay {
 		gridData.widthHint = 80;
 		show.setLayoutData(gridData);
 		show.addSelectionListener(new SelectionAdapter() {
-       	
+			
 			// Edit our requirement
 			public void widgetSelected(SelectionEvent e) {
 				RequirementInformation altS = (RequirementInformation) ((IStructuredSelection) 
@@ -517,7 +517,7 @@ public class RequirementStatusDisplay {
 				req.fromDatabase(altS.getName());
 				RationaleUpdateEvent evt2 = new RationaleUpdateEvent(this);
 				evt2.fireUpdateEvent(req, shell.getDisplay(), UpdateType.FIND);
-
+				
 				shell.close();
 				shell.dispose();
 				
@@ -531,7 +531,7 @@ public class RequirementStatusDisplay {
 		closeButton.setLayoutData(gridData); 
 		
 	}
-
+	
 	/**
 	 * Return the column names in a collection
 	 * 
@@ -540,19 +540,19 @@ public class RequirementStatusDisplay {
 	public java.util.List getColumnNames() {
 		return Arrays.asList(columnNames);
 	}
-
+	
 	public ISelection getSelection() {
 		return tableViewer.getSelection();
 	}
-
+	
 	public Vector getAltList() {
 		return reqInfoList;	
 	}
-
+	
 	public Control getControl() {
 		return table.getParent();
 	}
-
+	
 	public Button getCloseButton() {
 		return closeButton;
 	}

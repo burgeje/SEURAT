@@ -51,26 +51,26 @@ public class FindRequirements {
 		}
 		argumentType.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_FILL));
 		
-	
+		
 		Button findB = new Button(shell, SWT.PUSH);
 		findB.setText(" Find ");
 		GridData gridData = new GridData(GridData.HORIZONTAL_ALIGN_FILL | GridData.VERTICAL_ALIGN_BEGINNING);
 //		gridData.horizontalIndent = 5;
 		findB.setLayoutData(gridData);
 		findB.addSelectionListener(new SelectionAdapter() {
-
-		   public void widgetSelected(SelectionEvent event) {
-//			Vector ourArguments;		
-			int selI = argumentType.getSelectionIndex();
-			ReqStatus ourEle = ReqStatus.fromString(argumentType.getItem(selI));
-			@SuppressWarnings("unused") RequirementStatusDisplay cd = new RequirementStatusDisplay(shell, ourEle);
-
-/* -- we might want to do more than one query?
-			shell.close();
-			shell.dispose();
-			*/
-
-		   }
+			
+			public void widgetSelected(SelectionEvent event) {
+//				Vector ourArguments;		
+				int selI = argumentType.getSelectionIndex();
+				ReqStatus ourEle = ReqStatus.fromString(argumentType.getItem(selI));
+				@SuppressWarnings("unused") RequirementStatusDisplay cd = new RequirementStatusDisplay(shell, ourEle);
+				
+				/* -- we might want to do more than one query?
+				 shell.close();
+				 shell.dispose();
+				 */
+				
+			}
 		});
 		
 		Button cancelB = new Button(shell, SWT.PUSH);
@@ -79,12 +79,12 @@ public class FindRequirements {
 //		gridData2.horizontalIndent = 5;
 		cancelB.setLayoutData(gridData2);
 		cancelB.addSelectionListener(new SelectionAdapter() {
-
-		   public void widgetSelected(SelectionEvent event) {
-			shell.close();
-			shell.dispose();
-
-		   }
+			
+			public void widgetSelected(SelectionEvent event) {
+				shell.close();
+				shell.dispose();
+				
+			}
 		});
 		
 		//We want the buttons to be of equal size...
@@ -93,9 +93,9 @@ public class FindRequirements {
 		shell.pack();
 		shell.open();
 		while (!shell.isDisposed()) {
-		   if (!display.readAndDispatch()) display.sleep();
+			if (!display.readAndDispatch()) display.sleep();
 		}
-       
+		
 	}
-
+	
 }

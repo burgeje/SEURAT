@@ -42,7 +42,7 @@ import edu.wpi.cs.jburge.SEURAT.views.UpdateType;
  */
 
 public class RequirementRelationshipDisplay {
-
+	
 	/**
 	 * Our shell
 	 */
@@ -65,28 +65,28 @@ public class RequirementRelationshipDisplay {
 	 * affect it.
 	 */
 	private Vector<RequirementRelationship> relationshipList; 
-
+	
 	/**
 	 * Our column table names
 	 */
 	private final String ALTERNATIVE_COLUMN 		= "Alternative";
 	private final String RELATIONSHIP_COLUMN 	        = "Relationship";
 	private final String SELECTED_COLUMN 			= "Selected";
-
+	
 	// Set column names
 	private String[] columnNames = new String[] { 
 			ALTERNATIVE_COLUMN, 
 			RELATIONSHIP_COLUMN,
 			SELECTED_COLUMN
-			};
-
-
+	};
+	
+	
 	/**
 	 * Our constructor
 	 * @param parent - the composite
 	 * @param reqName - the name of the requirement
 	 */
-		public RequirementRelationshipDisplay(Composite parent, String reqName) {
+	public RequirementRelationshipDisplay(Composite parent, String reqName) {
 		
 		shell = new Shell();
 		shell.setText("Requirement Relationship Display");
@@ -103,22 +103,22 @@ public class RequirementRelationshipDisplay {
 		relationshipList.addAll(createList(args, ArgType.ADDRESSES));
 		args = inf.getArguments(ourReq, ArgType.VIOLATES);
 		relationshipList.addAll(createList(args, ArgType.VIOLATES));	
-
+		
 		// Set layout for shell
 		GridLayout layout = new GridLayout();
 		shell.setLayout(layout);
-	
+		
 		// Create a composite to hold the children
 		Composite composite = new Composite(shell, SWT.NONE);
 		this.addChildControls(composite);
-
-
+		
+		
 		shell.pack(); //do I need this?
 		// Ask the shell to display its content
 		shell.open();
 		this.run(shell);
 	}
-
+	
 	/**
 	 * Run and wait for a close event
 	 * @param shell Instance of Shell
@@ -127,7 +127,7 @@ public class RequirementRelationshipDisplay {
 		
 		// Add a listener for the close button
 		closeButton.addSelectionListener(new SelectionAdapter() {
-       	
+			
 			// Close the view i.e. dispose of the composite's parent
 			public void widgetSelected(SelectionEvent e) {
 				table.getParent().getParent().dispose();
@@ -140,7 +140,7 @@ public class RequirementRelationshipDisplay {
 				display.sleep();
 		}
 	}
-
+	
 	/**
 	 * Release resources
 	 */
@@ -149,22 +149,22 @@ public class RequirementRelationshipDisplay {
 		// Tell the label provider to release its ressources
 		tableViewer.getLabelProvider().dispose();
 	}
-
+	
 	/**
 	 * Create a new shell, add the widgets, open the shell
 	 * @return the shell that was created	 
 	 */
 	private void addChildControls(Composite composite) {
-
+		
 		// Create a composite to hold the children
 		GridData gridData = new GridData (GridData.HORIZONTAL_ALIGN_FILL | GridData.FILL_BOTH);
 		composite.setLayoutData (gridData);
-
+		
 		// Set numColumns to 3 for the buttons 
 		GridLayout layout = new GridLayout(3, false);
 		layout.marginWidth = 4;
 		composite.setLayout (layout);
-
+		
 		// Create the table 
 		createTable(composite);
 		
@@ -175,20 +175,20 @@ public class RequirementRelationshipDisplay {
 		// The input for the table viewer is the instance of ExampleargList
 //		argList = new ExampleargList();
 		tableViewer.setInput(relationshipList);
-
+		
 		// Add the buttons
 		createButtons(composite);
 	}
-
+	
 	/**
 	 * Create the Table
 	 */
 	private void createTable(Composite parent) {
 		int style = SWT.SINGLE | SWT.BORDER | SWT.H_SCROLL | SWT.V_SCROLL | 
-					SWT.FULL_SELECTION | SWT.HIDE_SELECTION;
-
-	//	final int NUMBER_COLUMNS = 4;
-
+		SWT.FULL_SELECTION | SWT.HIDE_SELECTION;
+		
+		//	final int NUMBER_COLUMNS = 4;
+		
 		table = new Table(parent, style);
 		
 		GridData gridData = new GridData(GridData.FILL_BOTH);
@@ -199,17 +199,17 @@ public class RequirementRelationshipDisplay {
 		int listHeight = table.getItemHeight() * 12;
 		Rectangle trim = table.computeTrim(0, 0, 0, listHeight);
 		gridData.heightHint = trim.height;
-					
+		
 		table.setLinesVisible(true);
 		table.setHeaderVisible(true);
-
+		
 		// 1st column with image/checkboxes - NOTE: The SWT.CENTER has no effect!!
 		TableColumn column = new TableColumn(table, SWT.CENTER, 0);		
 		column.setText(ALTERNATIVE_COLUMN);
 		column.setWidth(200);
 		// Add listener to column so tasks are sorted by description when clicked 
 		column.addSelectionListener(new SelectionAdapter() {
-       	
+			
 			public void widgetSelected(SelectionEvent e) {
 				tableViewer.setSorter(new RequirementRelationshipSorter(RequirementRelationshipSorter.ALTERNATIVE));
 			}
@@ -221,47 +221,47 @@ public class RequirementRelationshipDisplay {
 		column.setWidth(80);
 		// Add listener to column so tasks are sorted by description when clicked 
 		column.addSelectionListener(new SelectionAdapter() {
-       	
+			
 			public void widgetSelected(SelectionEvent e) {
 				tableViewer.setSorter(new RequirementRelationshipSorter(RequirementRelationshipSorter.RELATIONSHIP));
 			}
 		});
-
-
+		
+		
 		// 3rd column with task Owner
 		column = new TableColumn(table, SWT.LEFT, 2);
 		column.setText(SELECTED_COLUMN);
 		column.setWidth(40);
 		// Add listener to column so tasks are sorted by owner when clicked
 		column.addSelectionListener(new SelectionAdapter() {
-       	
+			
 			public void widgetSelected(SelectionEvent e) {
 				tableViewer.setSorter(new RequirementRelationshipSorter(RequirementRelationshipSorter.SELECTED));
 			}
 		});
-
+		
 	}
-
+	
 	/**
 	 * Create the TableViewer 
 	 */
 	private void createTableViewer() {
-
+		
 		tableViewer = new TableViewer(table);
 		tableViewer.setUseHashlookup(true);
 		
 		tableViewer.setColumnProperties(columnNames);
-
+		
 		// Set the default sorter for the viewer 
 		tableViewer.setSorter(new RequirementRelationshipSorter(RequirementRelationshipSorter.RELATIONSHIP));
 	}
-
+	
 	/*
 	 * Close the window and dispose of resources
 	 */
 	public void close() {
 		Shell shell = table.getShell();
-
+		
 		if (shell != null && !shell.isDisposed())
 			shell.dispose();
 	}
@@ -290,13 +290,13 @@ public class RequirementRelationshipDisplay {
 				rel.setSelected(alt.getStatus() == AlternativeStatus.ADOPTED);
 				ourList.add(rel);
 			}
-		
+			
 		}
 		
 		return ourList;
 		
 	}
-
+	
 	/** Inner class that holds our requirement relationship.
 	 * 
 	 * @author jburge
@@ -312,27 +312,27 @@ public class RequirementRelationshipDisplay {
 		public String getName() {
 			return name;
 		}
-
+		
 		public String getRelationship() {
 			return relationship;
 		}
-
+		
 		public boolean isSelected() {
 			return selected;
 		}
-
+		
 		public void setName(String name) {
 			this.name = name;
 		}
-
+		
 		public void setRelationship(String relationship) {
 			this.relationship = relationship;
 		}
-
+		
 		public void setSelected(boolean selected) {
 			this.selected = selected;
 		}
-
+		
 	}
 	
 	/**
@@ -342,27 +342,27 @@ public class RequirementRelationshipDisplay {
 	class RequirementRelationshipContentProvider implements IStructuredContentProvider  {
 		public void inputChanged(Viewer v, Object oldInput, Object newInput) {
 		}
-
+		
 		public void dispose() {
 //			argList.removeChangeListener(this);
 		}
-
+		
 		// Return the tasks as an array of Objects
 		public Object[] getElements(Object parent) {
 			return relationshipList.toArray();
 		}
-
+		
 		public void addTask(RequirementRelationship task) {
 			tableViewer.add(task);
 		}
-
-
+		
+		
 	}
 	
 	class RequirementRelationshipLabelProvider 
-		extends LabelProvider
-		implements ITableLabelProvider {
-
+	extends LabelProvider
+	implements ITableLabelProvider {
+		
 		/**
 		 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnText(java.lang.Object, int)
 		 */
@@ -370,28 +370,28 @@ public class RequirementRelationshipDisplay {
 			String result = "";
 			RequirementRelationship task = (RequirementRelationship) element;
 			switch (columnIndex) {
-				case 0:  // COMPLETED_COLUMN
-					result = task.getName();
-					break;
-				case 1 :
-					result = task.getRelationship();
-					break;
-				case 2 :
-					result = Boolean.toString(task.isSelected());
-					break;
-				default :
-					break; 	
+			case 0:  // COMPLETED_COLUMN
+				result = task.getName();
+				break;
+			case 1 :
+				result = task.getRelationship();
+				break;
+			case 2 :
+				result = Boolean.toString(task.isSelected());
+				break;
+			default :
+				break; 	
 			}
 			return result;
 		}
-
+		
 		/**
 		 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
 		 */
 		public Image getColumnImage(Object element, int columnIndex) {
 			return null; //no image columns
 		}
-
+		
 	} //end inner class
 	
 	/**
@@ -400,7 +400,7 @@ public class RequirementRelationshipDisplay {
 	 *
 	 */
 	class RequirementRelationshipSorter extends ViewerSorter {
-
+		
 		/**
 		 * Constructor argument values that indicate to sort items alternative,
 		 * relationship, or selection status
@@ -408,10 +408,10 @@ public class RequirementRelationshipDisplay {
 		public final static int ALTERNATIVE 		= 1;
 		public final static int RELATIONSHIP 				= 2;
 		public final static int SELECTED 	= 3;
-
+		
 		// Criteria that the instance uses 
 		private int criteria;
-
+		
 		/**
 		 * Creates a resource sorter that will use the given sort criteria.
 		 *
@@ -421,8 +421,8 @@ public class RequirementRelationshipDisplay {
 			super();
 			this.criteria = criteria;
 		}
-
-
+		
+		
 		/**
 		 * Compares two items
 		 * @param viewer our viewer
@@ -431,22 +431,22 @@ public class RequirementRelationshipDisplay {
 		 * @return the comparision results
 		 */
 		public int compare(Viewer viewer, Object o1, Object o2) {
-
+			
 			RequirementRelationship task1 = (RequirementRelationship) o1;
 			RequirementRelationship task2 = (RequirementRelationship) o2;
-
+			
 			switch (criteria) {
-				case ALTERNATIVE :
-					return compareText(task1.getName(), task2.getName());
-				case RELATIONSHIP :
-					return compareText(task1.getRelationship(), task2.getRelationship());
-				case SELECTED :
-					return compareText(Boolean.toString(task1.isSelected()), Boolean.toString(task2.isSelected()));
-				default:
-					return 0;
+			case ALTERNATIVE :
+				return compareText(task1.getName(), task2.getName());
+			case RELATIONSHIP :
+				return compareText(task1.getRelationship(), task2.getRelationship());
+			case SELECTED :
+				return compareText(Boolean.toString(task1.isSelected()), Boolean.toString(task2.isSelected()));
+			default:
+				return 0;
 			}
 		}
-
+		
 		/**
 		 * Returns a number reflecting the collation order of the text strings
 		 *
@@ -460,7 +460,7 @@ public class RequirementRelationshipDisplay {
 		protected int compareText(String str1, String str2) {
 			return collator.compare(str1, str2);
 		}
-
+		
 		/**
 		 * Returns the sort criteria of this this sorter.
 		 *
@@ -472,7 +472,7 @@ public class RequirementRelationshipDisplay {
 	} //end inner class
 	
 	
-
+	
 	/**
 	 * Add the "Close" button
 	 * @param parent the parent composite
@@ -487,7 +487,7 @@ public class RequirementRelationshipDisplay {
 		gridData.widthHint = 80;
 		add.setLayoutData(gridData);
 		add.addSelectionListener(new SelectionAdapter() {
-       	
+			
 			// Edit our alternative
 			public void widgetSelected(SelectionEvent e) {
 				RequirementRelationship altS = (RequirementRelationship) ((IStructuredSelection) 
@@ -497,16 +497,16 @@ public class RequirementRelationshipDisplay {
 				boolean canceled = alt.display(shell.getDisplay());
 				if (!canceled)
 				{
-
-				RationaleUpdateEvent evt = new RationaleUpdateEvent(this);
-				evt.fireUpdateEvent(alt, shell.getDisplay(), UpdateType.UPDATE);
+					
+					RationaleUpdateEvent evt = new RationaleUpdateEvent(this);
+					evt.fireUpdateEvent(alt, shell.getDisplay(), UpdateType.UPDATE);
 				}
 				shell.close();
 				shell.dispose();
 				
 			}
 		});
-	
+		
 		//	Create and configure the "Close" button
 		closeButton = new Button(parent, SWT.PUSH | SWT.CENTER);
 		closeButton.setText("Close");
@@ -514,25 +514,25 @@ public class RequirementRelationshipDisplay {
 		gridData.widthHint = 80; 
 		closeButton.setLayoutData(gridData); 
 		
-
+		
 	}
-
+	
 	public java.util.List getColumnNames() {
 		return Arrays.asList(columnNames);
 	}
-
+	
 	public ISelection getSelection() {
 		return tableViewer.getSelection();
 	}
-
+	
 	public Vector getAltList() {
 		return relationshipList;	
 	}
-
+	
 	public Control getControl() {
 		return table.getParent();
 	}
-
+	
 	public Button getCloseButton() {
 		return closeButton;
 	}

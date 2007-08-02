@@ -20,7 +20,7 @@ import edu.wpi.cs.jburge.SEURAT.rationaleData.RationaleElementType;
  * @author jburge
  */
 public class FindEntity {
-
+	
 	/**
 	 * Points back to the display
 	 */
@@ -34,7 +34,7 @@ public class FindEntity {
 	 * A combo box for choosing the entity type
 	 */
 	private Combo entityType;
-
+	
 	/**
 	 * Our constructor.
 	 * @param display our display
@@ -58,10 +58,10 @@ public class FindEntity {
 		{
 			rtype = (RationaleElementType) typeEnum.nextElement();
 			if ((rtype != RationaleElementType.NONE) &&
-				(rtype != RationaleElementType.RATIONALE))
-				{
-					entityType.add(rtype.toString());
-				}
+					(rtype != RationaleElementType.RATIONALE))
+			{
+				entityType.add(rtype.toString());
+			}
 			
 		}
 		entityType.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_FILL));
@@ -72,15 +72,15 @@ public class FindEntity {
 //		gridData.horizontalIndent = 5;
 		findB.setLayoutData(gridData);
 		findB.addSelectionListener(new SelectionAdapter() {
-
-		   public void widgetSelected(SelectionEvent event) {
-			int selI = entityType.getSelectionIndex();
-			RationaleElementType ourEle = RationaleElementType.fromString(entityType.getItem(selI));
-			@SuppressWarnings("unused") EditEntity editEntity = new EditEntity(ourDisplay, ourEle);
-			shell.close();
-			shell.dispose();
-
-		   }
+			
+			public void widgetSelected(SelectionEvent event) {
+				int selI = entityType.getSelectionIndex();
+				RationaleElementType ourEle = RationaleElementType.fromString(entityType.getItem(selI));
+				@SuppressWarnings("unused") EditEntity editEntity = new EditEntity(ourDisplay, ourEle);
+				shell.close();
+				shell.dispose();
+				
+			}
 		});
 		
 		Button cancelB = new Button(shell, SWT.PUSH);
@@ -89,12 +89,12 @@ public class FindEntity {
 //		gridData2.horizontalIndent = 5;
 		cancelB.setLayoutData(gridData2);
 		cancelB.addSelectionListener(new SelectionAdapter() {
-
-		   public void widgetSelected(SelectionEvent event) {
-			shell.close();
-			shell.dispose();
-
-		   }
+			
+			public void widgetSelected(SelectionEvent event) {
+				shell.close();
+				shell.dispose();
+				
+			}
 		});
 		
 		//We want the buttons to be of equal size...
@@ -103,9 +103,9 @@ public class FindEntity {
 		shell.pack();
 		shell.open();
 		while (!shell.isDisposed()) {
-		   if (!display.readAndDispatch()) display.sleep();
+			if (!display.readAndDispatch()) display.sleep();
 		}
-       
+		
 	}
-
+	
 }

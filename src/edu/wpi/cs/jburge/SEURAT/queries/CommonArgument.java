@@ -35,7 +35,7 @@ public class CommonArgument {
 	 * How many times it appears as an argument against an alternative
 	 */
 	private String againstCount;
-
+	
 	/**
 	 * Constructor
 	 */
@@ -47,35 +47,35 @@ public class CommonArgument {
 		// TODO Auto-generated constructor stub
 	}
 	
-
+	
 	/**
 	 * @return String
 	 */
 	public String getAgainstCount() {
 		return againstCount;
 	}
-
+	
 	/**
 	 * @return String
 	 */
 	public String getArgumentName() {
 		return argumentName;
 	}
-
+	
 	/**
 	 * @return String
 	 */
 	public String getForCount() {
 		return forCount;
 	}
-
+	
 	/**
 	 * @return String
 	 */
 	public String getTotal() {
 		return total;
 	}
-
+	
 	public RationaleElementType getType() {
 		return type;
 	}
@@ -89,7 +89,7 @@ public class CommonArgument {
 	
 	
 	
-
+	
 	/**
 	 * Sets the argumentName.
 	 * @param argumentName The argumentName to set
@@ -97,7 +97,7 @@ public class CommonArgument {
 	public void setArgumentName(String argumentName) {
 		this.argumentName = argumentName;
 	}
-
+	
 	/**
 	 * Sets the forCount.
 	 * @param forCount The forCount to set
@@ -105,7 +105,7 @@ public class CommonArgument {
 	public void setForCount(String forCount) {
 		this.forCount = forCount;
 	}
-
+	
 	/**
 	 * Sets the total.
 	 * @param total The total to set
@@ -147,5 +147,5 @@ public class CommonArgument {
 		totalCt++;
 		setTotal(Integer.toString(totalCt));	
 	}
-
+	
 }

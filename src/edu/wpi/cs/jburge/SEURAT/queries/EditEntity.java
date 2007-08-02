@@ -27,10 +27,10 @@ import edu.wpi.cs.jburge.SEURAT.views.UpdateType;
  * This display is used to select a rationale entity to edit. A list of all the entities
  * of a specified type is displayed. The user can search for a specific one by name.
  * @author jburge
-  */
+ */
 public class EditEntity {
 	
-
+	
 	/**
 	 * The shell
 	 */
@@ -55,8 +55,8 @@ public class EditEntity {
 	 * The index into the list found when selecting
 	 */
 	int selectionIndex;
-
-
+	
+	
 	/**
 	 * Display our editEntity display
 	 * @param display - points to the display
@@ -107,20 +107,20 @@ public class EditEntity {
 		new Label(shell, SWT.NONE).setText(" ");	
 		new Label(shell, SWT.NONE).setText(" ");	
 		
-        Button searchB = new Button(shell, SWT.PUSH);
-        searchB.setText("Search");
-        gridData = new GridData(GridData.HORIZONTAL_ALIGN_FILL);
-        Point buttonSize = searchB.computeSize(SWT.DEFAULT, SWT.DEFAULT);
-//        gridData.horizontalSpan = 3;
-        searchB.setLayoutData(gridData);
-        searchB.addSelectionListener(new SelectionAdapter() {
-        	public void widgetSelected(SelectionEvent event)
-        	{
+		Button searchB = new Button(shell, SWT.PUSH);
+		searchB.setText("Search");
+		gridData = new GridData(GridData.HORIZONTAL_ALIGN_FILL);
+		Point buttonSize = searchB.computeSize(SWT.DEFAULT, SWT.DEFAULT);
+//		gridData.horizontalSpan = 3;
+		searchB.setLayoutData(gridData);
+		searchB.addSelectionListener(new SelectionAdapter() {
+			public void widgetSelected(SelectionEvent event)
+			{
 				int limit = entityList.getItemCount();
 //				System.out.println("number items = " + Integer.toString(limit));
 				boolean found = false;
 				int numSearched = 0;
-			
+				
 				selectionString = searchText.getText();
 				while ((!found) && (numSearched < limit))
 				{
@@ -146,13 +146,13 @@ public class EditEntity {
 					numSearched++;
 				}
 			}
-		 });
-        		
+		});
+		
 		new Label(shell, SWT.NONE).setText(" ");	
 		new Label(shell, SWT.NONE).setText(" ");
 		new Label(shell, SWT.NONE).setText(" ");		
 		new Label(shell, SWT.NONE).setText(" ");
-			
+		
 		Button showB = new Button(shell, SWT.PUSH);
 		showB.setText("Show");
 //		editB.setSize(buttonSize);
@@ -161,18 +161,18 @@ public class EditEntity {
 		gridData.widthHint = buttonSize.y;
 		showB.setLayoutData(gridData);
 		showB.addSelectionListener(new SelectionAdapter() {
-
-		   public void widgetSelected(SelectionEvent event) {
-			String name = entityList.getItem(entityList.getSelectionIndex());
-			RationaleElement ele = 
-				RationaleDB.getRationaleElement(name, type);
-			RationaleUpdateEvent evt2 = new RationaleUpdateEvent(this);
-			evt2.fireUpdateEvent(ele, shell.getDisplay(), UpdateType.FIND);
-
-			//shell.close();
-			//shell.dispose();
-
-		   }
+			
+			public void widgetSelected(SelectionEvent event) {
+				String name = entityList.getItem(entityList.getSelectionIndex());
+				RationaleElement ele = 
+					RationaleDB.getRationaleElement(name, type);
+				RationaleUpdateEvent evt2 = new RationaleUpdateEvent(this);
+				evt2.fireUpdateEvent(ele, shell.getDisplay(), UpdateType.FIND);
+				
+				//shell.close();
+				//shell.dispose();
+				
+			}
 		});				
 		Button editB = new Button(shell, SWT.PUSH);
 		editB.setText("Edit");
@@ -182,50 +182,50 @@ public class EditEntity {
 		gridData.widthHint = buttonSize.y;
 		editB.setLayoutData(gridData);
 		editB.addSelectionListener(new SelectionAdapter() {
-
-		   public void widgetSelected(SelectionEvent event) {
-		   	String name = entityList.getItem(entityList.getSelectionIndex());
-			RationaleElement ele = 
-				RationaleDB.getRationaleElement(name, type);
-//			RationaleUpdateEvent evt2 = new RationaleUpdateEvent(this);
-//			evt2.fireUpdateEvent(ele, shell.getDisplay(), UpdateType.FIND);
-
-			boolean canceled = ele.display(shell.getDisplay());
-
-			if (!canceled)
-			{
-			RationaleUpdateEvent evt = new RationaleUpdateEvent(this);
-			evt.fireUpdateEvent(ele, shell.getDisplay(), UpdateType.UPDATE);
-			shell.close();
-			shell.dispose();
+			
+			public void widgetSelected(SelectionEvent event) {
+				String name = entityList.getItem(entityList.getSelectionIndex());
+				RationaleElement ele = 
+					RationaleDB.getRationaleElement(name, type);
+//				RationaleUpdateEvent evt2 = new RationaleUpdateEvent(this);
+//				evt2.fireUpdateEvent(ele, shell.getDisplay(), UpdateType.FIND);
+				
+				boolean canceled = ele.display(shell.getDisplay());
+				
+				if (!canceled)
+				{
+					RationaleUpdateEvent evt = new RationaleUpdateEvent(this);
+					evt.fireUpdateEvent(ele, shell.getDisplay(), UpdateType.UPDATE);
+					shell.close();
+					shell.dispose();
+				}
+				
 			}
-
-		   }
 		});
 		
-
+		
 		Button cancelB = new Button(shell, SWT.PUSH);
 		cancelB.setText("Cancel");
 		GridData gridData2 = new GridData(GridData.HORIZONTAL_ALIGN_FILL);
-	//	cancelB.setSize(searchB.getSize());
+		//	cancelB.setSize(searchB.getSize());
 //		gridData2.horizontalIndent = 5;
 		cancelB.setLayoutData(gridData2);
 		cancelB.addSelectionListener(new SelectionAdapter() {
-
-		   public void widgetSelected(SelectionEvent event) {
-			shell.close();
-			shell.dispose();
-
-		   }
+			
+			public void widgetSelected(SelectionEvent event) {
+				shell.close();
+				shell.dispose();
+				
+			}
 		});
 		
 		
 		shell.pack();
 		shell.open();
 		while (!shell.isDisposed()) {
-		   if (!display.readAndDispatch()) display.sleep();
+			if (!display.readAndDispatch()) display.sleep();
 		}
-       
+		
 	}
-
+	
 }
