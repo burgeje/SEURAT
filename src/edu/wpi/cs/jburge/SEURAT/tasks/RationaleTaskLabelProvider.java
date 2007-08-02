@@ -28,10 +28,10 @@ import edu.wpi.cs.jburge.SEURAT.rationaleData.*;
  *
  */
 public class RationaleTaskLabelProvider 
-	extends LabelProvider
-	implements ITableLabelProvider {
-
-
+extends LabelProvider
+implements ITableLabelProvider {
+	
+	
 	/**
 	 * The name of the different error types
 	 */
@@ -39,22 +39,22 @@ public class RationaleTaskLabelProvider
 	public static final String WARNING_IMAGE  = (RationaleErrorLevel.WARNING).toString();
 	public static final String INFO_IMAGE  = (RationaleErrorLevel.INFORMATION).toString();
 	
-
+	
 	/**
 	 * Our image registry. An image registry owns all of the image objects registered with it,
 	 * and automatically disposes of them the SWT Display is disposed.
 	 */
 	private static ImageRegistry imageRegistry = new ImageRegistry();
-
+	
 	//Add our icons to the registry
 	static {
 		imageRegistry.put(ERROR_IMAGE, SEURATPlugin.getImageDescriptor("error_tsk.gif")
-			);
+		);
 		imageRegistry.put(WARNING_IMAGE, SEURATPlugin.getImageDescriptor("warn_tsk.gif")
-			);
+		);
 		imageRegistry.put(INFO_IMAGE, SEURATPlugin.getImageDescriptor("info_tsk.gif")
-			);
-
+		);
+		
 	}
 	
 	/**
@@ -64,7 +64,7 @@ public class RationaleTaskLabelProvider
 	private Image getImage(RationaleErrorLevel status) {
 		return  imageRegistry.get(status.toString());
 	}
-
+	
 	/**
 	 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnText(java.lang.Object, int)
 	 */
@@ -72,30 +72,30 @@ public class RationaleTaskLabelProvider
 		String result = "";
 		RationaleTask task = (RationaleTask) element;
 		switch (columnIndex) {
-			case 0:  // COMPLETED_COLUMN
-				break;
-			case 1 :
-				result = task.getDescription();
-				break;
-			case 2 :
-				result = task.getRationale();
-				break;
-			case 3 :
-				result = task.getRationaleType() + "";
-				break;
-			default :
-				break; 	
+		case 0:  // COMPLETED_COLUMN
+			break;
+		case 1 :
+			result = task.getDescription();
+			break;
+		case 2 :
+			result = task.getRationale();
+			break;
+		case 3 :
+			result = task.getRationaleType() + "";
+			break;
+		default :
+			break; 	
 		}
 		return result;
 	}
-
+	
 	/**
 	 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
 	 */
 	public Image getColumnImage(Object element, int columnIndex) {
 		return (columnIndex == 0) ?   // COMPLETED_COLUMN?
-			getImage(((RationaleTask) element).getStatus()) :
-			null;
+				getImage(((RationaleTask) element).getStatus()) :
+					null;
 	}
-
+	
 }

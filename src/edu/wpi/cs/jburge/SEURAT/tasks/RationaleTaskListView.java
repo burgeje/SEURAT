@@ -33,12 +33,12 @@ import org.eclipse.swt.widgets.*;
  */
 
 public class RationaleTaskListView implements ISelectionProvider {
-
+	
 	public RationaleTaskListView(Composite parent) {
 		
 		this.addChildControls(parent);
 	}
-
+	
 	/**
 	 * The table
 	 */
@@ -48,13 +48,13 @@ public class RationaleTaskListView implements ISelectionProvider {
 	 */
 	private TableViewer tableViewer;
 	
-
+	
 	/**
 	 * Our task list - this is the data model we are using to get our
 	 * status. 
 	 */
 	private RationaleTaskList taskList = RationaleTaskList.getHandle(); 
-
+	
 	/**
 	 * The names of our table columns
 	 */
@@ -62,23 +62,23 @@ public class RationaleTaskListView implements ISelectionProvider {
 	private final String DESCRIPTION_COLUMN 	= "description";
 	private final String RATIONALE_COLUMN 			= "rationale";
 	private final String TYPE_COLUMN 		= "type";
-
+	
 	// Set column names
 	private String[] columnNames = new String[] { 
 			STATUS_COLUMN, 
 			DESCRIPTION_COLUMN,
 			RATIONALE_COLUMN,
 			TYPE_COLUMN
-			};
-
+	};
+	
 	/**
 	 * Main method to launch the window 
 	 */
 	public static void main(String[] args) {
-
+		
 		Shell shell = new Shell();
 		shell.setText("Rationale Task List");
-
+		
 		// Set layout for shell
 		GridLayout layout = new GridLayout();
 		shell.setLayout(layout);
@@ -88,18 +88,18 @@ public class RationaleTaskListView implements ISelectionProvider {
 		final RationaleTaskListView tableViewerExample = new RationaleTaskListView(composite);
 		
 		tableViewerExample.getControl().addDisposeListener(new DisposeListener() {
-
+			
 			public void widgetDisposed(DisposeEvent e) {
 				tableViewerExample.dispose();			
 			}
 			
 		});
-
+		
 		// Ask the shell to display its content
 		shell.open();
 		tableViewerExample.run(shell);
 	}
-
+	
 	/**
 	 * Run and wait for a close event
 	 * @param shell Instance of Shell
@@ -112,7 +112,7 @@ public class RationaleTaskListView implements ISelectionProvider {
 				display.sleep();
 		}
 	}
-
+	
 	/**
 	 * Release resources
 	 */
@@ -121,22 +121,22 @@ public class RationaleTaskListView implements ISelectionProvider {
 		// Tell the label provider to release its ressources
 		tableViewer.getLabelProvider().dispose();
 	}
-
+	
 	/**
 	 * Create a new shell, add the widgets, open the shell
 	 * @return the shell that was created	 
 	 */
 	private void addChildControls(Composite composite) {
-
+		
 		// Create a composite to hold the children
 		GridData gridData = new GridData (GridData.HORIZONTAL_ALIGN_FILL | GridData.FILL_BOTH);
 		composite.setLayoutData (gridData);
-
+		
 		// Set numColumns to 3 for the buttons 
 		GridLayout layout = new GridLayout(3, false);
 		layout.marginWidth = 4;
 		composite.setLayout (layout);
-
+		
 		// Create the table 
 		createTable(composite);
 		
@@ -147,35 +147,35 @@ public class RationaleTaskListView implements ISelectionProvider {
 		// The input for the table viewer is the instance of RationaleTaskList
 		taskList = RationaleTaskList.getHandle();
 		tableViewer.setInput(taskList);
-
+		
 	}
-
+	
 	/**
 	 * Create the Table
 	 */
 	private void createTable(Composite parent) {
 		int style = SWT.SINGLE | SWT.BORDER | SWT.H_SCROLL | SWT.V_SCROLL | 
-					SWT.FULL_SELECTION | SWT.HIDE_SELECTION;
-
-	//	final int NUMBER_COLUMNS = 4;
-
+		SWT.FULL_SELECTION | SWT.HIDE_SELECTION;
+		
+		//	final int NUMBER_COLUMNS = 4;
+		
 		table = new Table(parent, style);
 		
 		GridData gridData = new GridData(GridData.FILL_BOTH);
 		gridData.grabExcessVerticalSpace = true;
 		gridData.horizontalSpan = 3;
 		table.setLayoutData(gridData);		
-					
+		
 		table.setLinesVisible(true);
 		table.setHeaderVisible(true);
-
+		
 		// 1st column 
 		TableColumn column = new TableColumn(table, SWT.CENTER, 0);		
 		column.setText(" ");
 		column.setWidth(20);
 		// Add listener to column so tasks are sorted by status when clicked 
 		column.addSelectionListener(new SelectionAdapter() {
-       	
+			
 			public void widgetSelected(SelectionEvent e) {
 				tableViewer.setSorter(new RationaleTaskSorter(RationaleTaskSorter.STATUS));
 			}	
@@ -186,44 +186,44 @@ public class RationaleTaskListView implements ISelectionProvider {
 		column.setWidth(400);
 		// Add listener to column so tasks are sorted by description when clicked 
 		column.addSelectionListener(new SelectionAdapter() {
-       	
+			
 			public void widgetSelected(SelectionEvent e) {
 				tableViewer.setSorter(new RationaleTaskSorter(RationaleTaskSorter.DESCRIPTION));
 			}
 		});
-
-
+		
+		
 		// 3rd column with the rationale element
 		column = new TableColumn(table, SWT.LEFT, 2);
 		column.setText("Rationale");
 		column.setWidth(200);
 		// Add listener to column so tasks are sorted by element when clicked
 		column.addSelectionListener(new SelectionAdapter() {
-       	
+			
 			public void widgetSelected(SelectionEvent e) {
 				tableViewer.setSorter(new RationaleTaskSorter(RationaleTaskSorter.RATIONALE));
 			}
 		});
-
+		
 		// 4th column with rationale type 
 		column = new TableColumn(table, SWT.LEFT, 3);
 		column.setText("Type");
 		column.setWidth(200);
 		//  Add listener to column so tasks are sorted by type when clicked
 		column.addSelectionListener(new SelectionAdapter() {
-       	
+			
 			public void widgetSelected(SelectionEvent e) {
 				tableViewer.setSorter(new RationaleTaskSorter(RationaleTaskSorter.RATIONALE_TYPE));
 			}
 		});
 	}
-
+	
 	/**
 	 * Create the TableViewer. The RationaleTaskList table is much simpler
 	 * than the table example!
 	 */
 	private void createTableViewer() {
-
+		
 		tableViewer = new TableViewer(table);
 		tableViewer.setUseHashlookup(true);
 		
@@ -231,18 +231,18 @@ public class RationaleTaskListView implements ISelectionProvider {
 		// Set the default sorter for the viewer 
 		tableViewer.setSorter(new RationaleTaskSorter(RationaleTaskSorter.DESCRIPTION));
 	}
-
+	
 	/*
 	 * Close the window and dispose of resources
 	 */
 	public void close() {
 		Shell shell = table.getShell();
-
+		
 		if (shell != null && !shell.isDisposed())
 			shell.dispose();
 	}
-
-
+	
+	
 	/**
 	 * InnerClass that acts as a proxy for the RationaleTaskList 
 	 * providing content for the Table. It implements the IRationaleTaskListViewer 
@@ -256,30 +256,30 @@ public class RationaleTaskListView implements ISelectionProvider {
 			if (oldInput != null)
 				((RationaleTaskList) oldInput).removeChangeListener(this);
 		}
-
+		
 		public void dispose() {
 			taskList.removeChangeListener(this);
 		}
-
+		
 		// Return the tasks as an array of Objects
 		public Object[] getElements(Object parent) {
 			return taskList.getTasks().values().toArray();
 		}
-
+		
 		/* (non-Javadoc)
 		 * @see ITaskListViewer#addTask(ExampleTask)
 		 */
 		public void addTask(RationaleTask task) {
 			tableViewer.add(task);
 		}
-
+		
 		/* (non-Javadoc)
 		 * @see ITaskListViewer#removeTask(ExampleTask)
 		 */
 		public void removeTask(RationaleTask task) {
 			tableViewer.remove(task);			
 		}
-
+		
 		/* (non-Javadoc)
 		 * @see ITaskListViewer#updateTask(ExampleTask)
 		 */
@@ -299,15 +299,15 @@ public class RationaleTaskListView implements ISelectionProvider {
 	public void setSelection(ISelection sel)
 	{
 	}
-
+	
 	public RationaleTaskList getTaskList() {
 		return taskList;	
 	}
-
+	
 	public Control getControl() {
 		return table.getParent();
 	}
-
+	
 	public void removeSelectionChangedListener(ISelectionChangedListener listener)
 	{
 		//why would we need to do this?
