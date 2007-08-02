@@ -33,17 +33,17 @@ public class SEURATPlugin extends AbstractUIPlugin {
 	 * The plug-in ID
 	 */
 	public static final String PLUGIN_ID = "test1";
-
+	
 	/**
 	 * The shared instance
 	 */
 	private static SEURATPlugin plugin;
-
+	
 	/**
 	 * The resource bundle (whatever that is...)
 	 */
 	private ResourceBundle resourceBundle;
-
+	
 	/**
 	 * A vector containing all of our update listeners. 
 	 */
@@ -62,7 +62,7 @@ public class SEURATPlugin extends AbstractUIPlugin {
 			resourceBundle = null;
 		}
 	}
-
+	
 	/*
 	 * (non-Javadoc)
 	 * @see org.eclipse.ui.plugin.AbstractUIPlugin#start(org.osgi.framework.BundleContext)
@@ -70,7 +70,7 @@ public class SEURATPlugin extends AbstractUIPlugin {
 	public void start(BundleContext context) throws Exception {
 		super.start(context);
 	}
-
+	
 	/*
 	 * (non-Javadoc)
 	 * @see org.eclipse.ui.plugin.AbstractUIPlugin#stop(org.osgi.framework.BundleContext)
@@ -79,7 +79,7 @@ public class SEURATPlugin extends AbstractUIPlugin {
 		plugin = null;
 		super.stop(context);
 	}
-
+	
 	/**
 	 * Returns the shared instance
 	 *
@@ -88,7 +88,7 @@ public class SEURATPlugin extends AbstractUIPlugin {
 	public static SEURATPlugin getDefault() {
 		return plugin;
 	}
-
+	
 	/**
 	 * Returns an image descriptor for the image file at the given
 	 * plug-in relative path
@@ -96,11 +96,11 @@ public class SEURATPlugin extends AbstractUIPlugin {
 	 * @param path the path
 	 * @return the image descriptor
 	 *//*
-	public static ImageDescriptor getImageDescriptor(String path) {
-		return imageDescriptorFromPlugin(PLUGIN_ID, path);
-		
-		
-	}*/
+	 public static ImageDescriptor getImageDescriptor(String path) {
+	 return imageDescriptorFromPlugin(PLUGIN_ID, path);
+	 
+	 
+	 }*/
 	
 	/**
 	 * Returns the workspace instance.
@@ -117,7 +117,7 @@ public class SEURATPlugin extends AbstractUIPlugin {
 	{
 		return updateListeners.iterator();
 	}
-
+	
 	/**
 	 * Returns the string from the plugin's resource bundle,
 	 * or 'key' if not found.
@@ -130,7 +130,7 @@ public class SEURATPlugin extends AbstractUIPlugin {
 			return key;
 		}
 	}
-
+	
 	/**
 	 * Gets the image descriptor for the icons used in SEURAT. This is
 	 * where the icon path is set up as well. The image descriptor is
@@ -142,9 +142,9 @@ public class SEURATPlugin extends AbstractUIPlugin {
 	public static ImageDescriptor getImageDescriptor(String name) {
 		String iconPath = "icons/";
 		try {
-			 URL installURL = getDefault().getBundle().getEntry("/");
+			URL installURL = getDefault().getBundle().getEntry("/");
 			//URL installURL = getDefault().getBundle().getEntry("edu.wpi.cs.jburge.SEURAT.SEURATPluginResources");
-
+			
 			URL url = new URL(installURL, iconPath + name);
 			return ImageDescriptor.createFromURL(url);
 		} catch (MalformedURLException e) {
@@ -152,13 +152,13 @@ public class SEURATPlugin extends AbstractUIPlugin {
 			return ImageDescriptor.getMissingImageDescriptor();
 		}
 	}
-
+	
 	/**
 	 * Returns the plugin's resource bundle,
 	 */
-
+	
 	public ResourceBundle getResourceBundle() {
 		return resourceBundle;
 	}
-
+	
 }

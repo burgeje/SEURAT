@@ -11,22 +11,22 @@ import org.eclipse.core.runtime.Status;
  */
 public class SEURATStatus extends Status
 {
-  public SEURATStatus(
-	int type,
-	int code,
-	String message,
-	Throwable exception)
-  {
-	super(type, "hello", code, message, exception);
-  }
-  
-  public SEURATStatus(int code, String message)
-  {
-	this(code, code, message, null);
-  }
-  
-  public SEURATStatus(int code, String message, Throwable exception)
-  {
-	this(code, code, message, exception);
-  }
+	public SEURATStatus(
+			int type,
+			int code,
+			String message,
+			Throwable exception)
+	{
+		super(type, "hello", code, message, exception);
+	}
+	
+	public SEURATStatus(int code, String message)
+	{
+		this(code, code, message, null);
+	}
+	
+	public SEURATStatus(int code, String message, Throwable exception)
+	{
+		this(code, code, message, exception);
+	}
 }

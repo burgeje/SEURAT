@@ -20,29 +20,29 @@ public class Logger
 	 * @param message - an error message
 	 * @param throwable - an exception
 	 */
-  public static void logError(String message, Throwable throwable)
-  {
-	SEURATPlugin.getDefault().getLog().log(
-	  new SEURATStatus(Status.ERROR, message, throwable));
-  }
-  
-  /**
-   * Creates a status item with a type error given just the exception
-   * @param throwable - an exception
-   */
-  public static void logError(Throwable throwable)
-  {
-	SEURATPlugin.getDefault().getLog().log(
-	  new SEURATStatus(Status.ERROR, throwable.getMessage(), throwable));
-  }  
-  
-  /**
-   * Creates an information status item
-   * @param message - an information message
-   */
-  public static void logInfo(String message)
-  {
-	SEURATPlugin.getDefault().getLog().log(
-	  new SEURATStatus(Status.INFO, message));
-  }  
+	public static void logError(String message, Throwable throwable)
+	{
+		SEURATPlugin.getDefault().getLog().log(
+				new SEURATStatus(Status.ERROR, message, throwable));
+	}
+	
+	/**
+	 * Creates a status item with a type error given just the exception
+	 * @param throwable - an exception
+	 */
+	public static void logError(Throwable throwable)
+	{
+		SEURATPlugin.getDefault().getLog().log(
+				new SEURATStatus(Status.ERROR, throwable.getMessage(), throwable));
+	}  
+	
+	/**
+	 * Creates an information status item
+	 * @param message - an information message
+	 */
+	public static void logInfo(String message)
+	{
+		SEURATPlugin.getDefault().getLog().log(
+				new SEURATStatus(Status.INFO, message));
+	}  
 }
