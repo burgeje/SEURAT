@@ -12,7 +12,7 @@ package edu.wpi.cs.jburge.SEURAT.views;
  * @author jburge
  */
 public class RationaleUpdateNotifier implements Runnable {
-
+	
 	/**
 	 * The rationale update event
 	 */
@@ -28,11 +28,11 @@ public class RationaleUpdateNotifier implements Runnable {
 		evt = ev;
 		evl = el;
 	}
-/**
- * Depending on the type of event, run the appropriate method from the listener.
- * This could be updating the tree, bringing up the editor for a node, or
- * associating an alternative.
- */	
+	/**
+	 * Depending on the type of event, run the appropriate method from the listener.
+	 * This could be updating the tree, bringing up the editor for a node, or
+	 * associating an alternative.
+	 */	
 	public void run()
 	{
 		if (evt.getUpdateType() == UpdateType.UPDATE)
@@ -48,5 +48,5 @@ public class RationaleUpdateNotifier implements Runnable {
 			evl.associateAlternative(evt);
 		}
 	}
-
+	
 }

@@ -38,23 +38,23 @@ public class RationaleTaskView extends ViewPart  {
 	
 	private Action viewRationale;
 	private Action override;
-
+	
 	/**
 	 * The constructor.
 	 */
 	public RationaleTaskView() {
 	}
-
+	
 	/**
 	 * This is a callback that will allow us
 	 * to create the viewer and initialize it.
 	 */
 	public void createPartControl(Composite parent) {
 		viewer = new RationaleTaskListView(parent);
-
+		
 		makeActions();
 		createContextMenu();
-      	
+		
 	}
 	
 	/**
@@ -79,20 +79,20 @@ public class RationaleTaskView extends ViewPart  {
 	private void fillContextMenu(IMenuManager manager) {
 		ISelection selection = viewer.getTableViewer().getSelection();
 		Object obj = ((IStructuredSelection) selection).getFirstElement();
-
+		
 		if (obj != null)
 		{
-
-		if (obj instanceof RationaleTask)
-		{
-			manager.add(viewRationale);
-			manager.add(override);
-
-		}
-		else
-		{
-//			manager.add(viewRationale);
-		}
+			
+			if (obj instanceof RationaleTask)
+			{
+				manager.add(viewRationale);
+				manager.add(override);
+				
+			}
+			else
+			{
+//				manager.add(viewRationale);
+			}
 		}
 		manager.add(new Separator("Additions"));
 	}
@@ -121,19 +121,19 @@ public class RationaleTaskView extends ViewPart  {
 					boolean canceled = ele.display(viewer.getControl().getDisplay());
 					if (!canceled)
 					{
-					RationaleUpdateEvent evt = new RationaleUpdateEvent(this);
-					evt.fireUpdateEvent(ele, viewer.getControl().getDisplay(), UpdateType.UPDATE);
+						RationaleUpdateEvent evt = new RationaleUpdateEvent(this);
+						evt.fireUpdateEvent(ele, viewer.getControl().getDisplay(), UpdateType.UPDATE);
 					}	
 				}
-
+				
 			}
 		};
-	
-			viewRationale.setText("View");
-			viewRationale.setToolTipText("View Rationale");
-			viewRationale.setImageDescriptor(PlatformUI.getWorkbench().getSharedImages().
+		
+		viewRationale.setText("View");
+		viewRationale.setToolTipText("View Rationale");
+		viewRationale.setImageDescriptor(PlatformUI.getWorkbench().getSharedImages().
 				getImageDescriptor(ISharedImages.IMG_OBJS_INFO_TSK));
-
+		
 		override = new Action() {
 			public void run() {
 				
@@ -143,15 +143,15 @@ public class RationaleTaskView extends ViewPart  {
 				{ 
 					viewer.getTaskList().overrideTask((RationaleTask) obj);
 				}
-
+				
 			}
 		};
-	
-			override.setText("Override");
-			override.setToolTipText("Override Error");
-			override.setImageDescriptor(PlatformUI.getWorkbench().getSharedImages().
+		
+		override.setText("Override");
+		override.setToolTipText("Override Error");
+		override.setImageDescriptor(PlatformUI.getWorkbench().getSharedImages().
 				getImageDescriptor(ISharedImages.IMG_OBJS_INFO_TSK));
-
+		
 	}
 	/**
 	 * Passing the focus request to the viewer's control.
@@ -163,9 +163,9 @@ public class RationaleTaskView extends ViewPart  {
 	/**
 	 * Handle a 'close' event by disposing of the view
 	 */
-
+	
 	public void handleDispose() {	
 		this.getSite().getPage().hideView(this);
 	}
-
+	
 }

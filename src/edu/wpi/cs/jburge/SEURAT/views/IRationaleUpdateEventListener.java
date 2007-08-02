@@ -12,10 +12,10 @@ import java.util.EventListener;
  * The interface for a rationale update event. The listeners must
  * implement this interface.
  * @author jburge
-  */
+ */
 public interface IRationaleUpdateEventListener extends EventListener {
 	public void updateRationaleTree(RationaleUpdateEvent e);
 	public void showRationaleNode(RationaleUpdateEvent e);
 	public void associateAlternative(RationaleUpdateEvent e);
-
+	
 }

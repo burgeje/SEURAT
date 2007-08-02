@@ -50,19 +50,19 @@ import edu.wpi.cs.jburge.SEURAT.editors.AskQuestionGUI;
 /**
  * @author jburge
  *
-
-/**
- * The Rationale Explorer is the primary display and access mechanism for the rationale.
- * It is essentially a tree view with different icons specifying the different types of 
- * rationale elements and their status.
- * <p>
- * The view uses a label provider to define how model
- * objects should be presented in the view. 
- * <p>
- */
+ 
+ /**
+  * The Rationale Explorer is the primary display and access mechanism for the rationale.
+  * It is essentially a tree view with different icons specifying the different types of 
+  * rationale elements and their status.
+  * <p>
+  * The view uses a label provider to define how model
+  * objects should be presented in the view. 
+  * <p>
+  */
 
 public class RationaleExplorer extends ViewPart implements ISelectionListener, IRationaleUpdateEventListener {
-
+	
 	/**
 	 * The view into the tree of rationale
 	 */
@@ -170,14 +170,14 @@ public class RationaleExplorer extends ViewPart implements ISelectionListener, I
 	 * Menu item to find requirements with a specific status
 	 */
 	private Action findRequirement;
-
+	
 	/**
 	 * Points to our display
 	 */
 	private Display ourDisplay;
 	
 //	protected TreeParent invisibleRoot;
-
+	
 	/**
 	 * The Java Element selected
 	 */
@@ -194,7 +194,7 @@ public class RationaleExplorer extends ViewPart implements ISelectionListener, I
 	 * The Java resource
 	 */
 	private IResource ourRes;
-
+	
 	/**
 	 * The name of the alternative involved in an association
 	 */
@@ -487,10 +487,10 @@ public class RationaleExplorer extends ViewPart implements ISelectionListener, I
 				if (!ask.getCancel())
 				{
 					dbName = ask.getAnswer();
-				   RationaleDB.createNewDB(dbName);
-				   rebuildTree();
+					RationaleDB.createNewDB(dbName);
+					rebuildTree();
 				}
-
+				
 			}
 		};
 		newRationale.setText("Create New Rationale DB");
@@ -504,7 +504,7 @@ public class RationaleExplorer extends ViewPart implements ISelectionListener, I
 				@SuppressWarnings("unused") RationaleEntry re;
 				try {
 					re = new RationaleEntry();
-
+					
 				} catch (IOException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
@@ -646,7 +646,7 @@ public class RationaleExplorer extends ViewPart implements ISelectionListener, I
 		addElement.setText("New");
 		addElement.setToolTipText("Add Rationale");
 		
-	
+		
 		//
 		//add alternative element Action
 		//
@@ -737,7 +737,7 @@ public class RationaleExplorer extends ViewPart implements ISelectionListener, I
 		}; //end constraint assoc. action def.
 		addAltConstRel.setText("Associate Constraint");
 		addAltConstRel.setToolTipText("Associate Constraint");
-
+		
 		//
 		//add argument element Action
 		//
@@ -914,13 +914,13 @@ public class RationaleExplorer extends ViewPart implements ISelectionListener, I
 	 * shows a message to the user
 	 * @param message
 	 */
-/*	private void showMessage(String message) {
-		MessageDialog.openInformation(
-				viewer.getControl().getShell(),
-				"RationaleExplorer",
-				message);
-	} */
-
+	/*	private void showMessage(String message) {
+	 MessageDialog.openInformation(
+	 viewer.getControl().getShell(),
+	 "RationaleExplorer",
+	 message);
+	 } */
+	
 	/**
 	 * Passing the focus request to the viewer's control.
 	 */
@@ -993,7 +993,7 @@ public class RationaleExplorer extends ViewPart implements ISelectionListener, I
 		
 		newStatus.removeAll(removeNew);
 		curStatus.removeAll(removeCur);
-
+		
 		//this will leave curStatus with a list of items that should
 		//be removed from the database and from the list
 		//this will leave newStatus with a list of items that should
@@ -1126,18 +1126,18 @@ public class RationaleExplorer extends ViewPart implements ISelectionListener, I
 		}
 		return ourElement;
 	}
-/*	I'm not sure why this is here - no one seems to call it.
-	boolean updateAll(TreeParent treeElement)
-	{
-		boolean update = true;
-		if ((treeElement.getType() == RationaleElementType.TRADEOFF) ||
-				(treeElement.getType() == RationaleElementType.COOCCURRENCE))
-		{
-			update = false;
-		}
-		return update;
-	}
-*/	
+	/*	I'm not sure why this is here - no one seems to call it.
+	 boolean updateAll(TreeParent treeElement)
+	 {
+	 boolean update = true;
+	 if ((treeElement.getType() == RationaleElementType.TRADEOFF) ||
+	 (treeElement.getType() == RationaleElementType.COOCCURRENCE))
+	 {
+	 update = false;
+	 }
+	 return update;
+	 }
+	 */	
 	/**
 	 * this creates a new element in the rationale tree
 	 * @param parentElement - this is the rationaleElement parent
@@ -1441,11 +1441,11 @@ public class RationaleExplorer extends ViewPart implements ISelectionListener, I
 		newParent.update(rElement.getName(), rElement.getEnabled());
 		//need to iterate through all the items
 		Iterator treeI = treeUpdates.iterator();
-        if (!treeI.hasNext())
-        {
-        	//refresh ourself - needed for root elements with no status
-        	viewer.refresh((TreeParent) obj);
-        }
+		if (!treeI.hasNext())
+		{
+			//refresh ourself - needed for root elements with no status
+			viewer.refresh((TreeParent) obj);
+		}
 		while (treeI.hasNext())
 		{
 			
@@ -1531,11 +1531,11 @@ public class RationaleExplorer extends ViewPart implements ISelectionListener, I
 		
 		if (navigatorSelection != null)
 		{
-				
+			
 			ISelection selection = viewer.getSelection();
-
+			
 			obj = ((IStructuredSelection)selection).getFirstElement();
-						
+			
 			//whether an alternative is selected?
 			if (obj !=null && ((TreeParent)obj).getType() == RationaleElementType.ALTERNATIVE )
 			{
@@ -1546,214 +1546,214 @@ public class RationaleExplorer extends ViewPart implements ISelectionListener, I
 				SelectItem selectItem = new SelectItem(ourDisplay, RationaleElementType.fromString("Alternative"));
 				alternativeName=selectItem.getNewItem().getName();
 			}
-
+			
 			String assQ = "Associate '" +
 			alternativeName + "' with " +
-				navigatorSelection.getElementName() + "?";				
+			navigatorSelection.getElementName() + "?";				
+			
+			boolean selOk = showQuestion(assQ);
+			if (selOk)
+			{
+				lineNumber = 0;
+				
+				ourRes = null;
+				try {
 					
-				boolean selOk = showQuestion(assQ);
-				if (selOk)
-				{
-					lineNumber = 0;
-
-					ourRes = null;
-					try {
-						
-
-						if (navigatorSelection.getElementType() == IJavaElement.COMPILATION_UNIT)
+					
+					if (navigatorSelection.getElementType() == IJavaElement.COMPILATION_UNIT)
+					{
+						ourRes = navigatorSelection.getCorrespondingResource(); 
+					}
+					else
+					{
+						ourRes = navigatorSelection.getUnderlyingResource();
+						if (ourRes != null)
 						{
-							ourRes = navigatorSelection.getCorrespondingResource(); 
+//							***								System.out.println("this one wasn't null?");
 						}
-						else
+						//find the enclosing class file
+						IJavaElement nextE = navigatorSelection.getParent();
+						while ((nextE != null) && (nextE.getElementType() != IJavaElement.COMPILATION_UNIT))
 						{
-							ourRes = navigatorSelection.getUnderlyingResource();
-							if (ourRes != null)
-							{
-//***								System.out.println("this one wasn't null?");
-							}
-							//find the enclosing class file
-							IJavaElement nextE = navigatorSelection.getParent();
-							while ((nextE != null) && (nextE.getElementType() != IJavaElement.COMPILATION_UNIT))
-							{
-//***								System.out.println("Name = " + nextE.getElementName());
-//***							System.out.println("Type = " + nextE.getElementType());
-								nextE = nextE.getParent();
-							}
-							try {
-//***							System.out.println("getting our resource");
-	//						ourRes = nextE.getUnderlyingResource();
+//							***								System.out.println("Name = " + nextE.getElementName());
+//							***							System.out.println("Type = " + nextE.getElementType());
+							nextE = nextE.getParent();
+						}
+						try {
+//							***							System.out.println("getting our resource");
+							//						ourRes = nextE.getUnderlyingResource();
 							ourRes = nextE.getCorrespondingResource();
 							ourRes = nextE.getResource();
 						} catch (JavaModelException ex)
 						{
 							System.out.println("exception getting resource?");
 						}
-//***							System.out.println("Final name = " + nextE.getElementName());
-//***							System.out.println("Final type = " + nextE.getElementType());
-							if (ourRes == null)
-							{
-//***								System.out.println("see if there's a working copy");
-								//see if we can get the element from the working copy
-								IJavaElement original = ((ICompilationUnit) ((ICompilationUnit) nextE).getWorkingCopy()).getOriginalElement();
-								ourRes = original.getCorrespondingResource();
-
-							}
-						}
-						//						ourRes = navigatorSelection.getUnderlyingResource();
+//						***							System.out.println("Final name = " + nextE.getElementName());
+//						***							System.out.println("Final type = " + nextE.getElementType());
 						if (ourRes == null)
 						{
-//***							System.out.println("why would our resource be null?");
+//							***								System.out.println("see if there's a working copy");
+							//see if we can get the element from the working copy
+							IJavaElement original = ((ICompilationUnit) ((ICompilationUnit) nextE).getWorkingCopy()).getOriginalElement();
+							ourRes = original.getCorrespondingResource();
+							
 						}
-//***						System.out.println("FullPath = " + ourRes.getFullPath().toString());
-//***						System.out.println("now checking file extension?");
-						if (ourRes.getFullPath().getFileExtension().compareTo("java") == 0)
-						{
-//***							System.out.println("creating our file?");
-						  IJavaElement myJavaElement = JavaCore.create((IFile) ourRes);						
-//***						System.out.println("created an element?");
+					}
+					//						ourRes = navigatorSelection.getUnderlyingResource();
+					if (ourRes == null)
+					{
+//						***							System.out.println("why would our resource be null?");
+					}
+//					***						System.out.println("FullPath = " + ourRes.getFullPath().toString());
+//					***						System.out.println("now checking file extension?");
+					if (ourRes.getFullPath().getFileExtension().compareTo("java") == 0)
+					{
+//						***							System.out.println("creating our file?");
+						IJavaElement myJavaElement = JavaCore.create((IFile) ourRes);						
+//						***						System.out.println("created an element?");
 						if (myJavaElement.getElementType() == IJavaElement.COMPILATION_UNIT)
-						 {
-//***						   System.out.println("Compilation Unit");
-						   ICompilationUnit myCompilationUnit = (ICompilationUnit)
-				 myJavaElement;
-				 
-						   IType[] myTypes = myCompilationUnit.getTypes();
-						   ISourceRange range = null;
-						   boolean found = false;
-						   int i = 0;
-						   while ((!found) && i < myTypes.length)
-						   {
-						   	 //selected item was the class itself
-						   	 if (navigatorSelection.getElementType() == IJavaElement.COMPILATION_UNIT)
-						   	 {
-//***						   	 	System.out.println("found the class");
-						   	 	if (myTypes[i].isClass())
-						   	 	{
-						   	 		range = myTypes[i].getSourceRange();
-						   	 		found = true;
-						   	 	}
-						   	 }
-						   	 else if (navigatorSelection.getElementType() == IJavaElement.FIELD)
-						   	 {
-//***						   	 	System.out.println("looking for types");
-								IField[] myFields = myTypes[i].getFields();
-								for (int j = 0; j< myFields.length; j++)
+						{
+//							***						   System.out.println("Compilation Unit");
+							ICompilationUnit myCompilationUnit = (ICompilationUnit)
+							myJavaElement;
+							
+							IType[] myTypes = myCompilationUnit.getTypes();
+							ISourceRange range = null;
+							boolean found = false;
+							int i = 0;
+							while ((!found) && i < myTypes.length)
+							{
+								//selected item was the class itself
+								if (navigatorSelection.getElementType() == IJavaElement.COMPILATION_UNIT)
 								{
-									 if (myFields[j].getElementName().compareTo(navigatorSelection.getElementName()) == 0)
-									 {
-//***									 	System.out.println("found a type");
-									 	range = myFields[j].getSourceRange();
+//									***						   	 	System.out.println("found the class");
+									if (myTypes[i].isClass())
+									{
+										range = myTypes[i].getSourceRange();
 										found = true;
-									 }
+									}
 								}
-
-						   	 }
-						   	 else if (navigatorSelection.getElementType() == IJavaElement.METHOD)
-						   	 {
-//***						   	 	System.out.println("looking for a method");
-						   	 	IMethod[] myMethods = myTypes[i].getMethods();
-								for (int j = 0; j< myMethods.length; j++)
+								else if (navigatorSelection.getElementType() == IJavaElement.FIELD)
 								{
-									 if (myMethods[j].getElementName().compareTo(navigatorSelection.getElementName()) == 0)
-									 {
-//***									 	System.out.println("found a method");
-										range = myMethods[j].getSourceRange();
-										found = true;
-									 }
+//									***						   	 	System.out.println("looking for types");
+									IField[] myFields = myTypes[i].getFields();
+									for (int j = 0; j< myFields.length; j++)
+									{
+										if (myFields[j].getElementName().compareTo(navigatorSelection.getElementName()) == 0)
+										{
+//											***									 	System.out.println("found a type");
+											range = myFields[j].getSourceRange();
+											found = true;
+										}
+									}
+									
 								}
-						   	 }
-							    //don't forget to increment!
-	  						    i++;
-						    } //end while
-						    
-						    //now, we need to do some parsing.
-						    if (range != null)
-						    {
+								else if (navigatorSelection.getElementType() == IJavaElement.METHOD)
+								{
+//									***						   	 	System.out.println("looking for a method");
+									IMethod[] myMethods = myTypes[i].getMethods();
+									for (int j = 0; j< myMethods.length; j++)
+									{
+										if (myMethods[j].getElementName().compareTo(navigatorSelection.getElementName()) == 0)
+										{
+//											***									 	System.out.println("found a method");
+											range = myMethods[j].getSourceRange();
+											found = true;
+										}
+									}
+								}
+								//don't forget to increment!
+								i++;
+							} //end while
+							
+							//now, we need to do some parsing.
+							if (range != null)
+							{
 								CompilationUnit parsedUnit = AST.parseCompilationUnit(myCompilationUnit, false);
 								lineNumber = parsedUnit.lineNumber(range.getOffset());
-						    }
-						    else
-						    {
-						    	lineNumber = 0;
-						    }
-						    
-						 }
-						 else
-						 {
-//***						 	System.out.println("not a compilation unit?");
-						 	System.out.println(myJavaElement.getElementType());
-						 }
+							}
+							else
+							{
+								lineNumber = 0;
+							}
+							
+						}
+						else
+						{
+//							***						 	System.out.println("not a compilation unit?");
+							System.out.println(myJavaElement.getElementType());
+						}
 						//ok... now what type is our selected item? 
 						System.out.println("got the resource?");
 						if (ourRes == null)
 						{
 							System.out.println("null resource???");
 						}
-						}
-						else
-						{
-							System.out.println("not a java file?");
-						}
-//from the newsgroup - in a runnable?						
-						ResourcesPlugin.getWorkspace().run(new IWorkspaceRunnable()
-						{
-								public void run(IProgressMonitor monitor) {
-									try {
-//***						System.out.println("line number = " + new Integer(lineNumber).toString());
-						IMarker ratM = ourRes.createMarker("SEURAT.ratmarker");
-						String markD = "Alt: '" +
-							alternativeName + "'";
-						ratM.setAttribute(IMarker.MESSAGE, markD);
-//						ratM.setAttribute(IMarker.CHAR_START, 153);
-//						ratM.setAttribute(IMarker.CHAR_END, 154);
-						ratM.setAttribute(IMarker.SEVERITY, 0);
-						ratM.setAttribute(IMarker.LINE_NUMBER, lineNumber);
-						ratM.setAttribute("alternative", alternativeName);
-						SEURATResourcePropertiesManager.addPersistentProperty (ourRes,
-							"Rat", "true");
-							RationaleDB d = RationaleDB.getHandle();
-							d.associateAlternative(alternativeName,
-								navigatorSelection.getHandleIdentifier(),
-								ourRes.getName(),
-								navigatorSelection.getElementName(),
-								markD, lineNumber);
-							
-									}
-									catch (CoreException e) {
-										e.printStackTrace();
-									}
-								}
-								}, null);
-//***						System.out.println("adding persistent property");
-
-						SEURATDecoratorManager.addSuccessResources (ourRes);
-//***						System.out.println("added our property");  
-						// Refresh the label decorations... Change it to DemoDecoratorWithImageCaching if image caching should be used
-//						((TreeParent) obj).setStatus(RationaleErrorLevel.ERROR);
-						viewer.update((TreeParent) obj, null);
-						SEURATLightWeightDecorator.getRatDecorator().refresh();
-//***						System.out.println("refresh");
-
 					}
-					catch (Exception ex)
+					else
 					{
-						ex.printStackTrace();
-						System.out.println("an exception occured in AssociateArtifactAction");
+						System.out.println("not a java file?");
 					}
-							
+//					from the newsgroup - in a runnable?						
+					ResourcesPlugin.getWorkspace().run(new IWorkspaceRunnable()
+							{
+						public void run(IProgressMonitor monitor) {
+							try {
+//								***						System.out.println("line number = " + new Integer(lineNumber).toString());
+								IMarker ratM = ourRes.createMarker("SEURAT.ratmarker");
+								String markD = "Alt: '" +
+								alternativeName + "'";
+								ratM.setAttribute(IMarker.MESSAGE, markD);
+//								ratM.setAttribute(IMarker.CHAR_START, 153);
+//								ratM.setAttribute(IMarker.CHAR_END, 154);
+								ratM.setAttribute(IMarker.SEVERITY, 0);
+								ratM.setAttribute(IMarker.LINE_NUMBER, lineNumber);
+								ratM.setAttribute("alternative", alternativeName);
+								SEURATResourcePropertiesManager.addPersistentProperty (ourRes,
+										"Rat", "true");
+								RationaleDB d = RationaleDB.getHandle();
+								d.associateAlternative(alternativeName,
+										navigatorSelection.getHandleIdentifier(),
+										ourRes.getName(),
+										navigatorSelection.getElementName(),
+										markD, lineNumber);
+								
+							}
+							catch (CoreException e) {
+								e.printStackTrace();
+							}
+						}
+							}, null);
+//					***						System.out.println("adding persistent property");
+					
+					SEURATDecoratorManager.addSuccessResources (ourRes);
+//					***						System.out.println("added our property");  
+					// Refresh the label decorations... Change it to DemoDecoratorWithImageCaching if image caching should be used
+//					((TreeParent) obj).setStatus(RationaleErrorLevel.ERROR);
+					viewer.update((TreeParent) obj, null);
+					SEURATLightWeightDecorator.getRatDecorator().refresh();
+//					***						System.out.println("refresh");
+					
 				}
-				else
+				catch (Exception ex)
 				{
-					System.out.println("selection rejected");
+					ex.printStackTrace();
+					System.out.println("an exception occured in AssociateArtifactAction");
 				}
+				
 			}
-
+			else
+			{
+				System.out.println("selection rejected");
+			}
+		}
+		
 		else
 		{
 			System.out.println("No java element selected...");
 		}
-
-
+		
+		
 	}
 	/**
 	 * This method is used to pop-up a question to ask user whether to go on with the job
@@ -1763,9 +1763,9 @@ public class RationaleExplorer extends ViewPart implements ISelectionListener, I
 	 */
 	private boolean showQuestion(String message) {
 		return MessageDialog.openQuestion(
-			viewer.getControl().getShell(),
-			"RationaleExplorer",
-			message);
+				viewer.getControl().getShell(),
+				"RationaleExplorer",
+				message);
 	}
 	/**
 	 * This method is used to rebuild the tree from a different copy of the database

@@ -27,7 +27,7 @@ import edu.wpi.cs.jburge.SEURAT.rationaleData.RationaleElementType;
  * -- an item might be deleted!
  */
 public final class RationaleTreeMap {
-
+	
 	/**
 	 * The maximum size
 	 */
@@ -40,7 +40,7 @@ public final class RationaleTreeMap {
 	 * The hash map that is used to find where related items are in the tree 
 	 */
 	private HashMap<String, Vector<TreeObject>> keys = new HashMap<String, Vector<TreeObject>>(COUNT);
-
+	
 	/**
 	 * Constructor - this is supposed to be private to enforce the
 	 * singleton design pattern.
@@ -105,7 +105,7 @@ public final class RationaleTreeMap {
 			System.out.println("null vector???");
 		listItems.addElement(leaf);
 	}
-
+	
 	/**
 	 * Remove an item from our map
 	 * @param keykey the item's key
@@ -117,7 +117,7 @@ public final class RationaleTreeMap {
 		listItems = this.getKeys(keykey);
 		listItems.remove(leaf);
 	}
-
+	
 	/**
 	 * Make a key into the table. The name and type combination uniquely
 	 * identifies a rationale element since two items of the same type with

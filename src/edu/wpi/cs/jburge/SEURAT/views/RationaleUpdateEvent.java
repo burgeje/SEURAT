@@ -24,7 +24,7 @@ import edu.wpi.cs.jburge.SEURAT.rationaleData.RationaleElement;
  * @author jburge
  */
 public class RationaleUpdateEvent extends EventObject {
-
+	
 	/**
 	 * 
 	 */
@@ -50,7 +50,7 @@ public class RationaleUpdateEvent extends EventObject {
 	 */
 	public RationaleUpdateEvent(Object source) {
 		super(source);
-	
+		
 	}
 	
 	public RationaleElement getRationaleElement()
@@ -72,7 +72,7 @@ public class RationaleUpdateEvent extends EventObject {
 	{
 		return jElement;
 	}
-
+	
 	/**
 	 * Fire off an update event
 	 * @param ele the rationale element involved
@@ -81,11 +81,11 @@ public class RationaleUpdateEvent extends EventObject {
 	 */
 	public void fireUpdateEvent(RationaleElement ele, Display disp, UpdateType type)
 	{
-	  element = ele;
-	  ourType = type; 
-	  
-	  trigger(disp);
-	 
+		element = ele;
+		ourType = type; 
+		
+		trigger(disp);
+		
 	}
 	
 	//this is a event for the association from the Java file direction
@@ -110,13 +110,13 @@ public class RationaleUpdateEvent extends EventObject {
 	 * @param disp the display
 	 */
 	private void trigger (Display disp){
-		  SEURATPlugin plugin = SEURATPlugin.getDefault();
-		  Iterator i = plugin.getUpdateListenerI();
-		  while (i.hasNext())
-		  {
+		SEURATPlugin plugin = SEURATPlugin.getDefault();
+		Iterator i = plugin.getUpdateListenerI();
+		while (i.hasNext())
+		{
 			RationaleUpdateNotifier srn = new RationaleUpdateNotifier((IRationaleUpdateEventListener)i.next(), this);
 			disp.syncExec(srn);
-		  }
+		}
 	}
-
+	
 }

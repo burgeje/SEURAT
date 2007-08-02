@@ -46,7 +46,7 @@ public class TreeParent extends TreeObject {
 	public void addChild(TreeObject child) {
 		children.add(child);
 		child.setParent(this);
-
+		
 	}
 	/**
 	 * Remove a child from the map. If this is not being done inside an iterator,
@@ -65,9 +65,9 @@ public class TreeParent extends TreeObject {
 			children.remove(child);
 			child.setParent(null);
 		}
-
+		
 	}
-
+	
 	/**
 	 * Removing all the children of this parent.
 	 *
@@ -100,5 +100,5 @@ public class TreeParent extends TreeObject {
 	public boolean hasChildren() {
 		return children.size()>0;
 	}
-
+	
 }

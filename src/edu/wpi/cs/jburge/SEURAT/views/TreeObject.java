@@ -13,7 +13,7 @@ import edu.wpi.cs.jburge.SEURAT.rationaleData.*;
  * @author jburge
  *
  */
-	 
+
 public class TreeObject implements IAdaptable {
 	/**
 	 * The name of the element. This is displayed in the tree
@@ -39,8 +39,8 @@ public class TreeObject implements IAdaptable {
 	 * The listener
 	 */
 	protected IDeltaListener listener = NullDeltaListener.getSoleInstance();
-
-
+	
+	
 	/**
 	 * The constructor
 	 * @param name the element name
@@ -52,7 +52,7 @@ public class TreeObject implements IAdaptable {
 		this.status = null;
 		this.active = true;
 	}
-
+	
 	/**
 	 * Update an element when it's name changes or it changes from active
 	 * to inactive or vice versa
@@ -104,7 +104,7 @@ public class TreeObject implements IAdaptable {
 		return getName();
 	}
 	
-
+	
 	/**
 	 * Add a listener to our element
 	 * @param listener
@@ -121,9 +121,9 @@ public class TreeObject implements IAdaptable {
 			this.listener = NullDeltaListener.getSoleInstance();
 		}
 	}
-
-		public Object getAdapter (Class key) {
-			return null;
-		}
-
+	
+	public Object getAdapter (Class key) {
+		return null;
+	}
+	
 }

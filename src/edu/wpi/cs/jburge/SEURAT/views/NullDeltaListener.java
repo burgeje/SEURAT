@@ -22,11 +22,11 @@ public class NullDeltaListener implements IDeltaListener {
 	 * @see IDeltaListener#add(DeltaEvent)
 	 */
 	public void add(DeltaEvent event) {}
-
+	
 	/*
 	 * @see IDeltaListener#remove(DeltaEvent)
 	 */
 	public void remove(DeltaEvent event) {}
-
+	
 }
 
