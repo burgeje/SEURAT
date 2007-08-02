@@ -10,7 +10,7 @@ import edu.wpi.cs.jburge.SEURAT.rationaleData.RationaleElementType;
  *
  */
 public class RationaleNode {
-
+	
 	
 	private static final long serialVersionUID = 1L;
 	// class variables
@@ -39,7 +39,7 @@ public class RationaleNode {
 	 * Enabled flag - false if disabled
 	 */
 	boolean enabled;
-
+	
 	/**
 	 * Constructor - currently just creates a test node.
 	 *
