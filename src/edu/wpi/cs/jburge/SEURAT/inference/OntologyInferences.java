@@ -16,7 +16,7 @@ import edu.wpi.cs.jburge.SEURAT.rationaleData.*;
  *
  */
 public class OntologyInferences {
-
+	
 	/**
 	 * Empty constructor
 	 */
@@ -42,45 +42,45 @@ public class OntologyInferences {
 		
 		Statement stmt = null; 
 		ResultSet rs = null; 
-		 String findQuery = "";
-	//	boolean error = false;
+		String findQuery = "";
+		//	boolean error = false;
 		try {
-			 stmt = conn.createStatement();
-
-				 findQuery = "SELECT name  FROM " +
-				 "claims where " +
-				 "ontology = " + entry.getID();
-//			 System.out.println(findQuery);
-			 rs = stmt.executeQuery(findQuery);
-			 
-			 while (rs.next())
-			 {
+			stmt = conn.createStatement();
+			
+			findQuery = "SELECT name  FROM " +
+			"claims where " +
+			"ontology = " + entry.getID();
+//			System.out.println(findQuery);
+			rs = stmt.executeQuery(findQuery);
+			
+			while (rs.next())
+			{
 				claimNames.add(RationaleDB.decode(rs.getString("name")));
-			 }
-			 
-			 Enumeration claims = claimNames.elements();
-			 while (claims.hasMoreElements())
-			 {
+			}
+			
+			Enumeration claims = claimNames.elements();
+			while (claims.hasMoreElements())
+			{
 				Claim ourclaim = new Claim();
 				ourclaim.fromDatabase((String) claims.nextElement());
-			 	
+				
 				ClaimInferences inf = new ClaimInferences();
 				newStatus.addAll(inf.updateClaim(ourclaim));
-			 }
-			 
+			}
+			
 		} catch (SQLException ex) {
 			RationaleDB.reportError(ex, "OntologyInferences.updateOntEntry",
 					findQuery);
-	   }
-	   finally { 
-		   RationaleDB.releaseResources(stmt, rs);
-		   }
-		   
+		}
+		finally { 
+			RationaleDB.releaseResources(stmt, rs);
+		}
+		
 		UpdateManager manager = UpdateManager.getHandle();
 		manager.addUpdate(entry.getID(), entry.getName(), RationaleElementType.ONTENTRY);
-
-		 return newStatus;
-	
+		
+		return newStatus;
+		
 	} 
-
+	
 }

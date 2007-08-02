@@ -15,7 +15,7 @@ import edu.wpi.cs.jburge.SEURAT.rationaleData.*;
  * @author jburge
  */
 public class TradeoffInferences {
-
+	
 	/**
 	 * Empty constructor
 	 */
@@ -52,13 +52,13 @@ public class TradeoffInferences {
 			}
 //			UpdateManager manager = UpdateManager.getHandle();
 //			manager.addUpdate(ourDec.getID(), ourDec.getName(), RationaleElementType.DECISION);
-
+			
 		}
 //		System.out.println("tradeoff status ln = " + statV.size());
 		return statV;
 	}
-		
-
-
+	
+	
+	
 }
 

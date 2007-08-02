@@ -46,7 +46,7 @@ public class RequirementInferences {
 		ResultSet rs = null; 
 		ReqStatus rstat = ReqStatus.UNDECIDED;
 		String findArgQuery = "";
-	//	boolean error = false;
+		//	boolean error = false;
 		try {
 			stmt = conn.createStatement();
 			
@@ -67,7 +67,7 @@ public class RequirementInferences {
 //				***			System.out.println(findArgQuery);
 				rs = stmt.executeQuery(findArgQuery);
 				
-		//		Vector arguments;
+				//		Vector arguments;
 				
 				while (rs.next())
 				{	
@@ -183,7 +183,7 @@ public class RequirementInferences {
 			else
 			{
 				//check to see if the requirement was violated
-				 findArgQuery = "Select * From arguments where " +
+				findArgQuery = "Select * From arguments where " +
 				"argtype = 'requirement' and " +
 				"requirement = " + req.getID();
 //				***			System.out.println(findArgQuery);
@@ -230,7 +230,7 @@ public class RequirementInferences {
 		Statement stmt = null; 
 		ResultSet rs = null; 
 		String findArgQuery = "";
-	//	boolean error = false;
+		//	boolean error = false;
 		try {
 			stmt = conn.createStatement();
 			//check to see if the requirement was violated

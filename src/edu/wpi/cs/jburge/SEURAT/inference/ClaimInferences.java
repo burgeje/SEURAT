@@ -16,7 +16,7 @@ import edu.wpi.cs.jburge.SEURAT.rationaleData.*;
  * @author jburge
  */
 public class ClaimInferences {
-
+	
 	/**
 	 * Empty constructor
 	 */
@@ -41,45 +41,45 @@ public class ClaimInferences {
 		
 		Statement stmt = null; 
 		ResultSet rs = null;
-		 String findQuery = "";
-	//	boolean error = false;
+		String findQuery = "";
+		//	boolean error = false;
 		try {
-			 stmt = conn.createStatement();
-
-				 findQuery = "SELECT name  FROM " +
-				 "arguments where argtype = 'claim' and " +
-				 "claim = " + ourClaim.getID();
-//***			 System.out.println(findQuery);
-			 rs = stmt.executeQuery(findQuery);
-			 
-			 while (rs.next())
-			 {
+			stmt = conn.createStatement();
+			
+			findQuery = "SELECT name  FROM " +
+			"arguments where argtype = 'claim' and " +
+			"claim = " + ourClaim.getID();
+//			***			 System.out.println(findQuery);
+			rs = stmt.executeQuery(findQuery);
+			
+			while (rs.next())
+			{
 				argNames.add(RationaleDB.decode(rs.getString("name")));
-			 }
-			 
-			 Enumeration args = argNames.elements();
-			 while (args.hasMoreElements())
-			 {
+			}
+			
+			Enumeration args = argNames.elements();
+			while (args.hasMoreElements())
+			{
 				Argument arg = new Argument();
 				arg.fromDatabase((String) args.nextElement());
-			 	
+				
 				ArgumentInferences inf = new ArgumentInferences();
 				newStatus.addAll(inf.updateArgument(arg, true));
-			 }
-			 
+			}
+			
 		} catch (SQLException ex) {
 			RationaleDB.reportError(ex, "ClaimInferences.updateClaim", findQuery);
-	   }
-	   finally { 
-		   RationaleDB.releaseResources(stmt, rs);
-
-		   }
-		   
+		}
+		finally { 
+			RationaleDB.releaseResources(stmt, rs);
+			
+		}
+		
 		UpdateManager manager = UpdateManager.getHandle();
 		manager.addUpdate(ourClaim.getID(), ourClaim.getName(), RationaleElementType.CLAIM);
-
-		 return newStatus;
-	
+		
+		return newStatus;
+		
 	} 	
-
+	
 }

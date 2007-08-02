@@ -18,14 +18,14 @@ import edu.wpi.cs.jburge.SEURAT.rationaleData.*;
  *
  */
 public class AssumptionInferences {
-
+	
 	/**
 	 * Empty constructor
 	 *
 	 */
 	public AssumptionInferences() {
 	}
-
+	
 	/**
 	 * Updates any arguments that refer to this assumption
 	 * @param assm - the assumption modified
@@ -45,47 +45,47 @@ public class AssumptionInferences {
 		
 		Statement stmt = null; 
 		ResultSet rs = null; 
-		 String findQuery = "";
-	//	boolean error = false;
+		String findQuery = "";
+		//	boolean error = false;
 		try {
-			 stmt = conn.createStatement();
-
-				 findQuery = "SELECT name  FROM " +
-				 "arguments where argtype = 'assumption' and " +
-				 "assumption = " + assm.getID();
-//***	 		 System.out.println(findQuery);
-			 rs = stmt.executeQuery(findQuery);
-			 
-			 while (rs.next())
-			 {
-			 	argNames.add(RationaleDB.decode(rs.getString("name")));
-			 }
-			 
-			 Enumeration args = argNames.elements();
-			 while (args.hasMoreElements())
-			 {
-			 	Argument arg = new Argument();
-			 	arg.fromDatabase((String) args.nextElement());
-			 	
-			 	ArgumentInferences inf = new ArgumentInferences();
+			stmt = conn.createStatement();
+			
+			findQuery = "SELECT name  FROM " +
+			"arguments where argtype = 'assumption' and " +
+			"assumption = " + assm.getID();
+//			***	 		 System.out.println(findQuery);
+			rs = stmt.executeQuery(findQuery);
+			
+			while (rs.next())
+			{
+				argNames.add(RationaleDB.decode(rs.getString("name")));
+			}
+			
+			Enumeration args = argNames.elements();
+			while (args.hasMoreElements())
+			{
+				Argument arg = new Argument();
+				arg.fromDatabase((String) args.nextElement());
+				
+				ArgumentInferences inf = new ArgumentInferences();
 				newStatus.addAll(inf.updateArgument(arg, true));
-			 }
-			 
+			}
+			
 		} catch (SQLException ex) {
-	   // handle any errors 
+			// handle any errors 
 			RationaleDB.reportError(ex, "AssumptionInferences.updateAssumption",
 					findQuery);
-	   }
-	   finally { 
-		   RationaleDB.releaseResources(stmt, rs);
-		   }
-		   
+		}
+		finally { 
+			RationaleDB.releaseResources(stmt, rs);
+		}
+		
 		UpdateManager manager = UpdateManager.getHandle();
 		manager.addUpdate(assm.getID(), assm.getName(), RationaleElementType.ASSUMPTION);
-
-		 return newStatus;
-	
+		
+		return newStatus;
+		
 	} 
-
+	
 }
 

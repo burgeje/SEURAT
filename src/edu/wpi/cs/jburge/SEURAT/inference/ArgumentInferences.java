@@ -18,8 +18,8 @@ import edu.wpi.cs.jburge.SEURAT.rationaleData.*;
  * @author jburge
  */
 public class ArgumentInferences {
-
-
+	
+	
 	/**
 	 * Empty constructor - calls superclass
 	 *
@@ -46,8 +46,8 @@ public class ArgumentInferences {
 		ResultSet rs = null; 
 		//boolean error = false;
 		try {
-			 stmt = conn.createStatement();
-			 
+			stmt = conn.createStatement();
+			
 			RationaleElementType argParent = arg.getPtype();
 			
 			//if we are deleting the argument, need to update any
@@ -65,16 +65,16 @@ public class ArgumentInferences {
 					altI.updateAlternative(arg.getAlternative());
 				}
 			}
-			 	
+			
 			//so who are we arguing for?
 			if (argParent == RationaleElementType.ALTERNATIVE)
 			{
 				AlternativeInferences inf = new AlternativeInferences();
 				String findAltQuery = "Select name From alternatives where " +
-					"id = " + arg.getParent();
-//***				System.out.println(findAltQuery);
+				"id = " + arg.getParent();
+//				***				System.out.println(findAltQuery);
 				rs = stmt.executeQuery(findAltQuery);
-					
+				
 				while (rs.next())
 				{
 					String altName = RationaleDB.decode(rs.getString("name"));
@@ -88,8 +88,8 @@ public class ArgumentInferences {
 			{
 				RequirementInferences inf = new RequirementInferences();
 				String findReqQuery = "Select name from requirements where " +
-					"id = " + arg.getParent();
-//***				System.out.println(findReqQuery);
+				"id = " + arg.getParent();
+//				***				System.out.println(findReqQuery);
 				rs = stmt.executeQuery(findReqQuery);
 				
 				while (rs.next())
@@ -101,17 +101,17 @@ public class ArgumentInferences {
 				}
 			}
 			
-
+			
 		} catch (SQLException ex) {
 			RationaleDB.reportError(ex, "ArgumentInferences.updateArgument", "Check both queries");
-	   }
-	   finally { 
-		   RationaleDB.releaseResources(stmt, rs);
-	   }
-
+		}
+		finally { 
+			RationaleDB.releaseResources(stmt, rs);
+		}
+		
 		UpdateManager manager = UpdateManager.getHandle();
 		manager.addUpdate(arg.getID(), arg.getName(), RationaleElementType.ARGUMENT);
-				   
+		
 		return newStatus;			 
 		
 	}
@@ -140,7 +140,7 @@ public class ArgumentInferences {
 		//boolean error = false;
 		try 
 		{
-   			 stmt = conn.createStatement();
+			stmt = conn.createStatement();
 			String searchType;
 			if (type == RationaleElementType.ONTENTRY)
 			{
@@ -151,10 +151,10 @@ public class ArgumentInferences {
 				searchType = type.toString();
 			}
 			findArgQuery = "Select name From arguments where " +
-				"argtype = '" + searchType + "'";
-//***			System.out.println(findArgQuery);
+			"argtype = '" + searchType + "'";
+//			***			System.out.println(findArgQuery);
 			rs = stmt.executeQuery(findArgQuery);
-				
+			
 			while (rs.next())
 			{
 				String argName = RationaleDB.decode(rs.getString("name"));
@@ -176,20 +176,20 @@ public class ArgumentInferences {
 						{
 							countThis = false;
 						}
-/*						String findAltQuery = "Select * from alternatives where " +
-						" id = " + arg.getParent() + " and status = '" + 
-							AlternativeStatus.ADOPTED + "'";
-							System.out.println(findAltQuery);
-							rs2 = stmt.executeQuery(findAltQuery);
-					
-							if (!(rs2.next()))
-							{
-								countThis = false;
-							}
-//							rs2.close();
- */
+						/*						String findAltQuery = "Select * from alternatives where " +
+						 " id = " + arg.getParent() + " and status = '" + 
+						 AlternativeStatus.ADOPTED + "'";
+						 System.out.println(findAltQuery);
+						 rs2 = stmt.executeQuery(findAltQuery);
+						 
+						 if (!(rs2.next()))
+						 {
+						 countThis = false;
+						 }
+						 //							rs2.close();
+						  */
 					}
-						
+					
 				} //check for selected
 				if (countThis)
 				{
@@ -238,21 +238,21 @@ public class ArgumentInferences {
 					{
 						ca.incrementAgainst();
 					}
-				
+					
 				}
 			}
 		} catch (SQLException ex) {
 			RationaleDB.reportError(ex, "Argument Inferences.argumentStatistics",
 					findArgQuery);
-	   }
-	   finally { 
-		   RationaleDB.releaseResources(stmt, rs, rs2);
-	   }
-
+		}
+		finally { 
+			RationaleDB.releaseResources(stmt, rs, rs2);
+		}
+		
 		commonArgVector.addAll(commonArgs.values());
 		return commonArgVector;			 
 		
 	}
-
-
+	
+	
 }

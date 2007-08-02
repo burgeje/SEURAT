@@ -19,7 +19,7 @@ import edu.wpi.cs.jburge.SEURAT.views.*;
  * @author jburge
  */
 public class UpdateManager {
-
+	
 	/**
 	 * Empty Constructor
 	 */
@@ -39,7 +39,7 @@ public class UpdateManager {
 		updatesNeeded = new Vector<UpdateInformation>();
 		// TODO Auto-generated constructor stub
 	}
-
+	
 	/**
 	 * Sets the tree in our update manager. This is set by the RationaleExplorer
 	 * so the update manager will know who it is updating.
@@ -118,10 +118,10 @@ public class UpdateManager {
 				leaf.setStatus(error);
 				leaf.setActive(active);
 //				System.out.println("set status to " + leaf.getStatus().toString() +
-//					"for " + leaf.getName());
+//				"for " + leaf.getName());
 				treeUpdates.addElement(leaf);
 			}
-		
+			
 		}
 		//now clear out our update list
 		updatesNeeded.clear();
@@ -148,7 +148,7 @@ public class UpdateManager {
 		{
 			ourTree.update((TreeParent) treeI.next(), null);
 		}
-
+		
 		
 	}
 	
@@ -179,7 +179,7 @@ public class UpdateManager {
 		
 	}
 	
-
+	
 	/**
 	 * This is a class used internally that contains the update information
 	 * @author burgeje
@@ -198,5 +198,5 @@ public class UpdateManager {
 		}
 	}
 	
-
+	
 }

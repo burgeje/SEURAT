@@ -58,7 +58,7 @@ public class AlternativeInferences {
 		//boolean error = false;
 		try {
 			stmt = conn.createStatement();
-
+			
 			
 			if (alt.getPtype() == RationaleElementType.DECISION)
 			{
@@ -132,7 +132,7 @@ public class AlternativeInferences {
 		//boolean error = false;
 		try {
 			stmt = conn.createStatement();
-
+			
 			
 			if (alt.getPtype() == RationaleElementType.DECISION)
 			{

@@ -16,7 +16,7 @@ import edu.wpi.cs.jburge.SEURAT.rationaleData.*;
  * @author jburge
  */
 public class QuestionInferences {
-
+	
 	/**
 	 * Empty constructor
 	 */
@@ -42,35 +42,35 @@ public class QuestionInferences {
 		
 		Statement stmt = null; 
 		ResultSet rs = null; 
-		 String findQuery = "";
+		String findQuery = "";
 		try {
-			 stmt = conn.createStatement();
-
-			 
-			 if (quest.getPtype() == RationaleElementType.DECISION)
-			 {
-				 findQuery = "SELECT name  FROM " +
-				 "decisions where " +
-				 "id = " + quest.getParent();
-//***				 System.out.println(findQuery);
-				 rs = stmt.executeQuery(findQuery);
- 				 while (rs.next())
-				 {
-					 Decision dec = new Decision();
-					 dec.fromDatabase(RationaleDB.decode(rs.getString("name")));
-					 Vector<RationaleStatus> results = decinf.updateDecisionStatus(dec);
-					 if (results != null)
-					 {
+			stmt = conn.createStatement();
+			
+			
+			if (quest.getPtype() == RationaleElementType.DECISION)
+			{
+				findQuery = "SELECT name  FROM " +
+				"decisions where " +
+				"id = " + quest.getParent();
+//				***				 System.out.println(findQuery);
+				rs = stmt.executeQuery(findQuery);
+				while (rs.next())
+				{
+					Decision dec = new Decision();
+					dec.fromDatabase(RationaleDB.decode(rs.getString("name")));
+					Vector<RationaleStatus> results = decinf.updateDecisionStatus(dec);
+					if (results != null)
+					{
 						newStatus.addAll(results);
-					 }
-				 }
-			 }
-			 else if (quest.getPtype() == RationaleElementType.ALTERNATIVE)
-			 {
+					}
+				}
+			}
+			else if (quest.getPtype() == RationaleElementType.ALTERNATIVE)
+			{
 				findQuery = "SELECT name  FROM " +
 				"alternatives where " +
 				"id = " + quest.getParent();
-//***				System.out.println(findQuery);
+//				***				System.out.println(findQuery);
 				rs = stmt.executeQuery(findQuery);
 				while (rs.next())
 				{
@@ -79,29 +79,29 @@ public class QuestionInferences {
 					Vector<RationaleStatus> results = altinf.updateAlternative(alt);
 					if (results != null)
 					{
-					   newStatus.addAll(results);
+						newStatus.addAll(results);
 					}
 				}			 	
-			 }
-			 
-		 
+			}
+			
+			
 		} catch (SQLException ex) {
 			RationaleDB.reportError(ex, "QuestionInferences.updateQuestion",
 					findQuery);
-	   }
-	   finally { 
-		   RationaleDB.releaseResources(stmt, rs);
-
-		   }
+		}
+		finally { 
+			RationaleDB.releaseResources(stmt, rs);
+			
+		}
 		UpdateManager manager = UpdateManager.getHandle();
 		manager.addUpdate(quest.getID(), quest.getName(), RationaleElementType.QUESTION);
-	
+		
 		return newStatus;
 	}
 	
 	public Vector<RationaleStatus> updateOnDelete(Question quest) {
 		Vector<RationaleStatus> newStatus = new Vector<RationaleStatus>();
-
+		
 		DecisionInferences decinf = new DecisionInferences();
 		AlternativeInferences altinf = new AlternativeInferences();
 		
@@ -110,36 +110,36 @@ public class QuestionInferences {
 		
 		Statement stmt = null; 
 		ResultSet rs = null; 
-		 String findQuery = null;
-	//	boolean error = false;
+		String findQuery = null;
+		//	boolean error = false;
 		try {
-			 stmt = conn.createStatement();
-
-			 
-			 if (quest.getPtype() == RationaleElementType.DECISION)
-			 {
-				 findQuery = "SELECT name  FROM " +
-				 "decisions where " +
-				 "id = " + quest.getParent();
-//***				 System.out.println(findQuery);
-				 rs = stmt.executeQuery(findQuery);
-				 while (rs.next())
-				 {
-					 Decision dec = new Decision();
-					 dec.fromDatabase(RationaleDB.decode(rs.getString("name")));
-					 Vector<RationaleStatus> results = decinf.updateDecisionStatus(dec);
-					 if (results != null)
-					 {
+			stmt = conn.createStatement();
+			
+			
+			if (quest.getPtype() == RationaleElementType.DECISION)
+			{
+				findQuery = "SELECT name  FROM " +
+				"decisions where " +
+				"id = " + quest.getParent();
+//				***				 System.out.println(findQuery);
+				rs = stmt.executeQuery(findQuery);
+				while (rs.next())
+				{
+					Decision dec = new Decision();
+					dec.fromDatabase(RationaleDB.decode(rs.getString("name")));
+					Vector<RationaleStatus> results = decinf.updateDecisionStatus(dec);
+					if (results != null)
+					{
 						newStatus.addAll(results);
-					 }
-				 }
-			 }
-			 else if (quest.getPtype() == RationaleElementType.ALTERNATIVE)
-			 {
+					}
+				}
+			}
+			else if (quest.getPtype() == RationaleElementType.ALTERNATIVE)
+			{
 				findQuery = "SELECT name  FROM " +
 				"alternatives where " +
 				"id = " + quest.getParent();
-//***				System.out.println(findQuery);
+//				***				System.out.println(findQuery);
 				rs = stmt.executeQuery(findQuery);
 				while (rs.next())
 				{
@@ -148,25 +148,25 @@ public class QuestionInferences {
 					Vector<RationaleStatus> results = altinf.updateAlternative(alt);
 					if (results != null)
 					{
-					   newStatus.addAll(results);
+						newStatus.addAll(results);
 					}
 				}			 	
-			 }
-			 
-		 
+			}
+			
+			
 		} catch (SQLException ex) {
 			RationaleDB.reportError(ex, "QuestionInferences.updateOnDelete",
 					findQuery);
-	   }
-	   finally { 
-		   RationaleDB.releaseResources(stmt, rs);
-		   }
-		   
+		}
+		finally { 
+			RationaleDB.releaseResources(stmt, rs);
+		}
+		
 		UpdateManager manager = UpdateManager.getHandle();
 		manager.addUpdate(quest.getID(), quest.getName(), RationaleElementType.QUESTION);
-
+		
 		return newStatus;
 	}
-
-
+	
+	
 }
