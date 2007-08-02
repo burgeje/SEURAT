@@ -18,7 +18,7 @@ import java.io.Serializable;
  */
 public class NewRationaleElementGUI implements Serializable {
 	
-
+	
 	/**
 	 * 
 	 */
@@ -38,7 +38,7 @@ public class NewRationaleElementGUI implements Serializable {
 	{
 		return null; //this should not get called...
 	}
-    
+	
 	public boolean getCanceled()
 	{
 		return canceled;

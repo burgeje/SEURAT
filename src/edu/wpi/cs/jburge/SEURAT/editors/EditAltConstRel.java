@@ -31,7 +31,7 @@ public class EditAltConstRel {
 	 * The GUI shell
 	 */
 	private Shell shell;
-
+	
 	/**
 	 * The tree of constraints
 	 */
@@ -54,28 +54,28 @@ public class EditAltConstRel {
 	/**
 	 * The amount associated with the constraint
 	 */
-	  private Text amtField;
-	  
-	  /**
-	   * The units associated with the amount (km, kg, etc.)
-	   */
-	  private Text unitsField;
-	  
-	  /**
-	   * Indicates if this is a new item
-	   */
-	  private boolean aNewItem;
-	  
-	  /**
-	   * True if cancelled
-	   */
-	  boolean canceled;
-	  
-	  /**
-	   * The relationship
-	   */
-	  AltConstRel ourArea;
-
+	private Text amtField;
+	
+	/**
+	 * The units associated with the amount (km, kg, etc.)
+	 */
+	private Text unitsField;
+	
+	/**
+	 * Indicates if this is a new item
+	 */
+	private boolean aNewItem;
+	
+	/**
+	 * True if cancelled
+	 */
+	boolean canceled;
+	
+	/**
+	 * The relationship
+	 */
+	AltConstRel ourArea;
+	
 	/**
 	 * Constructor for editing the alternative-constraint relationships
 	 * @param display - points back to the parent display
@@ -100,7 +100,7 @@ public class EditAltConstRel {
 		shell.setLayout(gridLayout);
 		
 		new Label(shell, SWT.NONE).setText("Design Constraint:");
-
+		
 		
 		if (newItem)
 		{
@@ -118,11 +118,11 @@ public class EditAltConstRel {
 			gridData.horizontalSpan = 2;
 			componentTree.setLayoutData(gridData);
 			
-
+			
 		}
 		else
 		{
-		
+			
 			new Label(shell, SWT.NONE).setText(ourArea.getConstr().getName());
 			
 		}
@@ -151,50 +151,50 @@ public class EditAltConstRel {
 //		gridData.horizontalIndent = 5;
 		findB.setLayoutData(gridData);
 		gridData.horizontalSpan = 1;
-
+		
 		findB.addSelectionListener(new SelectionAdapter() {
-
-		   public void widgetSelected(SelectionEvent event) {
-		   	
-			   int pid = 0;
-			if (aNewItem)
-			{
-		   	TreeItem[] selected = componentTree.getSelection();
-		   	selEntry = new Constraint();
-			selEntry.fromDatabase(selected[0].getText());
-			ourArea.setConstr(selEntry);
-
-			if (ourParent != null)
-			{
-				ourArea.setName(ourParent.getName() + "_" + selEntry.getName());
-				pid = ourParent.getID();
-			}
-			} //not a new item
-			else
-			{
-				pid = ourArea.getID(); //in this case, the ID is equal to the parent?
-			}
-			ourArea.setUnits(unitsField.getText());
 			
-			String amountString = amtField.getText();
-			try
-			{
-			Float testFlt = Float.valueOf(amountString);
-			ourArea.setAmount(testFlt.floatValue());
-			
-			ourArea.toDatabase(pid);
-			canceled = false;
-			shell.close();
-			shell.dispose();
-			
-			   } catch (NumberFormatException ex)
+			public void widgetSelected(SelectionEvent event) {
+				
+				int pid = 0;
+				if (aNewItem)
 				{
-					   MessageBox mbox = new MessageBox(shell, SWT.ICON_ERROR);
-					   mbox.setMessage("Need to provide a valid percentage");
-					   mbox.open();
+					TreeItem[] selected = componentTree.getSelection();
+					selEntry = new Constraint();
+					selEntry.fromDatabase(selected[0].getText());
+					ourArea.setConstr(selEntry);
+					
+					if (ourParent != null)
+					{
+						ourArea.setName(ourParent.getName() + "_" + selEntry.getName());
+						pid = ourParent.getID();
+					}
+				} //not a new item
+				else
+				{
+					pid = ourArea.getID(); //in this case, the ID is equal to the parent?
 				}
-
-		   }
+				ourArea.setUnits(unitsField.getText());
+				
+				String amountString = amtField.getText();
+				try
+				{
+					Float testFlt = Float.valueOf(amountString);
+					ourArea.setAmount(testFlt.floatValue());
+					
+					ourArea.toDatabase(pid);
+					canceled = false;
+					shell.close();
+					shell.dispose();
+					
+				} catch (NumberFormatException ex)
+				{
+					MessageBox mbox = new MessageBox(shell, SWT.ICON_ERROR);
+					mbox.setMessage("Need to provide a valid percentage");
+					mbox.open();
+				}
+				
+			}
 		});
 		
 		Button cancelB = new Button(shell, SWT.PUSH);
@@ -203,14 +203,14 @@ public class EditAltConstRel {
 //		gridData2.horizontalIndent = 5;
 		cancelB.setLayoutData(gridData2);
 		cancelB.addSelectionListener(new SelectionAdapter() {
-
-		   public void widgetSelected(SelectionEvent event) {
-		   	selEntry = null;
-		   	canceled = true;
-			shell.close();
-			shell.dispose();
-
-		   }
+			
+			public void widgetSelected(SelectionEvent event) {
+				selEntry = null;
+				canceled = true;
+				shell.close();
+				shell.dispose();
+				
+			}
 		});
 		
 		//We want the buttons to be of equal size...
@@ -219,11 +219,11 @@ public class EditAltConstRel {
 		shell.pack();
 		shell.open();
 		while (!shell.isDisposed()) {
-		   if (!display.readAndDispatch()) display.sleep();
+			if (!display.readAndDispatch()) display.sleep();
 		}
-       
+		
 	}
-
+	
 	/**
 	 * populates our constraint tree that we select from when creating a new relationship. 
 	 * This is a recursive routine.
@@ -243,9 +243,9 @@ public class EditAltConstRel {
 			next.setText(child.getName());
 			populateTree(next, child.getName());
 		}
-			
+		
 	}
-
+	
 	/**
 	 * checks if the editor was canceled from and didn't modify anything
 	 * @return true if cancelled
@@ -261,7 +261,7 @@ public class EditAltConstRel {
 	 */
 	public Constraint getSelEntry()
 	{
-	  return selEntry;
+		return selEntry;
 	}
-
+	
 }

@@ -32,7 +32,7 @@ public class ConsistencyChecker {
 	 * The database table being examined
 	 */
 	private String Type; // includes decision, alternative,
-						// requirements, and arguments
+	// requirements, and arguments
 	
 	ConsistencyChecker()
 	{
@@ -66,11 +66,11 @@ public class ConsistencyChecker {
 		ResultSet rs = null;
 		String query = "";
 		boolean flag = false;
-				
+		
 		try{
 			stmt = conn.createStatement();
 			query = "SELECT id FROM " + Type + " WHERE name = '"
-					+ Name + "'";
+			+ Name + "'";
 			rs = stmt.executeQuery(query);
 			if(rs.next() && Integer.parseInt(rs.getString(1)) != id)
 			{

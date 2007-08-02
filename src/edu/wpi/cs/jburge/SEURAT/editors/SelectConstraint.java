@@ -50,7 +50,7 @@ public class SelectConstraint {
 	 * The selected design constraint
 	 */
 	private Constraint sel;
-
+	
 	/**
 	 * Present the user with a tree of constraints that they can
 	 * select from.
@@ -71,7 +71,7 @@ public class SelectConstraint {
 		new Label(shell, SWT.NONE).setText("");
 		new Label(shell, SWT.NONE).setText("");
 		componentTree = new Tree(shell, SWT.SINGLE | SWT.V_SCROLL | SWT.H_SCROLL);
-
+		
 		root = new TreeItem(componentTree, SWT.NONE);
 		root.setText("Design-Constraints");
 		populateTree(root, "Design-Constraints");
@@ -89,27 +89,27 @@ public class SelectConstraint {
 //			gridData.horizontalIndent = 5;
 			addB.setLayoutData(gridData);
 			addB.addSelectionListener(new SelectionAdapter() {
-
-			   public void widgetSelected(SelectionEvent event) {
-		   	
-				TreeItem[] selected = componentTree.getSelection();
-				sel = new Constraint();
-				if (selected.length > 0)
-				{
-					Constraint parent = new Constraint();
-					parent.fromDatabase(selected[0].getText());
-					Constraint newOnt = new Constraint();
-					EditConstraint ar = new EditConstraint(ourDisplay, newOnt, parent, true);
-					if (!ar.canceled)
+				
+				public void widgetSelected(SelectionEvent event) {
+					
+					TreeItem[] selected = componentTree.getSelection();
+					sel = new Constraint();
+					if (selected.length > 0)
 					{
-						newOnt = (Constraint) ar.getItem();
-						TreeItem newItem = new TreeItem(selected[0], SWT.NONE);
-						newItem.setText(newOnt.getName());
-						componentTree.redraw();
+						Constraint parent = new Constraint();
+						parent.fromDatabase(selected[0].getText());
+						Constraint newOnt = new Constraint();
+						EditConstraint ar = new EditConstraint(ourDisplay, newOnt, parent, true);
+						if (!ar.canceled)
+						{
+							newOnt = (Constraint) ar.getItem();
+							TreeItem newItem = new TreeItem(selected[0], SWT.NONE);
+							newItem.setText(newOnt.getName());
+							componentTree.redraw();
+						}
 					}
+					
 				}
-
-			   }
 			});
 		}
 		else
@@ -124,16 +124,16 @@ public class SelectConstraint {
 //		gridData.horizontalIndent = 5;
 		findB.setLayoutData(gridData);
 		findB.addSelectionListener(new SelectionAdapter() {
-
-		   public void widgetSelected(SelectionEvent event) {
-		   	
-		   	TreeItem[] selected = componentTree.getSelection();
-		   	sel = new Constraint();
-			sel.fromDatabase(selected[0].getText());
-			shell.close();
-			shell.dispose();
-
-		   }
+			
+			public void widgetSelected(SelectionEvent event) {
+				
+				TreeItem[] selected = componentTree.getSelection();
+				sel = new Constraint();
+				sel.fromDatabase(selected[0].getText());
+				shell.close();
+				shell.dispose();
+				
+			}
 		});
 		
 		Button cancelB = new Button(shell, SWT.PUSH);
@@ -142,13 +142,13 @@ public class SelectConstraint {
 //		gridData2.horizontalIndent = 5;
 		cancelB.setLayoutData(gridData2);
 		cancelB.addSelectionListener(new SelectionAdapter() {
-
-		   public void widgetSelected(SelectionEvent event) {
-		   	sel = null;
-			shell.close();
-			shell.dispose();
-
-		   }
+			
+			public void widgetSelected(SelectionEvent event) {
+				sel = null;
+				shell.close();
+				shell.dispose();
+				
+			}
 		});
 		
 		//We want the buttons to be of equal size...
@@ -157,11 +157,11 @@ public class SelectConstraint {
 		shell.pack();
 		shell.open();
 		while (!shell.isDisposed()) {
-		   if (!display.readAndDispatch()) display.sleep();
+			if (!display.readAndDispatch()) display.sleep();
 		}
-       
+		
 	}
-
+	
 	/**
 	 * Populates a constraint tree from the rationale database. This is a
 	 * recursive method that calls itself to add new children to the current
@@ -182,7 +182,7 @@ public class SelectConstraint {
 			next.setText(child.getName());
 			populateTree(next, child.getName());
 		}
-			
+		
 	}
 	
 	/**
@@ -191,7 +191,7 @@ public class SelectConstraint {
 	 */
 	public Constraint getSelConstraint()
 	{
-	  return sel;
+		return sel;
 	}
-
+	
 }

@@ -151,7 +151,7 @@ public class EditContingency extends NewRationaleElementGUI implements Serializa
 				public void widgetSelected(SelectionEvent event) 
 				{
 					canceled = false;
-
+					
 					ConsistencyChecker checker = new ConsistencyChecker(ourContingency.getID(), nameField.getText(), "Contingencies");
 					
 					if(ourContingency.getName() == nameField.getText() || checker.check())

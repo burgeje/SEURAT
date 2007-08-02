@@ -52,7 +52,7 @@ public class SelectItem {
 	 * The list of entities that the user can select from
 	 */
 	private List entityList;
-
+	
 	/**
 	 * The string typed into the text box (searchText)
 	 */
@@ -66,8 +66,8 @@ public class SelectItem {
 	 * The selected item
 	 */
 	private RationaleElement ourItem;
-
-
+	
+	
 	/**
 	 * Displays a list of rationale elements that the user can select from
 	 * @param display - points to the display
@@ -76,7 +76,7 @@ public class SelectItem {
 	public SelectItem(Display display, RationaleElementType eType) {
 		
 		//set up our display
- 		ourDisplay = display;
+		ourDisplay = display;
 		type = eType;
 		
 		ourItem = null;
@@ -124,7 +124,7 @@ public class SelectItem {
 		searchB.setText("Search");
 		gridData = new GridData(GridData.HORIZONTAL_ALIGN_FILL);
 		Point buttonSize = searchB.computeSize(SWT.DEFAULT, SWT.DEFAULT);
-//		  gridData.horizontalSpan = 3;
+//		gridData.horizontalSpan = 3;
 		searchB.setLayoutData(gridData);
 		searchB.addSelectionListener(new SelectionAdapter() {
 			public void widgetSelected(SelectionEvent event)
@@ -133,7 +133,7 @@ public class SelectItem {
 //				System.out.println("number items = " + Integer.toString(limit));
 				boolean found = false;
 				int numSearched = 0;
-			
+				
 				selectionString = searchText.getText();
 				while ((!found) && (numSearched < limit))
 				{
@@ -159,15 +159,15 @@ public class SelectItem {
 					numSearched++;
 				}
 			}
-		 });
-        		
+		});
+		
 		new Label(shell, SWT.NONE).setText(" ");	
 		new Label(shell, SWT.NONE).setText(" ");
 		new Label(shell, SWT.NONE).setText(" ");	
 		new Label(shell, SWT.NONE).setText(" ");
 		
 		if ((type != RationaleElementType.ALTERNATIVE) && 
-			(type != RationaleElementType.REQUIREMENT))
+				(type != RationaleElementType.REQUIREMENT))
 		{
 			Button createB = new Button(shell, SWT.PUSH);
 			createB.setText("New");
@@ -177,27 +177,27 @@ public class SelectItem {
 			gridData.widthHint = buttonSize.y;
 			createB.setLayoutData(gridData);
 			createB.addSelectionListener(new SelectionAdapter() {
-
-			   public void widgetSelected(SelectionEvent event) {
-				RationaleElement newItem  = 
-					RationaleElementFactory.getRationaleElement(type);
-				boolean cancelled = newItem.create(ourDisplay, null); //no parent here
-				if (!cancelled)
-				{
-					entityList.add(newItem.getName());
-         			entityList.redraw();
-					ourItem = newItem;
-					entityList.setSelection(entityList.indexOf(newItem.getName()));
+				
+				public void widgetSelected(SelectionEvent event) {
+					RationaleElement newItem  = 
+						RationaleElementFactory.getRationaleElement(type);
+					boolean cancelled = newItem.create(ourDisplay, null); //no parent here
+					if (!cancelled)
+					{
+						entityList.add(newItem.getName());
+						entityList.redraw();
+						ourItem = newItem;
+						entityList.setSelection(entityList.indexOf(newItem.getName()));
+					}
 				}
-			   }
 			});
 		}
 		else
 		{
 			new Label(shell, SWT.NONE).setText(" ");
 		}
-
-				
+		
+		
 		Button editB = new Button(shell, SWT.PUSH);
 		editB.setText("Select");
 //		editB.setSize(buttonSize);
@@ -206,40 +206,40 @@ public class SelectItem {
 		gridData.widthHint = buttonSize.y;
 		editB.setLayoutData(gridData);
 		editB.addSelectionListener(new SelectionAdapter() {
-
-		   public void widgetSelected(SelectionEvent event) {
-			String name = entityList.getItem(entityList.getSelectionIndex());
-			ourItem  = 
-				RationaleDB.getRationaleElement(name, type);
-			shell.close();
-			shell.dispose();
-
-		   }
+			
+			public void widgetSelected(SelectionEvent event) {
+				String name = entityList.getItem(entityList.getSelectionIndex());
+				ourItem  = 
+					RationaleDB.getRationaleElement(name, type);
+				shell.close();
+				shell.dispose();
+				
+			}
 		});
 		
-
+		
 		Button cancelB = new Button(shell, SWT.PUSH);
 		cancelB.setText("Cancel");
 		GridData gridData2 = new GridData(GridData.HORIZONTAL_ALIGN_FILL);
-	//	cancelB.setSize(searchB.getSize());
+		//	cancelB.setSize(searchB.getSize());
 //		gridData2.horizontalIndent = 5;
 		cancelB.setLayoutData(gridData2);
 		cancelB.addSelectionListener(new SelectionAdapter() {
-
-		   public void widgetSelected(SelectionEvent event) {
-			shell.close();
-			shell.dispose();
-
-		   }
+			
+			public void widgetSelected(SelectionEvent event) {
+				shell.close();
+				shell.dispose();
+				
+			}
 		});
 		
 		
 		shell.pack();
 		shell.open();
 		while (!shell.isDisposed()) {
-				if (!display.readAndDispatch()) display.sleep();
+			if (!display.readAndDispatch()) display.sleep();
 		}
-       
+		
 	}
 	
 	/**
@@ -248,7 +248,7 @@ public class SelectItem {
 	 */
 	public RationaleElement getNewItem()
 	{
-	 return ourItem;
+		return ourItem;
 	}
-
+	
 }

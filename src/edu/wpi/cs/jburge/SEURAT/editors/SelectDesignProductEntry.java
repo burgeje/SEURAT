@@ -48,7 +48,7 @@ public class SelectDesignProductEntry {
 	 * The selected product component element
 	 */
 	private DesignProductEntry selEntry;
-
+	
 	/**
 	 * Present the user with a tree of product components that they can
 	 * select from.
@@ -69,7 +69,7 @@ public class SelectDesignProductEntry {
 		new Label(shell, SWT.NONE).setText("");
 		new Label(shell, SWT.NONE).setText("");
 		componentTree = new Tree(shell, SWT.SINGLE | SWT.V_SCROLL | SWT.H_SCROLL);
-
+		
 		root = new TreeItem(componentTree, SWT.NONE);
 		root.setText("Design-Product-Ontology");
 		populateTree(root, "Design-Product-Ontology");
@@ -87,27 +87,27 @@ public class SelectDesignProductEntry {
 			gridData.horizontalIndent = 5;
 			addB.setLayoutData(gridData);
 			addB.addSelectionListener(new SelectionAdapter() {
-
-			   public void widgetSelected(SelectionEvent event) {
-		   	
-				TreeItem[] selected = componentTree.getSelection();
-				selEntry = new DesignProductEntry();
-				if (selected.length > 0)
-				{
-					DesignProductEntry parent = new DesignProductEntry();
-					parent.fromDatabase(selected[0].getText());
-					DesignProductEntry newOnt = new DesignProductEntry();
-					EditDesignProductEntry ar = new EditDesignProductEntry(ourDisplay, newOnt, parent, true);
-					if (!ar.canceled)
+				
+				public void widgetSelected(SelectionEvent event) {
+					
+					TreeItem[] selected = componentTree.getSelection();
+					selEntry = new DesignProductEntry();
+					if (selected.length > 0)
 					{
-						newOnt = (DesignProductEntry) ar.getItem();
-						TreeItem newItem = new TreeItem(selected[0], SWT.NONE);
-						newItem.setText(newOnt.getName());
-						componentTree.redraw();
+						DesignProductEntry parent = new DesignProductEntry();
+						parent.fromDatabase(selected[0].getText());
+						DesignProductEntry newOnt = new DesignProductEntry();
+						EditDesignProductEntry ar = new EditDesignProductEntry(ourDisplay, newOnt, parent, true);
+						if (!ar.canceled)
+						{
+							newOnt = (DesignProductEntry) ar.getItem();
+							TreeItem newItem = new TreeItem(selected[0], SWT.NONE);
+							newItem.setText(newOnt.getName());
+							componentTree.redraw();
+						}
 					}
+					
 				}
-
-			   }
 			});
 		}
 		else
@@ -122,16 +122,16 @@ public class SelectDesignProductEntry {
 		gridData.horizontalIndent = 5;
 		findB.setLayoutData(gridData);
 		findB.addSelectionListener(new SelectionAdapter() {
-
-		   public void widgetSelected(SelectionEvent event) {
-		   	
-		   	TreeItem[] selected = componentTree.getSelection();
-		   	selEntry = new DesignProductEntry();
-			selEntry.fromDatabase(selected[0].getText());
-			shell.close();
-			shell.dispose();
-
-		   }
+			
+			public void widgetSelected(SelectionEvent event) {
+				
+				TreeItem[] selected = componentTree.getSelection();
+				selEntry = new DesignProductEntry();
+				selEntry.fromDatabase(selected[0].getText());
+				shell.close();
+				shell.dispose();
+				
+			}
 		});
 		
 		Button cancelB = new Button(shell, SWT.PUSH);
@@ -140,13 +140,13 @@ public class SelectDesignProductEntry {
 		gridData2.horizontalIndent = 5;
 		cancelB.setLayoutData(gridData2);
 		cancelB.addSelectionListener(new SelectionAdapter() {
-
-		   public void widgetSelected(SelectionEvent event) {
-		   	selEntry = null;
-			shell.close();
-			shell.dispose();
-
-		   }
+			
+			public void widgetSelected(SelectionEvent event) {
+				selEntry = null;
+				shell.close();
+				shell.dispose();
+				
+			}
 		});
 		
 		//We want the buttons to be of equal size...
@@ -155,11 +155,11 @@ public class SelectDesignProductEntry {
 		shell.pack();
 		shell.open();
 		while (!shell.isDisposed()) {
-		   if (!display.readAndDispatch()) display.sleep();
+			if (!display.readAndDispatch()) display.sleep();
 		}
-       
+		
 	}
-
+	
 	/**
 	 * Populates a component tree from the rationale database. This is a
 	 * recursive method that calls itself to add new children to the current
@@ -167,7 +167,7 @@ public class SelectDesignProductEntry {
 	 * @param node - the root node for the tree
 	 * @param parentName - the name of the parent at the root node.
 	 */
-
+	
 	private void populateTree(TreeItem node, String parentName )
 	{
 		RationaleDB d = RationaleDB.getHandle();
@@ -181,7 +181,7 @@ public class SelectDesignProductEntry {
 			next.setText(child.getName());
 			populateTree(next, child.getName());
 		}
-			
+		
 	}
 	
 	/**
@@ -190,7 +190,7 @@ public class SelectDesignProductEntry {
 	 */
 	public DesignProductEntry getSelEntry()
 	{
-	  return selEntry;
+		return selEntry;
 	}
-
+	
 }

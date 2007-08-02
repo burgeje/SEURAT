@@ -14,8 +14,8 @@ import java.awt.event.*;
  *
  */
 public class ReasonGUI extends Dialog implements Serializable {
-
- 	
+	
+	
 	/**
 	 * 
 	 */

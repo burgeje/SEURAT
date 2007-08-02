@@ -14,8 +14,8 @@ import java.awt.event.*;
  *
  */
 public class AskQuestionGUI extends Dialog implements Serializable {
-
-
+	
+	
 	private static final long serialVersionUID = 3195632975620802133L;
 	
 	/**

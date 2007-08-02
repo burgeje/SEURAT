@@ -19,7 +19,7 @@ import java.io.Serializable;
  */
 public class RationaleElementGUI extends Dialog implements Serializable {
 	
-
+	
 	/**
 	 * 
 	 */
@@ -33,12 +33,12 @@ public class RationaleElementGUI extends Dialog implements Serializable {
 	}
 	
 	public RationaleElement getItem()
-    {
-    	return null; //this should not get called...
-    }
-    
-    public boolean getCanceled()
-    {
-    	return canceled;
-    }
+	{
+		return null; //this should not get called...
+	}
+	
+	public boolean getCanceled()
+	{
+		return canceled;
+	}
 }

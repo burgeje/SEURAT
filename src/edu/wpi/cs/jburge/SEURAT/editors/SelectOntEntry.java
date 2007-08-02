@@ -45,8 +45,8 @@ public class SelectOntEntry {
 	 * The selected item from the tree
 	 */
 	private OntEntry selEntry;
-
-
+	
+	
 	/**
 	 * Used to display the argument ontology tree so an element can be selected
 	 * @param display - points back to the display
@@ -66,7 +66,7 @@ public class SelectOntEntry {
 		new Label(shell, SWT.NONE).setText("");
 		new Label(shell, SWT.NONE).setText("");
 		ontologyTree = new Tree(shell, SWT.SINGLE | SWT.V_SCROLL| SWT.H_SCROLL);
-
+		
 		root = new TreeItem(ontologyTree, SWT.NONE);
 		root.setText("Argument-Ontology");
 		populateTree(root, "Argument-Ontology");
@@ -84,27 +84,27 @@ public class SelectOntEntry {
 			gridData.horizontalIndent = 5;
 			addB.setLayoutData(gridData);
 			addB.addSelectionListener(new SelectionAdapter() {
-
-			   public void widgetSelected(SelectionEvent event) {
-		   	
-				TreeItem[] selected = ontologyTree.getSelection();
-				selEntry = new OntEntry();
-				if (selected.length > 0)
-				{
-					OntEntry parent = new OntEntry();
-					parent.fromDatabase(selected[0].getText());
-					OntEntry newOnt = new OntEntry();
-					EditOntEntry ar = new EditOntEntry(ourDisplay, newOnt, parent, true);
-					if (!ar.canceled)
+				
+				public void widgetSelected(SelectionEvent event) {
+					
+					TreeItem[] selected = ontologyTree.getSelection();
+					selEntry = new OntEntry();
+					if (selected.length > 0)
 					{
-						newOnt = (OntEntry) ar.getItem();
-						TreeItem newItem = new TreeItem(selected[0], SWT.NONE);
-						newItem.setText(newOnt.getName());
-						ontologyTree.redraw();
+						OntEntry parent = new OntEntry();
+						parent.fromDatabase(selected[0].getText());
+						OntEntry newOnt = new OntEntry();
+						EditOntEntry ar = new EditOntEntry(ourDisplay, newOnt, parent, true);
+						if (!ar.canceled)
+						{
+							newOnt = (OntEntry) ar.getItem();
+							TreeItem newItem = new TreeItem(selected[0], SWT.NONE);
+							newItem.setText(newOnt.getName());
+							ontologyTree.redraw();
+						}
 					}
+					
 				}
-
-			   }
 			});
 		}
 		else
@@ -119,16 +119,16 @@ public class SelectOntEntry {
 		gridData.horizontalIndent = 5;
 		findB.setLayoutData(gridData);
 		findB.addSelectionListener(new SelectionAdapter() {
-
-		   public void widgetSelected(SelectionEvent event) {
-		   	
-		   	TreeItem[] selected = ontologyTree.getSelection();
-		   	selEntry = new OntEntry();
-			selEntry.fromDatabase(selected[0].getText());
-			shell.close();
-			shell.dispose();
-
-		   }
+			
+			public void widgetSelected(SelectionEvent event) {
+				
+				TreeItem[] selected = ontologyTree.getSelection();
+				selEntry = new OntEntry();
+				selEntry.fromDatabase(selected[0].getText());
+				shell.close();
+				shell.dispose();
+				
+			}
 		});
 		
 		Button cancelB = new Button(shell, SWT.PUSH);
@@ -137,13 +137,13 @@ public class SelectOntEntry {
 		gridData2.horizontalIndent = 5;
 		cancelB.setLayoutData(gridData2);
 		cancelB.addSelectionListener(new SelectionAdapter() {
-
-		   public void widgetSelected(SelectionEvent event) {
-		   	selEntry = null;
-			shell.close();
-			shell.dispose();
-
-		   }
+			
+			public void widgetSelected(SelectionEvent event) {
+				selEntry = null;
+				shell.close();
+				shell.dispose();
+				
+			}
 		});
 		
 		//We want the buttons to be of equal size...
@@ -152,11 +152,11 @@ public class SelectOntEntry {
 		shell.pack();
 		shell.open();
 		while (!shell.isDisposed()) {
-		   if (!display.readAndDispatch()) display.sleep();
+			if (!display.readAndDispatch()) display.sleep();
 		}
-       
+		
 	}
-
+	
 	/**
 	 * Populates the ontology tree from the rationale database. This is a
 	 * recursive method that calls itself to add new children to the current
@@ -177,7 +177,7 @@ public class SelectOntEntry {
 			next.setText(child.getName());
 			populateTree(next, child.getName());
 		}
-			
+		
 	}
 	
 	/**
@@ -186,7 +186,7 @@ public class SelectOntEntry {
 	 */
 	public OntEntry getSelOntEntry()
 	{
-	  return selEntry;
+		return selEntry;
 	}
-
+	
 }

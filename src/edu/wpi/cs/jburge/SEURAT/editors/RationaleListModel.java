@@ -86,7 +86,7 @@ public class RationaleListModel {
 		if (dbList)
 		{
 			RationaleDB db = RationaleDB.getHandle();
-	
+			
 			Vector listV = db.getNameList(type);
 			Enumeration listE = listV.elements();
 			while (listE.hasMoreElements())
@@ -106,14 +106,14 @@ public class RationaleListModel {
 				}
 			}
 		}
-
-
+		
+		
 	}
 	
-
+	
 	DefaultListModel getModel()
 	{
 		return ourModel;
 	}
-		
+	
 }

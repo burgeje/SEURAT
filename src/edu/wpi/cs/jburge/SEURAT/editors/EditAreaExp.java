@@ -35,11 +35,11 @@ public class EditAreaExp {
 	
 	private DesignProductEntry selEntry;
 	private Designer ourParent;
-	  private Combo areaBox;
-	  
-	  boolean canceled;
-	  AreaExp ourArea;
-
+	private Combo areaBox;
+	
+	boolean canceled;
+	AreaExp ourArea;
+	
 	/**
 	 * Edit the area of expertise
 	 * @param display - points back to the display
@@ -62,11 +62,11 @@ public class EditAreaExp {
 		shell.setLayout(gridLayout);
 		
 		new Label(shell, SWT.NONE).setText("Design Component:");
-
+		
 		
 		if (newItem)
 		{
-
+			
 			new Label(shell, SWT.NONE).setText("");
 			new Label(shell, SWT.NONE).setText("");
 			componentTree = new Tree(shell, SWT.SINGLE | SWT.V_SCROLL);
@@ -79,11 +79,11 @@ public class EditAreaExp {
 			gridData.heightHint = componentTree.getItemHeight() * 4;
 			componentTree.setLayoutData(gridData);
 			
-
+			
 		}
 		else
 		{
-		
+			
 			new Label(shell, SWT.NONE).setText(ourArea.getComponent().getName());
 		}
 		new Label(shell, SWT.NONE).setText("Level:");
@@ -97,8 +97,8 @@ public class EditAreaExp {
 				areaBox.select(k-1);
 			}
 		}
-
-
+		
+		
 		areaBox.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_FILL));
 		
 		Button findB = new Button(shell, SWT.PUSH);
@@ -107,26 +107,26 @@ public class EditAreaExp {
 		gridData.horizontalIndent = 5;
 		findB.setLayoutData(gridData);
 		findB.addSelectionListener(new SelectionAdapter() {
-
-		   public void widgetSelected(SelectionEvent event) {
-		   	
-		   	TreeItem[] selected = componentTree.getSelection();
-		   	selEntry = new DesignProductEntry();
-			selEntry.fromDatabase(selected[0].getText());
-			ourArea.setComponent(selEntry);
-			int pid = 0;
-			if (ourParent != null)
-			{
-				ourArea.setName(ourParent.getName() + "_" + selEntry.getName());
-				pid = ourParent.getID();
+			
+			public void widgetSelected(SelectionEvent event) {
+				
+				TreeItem[] selected = componentTree.getSelection();
+				selEntry = new DesignProductEntry();
+				selEntry.fromDatabase(selected[0].getText());
+				ourArea.setComponent(selEntry);
+				int pid = 0;
+				if (ourParent != null)
+				{
+					ourArea.setName(ourParent.getName() + "_" + selEntry.getName());
+					pid = ourParent.getID();
+				}
+				ourArea.setLevel(areaBox.getSelectionIndex());
+				ourArea.toDatabase(pid);
+				canceled = false;
+				shell.close();
+				shell.dispose();
+				
 			}
-			ourArea.setLevel(areaBox.getSelectionIndex());
-			ourArea.toDatabase(pid);
-			canceled = false;
-			shell.close();
-			shell.dispose();
-
-		   }
 		});
 		
 		Button cancelB = new Button(shell, SWT.PUSH);
@@ -135,14 +135,14 @@ public class EditAreaExp {
 		gridData2.horizontalIndent = 5;
 		cancelB.setLayoutData(gridData2);
 		cancelB.addSelectionListener(new SelectionAdapter() {
-
-		   public void widgetSelected(SelectionEvent event) {
-		   	selEntry = null;
-		   	canceled = true;
-			shell.close();
-			shell.dispose();
-
-		   }
+			
+			public void widgetSelected(SelectionEvent event) {
+				selEntry = null;
+				canceled = true;
+				shell.close();
+				shell.dispose();
+				
+			}
 		});
 		
 		//We want the buttons to be of equal size...
@@ -151,9 +151,9 @@ public class EditAreaExp {
 		shell.pack();
 		shell.open();
 		while (!shell.isDisposed()) {
-		   if (!display.readAndDispatch()) display.sleep();
+			if (!display.readAndDispatch()) display.sleep();
 		}
-       
+		
 	}
 	
 	private void populateTree(TreeItem node, String parentName )
@@ -169,7 +169,7 @@ public class EditAreaExp {
 			next.setText(child.getName());
 			populateTree(next, child.getName());
 		}
-			
+		
 	}
 	
 	public boolean getCanceled()
@@ -179,7 +179,7 @@ public class EditAreaExp {
 	
 	public DesignProductEntry getSelEntry()
 	{
-	  return selEntry;
+		return selEntry;
 	}
-
+	
 }

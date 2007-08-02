@@ -19,12 +19,12 @@ import javax.swing.JComboBox;
  * they must not have been necessary.
  */
 public class EnumerationBox extends JComboBox {
-
+	
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
-
+	
 	/**
 	 * @param arg0
 	 */
@@ -32,7 +32,7 @@ public class EnumerationBox extends JComboBox {
 		super(arg0);
 		// TODO Auto-generated constructor stub
 	}
-
+	
 	/**
 	 * @param arg0
 	 */
@@ -40,7 +40,7 @@ public class EnumerationBox extends JComboBox {
 		super(arg0);
 		// TODO Auto-generated constructor stub
 	}
-
+	
 	/**
 	 * @param arg0
 	 */
@@ -48,7 +48,7 @@ public class EnumerationBox extends JComboBox {
 		super(arg0);
 		// TODO Auto-generated constructor stub
 	}
-
+	
 	/**
 	 * 
 	 */
@@ -56,7 +56,7 @@ public class EnumerationBox extends JComboBox {
 		super();
 		// TODO Auto-generated constructor stub
 	}
-
+	
 	public EnumerationBox(Enumeration typeEnum, String selected) {
 		int i = 0;
 		while (typeEnum.hasMoreElements())

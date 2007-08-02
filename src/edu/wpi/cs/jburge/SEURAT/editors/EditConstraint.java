@@ -36,7 +36,7 @@ public class EditConstraint extends NewRationaleElementGUI implements Serializab
 	 * The rationale element the constraint applies to
 	 */
 	private Constraint ourParent;
-
+	
 	/**
 	 * The name of the constraint
 	 */

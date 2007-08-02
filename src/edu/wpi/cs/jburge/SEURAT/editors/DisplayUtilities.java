@@ -21,7 +21,7 @@ import org.eclipse.swt.widgets.Tree;
  *
  */
 public class DisplayUtilities {
-
+	
 	/**
 	 * Set up the dimensions (height and width for a list)
 	 * @param ourWidget - the element being sized
@@ -79,7 +79,7 @@ public class DisplayUtilities {
 		Rectangle trim = ourWidget.computeTrim(0, 0, treeWidth, 0);
 		gridData.widthHint = trim.width;	
 	}
-
+	
 	/**
 	 * Sets up the height and width of a tree
 	 * @param ourWidget
@@ -95,5 +95,5 @@ public class DisplayUtilities {
 		gridData.widthHint = trim.width;
 		gridData.heightHint = trim.height;
 	}
-
+	
 }
