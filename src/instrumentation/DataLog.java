@@ -19,7 +19,7 @@ package instrumentation;
  * @author jburge
  */
 public final class DataLog {
-
+	
 	/**
 	 * 
 	 */
@@ -31,29 +31,29 @@ public final class DataLog {
 	private DataLog() {
 		super();
 		/*
-		// TODO Auto-generated constructor stub
-		Date dStamp;
-		dStamp = new Date();
-		DateFormat df = DateFormat.getDateInstance(DateFormat.MEDIUM);
-		DateFormat tf = DateFormat.getTimeInstance(DateFormat.SHORT);
-		String time = tf.format(dStamp);
-		time = time.replace(':', '_');
-		String dString = df.format(dStamp) + "_" + time;
-		System.out.println(dString);
-		outFile = "log_" + dString + ".txt";
-		try
-		{
-			fh = new FileHandler(outFile);
-			fh.setFormatter(new SimpleFormatter());
-			ourLog = Logger.getLogger("edu.wpi.cs.jburge.SEURAT");
-			ourLog.addHandler(fh);
-			ourLog.setLevel(Level.ALL);
-			ourLog.fine("start session");
-		} catch (Exception ex)
-		{
-			System.out.println("Exception setting up log");
-		}
-		*/
+		 // TODO Auto-generated constructor stub
+		  Date dStamp;
+		  dStamp = new Date();
+		  DateFormat df = DateFormat.getDateInstance(DateFormat.MEDIUM);
+		  DateFormat tf = DateFormat.getTimeInstance(DateFormat.SHORT);
+		  String time = tf.format(dStamp);
+		  time = time.replace(':', '_');
+		  String dString = df.format(dStamp) + "_" + time;
+		  System.out.println(dString);
+		  outFile = "log_" + dString + ".txt";
+		  try
+		  {
+		  fh = new FileHandler(outFile);
+		  fh.setFormatter(new SimpleFormatter());
+		  ourLog = Logger.getLogger("edu.wpi.cs.jburge.SEURAT");
+		  ourLog.addHandler(fh);
+		  ourLog.setLevel(Level.ALL);
+		  ourLog.fine("start session");
+		  } catch (Exception ex)
+		  {
+		  System.out.println("Exception setting up log");
+		  }
+		  */
 		
 	}
 	
@@ -68,7 +68,7 @@ public final class DataLog {
 	public void writeData(String data)
 	{
 //		ourLog.log(Level.INFO, data);
-
+		
 	}
-
+	
 }
