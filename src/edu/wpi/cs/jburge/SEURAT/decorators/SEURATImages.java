@@ -12,48 +12,48 @@ import org.eclipse.swt.graphics.ImageData;
  */
 public class SEURATImages
 {
-  /**
-   * Rat Image Descriptor
-   */ 
-  public static final ImageDescriptor ratDescriptor = ImageDescriptor.
+	/**
+	 * Rat Image Descriptor
+	 */ 
+	public static final ImageDescriptor ratDescriptor = ImageDescriptor.
 	createFromFile (SEURATLightWeightDecorator.class, "smallRat.gif");
-  
- 
-  /**
-   * Constructor for SEURATImages.
-   */
-  public SEURATImages()
-  {
-	super();
-  }
-
-  /**
-   * Get the rat image data
-   * 
-   * @return image data for the rationale indicator
-   */   
-  public ImageData getRatImageData()
-  {
-	return ratDescriptor.getImageData();
-  }
-  
-  
- 
-  /**
-   * Get the image data depending on the key
-   * 
-   * @return image data 
-   * 
-   */ 
-  public ImageData getImageData(String imageKey)
-  {
-	if (imageKey.equals("Rat"))
+	
+	
+	/**
+	 * Constructor for SEURATImages.
+	 */
+	public SEURATImages()
 	{
-	  return getRatImageData();
+		super();
 	}
-	return null;
-  }
-   
- // public ImageDescriptor 
-
+	
+	/**
+	 * Get the rat image data
+	 * 
+	 * @return image data for the rationale indicator
+	 */   
+	public ImageData getRatImageData()
+	{
+		return ratDescriptor.getImageData();
+	}
+	
+	
+	
+	/**
+	 * Get the image data depending on the key
+	 * 
+	 * @return image data 
+	 * 
+	 */ 
+	public ImageData getImageData(String imageKey)
+	{
+		if (imageKey.equals("Rat"))
+		{
+			return getRatImageData();
+		}
+		return null;
+	}
+	
+	// public ImageDescriptor 
+	
 }

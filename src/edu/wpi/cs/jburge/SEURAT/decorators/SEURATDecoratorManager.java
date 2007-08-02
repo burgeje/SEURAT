@@ -17,64 +17,64 @@ import org.eclipse.core.resources.IResource;
  */
 public class SEURATDecoratorManager 
 {
-  /**
-   * The resources that are to be decorated
-   */ 
-  private static List<IResource> resourcesToBeUpdated_ = new Vector<IResource>();
-  
-  /**
-   * Constructor for DemoDecoratorManager.
-   */
-  public SEURATDecoratorManager() 
-  {
-  }
-  
-  public static List getSuccessResources ()
-  {
-	return resourcesToBeUpdated_;
-  }
-  
-  public static void addSuccessResources (List<IResource> successResourceList)
-  {
-	resourcesToBeUpdated_ = new Vector<IResource>();
-	resourcesToBeUpdated_.addAll(successResourceList); 
-  }
-  
-  public static void appendSuccessResources (List<IResource> successResourceList)
-  {
-	resourcesToBeUpdated_.addAll(successResourceList); 
-  }
-  
-  public static void addSuccessResources (IResource resource)
- {
-	resourcesToBeUpdated_.add(resource);
-//	System.out.println("added our new resource");
-  }
-  
-  public static boolean contains (IResource resource)
-  {
-	return resourcesToBeUpdated_.contains (resource);
-  }
-  
-  public static void removeResource (IResource resource)
-  {
-	if (resourcesToBeUpdated_.contains (resource))
+	/**
+	 * The resources that are to be decorated
+	 */ 
+	private static List<IResource> resourcesToBeUpdated_ = new Vector<IResource>();
+	
+	/**
+	 * Constructor for DemoDecoratorManager.
+	 */
+	public SEURATDecoratorManager() 
 	{
-	  resourcesToBeUpdated_.remove (resource);
-//	  System.out.println("removed resource");
 	}
-  }
- 
-  /*
-  private static void printSuccessResources()
-  {
-	Iterator<IResource> i = resourcesToBeUpdated_.iterator();
-//	System.out.println("The resources that are updated ");
-	while (i.hasNext())
+	
+	public static List getSuccessResources ()
 	{
+		return resourcesToBeUpdated_;
+	}
+	
+	public static void addSuccessResources (List<IResource> successResourceList)
+	{
+		resourcesToBeUpdated_ = new Vector<IResource>();
+		resourcesToBeUpdated_.addAll(successResourceList); 
+	}
+	
+	public static void appendSuccessResources (List<IResource> successResourceList)
+	{
+		resourcesToBeUpdated_.addAll(successResourceList); 
+	}
+	
+	public static void addSuccessResources (IResource resource)
+	{
+		resourcesToBeUpdated_.add(resource);
+//		System.out.println("added our new resource");
+	}
+	
+	public static boolean contains (IResource resource)
+	{
+		return resourcesToBeUpdated_.contains (resource);
+	}
+	
+	public static void removeResource (IResource resource)
+	{
+		if (resourcesToBeUpdated_.contains (resource))
+		{
+			resourcesToBeUpdated_.remove (resource);
+//			System.out.println("removed resource");
+		}
+	}
+	
+	/*
+	 private static void printSuccessResources()
+	 {
+	 Iterator<IResource> i = resourcesToBeUpdated_.iterator();
+	 //	System.out.println("The resources that are updated ");
+	  while (i.hasNext())
+	  {
 	  IResource resource = (IResource) i.next();
-//	  System.out.println(resource.getName()); 
-	}
-  }*/
-  
+	  //	  System.out.println(resource.getName()); 
+	   }
+	   }*/
+	
 }
