@@ -28,14 +28,14 @@
       </category>
            <view
             name="RationaleExplorer"
-            icon="icons/sample.gif"
+            icon="icons/Rat.gif"
             category="edu.wpi.cs.jburge.SEURAT"
             class="edu.wpi.cs.jburge.SEURAT.views.RationaleExplorer"
             id="edu.wpi.cs.jburge.SEURAT.views.RationaleExplorer">
       </view>
       <view
             name="Rationale Task List"
-            icon="icons/sample.gif"
+            icon="icons/Rat.gif"
             category="edu.wpi.cs.jburge.SEURAT"
             class="edu.wpi.cs.jburge.SEURAT.views.RationaleTaskView"
             id="edu.wpi.cs.jburge.SEURAT.views.RationaleTaskView">
