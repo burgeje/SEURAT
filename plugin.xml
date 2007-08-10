@@ -125,6 +125,7 @@
    			  </action>
    		  </viewerContribution>
    	</extension>
+ 
        <extension
              point="org.eclipse.ui.preferencePages">
           <page
@@ -132,10 +133,12 @@
                 id="SEURAT.preferences.SEURATPreferencePage"
                 name="SEURAT"/>
        </extension>
+ 
        <extension
              point="org.eclipse.core.runtime.preferences">
           <initializer class="SEURAT.preferences.PreferenceInitializer"/>
        </extension>
+ 
        <extension
              point="org.eclipse.help.toc">
           <toc
