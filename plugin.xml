@@ -14,29 +14,34 @@
       <library name="mysql-connector-java-3.0.8-stable-bin.jar"/>
    </runtime>
    <requires>
-     
       <import plugin="org.eclipse.core.resources"/>
       <import plugin="org.eclipse.ui"/>
       <import plugin="org.eclipse.jdt.core"/>
       <import plugin="org.eclipse.core.runtime"/>
    </requires>
 
-
    <extension
          point="org.eclipse.ui.views">
       <category
-            name="RationaleExplorer Category"
-            id="edu.wpi.cs.jburge.SEURAT.RationaleExplorerCategory">
+            name="SEURAT"
+            id="edu.wpi.cs.jburge.SEURAT">
       </category>
-      <view
+           <view
             name="RationaleExplorer"
             icon="icons/sample.gif"
-            category="edu.wpi.cs.jburge.SEURAT.RationaleExplorerCategory"
+            category="edu.wpi.cs.jburge.SEURAT"
             class="edu.wpi.cs.jburge.SEURAT.views.RationaleExplorer"
             id="edu.wpi.cs.jburge.SEURAT.views.RationaleExplorer">
       </view>
+      <view
+            name="Rationale Task List"
+            icon="icons/sample.gif"
+            category="edu.wpi.cs.jburge.SEURAT"
+            class="edu.wpi.cs.jburge.SEURAT.views.RationaleTaskView"
+            id="edu.wpi.cs.jburge.SEURAT.views.RationaleTaskView">
+      </view>    
    </extension>
-   <extension
+    <extension
          point="org.eclipse.ui.perspectiveExtensions">
       <perspectiveExtension
             targetID="org.eclipse.ui.resourcePerspective">
@@ -45,6 +50,19 @@
                relative="org.eclipse.ui.views.TaskList"
                relationship="right"
                id="edu.wpi.cs.jburge.SEURAT.views.RationaleExplorer">
+         </view>
+      </perspectiveExtension>
+   </extension>
+   
+  <extension
+         point="org.eclipse.ui.perspectiveExtensions">
+      <perspectiveExtension
+            targetID="org.eclipse.ui.resourcePerspective">
+         <view
+               ratio="0.5"
+               relative="org.eclipse.ui.views.TaskList"
+               relationship="stack"
+               id="edu.wpi.cs.jburge.SEURAT.views.RationaleTaskView">
          </view>
       </perspectiveExtension>
    </extension>
@@ -85,32 +103,8 @@
          </description>
       </decorator>
    </extension>
-   <extension
-         point="org.eclipse.ui.views">
-      <category
-            name="SEURAT"
-            id="edu.wpi.cs.jburge.SEURAT">
-      </category>
-      <view
-            name="Rationale Task List"
-            icon="icons/sample.gif"
-            category="edu.wpi.cs.jburge.SEURAT"
-            class="edu.wpi.cs.jburge.SEURAT.views.RationaleTaskView"
-            id="edu.wpi.cs.jburge.SEURAT.views.RationaleTaskView">
-      </view>
-   </extension>
-   <extension
-         point="org.eclipse.ui.perspectiveExtensions">
-      <perspectiveExtension
-            targetID="org.eclipse.ui.resourcePerspective">
-         <view
-               ratio="0.5"
-               relative="org.eclipse.ui.views.TaskList"
-               relationship="stack"
-               id="edu.wpi.cs.jburge.SEURAT.views.RationaleTaskView">
-         </view>
-      </perspectiveExtension>
-   </extension>
+
+
    
    <extension
    		 point="org.eclipse.ui.popupMenus">
