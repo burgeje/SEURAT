@@ -111,6 +111,7 @@ public class EditArgument extends NewRationaleElementGUI implements Serializable
 				}
 			}
 			gridData = new GridData(GridData.HORIZONTAL_ALIGN_FILL);
+			gridData.horizontalSpan = 1;
 			DisplayUtilities.setComboDimensions(designerBox, gridData, 100);
 			designerBox.setLayoutData(gridData);
 			
@@ -119,7 +120,6 @@ public class EditArgument extends NewRationaleElementGUI implements Serializable
 		{
 			if (ourArg.getDesigner() != null)
 			{
-				new Label(shell, SWT.NONE).setText(ourArg.getDesigner().getName());
 				Text desField =  new Text(shell, SWT.SINGLE | SWT.BORDER | SWT.H_SCROLL | SWT.READ_ONLY);
 				desField.setText(ourArg.getDesigner().getName());
 				gridData = new GridData(GridData.HORIZONTAL_ALIGN_FILL | GridData.VERTICAL_ALIGN_BEGINNING);
