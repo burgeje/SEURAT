@@ -41,32 +41,7 @@
             id="edu.wpi.cs.jburge.SEURAT.views.RationaleTaskView">
       </view>    
    </extension>
-    <extension
-         point="org.eclipse.ui.perspectiveExtensions">
-      <perspectiveExtension
-            targetID="org.eclipse.ui.resourcePerspective">
-         <view
-               ratio="0.5"
-               relative="org.eclipse.ui.views.TaskList"
-               relationship="right"
-               id="edu.wpi.cs.jburge.SEURAT.views.RationaleExplorer">
-         </view>
-      </perspectiveExtension>
-   </extension>
-   
-  <extension
-         point="org.eclipse.ui.perspectiveExtensions">
-      <perspectiveExtension
-            targetID="org.eclipse.ui.resourcePerspective">
-         <view
-               ratio="0.5"
-               relative="org.eclipse.ui.views.TaskList"
-               relationship="stack"
-               id="edu.wpi.cs.jburge.SEURAT.views.RationaleTaskView">
-         </view>
-      </perspectiveExtension>
-   </extension>
-   
+    
    <extension
          id="ratmarker"
          name="Rationale Marker"
