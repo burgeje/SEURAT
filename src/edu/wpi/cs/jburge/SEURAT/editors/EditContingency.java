@@ -10,6 +10,11 @@ import org.eclipse.swt.events.*;
 
 import edu.wpi.cs.jburge.SEURAT.rationaleData.*;
 
+/**
+ * Displays the editor for a contingency
+ * @author burgeje
+ *
+ */
 public class EditContingency extends NewRationaleElementGUI implements Serializable {
 	
 	/**

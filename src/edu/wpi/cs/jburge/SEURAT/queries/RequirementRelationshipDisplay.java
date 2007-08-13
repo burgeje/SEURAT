@@ -151,8 +151,7 @@ public class RequirementRelationshipDisplay {
 	}
 	
 	/**
-	 * Create a new shell, add the widgets, open the shell
-	 * @return the shell that was created	 
+	 * Create a new shell, add the widgets, open the shell 
 	 */
 	private void addChildControls(Composite composite) {
 		

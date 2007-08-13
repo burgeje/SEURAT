@@ -11,8 +11,6 @@ import javax.swing.DefaultListModel;
 import java.util.*;
 
 /**
- * @author jburge
- *
  * Not used. 
  */
 public class RationaleListModel {

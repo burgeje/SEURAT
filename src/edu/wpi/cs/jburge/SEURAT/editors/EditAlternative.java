@@ -519,7 +519,7 @@ public class EditAlternative extends NewRationaleElementGUI implements Serializa
 	 * These could be status questions (to supply a history) or ask for confirmation
 	 * if they try to select a previously rejected alternative
 	 * @param message
-	 * @return
+	 * @return the response to the dialog
 	 */
 	private boolean showQuestion(String message) {
 		return MessageDialog.openQuestion(

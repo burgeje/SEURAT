@@ -142,8 +142,7 @@ public class CommonArgumentDisplay {
 	}
 	
 	/**
-	 * Create a new shell, add the widgets, open the shell
-	 * @return the shell that was created	 
+	 * Create a new shell, add the widgets, open the shell	 
 	 */
 	private void addChildControls(Composite composite) {
 		
@@ -298,7 +297,7 @@ public class CommonArgumentDisplay {
 		/**
 		 * Get the text in the requested column
 		 * @param element - the argument
-		 * @param columIndex - its index
+		 * @param columnIndex - its index
 		 */
 		public String getColumnText(Object element, int columnIndex) {
 			String result = "";

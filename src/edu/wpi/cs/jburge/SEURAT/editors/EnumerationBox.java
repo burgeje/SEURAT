@@ -13,8 +13,6 @@ import javax.swing.ComboBoxModel;
 import javax.swing.JComboBox;
 
 /**
- * @author jburge
- *
  * Not used. The original idea was to use this to build special enumeration boxes but
  * they must not have been necessary.
  */

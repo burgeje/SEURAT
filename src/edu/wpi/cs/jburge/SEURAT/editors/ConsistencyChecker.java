@@ -56,7 +56,7 @@ public class ConsistencyChecker {
 	/**
 	 * This method does the actual check using the data sent to it in the constructor. If the class
 	 * was a static you could just pass that information in here and only have the one call.
-	 * @return
+	 * @return true if the name is not a duplicate
 	 */
 	public boolean check()
 	{

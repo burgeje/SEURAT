@@ -11,8 +11,6 @@ import edu.wpi.cs.jburge.SEURAT.rationaleData.*;
 import java.io.Serializable;
 
 /**
- * @author jburge
- *
  * This is the superclass for all the other rationale element editors. This
  * should never be instantiated directly.
  */

@@ -21,8 +21,6 @@ import edu.wpi.cs.jburge.SEURAT.rationaleData.Designer;
 import edu.wpi.cs.jburge.SEURAT.rationaleData.RationaleDB;
 
 /**
- * @author jburge
- *
  * This is the editor for adding a new area of expertise. This was created when we were
  * re-packaging SEURAT as ORCA and we don't really do anything useful with this yet.
  */
@@ -42,10 +40,10 @@ public class EditAreaExp {
 	
 	/**
 	 * Edit the area of expertise
-	 * @param display - points back to the display
-	 * @param - editArea - the new (or modified) area of expertise
-	 * @param - parent - the designer whose area of expertise we are specifying
-	 * @param - newItem - indicates if this is a new area of expertise
+	 * @param display points back to the display
+	 * @param editArea - the new (or modified) area of expertise
+	 * @param parent - the designer whose area of expertise we are specifying
+	 * @param newItem - indicates if this is a new area of expertise
 	 */
 	public EditAreaExp(Display display, AreaExp editArea, Designer parent, boolean newItem) {
 		

@@ -13,8 +13,6 @@ import java.awt.*;
 import java.io.Serializable;
 
 /**
- * @author jburge
- *
  * Not used. Perhapse a pre-cursor to "NewRationaleElementGUi"?
  */
 public class RationaleElementGUI extends Dialog implements Serializable {

@@ -54,7 +54,7 @@ public class FindImportanceOverrides {
 	
 	/**
 	 * Display all the importance overrides
-	 * @param disp the display
+	 * @param display the display
 	 */
 	public FindImportanceOverrides(Display display) {
 		

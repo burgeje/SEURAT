@@ -21,8 +21,6 @@ import edu.wpi.cs.jburge.SEURAT.rationaleData.Constraint;
 import edu.wpi.cs.jburge.SEURAT.rationaleData.RationaleDB;
 
 /**
- * @author jburge
- *
  * This is the editor for Alternative-Constraint relationships
  */
 public class EditAltConstRel {

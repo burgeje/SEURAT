@@ -11,6 +11,11 @@ import org.eclipse.swt.layout.*;
 import org.eclipse.swt.events.*;
 import edu.wpi.cs.jburge.SEURAT.rationaleData.*;
 
+/**
+ * Used to edit arguments
+ * @author burgeje
+ *
+ */
 public class EditArgument extends NewRationaleElementGUI implements Serializable {
 	
 	/**

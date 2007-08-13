@@ -15,6 +15,11 @@ import org.eclipse.swt.graphics.Rectangle;
 
 import edu.wpi.cs.jburge.SEURAT.rationaleData.*;
 
+/**
+ * Displays the editor for a decision
+ * @author burgeje
+ *
+ */
 public class EditDecision extends NewRationaleElementGUI implements Serializable {
 	
 	/**

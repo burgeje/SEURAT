@@ -13,6 +13,11 @@ import org.eclipse.swt.graphics.Rectangle;
 
 import edu.wpi.cs.jburge.SEURAT.rationaleData.*;
 
+/**
+ * Displays the editor for a designer
+ * @author burgeje
+ *
+ */
 public class EditDesigner extends NewRationaleElementGUI implements Serializable {
 	
 	/**
