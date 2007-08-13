@@ -641,8 +641,16 @@ public class Decision extends RationaleElement implements Serializable
 	public boolean create(Display disp, RationaleElement parent)
 	{
 //		System.out.println("create decision");
-		this.parent = parent.getID();
-		this.ptype = parent.getElementType();
+		if (parent != null)
+		{
+			this.parent = parent.getID();
+			this.ptype = parent.getElementType();
+		}
+		else
+		{
+			this.parent = 0;
+		}
+
 		EditDecision ar = new EditDecision(disp, this, true);
 		System.out.println("name in create = " + this.getName());
 		return ar.getCanceled(); //can I do this?
