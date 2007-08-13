@@ -29,7 +29,8 @@ public class RemoveAssociationUsingBookmark implements IObjectActionDelegate {
 	}
 	
 	/**
-	 * @see IActionDelegate#run(IAction)
+	 * Run the action
+	 * @param action the action to execute
 	 */
 	public void run(IAction action) {
 		Shell shell = new Shell();
@@ -40,7 +41,9 @@ public class RemoveAssociationUsingBookmark implements IObjectActionDelegate {
 	}
 	
 	/**
-	 * @see IActionDelegate#selectionChanged(IAction, ISelection)
+	 * Called when the selection changes
+	 * @param action the action
+	 * @param selection the selection
 	 */
 	public void selectionChanged(IAction action, ISelection selection) {
 	}
