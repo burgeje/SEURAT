@@ -26,8 +26,6 @@ import edu.wpi.cs.jburge.SEURAT.rationaleData.RationaleDB;
 
 
 /**
- * @author jburge
- *
  *  Removes the associations for a file.
  */
 public class RemoveRationaleAssociation extends ActionDelegate implements IViewActionDelegate {

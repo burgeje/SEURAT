@@ -25,8 +25,6 @@ import edu.wpi.cs.jburge.SEURAT.rationaleData.*;
 import edu.wpi.cs.jburge.SEURAT.decorators.*;
 
 /**
- * @author jburge
- *
  * This class restores associations from the database. This functionality was added to assist with the SEURAT 
  * evaluation so that SEURAT could be "reset" between subjects. The problem with restoring associations and
  * bookmarks in this way is that it uses the line numbers from when the associations were created which will

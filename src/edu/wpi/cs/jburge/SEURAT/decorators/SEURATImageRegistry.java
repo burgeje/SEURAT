@@ -4,12 +4,13 @@ import org.eclipse.jface.resource.ImageRegistry;
 import org.eclipse.swt.graphics.Image;
 
 /**
- * @author balajik
- *
  * Image registry for Resources. This class is a utility class to get
  * the image given the image key.  This was also taken from an Eclipse demo and was
  * originally named DemoImageRegistry.
  * 
+ * @author balajik
+ *
+
  */ 
 public class SEURATImageRegistry
 {

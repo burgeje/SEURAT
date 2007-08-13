@@ -7,13 +7,14 @@ import org.eclipse.core.resources.IResource;
 
 
 /**
- * @author balajik
- *
  * This class is used as a manager to organize the resources that need to 
  * be decorated. This code comes from one of the Eclipse examples. For SEURAT,
  * the only decorator used is the little rat icon that indicates if resources (files) in
  * the Package Explorer have rationale associated with them.
  * 
+ * @author balajik
+ *
+
  */
 public class SEURATDecoratorManager 
 {

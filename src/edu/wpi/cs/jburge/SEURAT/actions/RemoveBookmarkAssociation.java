@@ -20,8 +20,6 @@ import edu.wpi.cs.jburge.SEURAT.decorators.SEURATDecoratorManager;
 import edu.wpi.cs.jburge.SEURAT.rationaleData.RationaleDB;
 
 /**
- * @author jburge
- *
  * This class removes associations with the code. In this case, the item selected is the item from 
  * the Java Package Explorer and all alternatives associated with the resource will be unassociated. This is
  * invoked via a pop-up menu extension on the Bookmark View.

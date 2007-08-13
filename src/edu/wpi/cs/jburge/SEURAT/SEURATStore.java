@@ -1,8 +1,7 @@
 package edu.wpi.cs.jburge.SEURAT;
 
+
 /**
- * @author Balaji
- *
  * Utiltity Class to store the label decoration preference. This should
  * be enhanced by users so that the values are persistent across sessions. This code 
  * came from an Eclipse demo.

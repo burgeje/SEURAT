@@ -18,10 +18,9 @@ import edu.wpi.cs.jburge.SEURAT.SEURATResourcePropertiesManager;
 import edu.wpi.cs.jburge.SEURAT.Logger;
 
 /**
- * @author Administrator
- *
  * This method does the actual decorating. Like the other decorator files, it was adapted from a demo
  * (although I'm not sure who "Administrator" is). 
+ * @author Administrator
  */
 public class SEURATLightWeightDecorator extends LabelProvider 
 implements ILightweightLabelDecorator 

@@ -10,11 +10,8 @@ import org.eclipse.core.runtime.QualifiedName;
 import edu.wpi.cs.jburge.SEURAT.views.TreeObject;
 
 /**
- * @author balajik
- *
  * Utility class to add, modify, get the persistent property of the
  * resource. Taken from demo code and modified for SEURAT.
- *
  */
 public class SEURATResourcePropertiesManager
 {
@@ -66,7 +63,7 @@ public class SEURATResourcePropertiesManager
 	 * decorator to anything other than a resource (a file) this code does
 	 * nothing.
 	 * @param resource our TreeObject
-	 * @return 
+	 * @return true if there are errors
 	 */
 	private static boolean hasErrors(TreeObject resource)
 	{
@@ -181,7 +178,7 @@ public class SEURATResourcePropertiesManager
 	 * rationale tree elements however, it turns out you can only add an
 	 * element to a resource.
 	 * @param resource
-	 * @return
+	 * @return list of decorator types
 	 */
 	public static Vector findDecorationImageForRationale (TreeObject resource)
 	{

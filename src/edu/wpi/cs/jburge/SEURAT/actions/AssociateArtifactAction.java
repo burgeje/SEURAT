@@ -27,8 +27,6 @@ import edu.wpi.cs.jburge.SEURAT.views.TreeParent;
 import edu.wpi.cs.jburge.SEURAT.decorators.*;
 
 /**
- * @author jburge
- *
  * This class performs the associate in a different direction - it is an
  * option on the alternative and will associate that alternative with
  * whatever code element happens to be selected in the Java Package Explorer.
@@ -36,6 +34,8 @@ import edu.wpi.cs.jburge.SEURAT.decorators.*;
  * 
  * If there is no java element selected, the user is informed and no action is
  * taken.
+ * 
+ *  @author jburge
  */
 public class AssociateArtifactAction extends Action {
 	
