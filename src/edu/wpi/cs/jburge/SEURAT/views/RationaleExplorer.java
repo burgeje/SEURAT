@@ -1094,32 +1094,26 @@ public class RationaleExplorer extends ViewPart implements ISelectionListener, I
 			{
 //				System.out.println("found our tradeoff");
 				ourElement = new Tradeoff(true);
-				ourElement.setID(0);
 			}
 			else if (name.compareTo("Co-occurrences") == 0)
 			{
 				ourElement = new Tradeoff(false);
-				ourElement.setID(0);
 			}
 			else if (name.compareTo("Requirements") == 0)
 			{
 				ourElement = new Requirement();
-				ourElement.setID(0);
 			}
 			else if (name.compareTo("Decisions") == 0)
 			{
 				ourElement = new Decision();
-				ourElement.setID(0);
 			}
 			else if (name.compareTo("Design-Contingencies") == 0)
 			{
 				ourElement = new Contingency();
-				ourElement.setID(0);
 			}
 			else if (name.compareTo("Designer-Profiles") == 0)
 			{
 				ourElement = new Designer();
-				ourElement.setID(0);
 			}
 		}
 		if (!newElement)
