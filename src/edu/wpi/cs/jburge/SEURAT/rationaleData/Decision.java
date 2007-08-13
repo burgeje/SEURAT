@@ -294,9 +294,20 @@ public class Decision extends RationaleElement implements Serializable
 			}
 			else 
 			{
+				String parentSt;
+				String parentTSt;
 				
 				//now, we have determined that the decision is new
-				String parentSt = new Integer(this.parent).toString();
+				if ((this.parent < 0) || (ptype == null))
+				{
+					parentSt = "NULL";
+					parentTSt = "None";
+				}
+				else
+				{
+				     parentSt = new Integer(this.parent).toString();
+				     parentTSt = ptype.toString();
+				}
 				String updateD;
 				if (designer == null)
 					updateD = "null";
@@ -313,7 +324,7 @@ public class Decision extends RationaleElement implements Serializable
 				this.devPhase.toString() + "', '" +
 				subsReq + "', " +
 				parentSt + ", '" +
-				ptype.toString() + "', " +
+				parentTSt + "', " +
 				updateD + ")";
 				
 				stmt.execute(updateQuery); 
