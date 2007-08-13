@@ -794,7 +794,7 @@ public class Alternative extends RationaleElement implements Serializable {
 	 */	
 	/**
 	 * Used to edit our alternative - invokes the editor display
-	 * @param display - points back to the display
+	 * @param disp - points back to the display
 	 * @return - true if cancelled by the user
 	 */
 	public boolean display(Display disp)

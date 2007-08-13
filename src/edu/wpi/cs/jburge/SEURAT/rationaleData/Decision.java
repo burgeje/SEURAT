@@ -414,7 +414,7 @@ public class Decision extends RationaleElement implements Serializable
 	
 	/**
 	 * Get our alternative from the database, given its unique id
-	 * @param id - the decision ID
+	 * @param decID - the decision ID
 	 */
 	public void fromDatabase(int decID)
 	{
@@ -454,7 +454,7 @@ public class Decision extends RationaleElement implements Serializable
 	
 	/**
 	 * Get the decision from the database, given its name
-	 * @param decision name
+	 * @param name the decision name
 	 */
 	public void fromDatabase(String name)
 	{

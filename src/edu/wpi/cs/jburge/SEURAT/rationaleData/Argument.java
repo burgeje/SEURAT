@@ -328,7 +328,7 @@ public class Argument extends RationaleElement implements Serializable
 	
 	/**
 	 * Get all our arguments - for and against
-	 * @return
+	 * @return a vector of arguments
 	 */
 	public Vector<Argument> getAllArguments()
 	{
@@ -793,7 +793,7 @@ public class Argument extends RationaleElement implements Serializable
 	
 	/**
 	 * Given the argument ID, get it from the database
-	 * @param id - the argument ID
+	 * @param theID - the argument ID
 	 */
 	public void fromDatabase(int theID)
 	{

@@ -152,7 +152,7 @@ public class Tradeoff extends RationaleElement implements Serializable
 	
 	/**
 	 * Write our tradeoff to the database
-	 * @return
+	 * @return the id
 	 */
 	public int toDatabase()
 	{

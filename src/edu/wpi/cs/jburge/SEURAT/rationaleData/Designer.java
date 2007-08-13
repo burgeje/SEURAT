@@ -128,7 +128,7 @@ public class Designer extends RationaleElement implements Serializable
 	
 	/**
 	 * Save our designer to the database.
-	 * @return
+	 * @return the id
 	 */
 	public int toDatabase()
 	{

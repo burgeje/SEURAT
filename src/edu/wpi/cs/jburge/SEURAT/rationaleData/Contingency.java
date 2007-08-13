@@ -65,7 +65,7 @@ public class Contingency extends RationaleElement implements Serializable
 	/**
 	 * This returns the percentage for an enabled contingency. If the contingency
 	 * has been disabled, the amount returned is zero.
-	 * @return
+	 * @return the percentage
 	 */
 	public float getPercentage()
 	{

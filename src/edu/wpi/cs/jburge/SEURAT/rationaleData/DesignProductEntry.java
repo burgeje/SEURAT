@@ -20,6 +20,11 @@ import org.eclipse.swt.widgets.Display;
 
 import edu.wpi.cs.jburge.SEURAT.editors.EditDesignProductEntry;
 
+/**
+ * Defines an element in the design product ontology
+ * @author burgeje
+ *
+ */
 public class DesignProductEntry extends RationaleElement implements Serializable 
 {
 	// class variables
@@ -95,7 +100,7 @@ public class DesignProductEntry extends RationaleElement implements Serializable
 	 * Adding it also incrementing the parent's number of references. The child's
 	 * level is set to that of the parent plus one.
 	 * @param nam - the name of the child.
-	 * @return
+	 * @return the design product
 	 */
 	public DesignProductEntry addChild(String nam)
 	{

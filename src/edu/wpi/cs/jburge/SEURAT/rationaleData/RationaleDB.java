@@ -659,7 +659,7 @@ public final class RationaleDB implements Serializable {
 	 * Find all the alternatives that have a specific parent
 	 * @param parentName - the name of the parent
 	 * @param parentType - the type of the parent
-	 * @return
+	 * @return a vector of alternatives
 	 */
 	public Vector getAlternatives(String parentName,
 			RationaleElementType parentType) {
@@ -877,7 +877,8 @@ public final class RationaleDB implements Serializable {
 	}
 	/**
 	 * Return the name of the ontology entry mapping to the parent tradeoff
-	 * @param parentName - the parents name
+	 * @param tradeName - the parents name
+	 * @param whichOnt the element name
 	 * @return our elements name
 	 */
 	public String getTradeOntology(String tradeName, String whichOnt) {

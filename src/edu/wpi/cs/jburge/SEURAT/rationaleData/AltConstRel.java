@@ -353,7 +353,7 @@ public class AltConstRel extends RationaleElement implements Serializable
 	
 	/**
 	 * Creates a new relationship by bringing up the editor.
-	 * @param display - points back to the display
+	 * @param disp - points back to the display
 	 * @param parent - the parent alternative for our relationship 
 	 */
 	public boolean create(Display disp, RationaleElement parent)

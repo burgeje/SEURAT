@@ -199,7 +199,7 @@ public class RationaleElement implements Serializable
 	
 	/**
 	 * Deletes the element. This must be implemented by the subclasses.
-	 * @return
+	 * @return true
 	 */
 	public boolean delete()
 	{
