@@ -7,8 +7,6 @@
 package edu.wpi.cs.jburge.SEURAT.views;
 
 /**
- * @author jburge
- *
  * Taken from the Eclipse Corner article on Tree Viewers
  */
 
