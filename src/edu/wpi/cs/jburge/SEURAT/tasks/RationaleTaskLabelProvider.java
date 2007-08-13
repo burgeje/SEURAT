@@ -15,7 +15,7 @@ import org.eclipse.swt.graphics.Image;
 import edu.wpi.cs.jburge.SEURAT.*;
 import edu.wpi.cs.jburge.SEURAT.rationaleData.*;
 
-/*
+/**
  * This is the label provider for our Rationale Task List
  * 
  * This code is based on the Eclipse Corner article 

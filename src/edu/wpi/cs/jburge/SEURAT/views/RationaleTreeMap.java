@@ -12,8 +12,6 @@ import java.util.Vector;
 import edu.wpi.cs.jburge.SEURAT.rationaleData.RationaleElementType;
 
 /**
- * @author jburge
- *
  * This is a structure designed to provide an alternative mapping into the
  * RationaleTree. Basically, we need an index to be able to get all
  * the handles for a specific rationale item in the tree. This is used when

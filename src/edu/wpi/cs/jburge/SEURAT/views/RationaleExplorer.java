@@ -47,10 +47,6 @@ import edu.wpi.cs.jburge.SEURAT.views.TreeParent;
 import edu.wpi.cs.jburge.SEURAT.decorators.*;
 import edu.wpi.cs.jburge.SEURAT.editors.AskQuestionGUI;
 
-/**
- * @author jburge
- *
- 
  /**
   * The Rationale Explorer is the primary display and access mechanism for the rationale.
   * It is essentially a tree view with different icons specifying the different types of 
@@ -1759,7 +1755,7 @@ public class RationaleExplorer extends ViewPart implements ISelectionListener, I
 	 * This method is used to pop-up a question to ask user whether to go on with the job
 	 * It is used for the association.
 	 * @param message
-	 * @return
+	 * @return return value from the dialog
 	 */
 	private boolean showQuestion(String message) {
 		return MessageDialog.openQuestion(

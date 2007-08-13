@@ -25,7 +25,7 @@ public class RationaleLabelProvider extends LabelProvider {
 	 */
 	/**
 	 * Depending on what kind of element, find the right icon
-	 * @param our node
+	 * @param obj our node
 	 * @return the image
 	 */
 	public Image getImage(Object obj) {

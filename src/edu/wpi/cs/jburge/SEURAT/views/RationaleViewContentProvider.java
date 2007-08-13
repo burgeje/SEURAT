@@ -107,7 +107,7 @@ ITreeContentProvider {
 	/**
 	 * Returns all the elements in our tree. If the "root" is null, 
 	 * initialize the tree
-	 * @param the workspace
+	 * @param parent the workspace
 	 * @return the objects
 	 */
 	public Object[] getElements(Object parent) {
@@ -145,7 +145,7 @@ ITreeContentProvider {
 	
 	/**
 	 * Initialize our tree from the database.  
-	 * @return
+	 * @return the root of the tree
 	 */
 	public TreeParent initialize() {
 		
