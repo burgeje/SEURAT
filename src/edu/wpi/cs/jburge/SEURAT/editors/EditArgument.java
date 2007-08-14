@@ -402,33 +402,42 @@ public class EditArgument extends NewRationaleElementGUI implements Serializable
 						
 						if(ourArg.getName() == nameField.getText() || checker.check())
 						{
-							if ((designerBox.getItemCount() <= 0) || designerBox.getSelectionIndex() >= 0)
+							if (notCircular(ourArg))
 							{
-								ourArg.setName(nameField.getText());
-								ourArg.setDescription(descArea.getText());
-								ourArg.setType(ArgType.fromString(typeChoice.getItem(typeChoice.getSelectionIndex())));
-								ourArg.setPlausibility( Plausibility.fromString(plausibilityBox.getItem(plausibilityBox.getSelectionIndex())));
-								ourArg.setImportance( Importance.fromString(importanceBox.getItem(importanceBox.getSelectionIndex())));
-								ourArg.setAmount( Integer.parseInt(amountBox.getItem(amountBox.getSelectionIndex())));
-								if (designerBox.getItemCount() > 0)
+								if ((designerBox.getItemCount() <= 0) || designerBox.getSelectionIndex() >= 0)
 								{
-									String designerName = designerBox.getItem(designerBox.getSelectionIndex());
-									Designer ourDes = new Designer();
-									ourDes.fromDatabase(designerName);
-									ourArg.setDesigner(ourDes);
+									ourArg.setName(nameField.getText());
+									ourArg.setDescription(descArea.getText());
+									ourArg.setType(ArgType.fromString(typeChoice.getItem(typeChoice.getSelectionIndex())));
+									ourArg.setPlausibility( Plausibility.fromString(plausibilityBox.getItem(plausibilityBox.getSelectionIndex())));
+									ourArg.setImportance( Importance.fromString(importanceBox.getItem(importanceBox.getSelectionIndex())));
+									ourArg.setAmount( Integer.parseInt(amountBox.getItem(amountBox.getSelectionIndex())));
+									if (designerBox.getItemCount() > 0)
+									{
+										String designerName = designerBox.getItem(designerBox.getSelectionIndex());
+										Designer ourDes = new Designer();
+										ourDes.fromDatabase(designerName);
+										ourArg.setDesigner(ourDes);
+									}
+									
+									//			System.out.println("type " + ourArg.getType().toString());
+									
+//									comment before this made no sense...
+//									System.out.println("saving argument from edit");
+									ourArg.setID(ourArg.toDatabase(ourArg.getParent(), ourArg.getPtype()));
+									shell.close();
+									shell.dispose();	
 								}
-								
-								//			System.out.println("type " + ourArg.getType().toString());
-								
-//								comment before this made no sense...
-//								System.out.println("saving argument from edit");
-								ourArg.setID(ourArg.toDatabase(ourArg.getParent(), ourArg.getPtype()));
-								shell.close();
-								shell.dispose();	
+								else {
+									MessageBox mbox = new MessageBox(shell, SWT.ICON_ERROR);
+									mbox.setMessage("Need to provide the Designer name");
+									mbox.open();
+								}
 							}
-							else {
+							else
+							{
 								MessageBox mbox = new MessageBox(shell, SWT.ICON_ERROR);
-								mbox.setMessage("Need to provide the Designer name");
+								mbox.setMessage("Can not pre-suppose or oppose your self!");
 								mbox.open();
 							}
 						}
@@ -454,23 +463,30 @@ public class EditArgument extends NewRationaleElementGUI implements Serializable
 					canceled = false;
 					
 					ConsistencyChecker checker = new ConsistencyChecker(ourArg.getID(), nameField.getText(), "Arguments");
-					
-					if(ourArg.getName() == nameField.getText() || checker.check())
+					if (notCircular(ourArg))
 					{
-						ourArg.setName(nameField.getText());
-						ourArg.setDescription(descArea.getText());
-						ourArg.setType(ArgType.fromString(typeChoice.getItem(typeChoice.getSelectionIndex())));
-						ourArg.setPlausibility( Plausibility.fromString(plausibilityBox.getItem(plausibilityBox.getSelectionIndex())));
-						ourArg.setImportance( Importance.fromString(importanceBox.getItem(importanceBox.getSelectionIndex())));
-						ourArg.setAmount( Integer.parseInt(amountBox.getItem(amountBox.getSelectionIndex())));
-						//since this is a save, not an add, the type and parent are ignored
-						//			System.out.println("saving argument from edit, ptype = " + ourArg.getPtype());
-						ourArg.setID(ourArg.toDatabase(ourArg.getParent(), ourArg.getPtype()));	
-						
-						shell.close();
-						shell.dispose();	
+						if(ourArg.getName() == nameField.getText() || checker.check())
+						{
+							ourArg.setName(nameField.getText());
+							ourArg.setDescription(descArea.getText());
+							ourArg.setType(ArgType.fromString(typeChoice.getItem(typeChoice.getSelectionIndex())));
+							ourArg.setPlausibility( Plausibility.fromString(plausibilityBox.getItem(plausibilityBox.getSelectionIndex())));
+							ourArg.setImportance( Importance.fromString(importanceBox.getItem(importanceBox.getSelectionIndex())));
+							ourArg.setAmount( Integer.parseInt(amountBox.getItem(amountBox.getSelectionIndex())));
+							//since this is a save, not an add, the type and parent are ignored
+							//			System.out.println("saving argument from edit, ptype = " + ourArg.getPtype());
+							ourArg.setID(ourArg.toDatabase(ourArg.getParent(), ourArg.getPtype()));	
+							
+							shell.close();
+							shell.dispose();	
+						}
 					}
-					
+					else
+					{
+							MessageBox mbox = new MessageBox(shell, SWT.ICON_ERROR);
+							mbox.setMessage("Can not pre-suppose or oppose your self!");
+							mbox.open();
+					}						
 				}
 			});
 		}
@@ -498,7 +514,35 @@ public class EditArgument extends NewRationaleElementGUI implements Serializable
 		}
 	}
 	
-	public void refreshChoices()
+	/**
+	 * Check to make sure we aren't creating an argument for an alternative that opposes
+	 * or pre-supposes itself
+	 * @param ourArg the new argument
+	 * @return true if we are not circular
+	 */
+	private boolean notCircular(Argument ourArg)
+	{
+		boolean notcircular = true;
+		if (ourArg.getAlternative() != null)
+		{
+			//We need to read in our parent alternative to compare the names
+			Alternative parent = new Alternative();
+			parent.fromDatabase(ourArg.getParent());
+			String ourAlternativeName = ourArg.getAlternative().getName();
+			String parentName = parent.getName();
+			if (ourAlternativeName.compareTo(parentName) == 0)
+			{
+				notcircular = false;
+			}
+		}
+		return notcircular;
+	}
+	
+	/**
+	 * Sets the possible direction choices base on the type of argument we are making
+	 *
+	 */
+	private void refreshChoices()
 	{
 		if (ourArg != null)
 		{
