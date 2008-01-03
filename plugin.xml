@@ -94,6 +94,23 @@
    			   id="edu.wpi.cs.jburge.SEURAT.actions.RemoveBookmarkAssociation">
    			  </action>
    		  </viewerContribution>
+     <objectContribution
+           id="SEURAT.contribution1"
+           nameFilter="plugin.xml"
+           objectClass="org.eclipse.core.resources.IFile">
+        <menu
+              id="SEURAT.menu1"
+              label="Rationale"
+              path="additions">
+           <separator name="group1"/>
+        </menu>
+        <action
+              class="SEURAT.popup.actions.AssociateRationale"
+              enablesFor="1"
+              id="SEURAT.newAction"
+              label="Associate Rationale"
+              menubarPath="SEURAT.menu1/group1"/>
+     </objectContribution>
    	</extension> 	
    	
    	   <extension
@@ -110,6 +127,20 @@
    			  </action>
    		  </viewerContribution>
    	</extension>
+   	
+   	<extension point = "org.eclipse.ui.popupMenus">
+     <objectContribution
+        id="edu.wpi.cs.jburge.SEURAT.action.contribution.popup.explorer"
+        objectClass="org.eclipse.core.resources.IProject">
+	    <action id="edu.wpi.cs.jburge.SEURAT.actions.OpenRationale"
+	       label="Open Rationale"
+	       menubarPath="additions"
+	       class="edu.wpi.cs.jburge.SEURAT.actions.OpenRationale"	
+	       enablesFor="+">
+	    </action>
+	 </objectContribution>
+	 </extension>
+   	
    	
    	<extension
    		 point="org.eclipse.ui.popupMenus">
