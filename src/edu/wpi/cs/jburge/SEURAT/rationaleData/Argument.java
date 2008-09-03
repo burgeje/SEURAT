@@ -15,9 +15,10 @@ import java.sql.Statement;
 import java.sql.ResultSet;
 
 import org.eclipse.swt.widgets.Display;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.Text;
+import org.w3c.dom.*;
+
+import SEURAT.events.RationaleElementUpdateEventGenerator;
+import SEURAT.events.RationaleUpdateEvent;
 
 import edu.wpi.cs.jburge.SEURAT.editors.EditArgument;
 import edu.wpi.cs.jburge.SEURAT.inference.ArgumentInferences;
@@ -34,7 +35,7 @@ public class Argument extends RationaleElement implements Serializable
 	 */
 	private static final long serialVersionUID = -6496727760462256889L;
 	// class variables
-	
+
 	// instance variables
 	/**
 	 * The type (direction) of argument
@@ -102,7 +103,10 @@ public class Argument extends RationaleElement implements Serializable
 	 * All the arguments relating to this argument
 	 */
 	Vector<Argument> arguments;
-	
+
+	private RationaleElementUpdateEventGenerator<Argument> m_eventGenerator = 
+		new RationaleElementUpdateEventGenerator<Argument>(this);
+
 	/**
 	 * Constructor
 	 *
@@ -115,30 +119,91 @@ public class Argument extends RationaleElement implements Serializable
 		questions = new Vector<Question>();
 		arguments = new Vector<Argument>();
 	} 
-	
+	public Element toXML(Document ratDoc)
+	{
+		Element argE = ratDoc.createElement("DR:argument");
+		RationaleDB db = RationaleDB.getHandle();
+		String argID = db.getRef(id);
+		if (argID == null)
+		{
+			argID = db.addRef(id);
+		}
+		argE.setAttribute("id", argID);
+		argE.setAttribute("name", name);
+		argE.setAttribute("argtype", type.toString());
+		if (!importance.toString().equals(Importance.DEFAULT.toString()))
+			argE.setAttribute("importance", importance.toString());
+		argE.setAttribute("plausibility", plausibility.toString());
+		Integer testi = new Integer(amount);
+		argE.setAttribute("amount", testi.toString());
+
+		//save our description
+		Element descE = ratDoc.createElement("DR:description");
+		//set the reference contents
+		Text descText = ratDoc.createTextNode(description);
+		descE.appendChild(descText);
+		argE.appendChild(descE);
+
+
+		//now the hard part - what is our argument about?
+		if (assumption != null)
+		{
+			argE.appendChild(assumption.toXML(ratDoc));
+		}
+		else if (alternative != null)
+		{
+			argE.appendChild(alternative.toXML(ratDoc));
+		}
+		else if (claim != null)
+		{
+			argE.appendChild(claim.toXML(ratDoc));
+		}
+		else if (requirement != null)
+		{
+			argE.appendChild(requirement.toXML(ratDoc));
+		}
+
+		//any arguments?
+		Enumeration args = arguments.elements();
+		while (args.hasMoreElements())
+		{
+			Argument arg = (Argument) args.nextElement();
+			argE.appendChild(arg.toXML(ratDoc));
+		}
+
+		//finally - any questions?
+		Enumeration quests = questions.elements();
+		while (quests.hasMoreElements())
+		{
+			Question quest = (Question) quests.nextElement();
+			argE.appendChild(quest.toXML(ratDoc));
+		}
+
+		return argE;
+	}
 	public RationaleElementType getElementType()
 	{
 		return RationaleElementType.ARGUMENT;
 	}
-	
+
 	public void setType(ArgType ntype)
 	{
 		type = ntype;
 	}
-	
+
 	public ArgType getType()
 	{
 		return type;
 	}
-	
+
 	public Designer getDesigner() {
 		return designer;
 	}
-	
+
 	public void setDesigner(Designer designer) {
 		this.designer = designer;
 	}
-	
+
 	public ArgCategory getCategory()
 	{
 		return category;
@@ -147,47 +212,47 @@ public class Argument extends RationaleElement implements Serializable
 	{
 		return ptype;
 	}
-	
+
 	public void setPlausibility(Plausibility pls)
 	{
 		plausibility = pls;
 	}
-	
+
 	public Plausibility getPlausibility()
 	{
 		return plausibility;
 	}
-	
+
 	public void setImportance(Importance imp)
 	{
 		importance = imp;
 	}
-	
+
 	public Importance getImportance()
 	{
 		return importance;
 	}
-	
+
 	public void setAmount (int amt)
 	{
 		amount = amt;
 	}
-	
+
 	public void addArgument(Argument newArg)
 	{
 		arguments.addElement(newArg);
 	}
-	
+
 	public Vector getArguments()
 	{
 		return arguments;
 	}
-	
+
 	public int getAmount()
 	{
 		return amount;
 	}
-	
+
 	public int getParent()
 	{
 		return parent;
@@ -196,17 +261,17 @@ public class Argument extends RationaleElement implements Serializable
 	{
 		return argumentsFor;
 	}
-	
+
 	public Vector getArgumentsAgainst()
 	{
 		return argumentsAgainst;
 	}
-	
+
 	public Vector getQuestions()
 	{
 		return questions;
 	}
-	
+
 	/**
 	 * Associate a requirement to our argument. We store the requirement,
 	 * set our category to the correct value, and set the other possible 
@@ -221,12 +286,12 @@ public class Argument extends RationaleElement implements Serializable
 		alternative = null;
 		claim = null;
 	}
-	
+
 	public Requirement getRequirement()
 	{
 		return requirement;
 	}
-	
+
 	/**
 	 * Associate an assumption to our argument. We store the assumption,
 	 * set our category to the correct value, and set the other possible 
@@ -241,12 +306,12 @@ public class Argument extends RationaleElement implements Serializable
 		alternative = null;
 		claim = null;
 	}
-	
+
 	public Assumption getAssumption()
 	{
 		return assumption;
 	}
-	
+
 	/**
 	 * Associate an alternative to our argument. We store the alternative, set
 	 * our category to the correct value, and set the other possible argument
@@ -262,12 +327,12 @@ public class Argument extends RationaleElement implements Serializable
 		assumption = null;
 		claim = null;
 	}
-	
+
 	public Alternative getAlternative()
 	{
 		return alternative;
 	}
-	
+
 	/**
 	 * Associate a claim to our argument. We store the claim, set our
 	 * category to the correct value, and set the other possible argument
@@ -283,7 +348,7 @@ public class Argument extends RationaleElement implements Serializable
 		requirement = null;
 		assumption = null;
 	}
-	
+
 	public Claim getClaim()
 	{
 		return claim;
@@ -296,17 +361,17 @@ public class Argument extends RationaleElement implements Serializable
 	 return newArgument;
 	 }
 	 */	
-	
+
 	public void addArgumentFor(Argument newArg)
 	{
 		argumentsFor.addElement(newArg);
 	}
-	
+
 	public void addArgumentAgainst(Argument newArg)
 	{
 		argumentsAgainst.addElement(newArg);
 	}
-	
+
 	public void addQuestion(Question newQuest)
 	{
 		questions.addElement(newQuest);
@@ -315,17 +380,17 @@ public class Argument extends RationaleElement implements Serializable
 	{
 		argumentsFor.remove(newArg);
 	}
-	
+
 	public void delArgumentAgainst(Argument newArg)
 	{
 		argumentsAgainst.remove(newArg);
 	}
-	
+
 	public void delQuestion(Question newQuest)
 	{
 		questions.remove(newQuest);
 	}
-	
+
 	/**
 	 * Get all our arguments - for and against
 	 * @return a vector of arguments
@@ -337,7 +402,7 @@ public class Argument extends RationaleElement implements Serializable
 		all.addAll(argumentsAgainst);
 		return all;
 	}
-	
+
 	/**
 	 * Gets a list of elements associated with this argument. In this case,
 	 * the two valid types are sub-arguments and questions.
@@ -358,7 +423,7 @@ public class Argument extends RationaleElement implements Serializable
 			return null;
 		}
 	}
-	
+
 	/**
 	 * Return true if this argument is in support of an alternative
 	 * @return true if supporting
@@ -373,9 +438,9 @@ public class Argument extends RationaleElement implements Serializable
 		{
 			return false;
 		}
-		
+
 	}
-	
+
 	/**
 	 * Return true if this argument is against an alternative
 	 * @return true if arguing against
@@ -391,7 +456,7 @@ public class Argument extends RationaleElement implements Serializable
 			return false;
 		}
 	}
-	
+
 	/**
 	 * Evaluate the numerical score for this argument. This is used when evaluating
 	 * the alternative that it argues
@@ -401,7 +466,7 @@ public class Argument extends RationaleElement implements Serializable
 	{
 		double result;
 		double impVal = 0.0;
-		
+
 //		if (assumption != null)
 		if (category == ArgCategory.ASSUMPTION)
 		{
@@ -427,9 +492,9 @@ public class Argument extends RationaleElement implements Serializable
 			 {
 			 impVal = alternative.getImportanceVal();
 			 }
-			 
+
 			 else  */
-			
+
 			if (alternative.getStatus()== AlternativeStatus.ADOPTED)
 			{
 				if (this.type == ArgType.OPPOSES)
@@ -450,9 +515,9 @@ public class Argument extends RationaleElement implements Serializable
 				else
 				{
 					impVal = 0.0; //no effect
-					
+
 				}
-				
+
 			} 
 		}
 //		else if (claim != null)
@@ -485,13 +550,13 @@ public class Argument extends RationaleElement implements Serializable
 			{
 				impVal = 0.0; //ignore if requirement is not valid
 			}
-			
+
 		}
-		
-		
-		
+
+
+
 		result = amount * impVal;
-		
+
 		if ((type == ArgType.DENIES) || 
 //				(type == ArgType.OPPOSEDBY) ||
 				(type == ArgType.OPPOSES) ||
@@ -506,7 +571,7 @@ public class Argument extends RationaleElement implements Serializable
 	 {
 	 double result;
 	 double impVal = 0.0;
-	 
+
 	 //the trick is getting the importance
 	  if (importance == Importance.DEFAULT)
 	  {
@@ -530,15 +595,15 @@ public class Argument extends RationaleElement implements Serializable
 	  System.out.println("req imp");
 	  impVal = 1.0; //requirements are always essential!
 	  }
-	  
+
 	  }
 	  else
 	  {
 	  impVal = importance.getValue();
 	  }
-	  
+
 	  result = amount * impVal;
-	  
+
 	  if ((type == ArgType.DENIES) || 
 	  (type == ArgType.OPPOSEDBY) ||
 	  (type == ArgType.OPPOSES) ||
@@ -548,7 +613,7 @@ public class Argument extends RationaleElement implements Serializable
 	  }
 	  return result;
 	  } */
-	
+
 	/**
 	 * Save our argument to the database
 	 * @param parent - the parent of the argument (what it argues)
@@ -559,33 +624,37 @@ public class Argument extends RationaleElement implements Serializable
 	{
 		RationaleDB db = RationaleDB.getHandle();
 		Connection conn = db.getConnection();
-		
+
+		// Update Event To Inform Subscribers Of Changes
+		// To Rationale
+		RationaleUpdateEvent l_updateEvent;
+
 		int ourid = 0;
-		
+
 		//find out if this requirement is already in the database
 		Statement stmt = null; 
 		ResultSet rs = null; 
-		
+
 //		***		System.out.println("Saving to the database");
-		
+
 		try {
 			stmt = conn.createStatement(); 
-			
-			
+
+
 			String updateD;
 			if (designer == null)
 				updateD = "null";
 			else
 				updateD = new Integer(designer.getID()).toString();
-			
-			
+
+
 			if (inDatabase(parent,ptype))
 			{
 				String updateParent = "UPDATE arguments D " +
 				"SET D.parent = " + new Integer(parent).toString() +
 				", D.ptype = '" + ptype.toString() +
-				"', D.name = '" + RationaleDB.escape(name) +
-				"', D.description = '" + RationaleDB.escape(description) +
+				"', D.name = '" + RationaleDBUtil.escape(name) +
+				"', D.description = '" + RationaleDBUtil.escape(description) +
 				"', D.type = '" + type.toString() +
 				"', D.plausibility = '" + plausibility.toString() +
 				"', D.importance = '" + importance.toString() +
@@ -594,39 +663,64 @@ public class Argument extends RationaleElement implements Serializable
 				"D.id = " + this.id + " " ;
 //				System.out.println(updateParent);
 				stmt.execute(updateParent);
-				
+
+				l_updateEvent = m_eventGenerator.MakeUpdated();
 			}
 			else 
 			{
-				
+
 				//now, we have determined that the requirement is new
 				String parentRSt = new Integer(parent).toString();
-				
-				String newArgSt = "INSERT INTO Arguments " +
-				"(name, description, type, plausibility, importance, amount, ptype, parent, designer) " +
-				"VALUES ('" +
-				RationaleDB.escape(this.name) + "', '" +
-				RationaleDB.escape(this.description) + "', '" +
-				this.type.toString() + "', '" +
-				this.plausibility.toString() + "', '" +
-				this.importance.toString() + "', " +
-				new Integer(this.amount).toString() + ", '" +
-				ptype.toString() + "', " +
-				parentRSt + ", " +
-				updateD + ")";
-				
+
+				String newArgSt;
+
+				//If this is a newly imported candidate, some of this information will
+				//not exist. 
+				if (type == ArgType.NONE)
+				{
+					newArgSt = "INSERT INTO Arguments " +
+					"(name, description, type, plausibility, importance, amount, ptype, parent, designer) " +
+					"VALUES ('" +
+					RationaleDBUtil.escape(this.name) + "', '" +
+					RationaleDBUtil.escape(this.description) + "', '" +
+					this.type.toString() + "', '" +
+					this.plausibility.toString() + "', '" +
+					this.importance.toString() + "', " +
+					new Integer(this.amount).toString() + ", '" +
+					ptype.toString() + "', " +
+					parentRSt + ", " +
+					updateD + ")";					
+				}
+				else
+				{
+					newArgSt = "INSERT INTO Arguments " +
+					"(name, description, type, plausibility, importance, amount, ptype, parent, designer) " +
+					"VALUES ('" +
+					RationaleDBUtil.escape(this.name) + "', '" +
+					RationaleDBUtil.escape(this.description) + "', '" +
+					this.type.toString() + "', '" +
+					this.plausibility.toString() + "', '" +
+					this.importance.toString() + "', " +
+					new Integer(this.amount).toString() + ", '" +
+					ptype.toString() + "', " +
+					parentRSt + ", " +
+					updateD + ")";
+
+				}
+
 //				System.out.println(newArgSt);
 				stmt.execute(newArgSt); 
-				
+
+				l_updateEvent = m_eventGenerator.MakeCreated();
 			}
 			//in either case, we want to update any sub-requirements in case
 			//they are new!
 			//now, we need to get our ID
 			String findQuery2 = "SELECT id FROM arguments where name='" +
-			RationaleDB.escape(this.name) + "' and parent = " + this.parent;
+			RationaleDBUtil.escape(this.name) + "' and parent = " + this.parent;
 			rs = stmt.executeQuery(findQuery2); 
 //			***			System.out.println(findQuery2);
-			
+
 			if (rs.next())
 			{
 				ourid = rs.getInt("id");
@@ -634,11 +728,11 @@ public class Argument extends RationaleElement implements Serializable
 			}
 			else
 			{
-				ourid = 0;
+				ourid = -1;
 			}
-			
+
 			this.id = ourid;
-			
+
 //			System.out.println("category = " + category.toString());
 			//now, we need to either find, or create, our argument subject
 			//now the hard part - what is our argument about?
@@ -660,7 +754,7 @@ public class Argument extends RationaleElement implements Serializable
 			{
 				//get the ID for our alternative (presumably it exists)
 				String findAlt = "SELECT id from Alternatives where name = '" +
-				RationaleDB.escape(alternative.getName()) + "'";
+				RationaleDBUtil.escape(alternative.getName()) + "'";
 				rs = stmt.executeQuery(findAlt); 
 //				***			 System.out.println(findAlt);
 				int altid = 0;
@@ -676,7 +770,7 @@ public class Argument extends RationaleElement implements Serializable
 				" ";   
 //				System.out.println(setReq);
 				stmt.execute(setReq);
-				
+
 			}
 			else if (category == ArgCategory.CLAIM)
 //				else if (claim != null)
@@ -690,15 +784,15 @@ public class Argument extends RationaleElement implements Serializable
 				" ";   
 //				System.out.println(setReq);
 				stmt.execute(setReq);
-				
-				
+
+
 			}
 			else if (category == ArgCategory.REQUIREMENT)
 //				else if (requirement != null)
 			{
 				//get the ID for the requirement
 				String findReq = "SELECT id from Requirements where name = '" +
-				RationaleDB.escape(requirement.getName()) + "'";
+				RationaleDBUtil.escape(requirement.getName()) + "'";
 				rs = stmt.executeQuery(findReq); 
 //				***				System.out.println(findReq);
 				int reqid = 0;
@@ -715,21 +809,20 @@ public class Argument extends RationaleElement implements Serializable
 				stmt.execute(setReq);
 //				System.out.println(setReq);
 			}
-			
+
 			Enumeration args = getAllArguments().elements();
 			while (args.hasMoreElements()) {
 				Argument arg = (Argument) args.nextElement();
 				arg.toDatabase(ourid, arg.getPtype());
 			}
-			
+
 			Enumeration quests = questions.elements();
 			while (quests.hasMoreElements()) {
 				Question quest = (Question) quests.nextElement();
 				quest.toDatabase(ourid, RationaleElementType.ARGUMENT);
 			}
-			
-			
-			
+
+			m_eventGenerator.Broadcast(l_updateEvent);
 		} 
 		catch (RuntimeException ex)
 		{
@@ -740,29 +833,34 @@ public class Argument extends RationaleElement implements Serializable
 		catch (SQLException ex) {
 			RationaleDB.reportError(ex, "Argument.toDatabase", "SQL Error");
 		}
-		
-		
+
+
 		finally { 
 			RationaleDB.releaseResources(stmt, rs);
-			
+
 		}
-		
+
 		return ourid;	
-		
+
 	}	
-	
+
+	public RationaleElement getParentElement()
+	{
+		return RationaleDB.getRationaleElement(this.parent, this.ptype);
+	}
+
 	/**
 	 * Given the argument name, get it from the database
 	 * @param name - the argument name
 	 */
 	public void fromDatabase(String name)
 	{
-		
+
 		RationaleDB db = RationaleDB.getHandle();
 		Connection conn = db.getConnection();
-		
+
 		this.name = name;
-		
+
 		Statement stmt = null; 
 		ResultSet rs = null; 
 		try {
@@ -770,17 +868,17 @@ public class Argument extends RationaleElement implements Serializable
 			String findQuery; 
 			findQuery = "SELECT *  FROM " +
 			"arguments where name = '" +
-			RationaleDB.escape(name) + "'";
+			RationaleDBUtil.escape(name) + "'";
 			rs = stmt.executeQuery(findQuery);
 //			***			 System.out.println("Getting our argument contents");
 //			System.out.println(findQuery);
-			
+
 			if (rs.next())
 			{	 				
 				id = rs.getInt("id");
 				this.fromDatabase(id);
 			}
-			
+
 		} catch (SQLException ex) {
 			// handle any errors 
 			RationaleDB.reportError(ex, "Argument.fromDatabase(String)", "Error reading argument");
@@ -788,21 +886,21 @@ public class Argument extends RationaleElement implements Serializable
 		finally { 
 			RationaleDB.releaseResources(stmt, rs);
 		}
-		
+
 	}	
-	
+
 	/**
 	 * Given the argument ID, get it from the database
 	 * @param theID - the argument ID
 	 */
 	public void fromDatabase(int theID)
 	{
-		
+
 		RationaleDB db = RationaleDB.getHandle();
 		Connection conn = db.getConnection();
-		
+
 		this.id = theID;
-		
+
 		Statement stmt = null; 
 		ResultSet rs = null; 
 		//need to figure out our ids... 
@@ -810,13 +908,13 @@ public class Argument extends RationaleElement implements Serializable
 		int altid = 0;
 		int assumpid = 0;
 		int reqid = 0;
-		
+
 		//assume all components are null!
 		alternative = null;
 		claim = null;
 		requirement = null;
 		assumption = null;
-		
+
 		try {
 			stmt = conn.createStatement();
 			String findQuery; 
@@ -826,28 +924,48 @@ public class Argument extends RationaleElement implements Serializable
 			rs = stmt.executeQuery(findQuery);
 //			System.out.println("Getting our argument contents");
 //			System.out.println(findQuery);
-			
+
 			if (rs.next())
-			{
-				name = RationaleDB.decode(rs.getString("name"));
-				description = RationaleDB.decode(rs.getString("description"));
+			{				
+				name = RationaleDBUtil.decode(rs.getString("name"));
+				description = RationaleDBUtil.decode(rs.getString("description"));
 				ptype = RationaleElementType.fromString(rs.getString("ptype"));
 				parent = rs.getInt("parent");
 //				enabled = rs.getBoolean("enabled");
-				type = (ArgType) ArgType.fromString(rs.getString("type"));
-				category = (ArgCategory) ArgCategory.fromString(rs.getString("argtype"));
+				String typeStr = rs.getString("type");
+				if (typeStr != null)
+				{
+					type = ArgType.fromString(typeStr);
+				}
+				else
+				{
+					type = ArgType.NONE;
+				}
+				String catStr = rs.getString("argtype");
+				if (catStr != null)
+				{
+					category = ArgCategory.fromString(catStr);
+				}
+				else
+				{
+					category = ArgCategory.NONE;
+				}
 				amount = rs.getInt("amount");
 				importance = (Importance) Importance.fromString(rs.getString("importance"));
 				plausibility = (Plausibility) Plausibility.fromString(rs.getString("plausibility"));
 				try {
 					int desID = rs.getInt("designer");
+
+					if( rs.wasNull() )
+						throw new SQLException();
+
 					designer = new Designer();
 					designer.fromDatabase(desID);
 				} catch (SQLException ex)
 				{
 					designer = null; //nothing...
 				}
-				
+
 				if (category == ArgCategory.CLAIM)
 				{
 					claimid = rs.getInt("claim");
@@ -871,36 +989,36 @@ public class Argument extends RationaleElement implements Serializable
 				"ptype = 'Argument' and " +
 				"parent = " + 
 				new Integer(this.id).toString() + " and " +
-				"(type = 'SUPPORTS' or " +
-				"type = 'ADDRESSES' or " +
-				"type = 'SATISFIES' or " +
-				"type = 'PRE-SUPPOSED-BY')";
+				"(type = 'Supports' or " +
+				"type = 'Addresses' or " +
+				"type = 'Satisfies' or " +
+				"type = 'Pre-supposed-by')";
 //				***				System.out.println(findFor);
 				rs = stmt.executeQuery(findFor); 
 				Vector<String> aFor = new Vector<String>();
 				Vector<String> aAgainst = new Vector<String>();
 				while (rs.next())
 				{
-					aFor.addElement(RationaleDB.decode(rs.getString("name")));
+					aFor.addElement(RationaleDBUtil.decode(rs.getString("name")));
 				}
 				rs.close();
-				
+
 				//Now, the arguments against
 				String findAgainst = "SELECT name FROM Arguments where " +
 				"ptype = 'Argument' and " +
 				"parent = " + 
 				new Integer(this.id).toString() + " and " +
-				"(type = 'DENIES' or " +
-				"type = 'VIOLATES' or " +
-				"type = 'OPPOSED-BY')";
+				"(type = 'Denies' or " +
+				"type = 'Violates' or " +
+				"type = 'Opposed-by')";
 				rs = stmt.executeQuery(findAgainst); 
-				
+
 				while (rs.next())
 				{
-					aAgainst.addElement(RationaleDB.decode(rs.getString("name")));
+					aAgainst.addElement(RationaleDBUtil.decode(rs.getString("name")));
 				}
 				rs.close();	
-				
+
 				//Now that we have the names, create the arguments
 				Enumeration args = aFor.elements();
 				while (args.hasMoreElements())
@@ -916,9 +1034,9 @@ public class Argument extends RationaleElement implements Serializable
 					arg.fromDatabase((String) args.nextElement());
 					argumentsAgainst.add(arg);
 				}
-				
+
 				//now, figure out the rest
-				
+
 				if (category == ArgCategory.REQUIREMENT)
 				{
 					String reqName;
@@ -927,12 +1045,12 @@ public class Argument extends RationaleElement implements Serializable
 					rs = stmt.executeQuery(findQuery2);	
 					if (rs.next())				
 					{
-						reqName = RationaleDB.decode(rs.getString("name"));
+						reqName = RationaleDBUtil.decode(rs.getString("name"));
 						requirement = new Requirement();
 						requirement.fromDatabase(reqName);
 					}
 				}
-				
+
 				//is the argument a claim?
 				else if (category == ArgCategory.CLAIM)
 				{
@@ -942,12 +1060,12 @@ public class Argument extends RationaleElement implements Serializable
 					rs = stmt.executeQuery(findQuery2);	
 					if (rs.next())				
 					{
-						claimName = RationaleDB.decode(rs.getString("name"));
+						claimName = RationaleDBUtil.decode(rs.getString("name"));
 						claim = new Claim();
 						claim.fromDatabase(claimName);
 					}
 				}
-				
+
 				else if (category == ArgCategory.ALTERNATIVE)
 				{
 					String altName;
@@ -956,12 +1074,12 @@ public class Argument extends RationaleElement implements Serializable
 					rs = stmt.executeQuery(findQuery2);
 					if (rs.next())				
 					{
-						altName = RationaleDB.decode(rs.getString("name"));
+						altName = RationaleDBUtil.decode(rs.getString("name"));
 						alternative = new Alternative();
 						alternative.fromDatabase(altName);
 					}					
 				}
-				
+
 				else if (category == ArgCategory.ASSUMPTION)
 				{
 					String assumpName;
@@ -970,25 +1088,25 @@ public class Argument extends RationaleElement implements Serializable
 					rs = stmt.executeQuery(findQuery2);	
 					if (rs.next())				
 					{
-						assumpName = RationaleDB.decode(rs.getString("name"));
+						assumpName = RationaleDBUtil.decode(rs.getString("name"));
 						assumption = new Assumption();
 						assumption.fromDatabase(assumpName);
 					}
 				}
-				
+
 			}
-			
+
 		} catch (SQLException ex) {
 			// handle any errors 
 			RationaleDB.reportError(ex, "Argument.fromDatabase(int)", "Query error");
 		}
 		finally { 
 			RationaleDB.releaseResources(stmt, rs);
-			
+
 		}
-		
+
 	}	
-	
+
 	/**
 	 * Delete our argument. This requires checking for any dependencies. If the
 	 * argument is about a claim or an assumption we need to see who else refers
@@ -998,6 +1116,9 @@ public class Argument extends RationaleElement implements Serializable
 	public boolean delete()
 	{
 		RationaleDB db = RationaleDB.getHandle();
+
+		m_eventGenerator.Destroyed();
+
 		if (alternative != null)
 		{
 			//if we pre-suppose someone, then we can delete the argument
@@ -1023,9 +1144,9 @@ public class Argument extends RationaleElement implements Serializable
 			}
 		}
 		db.deleteRationaleElement(this);
-		return false;
-		
+		return false;		
 	}
+
 	/*	
 	 public boolean display()
 	 {
@@ -1047,9 +1168,9 @@ public class Argument extends RationaleElement implements Serializable
 		DataLog d = DataLog.getHandle();
 		d.writeData(msg);
 		return ar.getCanceled(); //can I do this?
-		
+
 	}
-	
+
 	/**
 	 * Create a new argument by starting up the editor
 	 * @param disp - points to the display
@@ -1090,20 +1211,22 @@ public class Argument extends RationaleElement implements Serializable
 		}
 		EditArgument ar = new EditArgument(disp, this, true);
 		return ar.getCanceled(); //can I do this?
-	}	
-	/*	public boolean create(RationaleElement parent)
-	 {
-	 System.out.println("create argument");
-	 this.parent = parent.getID();
-	 this.ptype = parent.getElementType();
-	 System.out.println("parent = " + ""+parent);
-	 System.out.println("parent type is " + this.ptype.toString());
-	 Frame lf = new Frame();
-	 ArgumentGUI ar = new ArgumentGUI(lf,  this, true);
-	 ar.show();
-	 return ar.getCanceled();
-	 } */
-	
+	}
+
+	/**
+	 * Used to set the parent data of the rationale element without
+	 * brigning up the edit alternative GUI (in conjunction with the
+	 * new editor GUI).
+	 * @param parent
+	 */
+	public void setParent(RationaleElement parent) {
+		if (parent != null)
+		{
+			this.parent = parent.getID();
+			this.ptype = parent.getElementType();
+		}
+	}
+
 	/**
 	 * Inference over the argument to update any status information that has 
 	 * been changed.
@@ -1115,7 +1238,7 @@ public class Argument extends RationaleElement implements Serializable
 		Vector<RationaleStatus> newStat = inf.updateArgument( this, false);
 		return newStat;
 	}
-	
+
 	/**
 	 * Inference over the argument to update status when an argment is deleted.
 	 * @return any new status elements
@@ -1126,11 +1249,11 @@ public class Argument extends RationaleElement implements Serializable
 		Vector<RationaleStatus> newStat = inf.updateArgument( this, true);
 		return newStat;
 	}
-	
+
 	public void setCategory(ArgCategory category) {
 		this.category = category;
 	}
-	
+
 	/**
 	 * Read in our argument from XML
 	 * @param argN - the XML element containing our argument
@@ -1139,25 +1262,25 @@ public class Argument extends RationaleElement implements Serializable
 	{
 		this.fromXML = true;
 		RationaleDB db = RationaleDB.getHandle();
-		
+
 		//add idref ***from the XML***
 		String idref = argN.getAttribute("id");
-		
+
 		//get our name
 		name = argN.getAttribute("name");
-		
+
 		//get our type
 		type = ArgType.fromString(argN.getAttribute("argtype"));
-		
+
 		//get our status
 		plausibility = Plausibility.fromString(argN.getAttribute("plausibility"));
-		
+
 		//get importance
 		importance = Importance.fromString(argN.getAttribute("importance"));
-		
+
 		//get our artifact
 		amount = Integer.parseInt(argN.getAttribute("amount"));
-		
+
 		Node descN = argN.getFirstChild();
 		//get the description
 		//the text is actually the child of the element, odd...
@@ -1168,17 +1291,17 @@ public class Argument extends RationaleElement implements Serializable
 			String data = text.getData();
 			setDescription(data);
 		}
-		
+
 		//and last....
 		db.addRef(idref, this);	//important to use the ref from the XML file!
-		
+
 		Element child = (Element) descN.getNextSibling();
 		String nextName;
-		
+
 		while (child != null)
 		{
-			
-			
+
+
 			nextName = child.getNodeName();
 			//here we check the type, then process
 			if (nextName.compareTo("DR:claim") == 0)
@@ -1192,14 +1315,14 @@ public class Argument extends RationaleElement implements Serializable
 				requirement = new Requirement();
 				requirement.fromXML(child);
 				db.addRequirement(requirement);
-				
+
 			}
 			else if (nextName.compareTo("DR:assumption") == 0)
 			{
 				assumption = new Assumption();
 				assumption.fromXML(child);
 				db.addAssumption(assumption);
-				
+
 			}
 			else if (nextName.compareTo("DR:argument") == 0)
 			{
@@ -1207,7 +1330,7 @@ public class Argument extends RationaleElement implements Serializable
 				db.addArgument(arg);
 				addArgument(arg);
 				arg.fromXML(child);
-				
+
 			}
 			else if (nextName.compareTo("DR:question") == 0)
 			{
@@ -1215,14 +1338,14 @@ public class Argument extends RationaleElement implements Serializable
 				db.addQuestion(quest);
 				addQuestion(quest);
 				quest.fromXML(child);
-				
+
 			}
 			else if (nextName.compareTo("DR:alternative") == 0)
 			{
 				alternative = new Alternative();
 				alternative.fromXML(child);
 				db.addAlternative(alternative);
-				
+
 			}
 			else if (nextName.compareTo("reqref") == 0)
 			{
@@ -1239,7 +1362,7 @@ public class Argument extends RationaleElement implements Serializable
 				Text refText = (Text) childRef;
 				String stRef = refText.getData();
 				claim = (Claim)db.getRef(stRef);
-				
+
 			}
 			else if (nextName.compareTo("assref") == 0)
 			{
@@ -1248,7 +1371,7 @@ public class Argument extends RationaleElement implements Serializable
 				Text refText = (Text) childRef;
 				String stRef = refText.getData();
 				assumption = (Assumption)db.getRef(stRef);
-				
+
 			}
 			else if (nextName.compareTo("argref") == 0)
 			{
@@ -1257,7 +1380,7 @@ public class Argument extends RationaleElement implements Serializable
 				Text refText = (Text) childRef;
 				String stRef = refText.getData();
 				addArgument( (Argument)db.getRef(stRef));
-				
+
 			}
 			else if (nextName.compareTo("questref") == 0)
 			{
@@ -1266,7 +1389,7 @@ public class Argument extends RationaleElement implements Serializable
 				Text refText = (Text) childRef;
 				String stRef = refText.getData();
 				addQuestion( (Question)db.getRef(stRef));
-				
+
 			}
 			else if (nextName.compareTo("altref") == 0)
 			{
@@ -1275,7 +1398,7 @@ public class Argument extends RationaleElement implements Serializable
 				Text refText = (Text) childRef;
 				String stRef = refText.getData();
 				alternative = (Alternative)db.getRef(stRef);
-				
+
 			}
 			else
 			{
@@ -1284,7 +1407,7 @@ public class Argument extends RationaleElement implements Serializable
 			child = (Element) child.getNextSibling();
 		}
 	}
-	
+
 	/**
 	 * Check if our element is already in the database. The check is different
 	 * if you are reading it in from XML because you can do a query on the name.
@@ -1298,23 +1421,23 @@ public class Argument extends RationaleElement implements Serializable
 	{
 		boolean found = false;
 		String findQuery = "";
-		
+
 		if (fromXML)
 		{
 			RationaleDB db = RationaleDB.getHandle();
 			Connection conn = db.getConnection();
-			
+
 			//find out if this argument is already in the database
 			Statement stmt = null; 
 			ResultSet rs = null; 
-			
+
 			try {
 				stmt = conn.createStatement(); 
 				findQuery = "SELECT id, parent FROM arguments where name='" +
 				this.name + "'";
 				System.out.println(findQuery);
 				rs = stmt.executeQuery(findQuery); 
-				
+
 				if (rs.next())
 				{
 					int ourid;
@@ -1340,5 +1463,11 @@ public class Argument extends RationaleElement implements Serializable
 		}
 		return found;
 	}
-	
+	public void setParent(int parent) {
+		this.parent = parent;
+	}
+
+	public void setPtype(RationaleElementType ptype) {
+		this.ptype = ptype;
+	}
 }

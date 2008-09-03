@@ -55,7 +55,7 @@ public class OntologyInferences {
 			
 			while (rs.next())
 			{
-				claimNames.add(RationaleDB.decode(rs.getString("name")));
+				claimNames.add(RationaleDBUtil.decode(rs.getString("name")));
 			}
 			
 			Enumeration claims = claimNames.elements();

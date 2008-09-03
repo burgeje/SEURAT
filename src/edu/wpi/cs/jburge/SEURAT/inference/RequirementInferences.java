@@ -60,8 +60,8 @@ public class RequirementInferences {
 				//have satisfied requirements w/o rationale
 //				req.setStatus(ReqStatus.UNDECIDED);
 				//check to see if the requirement was violated
-				findArgQuery = "Select * From arguments where " +
-				"argtype = 'requirement' and " +
+				findArgQuery = "SELECT * FROM " + RationaleDBUtil.escapeTableName("arguments") 
+				+ " where argtype = 'Requirement' and " +
 				"requirement = " + req.getID() + " and " +
 				"type = 'Violates'";
 //				***			System.out.println(findArgQuery);
@@ -115,8 +115,8 @@ public class RequirementInferences {
 				if (rstat == ReqStatus.UNDECIDED)
 				{
 					//check to see if the requirement was satisifed
-					findArgQuery = "Select * From arguments where " +
-					"argtype = 'requirement' and " +
+					findArgQuery = "SELECT * FROM "+RationaleDBUtil.escapeTableName("arguments")
+					+" where argtype = 'Requirement' and " +
 					"requirement = " + req.getID() + " and " +
 					"type = 'Satisfies'";
 //					***				System.out.println(findArgQuery);
@@ -144,8 +144,8 @@ public class RequirementInferences {
 				if (rstat == ReqStatus.UNDECIDED)
 				{
 					//check to see if the requirement was addressed
-					findArgQuery = "Select * From arguments where " +
-					"argtype = 'requirement' and " +
+					findArgQuery = "SELECT * FROM "+RationaleDBUtil.escapeTableName("arguments")
+					+" where argtype = 'Requirement' and " +
 					"requirement = " + req.getID() + " and " +
 					"type = 'Addresses'";
 //					***				System.out.println(findArgQuery);
@@ -183,8 +183,8 @@ public class RequirementInferences {
 			else
 			{
 				//check to see if the requirement was violated
-				findArgQuery = "Select * From arguments where " +
-				"argtype = 'requirement' and " +
+				findArgQuery = "SELECT * FROM "+RationaleDBUtil.escapeTableName("arguments")
+				+" where argtype = 'Requirement' and " +
 				"requirement = " + req.getID();
 //				***			System.out.println(findArgQuery);
 				rs = stmt.executeQuery(findArgQuery);
@@ -219,6 +219,46 @@ public class RequirementInferences {
 		return status;
 	}
 	
+	public Vector<Argument> getArguments(Requirement req)
+	{
+		Vector<Argument> args;
+		args= new Vector<Argument>();
+		
+		RationaleDB db = RationaleDB.getHandle();
+		Connection conn = db.getConnection();
+		
+		Statement stmt = null; 
+		ResultSet rs = null; 
+		String findArgQuery = "";
+		//	boolean error = false;
+		try {
+			stmt = conn.createStatement();
+			//check to see if the requirement was violated
+			findArgQuery = "SELECT * FROM "+RationaleDBUtil.escapeTableName("arguments")
+			+" where argtype = 'Requirement' and " +
+			"requirement = " + req.getID();
+//			System.out.println(findArgQuery);
+			rs = stmt.executeQuery(findArgQuery);
+			
+			while (rs.next())
+			{	
+				Argument nextArg = new Argument();
+				String name = RationaleDBUtil.decode(rs.getString("name"));
+				nextArg.fromDatabase(name);
+				args.add(nextArg);
+			}
+			
+		} catch (SQLException ex) {
+			RationaleDB.reportError(ex, "RequirementInferences.getArguments", 
+					findArgQuery);
+		}
+		
+		finally { 
+			RationaleDB.releaseResources(stmt, rs);
+		}
+		return args;
+	}
+	
 	public Vector<Argument> getArguments(Requirement req, ArgType type)
 	{
 		Vector<Argument> args;
@@ -234,8 +274,8 @@ public class RequirementInferences {
 		try {
 			stmt = conn.createStatement();
 			//check to see if the requirement was violated
-			findArgQuery = "Select * From arguments where " +
-			"argtype = 'requirement' and " +
+			findArgQuery = "SELECT * FROM "+RationaleDBUtil.escapeTableName("arguments")
+			+" where argtype = 'Requirement' and " +
 			"requirement = " + req.getID() + " and " +
 			"type = '" + type.toString() + "'";
 //			System.out.println(findArgQuery);
@@ -244,7 +284,7 @@ public class RequirementInferences {
 			while (rs.next())
 			{	
 				Argument nextArg = new Argument();
-				String name = RationaleDB.decode(rs.getString("name"));
+				String name = RationaleDBUtil.decode(rs.getString("name"));
 				nextArg.fromDatabase(name);
 				args.add(nextArg);
 			}

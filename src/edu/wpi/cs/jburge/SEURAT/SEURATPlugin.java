@@ -3,6 +3,9 @@ package edu.wpi.cs.jburge.SEURAT;
 import org.eclipse.ui.plugin.*;
 //import org.eclipse.core.runtime.*;
 import org.eclipse.core.resources.*;
+import org.eclipse.jdt.core.ElementChangedEvent;
+import org.eclipse.jdt.core.IElementChangedListener;
+import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.osgi.framework.BundleContext;
 
@@ -49,6 +52,7 @@ public class SEURATPlugin extends AbstractUIPlugin {
 	 */
 	private Vector<IRationaleUpdateEventListener> updateListeners;
 	
+	
 	/**
 	 * The constructor
 	 */
@@ -61,6 +65,8 @@ public class SEURATPlugin extends AbstractUIPlugin {
 		} catch (MissingResourceException x) {
 			resourceBundle = null;
 		}
+		// Add the SEURAT element changed manager for rationale association persistence.
+		JavaCore.addElementChangedListener(new SEURATElementChangedManager(), ElementChangedEvent.POST_CHANGE | ElementChangedEvent.POST_RECONCILE);
 	}
 	
 	/*

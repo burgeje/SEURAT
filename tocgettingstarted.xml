@@ -4,8 +4,6 @@
 <toc label="Getting Started" link_to="toc.xml#gettingstarted"> 
 	<topic label="Database Installation"  href="html/gettingstarted/databaseInstallation.html"> 
 	</topic>
-	<topic label="Preferences" href="html/gettingstarted/preferences.html">
-	</topic> 
 	<topic label="Entering New Rationale"  href="html/gettingstarted/enteringNewRationale.html"> 
 		<topic label="Requirement" href="html/gettingstarted/enteringNewRationale/requirement.html" /> 
 		<topic label="Decision" href="html/gettingstarted/enteringNewRationale/decision.html" /> 
@@ -20,6 +18,8 @@
 	</topic>
 	<topic label="Associating Rationale with Code"  href="html/gettingstarted/associatingRationaleWithCode.html"> 
 	</topic>
+	<topic label="Associating Projects with Rationale"  href="html/gettingstarted/associatingProjectsWithRationale.html"> 
+	</topic>
 	<topic label="Finding Associated Rationale"  href="html/gettingstarted/findingAssociatedRationale.html"> 
 	</topic>
 	<topic label="Removing Rationale Associations"  href="html/gettingstarted/removingRationaleAssociations.html"> 
@@ -33,9 +33,17 @@
 		<topic label="Finding Status Overrides" href="html/gettingstarted/rationaleQueries/findStatusOverrides.html" />
 		<topic label="Finding Importance Overrides" href="html/gettingstarted/rationaleQueries/findImportanceOverrides.html" />				
 	</topic>
+	<topic label="Rationale Reports"  href="html/gettingstarted/rationaleReports.html">
+		<topic label="Generating a Traceability Matrix" href="html/gettingstarted/rationaleReports/traceabilityMatrix.html" /> 
+		<topic label="Exporting the Rationale Tree or a Sub-Tree" href="html/gettingstarted/rationaleReports/rationaleTree.html" />
+	</topic>
 	<topic label="Using the Rationale"  href="html/gettingstarted/usingtheRationale.html"> 
 		<topic label="Modifying Importance Values" href="html/gettingstarted/usingtheRationale/modifyingImportanceValues.html" /> 
 		<topic label="Disabling Rationale Items" href="html/gettingstarted/usingtheRationale/disablingRationaleItems.html" />
+	</topic>
+	<topic label="Multi-User Databases"  href="html/gettingstarted/multiUserDatabases.html">
+	</topic>
+	<topic label="The Graphical Rationale View"  href="html/gettingstarted/graphicalRationale.html">
 	</topic>
 	
 </toc>

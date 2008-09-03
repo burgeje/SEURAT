@@ -15,9 +15,6 @@ import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.core.*;
-import org.eclipse.jdt.core.dom.AST;
-import org.eclipse.jdt.core.dom.ASTParser;
-import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.*;
@@ -55,10 +52,10 @@ public class AssociateArtifactAction extends Action {
 	private Object obj;
 	
 	/**
-	 * The line number in the file for the selected Java resource (class,
-	 * method, or attribute)
+	 * The index for the first character of the artifact we're looking for.  This determines
+	 * where we will place the marker once we find it.
 	 */
-	private int lineNumber;
+	private int cstart;
 	
 	/**
 	 * The Java resource
@@ -102,7 +99,7 @@ public class AssociateArtifactAction extends Action {
 //				System.out.println(navigatorSelection.getHandleIdentifier());
 				if (selOk)
 				{
-					lineNumber = 0;
+					cstart = 0;
 					
 					ourRes = null;
 					try {
@@ -167,7 +164,6 @@ public class AssociateArtifactAction extends Action {
 								myJavaElement;
 								
 								IType[] myTypes = myCompilationUnit.getTypes();
-								ISourceRange range = null;
 								boolean found = false;
 								int i = 0;
 								while ((!found) && i < myTypes.length)
@@ -178,8 +174,8 @@ public class AssociateArtifactAction extends Action {
 //										***						   	 	System.out.println("found the class");
 										if (myTypes[i].isClass())
 										{
-											range = myTypes[i].getSourceRange();
 											found = true;
+											cstart = myTypes[i].getNameRange().getOffset();
 										}
 									}
 									else if (navigatorSelection.getElementType() == IJavaElement.FIELD)
@@ -191,8 +187,8 @@ public class AssociateArtifactAction extends Action {
 											if (myFields[j].getElementName().compareTo(navigatorSelection.getElementName()) == 0)
 											{
 //												***									 	System.out.println("found a type");
-												range = myFields[j].getSourceRange();
 												found = true;
+												cstart = myFields[j].getNameRange().getOffset();
 											}
 										}
 										
@@ -206,30 +202,14 @@ public class AssociateArtifactAction extends Action {
 											if (myMethods[j].getElementName().compareTo(navigatorSelection.getElementName()) == 0)
 											{
 //												***									 	System.out.println("found a method");
-												range = myMethods[j].getSourceRange();
 												found = true;
+												cstart = myMethods[j].getNameRange().getOffset();
 											}
 										}
 									}
 									//don't forget to increment!
 									i++;
 								} //end while
-								
-								//now, we need to do some parsing.
-								if (range != null)
-								{
-									
-									ASTParser ourParser = ASTParser.newParser(AST.JLS3);
-									ourParser.setSource(myCompilationUnit);
-									CompilationUnit parsedUnit = (CompilationUnit) ourParser.createAST(null);
-//									CompilationUnit parsedUnit = AST.parseCompilationUnit(myCompilationUnit, false);
-									lineNumber = parsedUnit.lineNumber(range.getOffset());
-								}
-								else
-								{
-									lineNumber = 0;
-								}
-								
 							}
 							else
 							{
@@ -254,13 +234,14 @@ public class AssociateArtifactAction extends Action {
 								try {
 //									***						System.out.println("line number = " + new Integer(lineNumber).toString());
 									IMarker ratM = ourRes.createMarker("SEURAT.ratmarker");
+									String dbname = RationaleDB.getDbName();
 									String markD = "Alt: '" +
-									((TreeParent)obj).getName() + "'";
+									((TreeParent)obj).getName() + "'   Rationale DB: '" + dbname + "'";
 									ratM.setAttribute(IMarker.MESSAGE, markD);
-//									ratM.setAttribute(IMarker.CHAR_START, 153);
-//									ratM.setAttribute(IMarker.CHAR_END, 154);
+									ratM.setAttribute(IMarker.CHAR_START, cstart);
+									ratM.setAttribute(IMarker.CHAR_END, cstart+1);
 									ratM.setAttribute(IMarker.SEVERITY, 0);
-									ratM.setAttribute(IMarker.LINE_NUMBER, lineNumber);
+									String artName = navigatorSelection.getElementName();
 									ratM.setAttribute("alternative", ((TreeParent)obj).getName());
 									SEURATResourcePropertiesManager.addPersistentProperty (ourRes,
 											"Rat", "true");
@@ -268,8 +249,8 @@ public class AssociateArtifactAction extends Action {
 									d.associateAlternative(((TreeParent)obj).getName(),
 											navigatorSelection.getHandleIdentifier(),
 											ourRes.getName(),
-											navigatorSelection.getElementName(),
-											markD, lineNumber);
+											artName,
+											markD);
 									
 								}
 								catch (CoreException e) {

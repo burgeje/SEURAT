@@ -157,6 +157,10 @@ public final class RationaleStatusType implements Serializable
 	public static final RationaleStatusType SUBDECISIONS_MISSING = new
 	RationaleStatusType("Subdecisions_Missing");
 	
-	
+	/**
+	 * An argument is incomplete. This can happen if it was imported and not yet formalized
+	 */
+	public static final RationaleStatusType ARGUMENT_INCOMPLETE = new 
+	RationaleStatusType("Argument_Incomplete");
 	
 }

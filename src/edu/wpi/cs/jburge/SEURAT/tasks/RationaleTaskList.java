@@ -105,6 +105,12 @@ public final class RationaleTaskList {
 					alt.fromDatabase(pid);
 					rationale = alt.getName();
 				} 
+				else if (parentType == RationaleElementType.ARGUMENT)
+				{
+					Argument arg = new Argument();
+					arg.fromDatabase(pid);
+					rationale = arg.getName();
+				}
 				
 				
 				RationaleTask task = new RationaleTask(
@@ -239,6 +245,12 @@ public final class RationaleTaskList {
 				alt.fromDatabase(pid);
 				rationale = alt.getName();
 			} 
+			else if (parentType == RationaleElementType.ARGUMENT)
+			{
+				Argument arg = new Argument();
+				arg.fromDatabase(pid);
+				rationale = arg.getName();
+			}
 			
 			
 			RationaleTask task = new RationaleTask(

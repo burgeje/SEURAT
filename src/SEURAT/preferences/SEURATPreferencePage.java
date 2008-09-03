@@ -21,10 +21,15 @@ import edu.wpi.cs.jburge.SEURAT.SEURATPlugin;
 
 public class SEURATPreferencePage extends FieldEditorPreferencePage implements IWorkbenchPreferencePage {
 	
+	/**
+	 * This constructor initializes the preference page so that
+	 * the field editors can automatically manage changes made by 
+	 * the user to the SEURAT preferences.
+	 */
 	public SEURATPreferencePage() {
 		super(GRID);
 		setPreferenceStore(SEURATPlugin.getDefault().getPreferenceStore());
-		setDescription("SEURAT Database Setup Preferences");
+		setDescription("SEURAT Database Selection Preferences");
 	}
 	
 	/**
@@ -34,14 +39,19 @@ public class SEURATPreferencePage extends FieldEditorPreferencePage implements I
 	 * restore itself.
 	 */
 	public void createFieldEditors() {
-		addField(
-				new StringFieldEditor(PreferenceConstants.P_DATABASE, "&Database name:", getFieldEditorParent()));
-		addField(
-				new StringFieldEditor(PreferenceConstants.P_DATABASEUSER, "&Database userid:", getFieldEditorParent()));
-		addField(
-				new StringFieldEditor(PreferenceConstants.P_DATABASEPASSWORD, "&Database password:", getFieldEditorParent()));
-		addField(new DirectoryFieldEditor(PreferenceConstants.P_PATH, 
-				"&Database bin directory:", getFieldEditorParent()));
+		String databaseTypes[][] = 
+		{
+				{"Apache Derby", PreferenceConstants.DatabaseType.DERBY},
+				{"MySQL DB", PreferenceConstants.DatabaseType.MYSQL}
+		};
+		
+		addField( new RadioGroupFieldEditor
+		(
+				PreferenceConstants.P_DATABASETYPE,
+				"Which Database Do You Want To Use?",
+				2, databaseTypes,
+				getFieldEditorParent()
+		));
 	}
 	
 	/* (non-Javadoc)

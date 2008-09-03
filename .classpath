@@ -4,5 +4,6 @@
 	<classpathentry exported="true" kind="lib" path="mysql-connector-java-3.0.8-stable-bin.jar"/>
 	<classpathentry exported="true" kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="con" path="org.eclipse.pde.core.requiredPlugins"/>
+	<classpathentry kind="lib" path="/Users/burgeje/Documents/workspace/edu.wpi.cs.jburge.SEURAT_trunk/derby.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

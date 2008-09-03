@@ -1,7 +1,6 @@
 
 package edu.wpi.cs.jburge.SEURAT.editors;
 
-import java.awt.Frame;
 import java.io.Serializable;
 import java.util.Enumeration;
 import java.util.Iterator;
@@ -369,10 +368,8 @@ public class EditDecision extends NewRationaleElementGUI implements Serializable
 						ourDec.setPhase(Phase.fromString(phaseBox.getItem(phaseBox.getSelectionIndex())));
 						if (!newStat.toString().equals(ourDec.getStatus().toString()))
 						{
-							Frame rf = new Frame();
-							ReasonGUI rg = new ReasonGUI(rf);
+							ReasonGUI rg = new ReasonGUI();
 							//				rg.show();
-							rg.setVisible(true);
 							String newReason = rg.getReason();
 							ourDec.setStatus(newStat);
 							//				System.out.println(newStat.toString() + ourDec.getStatus().toString());

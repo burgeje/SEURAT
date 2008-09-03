@@ -26,12 +26,12 @@ import edu.wpi.cs.jburge.SEURAT.decorators.*;
 
 /**
  * This class restores associations from the database. This functionality was added to assist with the SEURAT 
- * evaluation so that SEURAT could be "reset" between subjects. The problem with restoring associations and
- * bookmarks in this way is that it uses the line numbers from when the associations were created which will
- * be incorrect if the code has been modified. Still, the code is being left in place because we may want to do
- * something similar when converting SEURAT into a multi-user system. Bookmarks and other markers are only stored
- * locally and can not be shared between users unless they are saved and restored from a database or other
- * shared data repository.
+ * evaluation so that SEURAT could be "reset" between subjects, because bookmarks and other markers are only
+ * stored locally and cannot be shared between users unless they are saved and restored from a database or 
+ * other shared data repository.  Originally, the class used the line numbers from when the associations
+ * were created to restore the associations.  This has been improved and it no longer depends on the line
+ * numbers.  However, if the code has been refactored the associations will not be restored properly, and
+ * this problem will need to be solved or avoided if SEURAT is to function properly in a multi-user environment.
  */
 public class RestoreAssociations extends Action {
 	//needed because of our inner class experiment
@@ -46,12 +46,18 @@ public class RestoreAssociations extends Action {
 	private IResource ourRes;
 	
 	/**
+	 * The index for the first character of the artifact we're looking for.  This determines
+	 * where we will place the marker once we find it.
+	 */
+	private int cstart;
+	
+	/**
 	 * Constructor
 	 * @param view - our tree viewer
 	 */
 	public RestoreAssociations(TreeViewer view)
 	{
-		this.setText("Restore");
+		this.setText("Restore Associations");
 		this.setToolTipText("Restore Associations");
 //		this.setImageDescriptor(PlatformUI.getWorkbench().getSharedImages().
 //		getImageDescriptor(ISharedImages.IMG_OBJS_INFO_TSK));
@@ -64,18 +70,24 @@ public class RestoreAssociations extends Action {
 	{
 		//find all our resources
 		RationaleDB d = RationaleDB.getHandle();
-		Vector ourResources = d.getAssociations();
-		Iterator resI = ourResources.iterator();
+		Vector<Association> ourResources = d.getAssociations();
+		Iterator<Association> resI = ourResources.iterator();
 		try
 		{
 			
 			while (resI.hasNext())
 			{
+				cstart = 0;
 				ourAssoc = (Association) resI.next();
-				String ourResName = ourAssoc.getResource();
+				String ourArtifact = ourAssoc.getArtifact();
+
+				//System.out.println(ourArtifact);
+				//System.out.println(ourAssoc.getResource());
 				try{
-					
-					IJavaElement ourEle = JavaCore.create(ourResName);
+					// We create the java element from its artifact that is stored in the DB
+					// and then search through the resource to find out where the marker needs to be placed.
+					IJavaElement ourEle = JavaCore.create(ourArtifact);
+					//System.out.println(ourEle.getElementName() + " " + ourEle.getElementType());
 					
 					if (ourEle.getElementType() == IJavaElement.COMPILATION_UNIT)
 					{
@@ -145,6 +157,7 @@ public class RestoreAssociations extends Action {
 									if (myTypes[i].isClass())
 									{
 										found = true;
+										cstart = myTypes[i].getNameRange().getOffset();
 									}
 								}
 								else if (ourEle.getElementType() == IJavaElement.FIELD)
@@ -157,6 +170,7 @@ public class RestoreAssociations extends Action {
 										{
 //											***									 	System.out.println("found a type");
 											found = true;
+											cstart = myFields[j].getNameRange().getOffset();
 										}
 									}
 									
@@ -171,6 +185,7 @@ public class RestoreAssociations extends Action {
 										{
 //											***							 	System.out.println("found a method");
 											found = true;
+											cstart = myMethods[j].getNameRange().getOffset();
 										}
 									}
 								}
@@ -204,10 +219,10 @@ public class RestoreAssociations extends Action {
 								IMarker ratM = ourRes.createMarker("SEURAT.ratmarker");
 								String markD = ourAssoc.getMsg();
 								ratM.setAttribute(IMarker.MESSAGE, markD);
-//								ratM.setAttribute(IMarker.CHAR_START, 153);
-//								ratM.setAttribute(IMarker.CHAR_END, 154);
+								ratM.setAttribute(IMarker.CHAR_START, cstart);
+								ratM.setAttribute(IMarker.CHAR_END, cstart+1);
 								ratM.setAttribute(IMarker.SEVERITY, 0);
-								ratM.setAttribute(IMarker.LINE_NUMBER, ourAssoc.getLineNumber());
+								System.out.println(cstart);
 								Alternative ourAlt = (Alternative) RationaleDB.getRationaleElement(ourAssoc.getAlt(), RationaleElementType.ALTERNATIVE);
 								ratM.setAttribute("alternative", ourAlt.getName());
 								SEURATResourcePropertiesManager.addPersistentProperty (ourRes,
@@ -234,7 +249,7 @@ public class RestoreAssociations extends Action {
 				}
 				catch (Exception e)
 				{
-					System.out.println("couldn't create our element " + ourResName);
+					System.out.println("couldn't create our element " + ourArtifact);
 				}
 				
 			}

@@ -3,23 +3,35 @@
 <html>
 <head>
 	<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
-	<title>Find Importance Overrides</title>
+	<title>Finding Importance Overrides</title>
 </head>
 
 <body>
-<h2>Find Importance Overrides</h2>
-The user can also display a list of all claims and arguments where the default 
-importance has been overridden. This can happen in several ways:<br>
-<br>
-&#8226; A claim (which could be used by many arguments) has been given an importance 
-other than the default inherited from the Argument Ontology.<br>
-&#8226; An argument that refers to a claim has been given an importance other than the 
-default inherited from the claim (which inherits from the Argument Ontology)<br>
-&#8226; An argument that refers to a requirement has been given an importance of 
-something other than &#8220;Essential.&#8221;<br>
-<br>
-This display is brought up by selecting &#8220;Find Importance Overrides&#8221; from the 
-Rationale Query Menu. The following figure shows the Importance Override Display.<p>&nbsp;</p>
+<h2>Finding Importance Overrides</h2>
+
+<p>
+SEURAT provide a query designed to locate importance settings which have been overridden
+from the defaults. Importance settings can be overridden in a number of ways:
+</p>
+<ul>
+<li>A claim has been given an importance other than that inherited from the Argument Ontology.</li>
+<li>An argument refers to a claim and has been given an importance other than the 
+default inherited from the claim which inherits from the Argument Ontology.</li>
+<li>An argument refers to a requirement and has been given an importance of 
+something other than <i>Essential</i>.</li>
+</ul>
+</p>
+<p>
+To perform an importance override search you can locate the <i>SEURAT Search Page</i> from
+the standard Eclipse search window. Select the <i>Importance Override</i> radio button
+and use the Search Button to execute the query.
+</p>
 <p align="center"><img border="0" src="../../pics/findImportantOverride.jpg"></p>
+<p>
+The results of the query will be presented in the Eclipse search view. Any of the
+table column headers may be used to sort on that column's data. You can double
+click on any of the search results to open an editor for the selected rationale element.
+</p>
+<p align="center"><img border="0" src="../../pics/findImportantOverrideResults.jpg"></p>
 </body>
 </html>

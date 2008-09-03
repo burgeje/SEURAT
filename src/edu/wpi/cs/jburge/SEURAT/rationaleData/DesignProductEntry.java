@@ -17,6 +17,9 @@ import java.sql.ResultSet;
 
 import org.eclipse.swt.widgets.Display;
 
+import SEURAT.events.RationaleElementUpdateEventGenerator;
+import SEURAT.events.RationaleUpdateEvent;
+
 
 import edu.wpi.cs.jburge.SEURAT.editors.EditDesignProductEntry;
 
@@ -55,6 +58,9 @@ public class DesignProductEntry extends RationaleElement implements Serializable
 	 * The sub-elements in the component tree
 	 */
 	Vector<DesignProductEntry> children;
+
+	private RationaleElementUpdateEventGenerator<DesignProductEntry> m_eventGenerator = 
+		new RationaleElementUpdateEventGenerator<DesignProductEntry>(this);
 	
 	/**
 	 * The constructor called from the XML parsing code
@@ -198,6 +204,10 @@ public class DesignProductEntry extends RationaleElement implements Serializable
 		//find out if this requirement is already in the database
 		Statement stmt = null; 
 		ResultSet rs = null; 
+
+		// Update Event To Inform Subscribers Of Changes
+		// To Rationale
+		RationaleUpdateEvent l_updateEvent;
 		
 //		System.out.println("Saving to the database");
 		
@@ -220,13 +230,15 @@ public class DesignProductEntry extends RationaleElement implements Serializable
 				//now, update it with the new information
 				String updateOnt = "UPDATE DesignComponents " +
 				"SET name = '" +
-				RationaleDB.escape(this.name) + "', " +
+				RationaleDBUtil.escape(this.name) + "', " +
 				"description = '" +
-				RationaleDB.escape(this.description) + "'" +
+				RationaleDBUtil.escape(this.description) + "'" +
 				" WHERE " +
 				"id = " + this.id + " " ;
 //				System.out.println(updateOnt);
 				stmt.execute(updateOnt);
+				
+				l_updateEvent = m_eventGenerator.MakeUpdated();
 			}
 			else 
 			{
@@ -236,14 +248,13 @@ public class DesignProductEntry extends RationaleElement implements Serializable
 				String newArgSt = "INSERT INTO DesignComponents " +
 				"(name, description) " +
 				"VALUES ('" +
-				RationaleDB.escape(this.name) + "', '" +
-				RationaleDB.escape(this.description) +  "')"; 
+				RationaleDBUtil.escape(this.name) + "', '" +
+				RationaleDBUtil.escape(this.description) +  "')"; 
 				
 //				***			   System.out.println(newArgSt);
 				stmt.execute(newArgSt); 
 				
-				
-				
+				l_updateEvent = m_eventGenerator.MakeCreated();				
 			}
 			//now, we need to get our ID
 			String findQuery2 = "SELECT id FROM DesignComponents where name='" +
@@ -258,7 +269,7 @@ public class DesignProductEntry extends RationaleElement implements Serializable
 			}
 			else
 			{
-				ourid = 0;
+				ourid = -1;
 			}
 			
 			this.id = ourid;
@@ -293,6 +304,8 @@ public class DesignProductEntry extends RationaleElement implements Serializable
 				DesignProductEntry kid = (DesignProductEntry) kids.nextElement();
 				kid.toDatabase(ourid);
 			}
+			
+			m_eventGenerator.Broadcast(l_updateEvent);
 		} catch (SQLException ex) {
 			RationaleDB.reportError(ex, "DesignProductEntry.toDatabase", "SQL Error");
 		}
@@ -331,7 +344,7 @@ public class DesignProductEntry extends RationaleElement implements Serializable
 			
 			if (rs.next())
 			{
-				name = RationaleDB.decode(rs.getString("name"));
+				name = RationaleDBUtil.decode(rs.getString("name"));
 				rs.close();
 				this.fromDatabase(name);
 			}
@@ -369,7 +382,7 @@ public class DesignProductEntry extends RationaleElement implements Serializable
 //		***		System.out.println("ont name = " + name);
 		
 		this.name = name;
-		name = RationaleDB.escape(name);
+		name = RationaleDBUtil.escape(name);
 		
 		Statement stmt = null; 
 		ResultSet rs = null; 

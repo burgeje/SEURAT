@@ -19,9 +19,13 @@ import java.sql.ResultSet;
 
 import org.eclipse.swt.widgets.Display;
 
+import SEURAT.events.RationaleElementUpdateEventGenerator;
+import SEURAT.events.RationaleUpdateEvent;
+
 
 import edu.wpi.cs.jburge.SEURAT.editors.EditConstraint;
 import edu.wpi.cs.jburge.SEURAT.editors.SelectOntEntry;
+import edu.wpi.cs.jburge.SEURAT.rationaleData.RationaleDBUtil;
 
 /**
  * Defines the contents of a Constraint Rationale Element
@@ -78,7 +82,9 @@ public class Constraint extends RationaleElement implements Serializable
 	 * Who our children are 
 	 */
 	Vector<Constraint> children;
-	
+
+	private RationaleElementUpdateEventGenerator<Constraint> m_eventGenerator = 
+		new RationaleElementUpdateEventGenerator<Constraint>(this);
 	/**
 	 * Constructor called from the XML parsing code.
 	 */
@@ -233,6 +239,10 @@ public class Constraint extends RationaleElement implements Serializable
 		Connection conn = db.getConnection();
 		
 		int ourid = 0;
+
+		// Update Event To Inform Subscribers Of Changes
+		// To Rationale
+		RationaleUpdateEvent l_updateEvent;
 		
 		//find out if this requirement is already in the database
 		Statement stmt = null; 
@@ -247,15 +257,15 @@ public class Constraint extends RationaleElement implements Serializable
 			{
 				
 				//now, update it with the new information
-				findQuery = "UPDATE Constraints " +
+				findQuery = "UPDATE " + RationaleDBUtil.escapeTableName("CONSTRAINTS") + " " +
 				"SET name = '" +
-				RationaleDB.escape(this.name) + "', " +
+				RationaleDBUtil.escape(this.name) + "', " +
 				"description = '" +
-				RationaleDB.escape(this.description) + "', " +
+				RationaleDBUtil.escape(this.description) + "', " +
 				"type = '" +
-				RationaleDB.escape(this.type) + "', " +
+				RationaleDBUtil.escape(this.type) + "', " +
 				"units = '" +
-				RationaleDB.escape(this.units) + "', " +
+				RationaleDBUtil.escape(this.units) + "', " +
 				"subsys = " + this.component.getID() + ", " +
 				"amount = " + 
 				this.amount +
@@ -263,31 +273,33 @@ public class Constraint extends RationaleElement implements Serializable
 				"id = " + this.id + " " ;
 				System.out.println(findQuery);
 				stmt.execute(findQuery);
+				
+				l_updateEvent = m_eventGenerator.MakeUpdated();
 			}
 			else 
 			{
 				
 				//now, we have determined that the ontolgy entry is new
 				
-				findQuery = "INSERT INTO Constraints " +
+				findQuery = "INSERT INTO " + RationaleDBUtil.escapeTableName("CONSTRAINTS") + " " +
 				"(name, description, type, units, subsys, amount) " +
 				"VALUES ('" +
-				RationaleDB.escape(this.name) + "', '" +
-				RationaleDB.escape(this.description) + "', '" +
-				RationaleDB.escape(this.type) + "', '" +
-				RationaleDB.escape(this.units) + "', " +
+				RationaleDBUtil.escape(this.name) + "', '" +
+				RationaleDBUtil.escape(this.description) + "', '" +
+				RationaleDBUtil.escape(this.type) + "', '" +
+				RationaleDBUtil.escape(this.units) + "', " +
 				this.component.getID() + ", " +
 				this.amount + ")"; 
 				
 				System.out.println(findQuery);
 				stmt.execute(findQuery); 
 				
-				
-				
+				l_updateEvent = m_eventGenerator.MakeCreated();				
 			}
 			//now, we need to get our ID
-			findQuery = "SELECT id FROM Constraints where name='" +
-			this.name + "'";
+			findQuery = "SELECT id FROM " + 
+				RationaleDBUtil.escapeTableName("CONSTRAINTS") + " " + 
+				" where name='" + this.name + "'";
 			rs = stmt.executeQuery(findQuery); 
 //			***			System.out.println(findQuery);
 			
@@ -298,7 +310,7 @@ public class Constraint extends RationaleElement implements Serializable
 			}
 			else
 			{
-				ourid = 0;
+				ourid = -1;
 			}
 			
 			this.id = ourid;
@@ -360,6 +372,8 @@ public class Constraint extends RationaleElement implements Serializable
 				Constraint kid = (Constraint) kids.nextElement();
 				kid.toDatabase(ourid);
 			}
+			
+			m_eventGenerator.Broadcast(l_updateEvent);
 		} catch (SQLException ex) {
 			// handle any errors 
 			RationaleDB.reportError(ex, "Writing Constraint to DB", findQuery);
@@ -391,14 +405,15 @@ public class Constraint extends RationaleElement implements Serializable
 			stmt = conn.createStatement();
 			
 			findQuery = "SELECT *  FROM " +
-			"Constraints where id = " +
+			RationaleDBUtil.escapeTableName("CONSTRAINTS") + " " +
+			"where id = " +
 			new Integer(id).toString();
 //			***			System.out.println(findQuery);
 			rs = stmt.executeQuery(findQuery);
 			
 			if (rs.next())
 			{
-				name = RationaleDB.decode(rs.getString("name"));
+				name = RationaleDBUtil.decode(rs.getString("name"));
 				rs.close();
 				this.fromDatabase(name);
 			}
@@ -431,7 +446,7 @@ public class Constraint extends RationaleElement implements Serializable
 //		***		System.out.println("ont name = " + name);
 		
 		this.name = name;
-		name = RationaleDB.escape(name);
+		name = RationaleDBUtil.escape(name);
 		
 		String findQuery = "";
 		Statement stmt = null; 
@@ -439,21 +454,20 @@ public class Constraint extends RationaleElement implements Serializable
 		try {
 			stmt = conn.createStatement();
 			findQuery = "SELECT *  FROM " +
-			"Constraints where name = '" +
-			name + "'";
+			RationaleDBUtil.escapeTableName("CONSTRAINTS") + 
+			" where name = '" + name + "'";
 //			***			System.out.println(findQuery);
 			rs = stmt.executeQuery(findQuery);
 			
 			if (rs.next())
 			{
-				
 				id = rs.getInt("id");
-				description = RationaleDB.decode(rs.getString("description"));
+				description = RationaleDBUtil.decode(rs.getString("description"));
 				amount = rs.getFloat("amount");
 				String tmp = rs.getString("units");
 				if (tmp != null)
 				{
-					units = RationaleDB.decode(tmp);
+					units = RationaleDBUtil.decode(tmp);
 				}
 				
 				component = new DesignProductEntry();
@@ -476,10 +490,7 @@ public class Constraint extends RationaleElement implements Serializable
 					rs.close();
 				}
 				
-				
-				
 				rs.close();	
-				
 			}
 			
 		} catch (SQLException ex) {

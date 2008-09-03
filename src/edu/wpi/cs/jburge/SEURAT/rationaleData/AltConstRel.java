@@ -22,6 +22,9 @@ import java.sql.ResultSet;
 
 import org.eclipse.swt.widgets.Display;
 
+import SEURAT.events.RationaleElementUpdateEventGenerator;
+import SEURAT.events.RationaleUpdateEvent;
+
 import edu.wpi.cs.jburge.SEURAT.editors.EditAltConstRel;
 
 /**
@@ -56,8 +59,9 @@ public class AltConstRel extends RationaleElement implements Serializable
 	 * The unit associated with the constraint amount (ex: pounds)
 	 */
 	String units;
-	
-	
+
+	private RationaleElementUpdateEventGenerator<AltConstRel> m_eventGenerator = 
+		new RationaleElementUpdateEventGenerator<AltConstRel>(this);
 	
 	/**
 	 * The constructor.
@@ -68,7 +72,6 @@ public class AltConstRel extends RationaleElement implements Serializable
 		units = "";
 		constr = new Constraint();
 	}
-	
 	
 	/**
 	 * Get the units
@@ -94,7 +97,6 @@ public class AltConstRel extends RationaleElement implements Serializable
 	{
 		return RationaleElementType.ALTCONSTREL;
 	}
-	
 	
 	/**
 	 * Get the amount
@@ -156,6 +158,10 @@ public class AltConstRel extends RationaleElement implements Serializable
 		Connection conn = db.getConnection();
 		String updateOnt = "";
 		int ourid = 0;
+
+		// Update Event To Inform Subscribers Of Changes
+		// To Rationale
+		RationaleUpdateEvent l_updateEvent;
 		
 		//find out if this requirement is already in the database
 		Statement stmt = null; 
@@ -166,11 +172,10 @@ public class AltConstRel extends RationaleElement implements Serializable
 		try {
 			stmt = conn.createStatement(); 
 			if (this.id >= 0)
-			{
-				
+			{				
 				//now, update it with the new information
 				updateOnt = "UPDATE AltConstRel " +
-				"SET name = '" + RationaleDB.escape(this.name) + 
+				"SET name = '" + RationaleDBUtil.escape(this.name) + 
 				"', alternative = " +
 				pid + ", " +
 				"constr  = " +
@@ -184,14 +189,18 @@ public class AltConstRel extends RationaleElement implements Serializable
 				constr.getID() + ";";
 				System.out.println(updateOnt);
 				stmt.execute(updateOnt);
+				
+				ourid = this.id;
+				
+				l_updateEvent = m_eventGenerator.MakeUpdated();
 			}
 			else if (pid == 0)
 			{
 				//now, update it with the new information
 				updateOnt = "UPDATE AltConstRel " +
-				"SET name = '" + RationaleDB.escape(this.name) + 
+				"SET name = '" + RationaleDBUtil.escape(this.name) + 
 				"' units = '" +
-				RationaleDB.escape(this.units) +
+				RationaleDBUtil.escape(this.units) +
 				"' amount = " +
 				this.amount +
 				" WHERE " +
@@ -199,6 +208,10 @@ public class AltConstRel extends RationaleElement implements Serializable
 				this.getID() + ";";
 				System.out.println(updateOnt);
 				stmt.execute(updateOnt);
+
+				ourid = this.id;
+				
+				l_updateEvent = m_eventGenerator.MakeUpdated();
 			}
 			else 
 			{
@@ -208,17 +221,25 @@ public class AltConstRel extends RationaleElement implements Serializable
 				updateOnt = "INSERT INTO AltConstRel " +
 				"(name, alternative, constr, amount, units) " +
 				"VALUES ('" +
-				RationaleDB.escape(name) + "', " +
+				RationaleDBUtil.escape(name) + "', " +
 				alt.getID() + ", " +
 				constr.getID() + ", " +
 				amount + ", '" +
-				RationaleDB.escape(units) + "')"; 
+				RationaleDBUtil.escape(units) + "')"; 
 				
 				System.out.println(updateOnt);
-				stmt.execute(updateOnt); 
+				stmt.executeUpdate(updateOnt, Statement.RETURN_GENERATED_KEYS); 
+
+				// TODO This code has not been tested
+				ResultSet generatedKey = null;
+				generatedKey = stmt.getGeneratedKeys();
+				generatedKey.next();
+				ourid = generatedKey.getInt(1);
 				
+				l_updateEvent = m_eventGenerator.MakeCreated();				
 			}
 			
+			m_eventGenerator.Broadcast(l_updateEvent);
 		} catch (SQLException ex) {
 			// handle any errors 
 			RationaleDB.reportError(ex, "Writing AltConstRel to DB", updateOnt);
@@ -228,8 +249,7 @@ public class AltConstRel extends RationaleElement implements Serializable
 			RationaleDB.releaseResources(stmt, rs);
 		}
 		
-		return ourid;	
-		
+		return ourid;
 	}	
 	
 	/**
@@ -238,7 +258,6 @@ public class AltConstRel extends RationaleElement implements Serializable
 	 */
 	public void fromDatabase(int id)
 	{
-		
 		RationaleDB db = RationaleDB.getHandle();
 		Connection conn = db.getConnection();
 		
@@ -259,7 +278,7 @@ public class AltConstRel extends RationaleElement implements Serializable
 			
 			if (rs.next())
 			{
-				name = RationaleDB.decode(rs.getString("name"));
+				name = RationaleDBUtil.decode(rs.getString("name"));
 				this.fromDatabase(name);
 			}
 			
@@ -287,7 +306,7 @@ public class AltConstRel extends RationaleElement implements Serializable
 //		***		System.out.println("ont name = " + name);
 		
 		this.name = name;
-		name = RationaleDB.escape(name);
+		name = RationaleDBUtil.escape(name);
 		String findQuery = "";
 		Statement stmt = null; 
 		ResultSet rs = null; 
@@ -306,9 +325,9 @@ public class AltConstRel extends RationaleElement implements Serializable
 			{
 				
 				id = rs.getInt("id"); //ID equals the alternative
-				name = RationaleDB.decode(rs.getString("name"));
+				name = RationaleDBUtil.decode(rs.getString("name"));
 				amount = rs.getFloat("amount");
-				units = RationaleDB.decode(rs.getString("units"));
+				units = RationaleDBUtil.decode(rs.getString("units"));
 				constr = new Constraint();
 				constr.fromDatabase(rs.getInt("constr"));
 				alt = new Alternative();
@@ -367,7 +386,6 @@ public class AltConstRel extends RationaleElement implements Serializable
 		return ar.getCanceled(); //can I do this?
 	}
 	
-	
 	/**
 	 * We don't use this yet. 
 	 */
@@ -380,8 +398,4 @@ public class AltConstRel extends RationaleElement implements Serializable
 //		return newStat;
 		return null;
 	}
-	
-	
-	
-	
 }

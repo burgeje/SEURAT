@@ -57,7 +57,7 @@ public class QuestionInferences {
 				while (rs.next())
 				{
 					Decision dec = new Decision();
-					dec.fromDatabase(RationaleDB.decode(rs.getString("name")));
+					dec.fromDatabase(RationaleDBUtil.decode(rs.getString("name")));
 					Vector<RationaleStatus> results = decinf.updateDecisionStatus(dec);
 					if (results != null)
 					{
@@ -75,7 +75,7 @@ public class QuestionInferences {
 				while (rs.next())
 				{
 					Alternative alt = new Alternative();
-					alt.fromDatabase(RationaleDB.decode(rs.getString("name")));
+					alt.fromDatabase(RationaleDBUtil.decode(rs.getString("name")));
 					Vector<RationaleStatus> results = altinf.updateAlternative(alt);
 					if (results != null)
 					{
@@ -126,7 +126,7 @@ public class QuestionInferences {
 				while (rs.next())
 				{
 					Decision dec = new Decision();
-					dec.fromDatabase(RationaleDB.decode(rs.getString("name")));
+					dec.fromDatabase(RationaleDBUtil.decode(rs.getString("name")));
 					Vector<RationaleStatus> results = decinf.updateDecisionStatus(dec);
 					if (results != null)
 					{
@@ -144,7 +144,7 @@ public class QuestionInferences {
 				while (rs.next())
 				{
 					Alternative alt = new Alternative();
-					alt.fromDatabase(RationaleDB.decode(rs.getString("name")));
+					alt.fromDatabase(RationaleDBUtil.decode(rs.getString("name")));
 					Vector<RationaleStatus> results = altinf.updateAlternative(alt);
 					if (results != null)
 					{

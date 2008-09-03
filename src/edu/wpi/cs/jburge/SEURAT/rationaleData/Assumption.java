@@ -17,10 +17,10 @@ import java.sql.ResultSet;
 import java.util.Vector;
 
 import org.eclipse.swt.widgets.Display;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.Text;
+import org.w3c.dom.*;
 
+import SEURAT.events.RationaleElementUpdateEventGenerator;
+import SEURAT.events.RationaleUpdateEvent;
 import edu.wpi.cs.jburge.SEURAT.editors.EditAssumption;
 import edu.wpi.cs.jburge.SEURAT.inference.AssumptionInferences;
 
@@ -31,7 +31,6 @@ import edu.wpi.cs.jburge.SEURAT.inference.AssumptionInferences;
  */
 public class Assumption extends RationaleElement implements Serializable
 {
-	
 	/**
 	 * 
 	 */
@@ -41,6 +40,9 @@ public class Assumption extends RationaleElement implements Serializable
 	 * How important is the assumption?
 	 */
 	Importance importance;
+
+	private RationaleElementUpdateEventGenerator<Assumption> m_eventGenerator = 
+		new RationaleElementUpdateEventGenerator<Assumption>(this);
 	
 	public Assumption()
 	{
@@ -65,7 +67,38 @@ public class Assumption extends RationaleElement implements Serializable
 	 }
 	 
 	 */
-	
+	public Element toXML(Document ratDoc)
+	{
+		Element assE;
+		RationaleDB db = RationaleDB.getHandle();
+		String assID = db.getRef(id);
+/*		
+		if (assID != null)
+		{		
+			assE = ratDoc.createElement("assref");
+			//set the reference contents
+			Text text = ratDoc.createTextNode(assID);
+			assE.appendChild(text);
+		}
+		else 
+		{
+		*/
+			assE = ratDoc.createElement("DR:assumption");
+			assID = db.addRef(id);
+			assE.setAttribute("id", assID);
+			assE.setAttribute("name", name);
+			
+			//save our description
+			Element descE = ratDoc.createElement("DR:description");
+			//set the reference contents
+			Text descText = ratDoc.createTextNode(description);
+			descE.appendChild(descText);
+			assE.appendChild(descE);
+
+//		}
+			
+		return assE;
+	}
 	/**
 	 * Get our importance. If the assumption is disabled, return zero.
 	 */
@@ -93,6 +126,10 @@ public class Assumption extends RationaleElement implements Serializable
 		Connection conn = db.getConnection();
 		
 		int ourid = 0;
+
+		// Update Event To Inform Subscribers Of Changes
+		// To Rationale
+		RationaleUpdateEvent l_updateEvent;
 		
 		Statement stmt = null; 
 		ResultSet rs = null; 
@@ -101,42 +138,41 @@ public class Assumption extends RationaleElement implements Serializable
 			stmt = conn.createStatement(); 
 			String enabledStr;
 			if (enabled)
-				enabledStr = "True";
+				enabledStr = RationaleDBUtil.correctBooleanStr(true);
 			else
-				enabledStr = "False";
+				enabledStr = RationaleDBUtil.correctBooleanStr(false);
 			
 			if (inDatabase())
 			{
 //				***				System.out.println("already there");
 //				ourid = rs.getInt("id");
 				String updateAssump = "UPDATE assumptions A " +
-				"SET A.name = '" + RationaleDB.escape(this.name) +
-				"', A.description = '" + RationaleDB.escape(this.description) +
+				"SET A.name = '" + RationaleDBUtil.escape(this.name) +
+				"', A.description = '" + RationaleDBUtil.escape(this.description) +
 				"', A.importance = '" + this.importance.toString() +
-				"', A.enabled = '" + enabledStr +
+				"', A.enabled = '" + RationaleDBUtil.escape(enabledStr) +
 				"' WHERE " +
 				"A.id = " + this.id + " ";
 //				System.out.println(updateAssump);
 				stmt.execute(updateAssump);
+				l_updateEvent = m_eventGenerator.MakeUpdated();
 			}
 			else 
 			{
-				
 				//now, we have determined that the assumption is new
 				
 				String newArgSt = "INSERT INTO Assumptions " +
 				"(name, description, importance, enabled) " +
 				"VALUES ('" +
-				RationaleDB.escape(this.name) + "', '" +
-				RationaleDB.escape(this.description) + "', '" +
+				RationaleDBUtil.escape(this.name) + "', '" +
+				RationaleDBUtil.escape(this.description) + "', '" +
 				"Moderate" + "', " +
-				"'" + enabledStr + "')";
+				"'" + RationaleDBUtil.escape(enabledStr) + "')";
 				
 //				***			   System.out.println(newArgSt);
 				stmt.execute(newArgSt); 
 				
-				
-				
+				l_updateEvent = m_eventGenerator.MakeCreated();
 			}
 			//now, we need to get our ID
 			String findQuery2 = "SELECT id FROM assumptions where name='" +
@@ -151,9 +187,11 @@ public class Assumption extends RationaleElement implements Serializable
 			}
 			else
 			{
-				ourid = 0;
+				ourid = -1;
 			}
 			this.id = ourid;
+			
+			m_eventGenerator.Broadcast(l_updateEvent);
 		} catch (SQLException ex) {
 			RationaleDB.reportError(ex, "Assumption.toDatabase", "SQL Error");
 		}
@@ -191,7 +229,7 @@ public class Assumption extends RationaleElement implements Serializable
 			
 			if (rs.next())
 			{
-				name = RationaleDB.decode(rs.getString("name"));
+				name = RationaleDBUtil.decode(rs.getString("name"));
 				rs.close();
 				this.fromDatabase(name);
 			}
@@ -216,7 +254,7 @@ public class Assumption extends RationaleElement implements Serializable
 		Connection conn = db.getConnection();
 		
 		this.name = name;
-		name = RationaleDB.escape(name);
+		name = RationaleDBUtil.escape(name);
 		String findQuery = ""; 		
 		Statement stmt = null; 
 		ResultSet rs = null; 
@@ -233,7 +271,7 @@ public class Assumption extends RationaleElement implements Serializable
 			{
 				
 				id = rs.getInt("id");
-				description = RationaleDB.decode(rs.getString("description"));
+				description = RationaleDBUtil.decode(rs.getString("description"));
 				enabled = rs.getBoolean("enabled");
 				importance = (Importance) Importance.fromString(rs.getString("importance"));
 				

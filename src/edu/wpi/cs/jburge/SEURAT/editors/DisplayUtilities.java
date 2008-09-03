@@ -29,7 +29,7 @@ public class DisplayUtilities {
 	 * @param height - the height in lines of text
 	 * @param width - the width - units??? 
 	 */
-	static void setListDimensions(List ourWidget, GridData gridData, int height, int width )
+	public static void setListDimensions(List ourWidget, GridData gridData, int height, int width )
 	{
 		int treeHeight = ourWidget.getItemHeight() * height;
 		int treeWidth = ourWidget.getFont().getFontData().length * width;
@@ -44,7 +44,7 @@ public class DisplayUtilities {
 	 * @param gridData - the data
 	 * @param width - the desired width 
 	 */
-	static void setTextDimensions(Text ourWidget, GridData gridData, int width)
+	public static void setTextDimensions(Text ourWidget, GridData gridData, int width)
 	{
 		int treeWidth = ourWidget.getFont().getFontData().length * width;
 		Rectangle trim = ourWidget.computeTrim(0, 0, treeWidth, 0);
@@ -58,7 +58,7 @@ public class DisplayUtilities {
 	 * @param width
 	 * @param height
 	 */
-	static void setTextDimensions(Text ourWidget, GridData gridData, int width, int height)
+	public static void setTextDimensions(Text ourWidget, GridData gridData, int width, int height)
 	{
 		int treeWidth = ourWidget.getFont().getFontData().length * width;
 		int treeHeight = ourWidget.getLineHeight() * height;
@@ -73,7 +73,7 @@ public class DisplayUtilities {
 	 * @param gridData
 	 * @param width
 	 */
-	static void setComboDimensions(Combo ourWidget, GridData gridData, int width)
+	public static void setComboDimensions(Combo ourWidget, GridData gridData, int width)
 	{
 		int treeWidth = ourWidget.getFont().getFontData().length * width;
 		Rectangle trim = ourWidget.computeTrim(0, 0, treeWidth, 0);
@@ -87,7 +87,7 @@ public class DisplayUtilities {
 	 * @param height
 	 * @param width
 	 */
-	static void setTreeDimensions(Tree ourWidget, GridData gridData, int height, int width )
+	public static void setTreeDimensions(Tree ourWidget, GridData gridData, int height, int width )
 	{
 		int treeHeight = ourWidget.getItemHeight() * height;
 		int treeWidth = ourWidget.getFont().getFontData().length * width;

@@ -158,13 +158,14 @@ public class RationaleStatus {
 		//find out if this status item is already in the database
 		Statement stmt = null; 
 		ResultSet rs = null; 
+		String findQuery;
 		
 		System.out.println("Saving Status to the database");
 		
 		try {
 			stmt = conn.createStatement(); 
-			String findQuery = "SELECT parent, ptype, description, status FROM status where parent ='" +
-			this.pid + "' and ptype = '" +
+			findQuery = "SELECT parent, ptype, description, status FROM status where parent =" +
+			this.pid + " and ptype = '" +
 			this.type + "' and status = '" + 
 			this.stype + "'";
 //			***			 System.out.println(findQuery);
@@ -181,10 +182,10 @@ public class RationaleStatus {
 				String stat = rs.getString("status");
 				String updateQuery;
 				updateQuery = "UPDATE Status " +
-				"SET Override = '" + over + "' " +
+				"SET override = '" + over + "' " +
 				"WHERE status = '" + stat +
 				"' AND parent = " + this.pid +
-				" and ptype = '" + this.type + "';";
+				" AND ptype = '" + this.type + "'";
 				stmt.execute(updateQuery);
 				
 			}
@@ -206,7 +207,7 @@ public class RationaleStatus {
 				"(date, description, type, ptype, parent, status, override) " +
 				"VALUES ('" +
 				time.toString() + "', '" +
-				RationaleDB.escape(this.description) + "', '" +
+				RationaleDBUtil.escape(this.description) + "', '" +
 				this.status.toString() + "', '" +
 //				RationaleDB.escape(this.rationale) + "', '" +
 				this.type.toString() + "', " +

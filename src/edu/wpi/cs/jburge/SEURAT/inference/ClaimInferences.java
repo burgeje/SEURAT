@@ -47,14 +47,14 @@ public class ClaimInferences {
 			stmt = conn.createStatement();
 			
 			findQuery = "SELECT name  FROM " +
-			"arguments where argtype = 'claim' and " +
+			"arguments where argtype = 'Claim' and " +
 			"claim = " + ourClaim.getID();
 //			***			 System.out.println(findQuery);
 			rs = stmt.executeQuery(findQuery);
 			
 			while (rs.next())
 			{
-				argNames.add(RationaleDB.decode(rs.getString("name")));
+				argNames.add(RationaleDBUtil.decode(rs.getString("name")));
 			}
 			
 			Enumeration args = argNames.elements();

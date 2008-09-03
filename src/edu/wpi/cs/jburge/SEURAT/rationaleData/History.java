@@ -10,8 +10,9 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
 
-import org.w3c.dom.Element;
+import org.w3c.dom.*;
 
+import SEURAT.events.RationaleElementUpdateEventGenerator;
 /**
  * Defines the structure of history information stored for rationale entities. 
  * The history keeps track of status changes (like when an alternative is rejected, and why).
@@ -44,6 +45,7 @@ public class History implements Serializable
 	 * Flag indicating if this was read from XML
 	 */
 	boolean fromXML;
+	
 	/**
 	 * Our constructor
 	 *
@@ -67,7 +69,15 @@ public class History implements Serializable
 		//figure out date
 		dateStamp = new Date();
 	}
-	
+	public Element toXML(Document ratDoc)
+	{
+		Element histE = ratDoc.createElement("DR:record");
+		RationaleDB db = RationaleDB.getHandle();
+		histE.setAttribute("status", status);
+		histE.setAttribute("reason", reason);
+		histE.setAttribute("datestamp", dateStamp.toString());
+		return histE;
+	}
 	public String getStatus()
 	{
 		return status;
@@ -139,7 +149,7 @@ public class History implements Serializable
 				ptype.toString() + "', " +
 				parentRSt + ", '" +
 				ourTime.toString() + "', '" +
-				RationaleDB.escape(this.reason) + "', '" +
+				RationaleDBUtil.escape(this.reason) + "', '" +
 				this.status + "')";
 				
 //				System.out.println(newQuestSt);

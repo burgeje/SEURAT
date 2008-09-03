@@ -16,10 +16,10 @@ import java.util.Enumeration;
 import java.util.Vector;
 
 import org.eclipse.swt.widgets.Display;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.Text;
+import org.w3c.dom.*;
 
+import SEURAT.events.RationaleElementUpdateEventGenerator;
+import SEURAT.events.RationaleUpdateEvent;
 import edu.wpi.cs.jburge.SEURAT.editors.EditQuestion;
 import edu.wpi.cs.jburge.SEURAT.inference.QuestionInferences;
 
@@ -60,7 +60,9 @@ public class Question extends RationaleElement implements Serializable
 	 * Is the question answered or not?
 	 */
 	QuestionStatus status;		//don't know if maybe this should be an integer?
-	
+
+	private RationaleElementUpdateEventGenerator<Question> m_eventGenerator = 
+		new RationaleElementUpdateEventGenerator<Question>(this);
 	
 	/**
 	 * Our constructor
@@ -73,7 +75,58 @@ public class Question extends RationaleElement implements Serializable
 		answer = new String("");
 		procedure = new String("");
 	} 
-	
+	public Element toXML(Document ratDoc)
+	{
+		Element questE;
+		RationaleDB db = RationaleDB.getHandle();
+		String questID = db.getRef(id);
+		if (questID != null)
+		{		
+			//this should never be the case but just in case...
+			questE = ratDoc.createElement("questref");
+			//set the reference contents
+			Text text = ratDoc.createTextNode(questID);
+			questE.appendChild(text);
+		}
+		else 
+		{
+			questE  = ratDoc.createElement("DR:question");
+			questID = db.addRef(id);
+			questE.setAttribute("id", questID);
+			questE.setAttribute("name", name);
+			questE.setAttribute("status", status.toString());
+			System.out.println(name);
+			
+			//save our description
+			Element descE = ratDoc.createElement("DR:description");
+			//set the reference contents
+			Text descText = ratDoc.createTextNode(description);
+			descE.appendChild(descText);
+			questE.appendChild(descE);
+						
+			Element procE = ratDoc.createElement("DR:procedure");
+			Text pt = ratDoc.createTextNode(procedure);
+			procE.appendChild(pt);
+			questE.appendChild(procE);
+			Element ansE = ratDoc.createElement("DR:answer");
+			Text at = ratDoc.createTextNode(answer);
+			ansE.appendChild(at);
+			questE.appendChild(ansE);	
+
+			
+			//finally, the history
+			
+			Element ourHist = ratDoc.createElement("DR:history");
+			Enumeration hist = history.elements();
+			while (hist.hasMoreElements())
+			{
+				History his = (History) hist.nextElement();
+				ourHist.appendChild(his.toXML(ratDoc));
+			}
+			questE.appendChild(ourHist);
+		}	
+		return questE;
+	}
 	public RationaleElementType getElementType()
 	{
 		return RationaleElementType.QUESTION;
@@ -138,6 +191,10 @@ public class Question extends RationaleElement implements Serializable
 		Connection conn = db.getConnection();
 		
 		int ourid = 0;
+
+		// Update Event To Inform Subscribers Of Changes
+		// To Rationale
+		RationaleUpdateEvent l_updateEvent;
 		
 		//find out if this question is already in the database
 		Statement stmt = null; 
@@ -152,13 +209,13 @@ public class Question extends RationaleElement implements Serializable
 			{
 				String updateParent = "UPDATE questions " +
 				"SET name = '" +
-				RationaleDB.escape(this.name) + "', " +
+				RationaleDBUtil.escape(this.name) + "', " +
 				"description = '" +
-				RationaleDB.escape(this.description) + "', " +
+				RationaleDBUtil.escape(this.description) + "', " +
 				"answer = '" +
-				RationaleDB.escape(this.answer) + "', " +
+				RationaleDBUtil.escape(this.answer) + "', " +
 				"proc = '" +
-				RationaleDB.escape(this.procedure) + "', " +
+				RationaleDBUtil.escape(this.procedure) + "', " +
 				"status = '" +
 				status.toString() + "', " +
 				"parent = " + new Integer(parent).toString() + ", " +
@@ -167,6 +224,8 @@ public class Question extends RationaleElement implements Serializable
 				"id = " + this.id + " " ;
 //				System.out.println(updateParent);
 				stmt.execute(updateParent);
+				
+				l_updateEvent = m_eventGenerator.MakeUpdated();
 			}
 			
 			else 
@@ -177,23 +236,24 @@ public class Question extends RationaleElement implements Serializable
 				String newQuestSt = "INSERT INTO Questions "+
 				"(name, description, status, proc, answer, ptype, parent) " +
 				"VALUES ('" +
-				RationaleDB.escape(this.name) + "', '" +
-				RationaleDB.escape(this.description) + "', '" +
+				RationaleDBUtil.escape(this.name) + "', '" +
+				RationaleDBUtil.escape(this.description) + "', '" +
 				this.status.toString() + "', '" +
-				RationaleDB.escape(this.procedure) + "', '" +
-				RationaleDB.escape(this.answer) + "', '" +
+				RationaleDBUtil.escape(this.procedure) + "', '" +
+				RationaleDBUtil.escape(this.answer) + "', '" +
 				ptype.toString() + "', " +
 				parentRSt + ")";
 				
 //				***			   System.out.println(newQuestSt);
 				stmt.execute(newQuestSt); 
 				
+				l_updateEvent = m_eventGenerator.MakeCreated();
 			}
 			//in either case, we want to update any sub-requirements in case
 			//they are new!
 			//now, we need to get our ID
 			String findQuery2 = "SELECT id FROM questions where name='" +
-			RationaleDB.escape(this.name) + "'";
+			RationaleDBUtil.escape(this.name) + "'";
 			rs = stmt.executeQuery(findQuery2); 
 			
 			if (rs.next())
@@ -203,7 +263,7 @@ public class Question extends RationaleElement implements Serializable
 			}
 			else
 			{
-				ourid = 0;
+				ourid = -1;
 			}
 			this.id = ourid;
 			
@@ -216,7 +276,7 @@ public class Question extends RationaleElement implements Serializable
 				his.toDatabase(ourid, RationaleElementType.QUESTION);
 			}
 			
-			
+			m_eventGenerator.Broadcast(l_updateEvent);
 		} catch (SQLException ex) {
 			RationaleDB.reportError(ex, "Question.toDatabase(int, type)", "SQL Error");
 		}
@@ -239,7 +299,7 @@ public class Question extends RationaleElement implements Serializable
 		Connection conn = db.getConnection();
 		
 		this.name = name;
-		name = RationaleDB.escape(name);
+		name = RationaleDBUtil.escape(name);
 		
 		Statement stmt = null; 
 		ResultSet rs = null; 
@@ -257,9 +317,9 @@ public class Question extends RationaleElement implements Serializable
 			{
 				
 				id = rs.getInt("id");
-				description = RationaleDB.decode(rs.getString("description"));
-				answer = RationaleDB.decode(rs.getString("answer"));
-				procedure = RationaleDB.decode(rs.getString("proc"));
+				description = RationaleDBUtil.decode(rs.getString("description"));
+				answer = RationaleDBUtil.decode(rs.getString("answer"));
+				procedure = RationaleDBUtil.decode(rs.getString("proc"));
 				status = (QuestionStatus) QuestionStatus.fromString(rs.getString("status"));
 				ptype = (RationaleElementType) RationaleElementType.fromString(rs.getString("ptype"));
 				parent = rs.getInt("parent");
@@ -276,7 +336,7 @@ public class Question extends RationaleElement implements Serializable
 			{
 				History nextH = new History();
 				nextH.setStatus(rs.getString("status"));
-				nextH.setReason(RationaleDB.decode(rs.getString("reason")));
+				nextH.setReason(RationaleDBUtil.decode(rs.getString("reason")));
 				nextH.dateStamp = rs.getTimestamp("date");
 //				nextH.dateStamp = rs.getDate("date");
 				history.add(nextH);
@@ -337,11 +397,26 @@ public class Question extends RationaleElement implements Serializable
 	 */
 	public boolean delete()
 	{
+		m_eventGenerator.Destroyed();
+		
 		//no downward dependencies for questions!
 		RationaleDB db = RationaleDB.getHandle();
 		db.deleteRationaleElement(this);
 		return false;
 		
+	}
+	/**
+	 * Used to set the parent data of the rationale element without
+	 * brigning up the edit alternative GUI (in conjunction with the
+	 * new editor GUI).
+	 * @param parent
+	 */
+	public void setParent(RationaleElement parent) {
+		if (parent != null)
+		{
+			this.parent = parent.getID();
+			this.ptype = parent.getElementType();
+		}
 	}
 	/**
 	 * Update the status of our question

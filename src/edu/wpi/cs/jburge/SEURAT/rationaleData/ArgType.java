@@ -114,5 +114,9 @@ public final class ArgType implements Serializable {
 	 */
 	public static final ArgType VIOLATES = new 
 	ArgType("Violates");
+	/**
+	 * If we imported the argument, we won't have a direction... so we need to deal.
+	 */
+	public static final ArgType NONE = new ArgType("None");
 }
 

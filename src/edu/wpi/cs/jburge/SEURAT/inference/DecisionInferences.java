@@ -20,7 +20,7 @@ import edu.wpi.cs.jburge.SEURAT.rationaleData.*;
  * @author jburge
  */
 public class DecisionInferences {
-	
+
 	/**
 	 * Empty Constructor
 	 */
@@ -28,7 +28,7 @@ public class DecisionInferences {
 		super();
 		// TODO Auto-generated constructor stub
 	}
-	
+
 	/**
 	 * Updates the status of the decision. This includes - calculating support for all arguments (evaluation),
 	 * checking for errors in the arguments for/against, and checking for tradeoff violations.
@@ -37,13 +37,13 @@ public class DecisionInferences {
 	 */
 	public Vector<RationaleStatus> updateDecisionStatus(Decision ourDec)
 	{
-		
+
 		RationaleErrorLevel error = null;
 		boolean selected = false;
 		double evaluation = 0;
 		double maxEvaluation = -99;
 		Vector<RationaleStatus> ourStatus = new Vector<RationaleStatus>();
-		
+
 		//don't bother computing status for the base idem
 		if (ourDec.getID() == 0)
 		{
@@ -111,7 +111,7 @@ public class DecisionInferences {
 					ourDec.setStatus(DecisionStatus.UNRESOLVED);
 				}
 			}
-			//
+			//the alternative is selected
 			else
 			{
 				if ((selCount > 1) && (ourDec.getType() == DecisionType.SINGLECHOICE))
@@ -123,9 +123,9 @@ public class DecisionInferences {
 					ourStatus.add(stat);
 				}
 				ourDec.setStatus(DecisionStatus.RESOLVED);
-				
+
 				Alternative selAlt = ourDec.getSelected();	
-				
+
 				//check the evaluation
 				if (evaluation < maxEvaluation)
 				{
@@ -141,14 +141,14 @@ public class DecisionInferences {
 					 System.out.println("status is not different?");
 					 */					   				   
 				}
-				
+
 				//perform inferences that look at the selected alternative
-				
+
 				//Make sure there are arguments for this alternative!
 				//The arguments For should include anyone who we are pre-supposed by
 				if (selAlt.getArgumentsFor().size() == 0)
 				{
-					
+
 					//anyone against us?
 					if (selAlt.getArgumentsAgainst().size() > 0)
 					{
@@ -170,9 +170,9 @@ public class DecisionInferences {
 								RationaleStatusType.SELECTED_NONE_FOR);
 						ourStatus.add(stat);							
 					}
-					
+
 				} //end checking arguments for
-				
+
 				//check to see if we have any requirements violations
 				Vector argAgainst = selAlt.getArgumentsAgainst();
 				Iterator againstI = argAgainst.iterator();
@@ -193,10 +193,10 @@ public class DecisionInferences {
 							ourStatus.add(stat);
 							ourStatus.addAll(nreq.updateStatus());		
 						}
-						
+
 					}
 				}
-				
+
 				//Check to see if we need to update any other requirements
 				Vector argFor = selAlt.getArgumentsFor();
 				Iterator forI = argFor.iterator();
@@ -213,13 +213,13 @@ public class DecisionInferences {
 						{
 							ourStatus.addAll(nreq.updateStatus());		
 						}
-						
+
 					}
 				}				
-				
+
 				//check to see if the selected alternative pre-supposes
 				//someone...
-				
+
 				Vector preSupposes = selAlt.getAlts(ArgType.PRESUPPOSES);
 				if (preSupposes.size() > 0 )
 				{
@@ -260,7 +260,7 @@ public class DecisionInferences {
 						}
 					}
 				}
-				
+
 				//check to see if the selected alternative has any questions!
 				Iterator ourQuestions = selAlt.getQuestions().iterator();
 				while (ourQuestions.hasNext())
@@ -275,30 +275,30 @@ public class DecisionInferences {
 						ourStatus.add(stat);					
 					}
 				}				
-				//check all Tradeoffs
-				RationaleDB db = RationaleDB.getHandle();
-				Vector tradeoffs = db.getTradeoffData();
-				Iterator tradeI = tradeoffs.iterator();
-				while (tradeI.hasNext())
-				{
-					Tradeoff ourTrade = (Tradeoff) tradeI.next();
-					Vector<RationaleStatus> newStat = this.updateTradeoff(ourDec, ourTrade);
-					if (newStat != null)
-					{
-						ourStatus.addAll(newStat);
-					}
-				}
-				
+				//Did check the tradeoffs here - moved to below...
+
 				//check for any requirements violations? - make a specific routine
 				//for this that checks for a specific decision.
 				//go over all arguments
 				//if argument points to a requirement...
-				
+
 			}
-			
+
 		}				
-		
-		
+
+		//check all Tradeoffs - this is probably not real efficient... 
+		RationaleDB db = RationaleDB.getHandle();
+		Vector tradeoffs = db.getTradeoffData();
+		Iterator tradeI = tradeoffs.iterator();
+		while (tradeI.hasNext())
+		{
+			Tradeoff ourTrade = (Tradeoff) tradeI.next();
+			Vector<RationaleStatus> newStat = this.updateTradeoff(ourDec, ourTrade);
+			if (newStat != null)
+			{
+				ourStatus.addAll(newStat);
+			}
+		}
 		//check for unanswered questions - here we don't care if there
 		//is a selected alternative or not!
 		Iterator ourQuestions = ourDec.getQuestions().iterator();
@@ -318,7 +318,7 @@ public class DecisionInferences {
 		//the status changed from error to ok!
 		UpdateManager manager = UpdateManager.getHandle();
 		manager.addUpdate(ourDec.getID(), ourDec.getName(), RationaleElementType.DECISION);
-		
+
 		//is our parent a decision? if we are a sub-decision we might want
 		//to update the parent status!
 		if ((ourDec.getPtype() == RationaleElementType.DECISION) && (ourDec.getParent() != 0))
@@ -331,7 +331,7 @@ public class DecisionInferences {
 			{
 				ourStatus.addAll(parentStatus);
 			}
-			
+
 		} 
 		if (ourStatus.size() > 0)
 		{
@@ -341,11 +341,11 @@ public class DecisionInferences {
 		{
 			return null;
 		}
-		
-		
-		
+
+
+
 	}
-	
+
 	/**
 	 * Make any status updates needed when a decision is deleted
 	 * @param ourDec - the decision that is being deleted
@@ -355,17 +355,17 @@ public class DecisionInferences {
 	{
 		Vector<RationaleStatus> newStatus = new Vector<RationaleStatus>();
 		DecisionInferences inf = new DecisionInferences();
-		
+
 		RationaleDB db = RationaleDB.getHandle();
 		Connection conn = db.getConnection();
-		
+
 		Statement stmt = null; 
 		ResultSet rs = null; 
 		String findQuery = "";
 		//	boolean error = false;
 		try {
 			stmt = conn.createStatement();
-			
+
 			//what about our parents?
 			if (ourDec.getPtype() == RationaleElementType.DECISION)
 			{
@@ -377,7 +377,7 @@ public class DecisionInferences {
 				while (rs.next())
 				{
 					Decision dec = new Decision();
-					dec.fromDatabase(RationaleDB.decode(rs.getString("name")));
+					dec.fromDatabase(RationaleDBUtil.decode(rs.getString("name")));
 					Vector<RationaleStatus> results = inf.updateDecisionStatus(dec);
 					if (results != null)
 					{
@@ -392,133 +392,140 @@ public class DecisionInferences {
 		finally { 
 			RationaleDB.releaseResources(stmt, rs);
 		}
-		
+
 		UpdateManager manager = UpdateManager.getHandle();
 		manager.addUpdate(ourDec.getID(), ourDec.getName(), RationaleElementType.DECISION);
 		return newStatus;
 	}
-	
+
 	//This version looks at IS and NOT, rather than supports, denies
 	public Vector<RationaleStatus> updateTradeoff(Decision ourDec, Tradeoff ourTrade)
 	{
 		Vector<RationaleStatus> ourStatus = new Vector<RationaleStatus>();
-		Alternative alt = ourDec.getSelected();
-		Vector ourClaims = alt.getClaims();
-		
-		//figure out who is where
-		boolean t1IS = false;
-		boolean t2IS = false;
-		boolean t1Present = false;
-		boolean t2Present = false;
-		boolean allFalse = true;
-		
-		//iterate through the For claims
-		Iterator clmI = ourClaims.iterator();
-		while (clmI.hasNext())
+
+//		warn about any incomplete rationale!		Alternative alt = ourDec.getSelected();
+		Vector<Alternative> altV = ourDec.getAlternatives();
+		Iterator altI = altV.iterator();
+		while (altI.hasNext())
 		{
-			Claim ourClaim = (Claim) clmI.next();
-			//do the ontologies match?
-			if (ourClaim.getOntology().getName().compareTo(ourTrade.getOnt1().getName()) == 0)
+			Alternative alt = (Alternative) altI.next();
+			Vector ourClaims = alt.getClaims();
+
+			//figure out who is where
+			boolean t1IS = false;
+			boolean t2IS = false;
+			boolean t1Present = false;
+			boolean t2Present = false;
+			boolean allFalse = true;
+
+			//iterate through the For claims
+			Iterator clmI = ourClaims.iterator();
+			while (clmI.hasNext())
 			{
-				t1IS = (ourClaim.getDirection() == Direction.IS);
-				t1Present = true;
-				allFalse = false;
-			}
-			else if (ourClaim.getOntology().getName().compareTo(ourTrade.getOnt2().getName()) == 0)
-			{
-				t2IS = (ourClaim.getDirection() == Direction.IS);
-				t2Present = true;
-				allFalse = false;
-			}
-		}
-		
-		
-		if (!allFalse)
-		{
-//			System.out.println("match found for " + ourDec.getName());
-//			System.out.println("t1 for = " + new Boolean(t1For).toString());
-//			System.out.println("t1 against = " + new Boolean(t1Against).toString());
-//			System.out.println("t2 for = " + new Boolean(t2For).toString());
-//			System.out.println("t2 against" + new Boolean(t2Against).toString());	
-			
-			String errorMsg = "alt '" + ourDec.getSelected().getName() + 
-			"' violates tradeoff '" + ourTrade.getOnt1().getName() + " vs " +
-			ourTrade.getOnt2().getName() + "'";
-			RationaleErrorLevel error = null;
-			RationaleStatusType stat = null;
-			//First, are we a tradeoff?
-			if (ourTrade.getTradeoff())
-			{
-				stat = RationaleStatusType.TRADE_VIOLATION;
-				//first, check the cases that are always bad
-				//this is when we actually contradict the tradeoff
-				if ((t1IS == t2IS) && (t1Present && t2Present))
+				Claim ourClaim = (Claim) clmI.next();
+				//do the ontologies match?
+				if (ourClaim.getOntology().getName().compareTo(ourTrade.getOnt1().getName()) == 0)
 				{
-					error = RationaleErrorLevel.ERROR;
-					errorMsg = errorMsg + ": tradeoff is contradicted";
-					
+					t1IS = (ourClaim.getDirection() == Direction.IS);
+					t1Present = true;
+					allFalse = false;
 				}
-				//then we look to see if there are problems in the 
-				//"prime" direction
-				else if ((t1Present) && (!t2Present))
+				else if (ourClaim.getOntology().getName().compareTo(ourTrade.getOnt2().getName()) == 0)
 				{
-					error = RationaleErrorLevel.WARNING;
-					errorMsg = errorMsg + ": second element is missing";
+					t2IS = (ourClaim.getDirection() == Direction.IS);
+					t2Present = true;
+					allFalse = false;
 				}
-				//in Symmetric cases, we also look for when the desired
-				//tradeoff is not completely there. 
-				else if (ourTrade.getSymmetric())
+			}
+
+
+			if (!allFalse)
+			{
+//				System.out.println("match found for " + ourDec.getName());
+//				System.out.println("t1 for = " + new Boolean(t1For).toString());
+//				System.out.println("t1 against = " + new Boolean(t1Against).toString());
+//				System.out.println("t2 for = " + new Boolean(t2For).toString());
+//				System.out.println("t2 against" + new Boolean(t2Against).toString());	
+
+				String errorMsg = "alt '" + alt.getName() + 
+				"' violates tradeoff '" + ourTrade.getOnt1().getName() + " vs " +
+				ourTrade.getOnt2().getName() + "'";
+				RationaleErrorLevel error = null;
+				RationaleStatusType stat = null;
+				//First, are we a tradeoff?
+				if (ourTrade.getTradeoff())
 				{
-					if ((t2Present) && (!t1Present))
+					stat = RationaleStatusType.TRADE_VIOLATION;
+					//first, check the cases that are always bad
+					//this is when we actually contradict the tradeoff
+					if ((t1IS == t2IS) && (t1Present && t2Present))
+					{
+						error = RationaleErrorLevel.ERROR;
+						errorMsg = errorMsg + ": tradeoff is contradicted";
+
+					}
+					//then we look to see if there are problems in the 
+					//"prime" direction
+					else if ((t1Present) && (!t2Present))
 					{
 						error = RationaleErrorLevel.WARNING;
-						errorMsg = errorMsg + ": first element is missing";
+						errorMsg = errorMsg + ": second element is missing";
 					}
-				}
-				
-			} //end if Tradeoff
-			//now, check the co-occurences
-			else
-			{
-				stat = RationaleStatusType.CO_OCCURRENCE_VIOLATION;
-				errorMsg = "alt '" + ourDec.getSelected().getName() + 
-				"' violates co-occurrence '" + ourTrade.getOnt1().getName() + " vs " +
-				ourTrade.getOnt2().getName() + "'";
-				
-				//first, check the cases that are always bad - when the oppose
-				if ((t1IS != t2IS) && (t1Present && t2Present))
+					//in Symmetric cases, we also look for when the desired
+					//tradeoff is not completely there. 
+					else if (ourTrade.getSymmetric())
+					{
+						if ((t2Present) && (!t1Present))
+						{
+							error = RationaleErrorLevel.WARNING;
+							errorMsg = errorMsg + ": first element is missing";
+						}
+					}
+
+				} //end if Tradeoff
+				//now, check the co-occurences
+				else
 				{
-					error = RationaleErrorLevel.ERROR;
-					errorMsg = errorMsg + ": co-occurrence is contradicted";
-				}
-				//then, check to see if the second is missing
-				else if ((t1Present) && (!t2Present))
-				{
-					error = RationaleErrorLevel.WARNING;
-					errorMsg = errorMsg + ": second element is missing";
-					
-				}
-				else if (ourTrade.getSymmetric())
-				{
-					if ((t2Present) && (!t1Present))
-					{	
+					stat = RationaleStatusType.CO_OCCURRENCE_VIOLATION;
+					errorMsg = "alt '" + alt.getName() + 
+					"' violates co-occurrence '" + ourTrade.getOnt1().getName() + " vs " +
+					ourTrade.getOnt2().getName() + "'";
+
+					//first, check the cases that are always bad - when the oppose
+					if ((t1IS != t2IS) && (t1Present && t2Present))
+					{
+						error = RationaleErrorLevel.ERROR;
+						errorMsg = errorMsg + ": co-occurrence is contradicted";
+					}
+					//then, check to see if the second is missing
+					else if ((t1Present) && (!t2Present))
+					{
 						error = RationaleErrorLevel.WARNING;
-						errorMsg = errorMsg + ": first element is missing";
+						errorMsg = errorMsg + ": second element is missing";
+
 					}
+					else if (ourTrade.getSymmetric())
+					{
+						if ((t2Present) && (!t1Present))
+						{	
+							error = RationaleErrorLevel.WARNING;
+							errorMsg = errorMsg + ": first element is missing";
+						}
+					}
+
+				} //co-occurence
+				if (error != null)
+				{
+//					System.out.println(errorMsg);
+					RationaleStatus newStat = new RationaleStatus(RationaleErrorLevel.WARNING, errorMsg, 
+							RationaleElementType.DECISION, new java.util.Date(), ourDec.getID(),
+							stat);
+					ourStatus.add(newStat);
+
 				}
-				
-			} //co-occurence
-			if (error != null)
-			{
-//				System.out.println(errorMsg);
-				RationaleStatus newStat = new RationaleStatus(RationaleErrorLevel.WARNING, errorMsg, 
-						RationaleElementType.DECISION, new java.util.Date(), ourDec.getID(),
-						stat);
-				ourStatus.add(newStat);
-				
 			}
 		}
-		
+
 		return ourStatus;
 	}	
 	/*	
@@ -528,14 +535,14 @@ public class DecisionInferences {
 	 Alternative alt = ourDec.getSelected();
 	 Vector claimsFor = alt.getClaimsFor();
 	 Vector claimsAgainst = alt.getClaimsAgainst();
-	 
+
 	 //figure out who is where
 	  boolean t1For = false;
 	  boolean t2For = false;
 	  boolean t1Against = false;
 	  boolean t2Against = false;
 	  boolean allFalse = true;
-	  
+
 	  //iterate through the For claims
 	   Iterator clmI = claimsFor.iterator();
 	   while (clmI.hasNext())
@@ -567,7 +574,7 @@ public class DecisionInferences {
 	   allFalse = false;
 	   }
 	   }
-	   
+
 	   if (!allFalse)
 	   {
 	   System.out.println("match found for " + ourDec.getName());
@@ -591,13 +598,13 @@ public class DecisionInferences {
 	      {
 	      error = RationaleErrorLevel.ERROR;
 	      errorMsg = errorMsg + ": tradeoff is contradicted";
-	      
+
 	      }
 	      else if ((t1For) && (t2For))
 	      {
 	      error = RationaleErrorLevel.ERROR;
 	      errorMsg = errorMsg + ": tradeoff is contradicted";
-	      
+
 	      }
 	      //then we look to see if there are problems in the 
 	       //"prime" direction
@@ -626,9 +633,9 @@ public class DecisionInferences {
 	          error = RationaleErrorLevel.WARNING;
 	          errorMsg = errorMsg + ": first element is missing";
 	          }
-	          
+
 	          }
-	          
+
 	          } //end if Tradeoff
 	          //now, check the co-occurences
 	           else
@@ -637,7 +644,7 @@ public class DecisionInferences {
 	           errorMsg = "alternative " + ourDec.getSelected().getName() + 
 	           " violates co-occurrence " + ourTrade.getOnt1().getName() + " vs " +
 	           ourTrade.getOnt2().getName();
-	           
+
 	           //first, check the cases that are always bad - when the oppose
 	            if ((t1For) && (t2Against))
 	            {
@@ -654,13 +661,13 @@ public class DecisionInferences {
 	             {
 	             error = RationaleErrorLevel.WARNING;
 	             errorMsg = errorMsg + ": second element is missing";
-	             
+
 	             }
 	             else if ((t1Against) && (!t2Against))
 	             {
 	             error = RationaleErrorLevel.WARNING;
 	             errorMsg = errorMsg + ": second element is missing";
-	             
+
 	             }
 	             else if (ourTrade.getSymmetric())
 	             {
@@ -683,15 +690,22 @@ public class DecisionInferences {
 	             RationaleElementType.DECISION, new java.util.Date(), ourDec.getID(),
 	             stat);
 	             ourStatus.add(newStat);
-	             
+
 	             }
-	             
+
 	             return ourStatus;
 	             }
-	             */
+	 */
 	public boolean checkTradeoff(Decision ourDec, Tradeoff ourTrade)
 	{
-		Alternative alt = ourDec.getSelected();
+		boolean tradeoffApplies = false;
+		Vector<Alternative>  altV = ourDec.getAlternatives();
+		Iterator<Alternative> altI = altV.iterator();
+		
+		while (altI.hasNext())
+		{
+			Alternative alt = altI.next();
+
 		if (alt == null)
 		{
 			return false;
@@ -699,9 +713,7 @@ public class DecisionInferences {
 		else
 		{
 			Vector ourClaims = alt.getClaims();
-			
-			boolean tradeoffApplies = false;
-			
+
 			//iterate through the For claims
 			Iterator clmI = ourClaims.iterator();
 //			System.out.println("testing trade " + ourTrade.getName());
@@ -723,10 +735,12 @@ public class DecisionInferences {
 			{
 				//			System.out.println("Tradeoff applies to " + ourDec.getName());			
 			}
-			return tradeoffApplies;
+			
 		}
-		
+		}
+			return tradeoffApplies;
 	}
-	
+
+
 }
 

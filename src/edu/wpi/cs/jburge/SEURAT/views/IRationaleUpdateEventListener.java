@@ -17,5 +17,7 @@ public interface IRationaleUpdateEventListener extends EventListener {
 	public void updateRationaleTree(RationaleUpdateEvent e);
 	public void showRationaleNode(RationaleUpdateEvent e);
 	public void associateAlternative(RationaleUpdateEvent e);
-	
+	public void openDatabase(RationaleUpdateEvent e);
+	public void updateRationaleStatus(RationaleUpdateEvent e);
+	public void addNewElement(RationaleUpdateEvent e);
 }

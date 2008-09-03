@@ -9,6 +9,7 @@ import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.widgets.Shell;
 
 import edu.wpi.cs.jburge.SEURAT.rationaleData.RationaleDB;
+import edu.wpi.cs.jburge.SEURAT.rationaleData.RationaleDBUtil;
 
 /**
  * It is a requirement that each element of a given type have a unique name. The name is used as
@@ -34,7 +35,7 @@ public class ConsistencyChecker {
 	private String Type; // includes decision, alternative,
 	// requirements, and arguments
 	
-	ConsistencyChecker()
+	public ConsistencyChecker()
 	{
 		Name = "";
 		Type = "";
@@ -46,7 +47,7 @@ public class ConsistencyChecker {
 	 * @param n - the name of the item
 	 * @param t - the type of the item - this needs to match the database table name. Not a good design!
 	 */
-	ConsistencyChecker(int id, String n, String t)
+	public ConsistencyChecker(int id, String n, String t)
 	{
 		this.id = id;
 		Name = n;
@@ -58,7 +59,7 @@ public class ConsistencyChecker {
 	 * was a static you could just pass that information in here and only have the one call.
 	 * @return true if the name is not a duplicate
 	 */
-	public boolean check()
+	public boolean check(boolean showDialog)
 	{
 		RationaleDB db = RationaleDB.getHandle();
 		Connection conn = db.getConnection();
@@ -69,12 +70,12 @@ public class ConsistencyChecker {
 		
 		try{
 			stmt = conn.createStatement();
-			query = "SELECT id FROM " + Type + " WHERE name = '"
-			+ Name + "'";
+			query = "SELECT id FROM " + RationaleDBUtil.escapeTableName(Type) + " WHERE name = '"
+			+ RationaleDBUtil.escape(Name) + "'";
 			rs = stmt.executeQuery(query);
 			if(rs.next() && Integer.parseInt(rs.getString(1)) != id)
 			{
-				MessageDialog.openError(new Shell(), "Inconsistency", "Name already exists...");
+				if (showDialog) MessageDialog.openError(new Shell(), "Inconsistency", "Name already exists...");
 				flag = false;
 			}
 			else
@@ -87,5 +88,13 @@ public class ConsistencyChecker {
 		}
 		
 		return flag;
+	}
+	
+	/**
+	 * Version of the check method that doesn't take a boolean value.  Added for
+	 * compatibility.  Simply calls the other method with showDialog set to true.
+	 */
+	public boolean check() {
+		return check(true);
 	}
 }

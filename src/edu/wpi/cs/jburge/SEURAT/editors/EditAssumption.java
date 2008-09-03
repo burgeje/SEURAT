@@ -114,8 +114,14 @@ public class EditAssumption extends NewRationaleElementGUI implements Serializab
 					}
 					else
 					{
+						String l_message = "";
+						l_message += "The assumption name you have specified is either already"
+							+ " in use or empty. Please make sure that you have specified"
+							+ " an assumption name and the assumption name does not already exist"
+							+ " in the database.";
 						MessageBox mbox = new MessageBox(shell, SWT.ICON_ERROR);
-						mbox.setMessage("Need to provide the Assumption name");
+						mbox.setMessage(l_message);
+						mbox.setText("Assumption Name Is Invalid");
 						mbox.open();
 					}
 				}

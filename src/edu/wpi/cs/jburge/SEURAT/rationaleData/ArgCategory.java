@@ -92,6 +92,10 @@ public final class ArgCategory implements Serializable {
 	 */
 	public static final ArgCategory ALTERNATIVE = new 
 	ArgCategory("Alternative");
-	
+	/**
+	 * If an argument has been imported, it initially will not have a type. This
+	 * will be reported as an error by SEURAT but we still need to assign it to something
+	 */
+	public static final ArgCategory NONE = new ArgCategory("None");
 }
 

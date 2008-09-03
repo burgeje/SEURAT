@@ -18,6 +18,9 @@ import java.util.Vector;
 
 import org.eclipse.swt.widgets.Display;
 
+import SEURAT.events.RationaleElementUpdateEventGenerator;
+import SEURAT.events.RationaleUpdateEvent;
+
 import edu.wpi.cs.jburge.SEURAT.editors.EditDesigner;
 
 /**
@@ -61,7 +64,9 @@ public class Designer extends RationaleElement implements Serializable
 	 * What are their areas of expertise?
 	 */
 	Vector<AreaExp> expertise;
-	
+
+	private RationaleElementUpdateEventGenerator<Designer> m_eventGenerator = 
+		new RationaleElementUpdateEventGenerator<Designer>(this);
 	
 	public String getCorpPosition() {
 		return corpPosition;
@@ -136,6 +141,10 @@ public class Designer extends RationaleElement implements Serializable
 		Connection conn = db.getConnection();
 		
 		int ourid = 0;
+
+		// Update Event To Inform Subscribers Of Changes
+		// To Rationale
+		RationaleUpdateEvent l_updateEvent;
 		
 		//find out if this requirement is already in the database
 		Statement stmt = null; 
@@ -162,15 +171,17 @@ public class Designer extends RationaleElement implements Serializable
 //				***				System.out.println("already there");
 //				ourid = rs.getInt("id");
 				String updateAssump = "UPDATE DesignerProfiles A " +
-				"SET A.name = '" + RationaleDB.escape(this.name) +
-				"', A.corpPosition = '" + RationaleDB.escape(this.corpPosition) +
-				"', A.projPosition = '" + RationaleDB.escape(this.projPosition) +
+				"SET A.name = '" + RationaleDBUtil.escape(this.name) +
+				"', A.corpPosition = '" + RationaleDBUtil.escape(this.corpPosition) +
+				"', A.projPosition = '" + RationaleDBUtil.escape(this.projPosition) +
 				"', A.exprHere = " + this.exprHere +
 				", A.exprTotal = " + this.exprTotal +
 				" WHERE " +
 				"A.id = " + this.id + " ";
 //				System.out.println(updateAssump);
 				stmt.execute(updateAssump);
+				
+				l_updateEvent = m_eventGenerator.MakeUpdated();
 			}
 			else 
 			{
@@ -180,17 +191,16 @@ public class Designer extends RationaleElement implements Serializable
 				String newArgSt = "INSERT INTO DesignerProfiles " +
 				"(name, corpPosition, projPosition, exprHere, exprTotal) " +
 				"VALUES ('" +
-				RationaleDB.escape(this.name) + 
-				"', '" + RationaleDB.escape(this.corpPosition) +
-				"', '" + RationaleDB.escape(this.projPosition) +
+				RationaleDBUtil.escape(this.name) + 
+				"', '" + RationaleDBUtil.escape(this.corpPosition) +
+				"', '" + RationaleDBUtil.escape(this.projPosition) +
 				"', " + this.exprHere +
 				", " + this.exprTotal + ")";
 				
 //				***			   System.out.println(newArgSt);
 				stmt.execute(newArgSt); 
 				
-				
-				
+				l_updateEvent = m_eventGenerator.MakeCreated();
 			}
 			//now, we need to get our ID
 			String findQuery2 = "SELECT id FROM DesignerProfiles where name='" +
@@ -205,11 +215,11 @@ public class Designer extends RationaleElement implements Serializable
 			}
 			else
 			{
-				ourid = 0;
+				ourid = -1;
 			}
 			this.id = ourid;
 			
-			
+			m_eventGenerator.Broadcast(l_updateEvent);
 		} catch (SQLException ex) {
 			RationaleDB.reportError(ex, "Designer.toDatabase", "SQL error");
 		}
@@ -248,7 +258,7 @@ public class Designer extends RationaleElement implements Serializable
 			
 			if (rs.next())
 			{
-				name = RationaleDB.decode(rs.getString("name"));
+				name = RationaleDBUtil.decode(rs.getString("name"));
 				rs.close();
 				this.fromDatabase(name);
 			}
@@ -273,7 +283,7 @@ public class Designer extends RationaleElement implements Serializable
 		Connection conn = db.getConnection();
 		
 		this.name = name;
-		name = RationaleDB.escape(name);
+		name = RationaleDBUtil.escape(name);
 		
 		Statement stmt = null; 
 		ResultSet rs = null; 
@@ -291,8 +301,8 @@ public class Designer extends RationaleElement implements Serializable
 				while (rs.next())
 				{
 					id = rs.getInt("id");
-					corpPosition = RationaleDB.decode(rs.getString("corpPosition"));
-					projPosition = RationaleDB.decode(rs.getString("projPosition"));
+					corpPosition = RationaleDBUtil.decode(rs.getString("corpPosition"));
+					projPosition = RationaleDBUtil.decode(rs.getString("projPosition"));
 					exprHere = rs.getInt("exprHere");
 					exprTotal = rs.getInt("exprTotal");
 				}

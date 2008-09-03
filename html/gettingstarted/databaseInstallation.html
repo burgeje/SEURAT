@@ -8,25 +8,53 @@
 
 <body>
 <h2><font face="Times New Roman">Database Installation</font></h2>
-<p><font face="Times New Roman">In addition to the SEURAT plugin, you will need 
-to install the following:<br>
+<p><font face="Times New Roman">SEURAT comes preconfigured to work on
+two different database engines. The primary database subsystem suppoted
+by SEURAT is Apache Derby. As an alternative to this
+pure Java embedded database system, it is possible to configure
+SEURAT to connect to either a local or a remote MySQL database server to manage
+your rationale. More information about connecting to both of
+these databases can be found in <a href="../reference/preferences.html">the SEURAT Preferences help page</a>.<br>
 <br>
-<b>Eclipse (we are using 3.2.1)<br>
-Java (1.5.x)<br>
-MySQL 5.0 </b><br>
+Additionally, if you plan to connect to a remote database and use SEURAT in a multi-user environment,
+you should read the <a href="multiUserDatabases.html">Multi-User Databases help page</a>
+for important information about synchronization and association issues in multi-user settings.<br>
 <br>
-You will also need to have the database tables set up with some initial 
-rationale. We have created a zip file with a database containing empty tables to 
-store the rationale and with an initialized argument ontology. This file is available from
+This version of SEURAT was designed and tested with Eclipse version 3.3.1;
+you may be able to use SEURAT using older or newer versions of
+Eclipse, but you are guaranteed the highest level of compatibility
+with this version only.
+<br><br>
+SEURAT was written to utilize some features first introduced in
+Java version 1.5. You will need a Java runtime environment (JRE) of
+version 1.5 or higher to use SEURAT.
+</font>
+</p><br>
+<h2><font face="Times New Roman">Derby</font></h2>
+<p><font face="Times New Roman">Derby is fully installed alongside SEURAT
+when you use Eclipse's built-in install and update manager.
+<br>
+Derby can be configured to store the SEURAT database anywhere
+on your hard drive. By default, the SEURAT database is stored
+in the current Eclipse working directory. This means it will
+be easily available and transportable between computers. 
+</p>
+</font>
+<h2><font face="Times New Roman">MySQL</font></h2>
+<p><font face="Times New Roman">
+Configuring SEURAT for use with MySQL is not as easy as configuring SEURAT's embedded
+database options. First, you must
+install a MySQL database server on your local computer or have a user account on a remote server. 
+SEURAT is primarily intended for use with MySQL 5.0.
+<br><br>
+Once you have installed the database server, you will have to
+get database tables set up with some initial 
+rationale. A .zip file has been made available for this purpose with a database containing empty tables to 
+store the rationale and an initialized argument ontology. This file is available from
 the SEURAT download directory 
 (<a href="http://www.users.muohio.edu/burgeje/SEURAT/Downloads.html">http://www.users.muohio.edu/burgeje/SEURAT/Downloads.html</a>).
-Once you are 
-running SEURAT, you can set the preferences to point to the appropriate database 
-(in this case, named SEURAT_Base) and to provide the username and password you 
-wish to use with your MySQL installation. If you are using an older version of 
-MySQL (not 5) you will need to use an account that does not have a password. 
-Otherwise, any account with CREATE, DELETE, INSERT, SELECT, UPDATE privileges 
-will work. </font></p>
+<br>
+</font></p>
 <p>&nbsp;</p>
 </body>
 </html>

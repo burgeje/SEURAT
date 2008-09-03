@@ -17,10 +17,9 @@ import java.sql.ResultSet;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.Text;
+import org.w3c.dom.*;
 
+import SEURAT.events.*;
 import edu.wpi.cs.jburge.SEURAT.editors.EditDecision;
 import edu.wpi.cs.jburge.SEURAT.editors.SelectConstraint;
 import edu.wpi.cs.jburge.SEURAT.inference.DecisionInferences;
@@ -84,6 +83,9 @@ public class Decision extends RationaleElement implements Serializable
 	Vector<Alternative> alternatives;    //the decision will have alternatives *or* sub-decisions
 	Vector<Decision> subDecisions;
 	Vector<Question> questions;       
+
+	private RationaleElementUpdateEventGenerator<Decision> m_eventGenerator = 
+		new RationaleElementUpdateEventGenerator<Decision>(this);
 	
 	public Decision()
 	{
@@ -96,7 +98,74 @@ public class Decision extends RationaleElement implements Serializable
 		constraints = new Vector<Constraint>();
 	} 
 	
-	
+	public Element toXML(Document ratDoc)
+	{
+		Element decE;
+		RationaleDB db = RationaleDB.getHandle();
+		String decID = db.getRef(id);
+//		System.out.println("decision to XML");
+		if (decID != null)
+		{		
+//			System.out.println("decision with non-unique ID???");
+			//this should never be the case but just in case...
+			decE = ratDoc.createElement("decref");
+			//set the reference contents
+			Text text = ratDoc.createTextNode(decID);
+			decE.appendChild(text);
+		}
+		else 
+		{
+//			System.out.println("saving our decision");
+			decE = ratDoc.createElement("DR:decisionproblem");
+			decID = db.addRef(id);
+			decE.setAttribute("id", decID);
+			decE.setAttribute("name", name);
+			decE.setAttribute("type", type.toString());
+			decE.setAttribute("phase", devPhase.toString());
+			decE.setAttribute("status", status.toString());
+			
+			//save our description
+			Element descE = ratDoc.createElement("DR:description");
+			//set the reference contents
+			Text descText = ratDoc.createTextNode(description);
+			descE.appendChild(descText);
+			decE.appendChild(descE);
+
+			Enumeration alts = alternatives.elements();
+			while (alts.hasMoreElements())
+			{
+				Alternative alt = (Alternative) alts.nextElement();
+				decE.appendChild(alt.toXML(ratDoc));
+			}
+			
+			Enumeration decs = subDecisions.elements();
+			while (decs.hasMoreElements())
+			{
+				Decision dec = (Decision) decs.nextElement();
+				decE.appendChild(dec.toXML(ratDoc));
+			}
+			
+			Enumeration quests = questions.elements();
+			while (quests.hasMoreElements())
+			{
+				Question quest = (Question) quests.nextElement();
+				decE.appendChild(quest.toXML(ratDoc));
+			}
+			
+			//finally, the history
+			
+			Element ourHist = ratDoc.createElement("DR:history");
+			Enumeration hist = history.elements();
+			while (hist.hasMoreElements())
+			{
+				History his = (History) hist.nextElement();
+				ourHist.appendChild(his.toXML(ratDoc));
+			}
+			decE.appendChild(ourHist);
+		}
+		 
+		return decE;
+	}
 	public RationaleElementType getElementType()
 	{
 		return RationaleElementType.DECISION;
@@ -257,6 +326,8 @@ public class Decision extends RationaleElement implements Serializable
 		String updateQuery = "";
 		int ourid = 0;
 		
+		RationaleUpdateEvent l_updateEvent;
+		
 		//find out if this requirement is already in the database
 		Statement stmt = null; 
 		ResultSet rs = null; 
@@ -281,9 +352,9 @@ public class Decision extends RationaleElement implements Serializable
 				"SET D.parent = " + new Integer(parent).toString() +
 				", D.ptype = '" + ptype.toString() + 
 				"', D.phase = '" + devPhase.toString() +
-				"', D.description = '" + RationaleDB.escape(description) +
+				"', D.description = '" + RationaleDBUtil.escape(description) +
 				"', D.type = '" + type.toString() +
-				"', D.name = '" + RationaleDB.escape(name) +
+				"', D.name = '" + RationaleDBUtil.escape(name) +
 				"', D.status = '" + status.toString() + 
 				"', D.subdecreq = '" + subsReq +
 				"', " + updateD +
@@ -291,6 +362,7 @@ public class Decision extends RationaleElement implements Serializable
 				"D.id = " + this.id + " " ;
 				stmt.execute(updateQuery);
 				
+				l_updateEvent = m_eventGenerator.MakeUpdated();
 			}
 			else 
 			{
@@ -317,8 +389,8 @@ public class Decision extends RationaleElement implements Serializable
 				updateQuery = "INSERT INTO Decisions "+
 				"(name, description, type, status, phase, subdecreq, parent, ptype, designer) " +
 				"VALUES ('" +
-				RationaleDB.escape(this.name) + "', '" +
-				RationaleDB.escape(this.description) + "', '" +
+				RationaleDBUtil.escape(this.name) + "', '" +
+				RationaleDBUtil.escape(this.description) + "', '" +
 				this.type.toString() + "', '" +
 				this.status.toString() + "', '" +
 				this.devPhase.toString() + "', '" +
@@ -329,12 +401,13 @@ public class Decision extends RationaleElement implements Serializable
 				
 				stmt.execute(updateQuery); 
 				
+				l_updateEvent = m_eventGenerator.MakeCreated();				
 			}
 			//in either case, we want to update any sub-requirements in case
 			//they are new!
 			//now, we need to get our ID
 			updateQuery = "SELECT id FROM decisions where name='" +
-			RationaleDB.escape(this.name) + "'";
+			RationaleDBUtil.escape(this.name) + "'";
 			rs = stmt.executeQuery(updateQuery); 
 			
 			if (rs.next())
@@ -344,7 +417,7 @@ public class Decision extends RationaleElement implements Serializable
 			}
 			else
 			{
-				ourid = 0;
+				ourid = -1;
 			}
 			this.id = ourid;
 			
@@ -408,7 +481,7 @@ public class Decision extends RationaleElement implements Serializable
 				kid.toDatabase(ourid);
 			} //checking parent
 			
-			
+			m_eventGenerator.Broadcast(l_updateEvent);	
 		} catch (SQLException ex) {
 			// handle any errors 
 			RationaleDB.reportError(ex,"Error in Decision.toDatabase", updateQuery);
@@ -448,7 +521,7 @@ public class Decision extends RationaleElement implements Serializable
 			
 			if (rs.next())
 			{
-				name = RationaleDB.decode(rs.getString("name"));
+				name = RationaleDBUtil.decode(rs.getString("name"));
 				rs.close();
 				this.fromDatabase(name);
 			}
@@ -462,6 +535,11 @@ public class Decision extends RationaleElement implements Serializable
 		}
 		
 	}
+
+	public RationaleElement getParentElement()
+	{
+		return RationaleDB.getRationaleElement(this.parent, this.ptype);
+	}
 	
 	/**
 	 * Get the decision from the database, given its name
@@ -474,7 +552,7 @@ public class Decision extends RationaleElement implements Serializable
 		Connection conn = db.getConnection();
 		
 		this.name = name;
-		name = RationaleDB.escape(name);
+		name = RationaleDBUtil.escape(name);
 		
 		Statement stmt = null; 
 		ResultSet rs = null; 
@@ -489,7 +567,7 @@ public class Decision extends RationaleElement implements Serializable
 			if (rs.next())
 			{
 				id = rs.getInt("id");
-				description = RationaleDB.decode(rs.getString("description"));
+				description = RationaleDBUtil.decode(rs.getString("description"));
 				type = (DecisionType) DecisionType.fromString(rs.getString("type"));
 				devPhase = (Phase) Phase.fromString(rs.getString("phase"));
 				ptype = RationaleElementType.fromString(rs.getString("ptype"));
@@ -509,6 +587,9 @@ public class Decision extends RationaleElement implements Serializable
 				
 				try {
 					int desID = rs.getInt("designer");
+					if (rs.wasNull()) 
+						throw new SQLException();
+					
 					designer = new Designer();
 					designer.fromDatabase(desID);
 				} catch (SQLException ex)
@@ -520,8 +601,10 @@ public class Decision extends RationaleElement implements Serializable
 			}
 			rs.close();
 			//need to read in the rest - recursive routines?
+			subDecisions.removeAllElements();
+			alternatives.removeAllElements();
 			if (!alts)
-			{
+			{				
 				Vector<String> decNames = new Vector<String>();
 				findQuery = "SELECT name from DECISIONS where " +
 				"ptype = '" + RationaleElementType.DECISION.toString() +
@@ -530,7 +613,7 @@ public class Decision extends RationaleElement implements Serializable
 				rs = stmt.executeQuery(findQuery);	
 				while (rs.next())				
 				{
-					decNames.add(RationaleDB.decode(rs.getString("name")));
+					decNames.add(RationaleDBUtil.decode(rs.getString("name")));
 				}
 				Enumeration decs = decNames.elements();
 				while (decs.hasMoreElements())
@@ -551,7 +634,7 @@ public class Decision extends RationaleElement implements Serializable
 				rs = stmt.executeQuery(findQuery);	
 				while (rs.next())				
 				{
-					altNames.add(RationaleDB.decode(rs.getString("name")));
+					altNames.add(RationaleDBUtil.decode(rs.getString("name")));
 				}
 				Enumeration alts = altNames.elements();
 				while (alts.hasMoreElements())
@@ -572,9 +655,10 @@ public class Decision extends RationaleElement implements Serializable
 			rs = stmt.executeQuery(findQuery);
 			while (rs.next())
 			{
-				questNames.add(RationaleDB.decode(rs.getString("name")));
+				questNames.add(RationaleDBUtil.decode(rs.getString("name")));
 			}
 			Enumeration quests = questNames.elements();
+			questions.removeAllElements();
 			while (quests.hasMoreElements())
 			{
 				Question quest = new Question();
@@ -587,11 +671,12 @@ public class Decision extends RationaleElement implements Serializable
 			"parent = " + Integer.toString(id);
 //			***			  System.out.println(findQuery5);
 			rs = stmt.executeQuery(findQuery);
+			history.removeAllElements();
 			while (rs.next())
 			{
 				History nextH = new History();
 				nextH.setStatus(rs.getString("status"));
-				nextH.setReason(RationaleDB.decode(rs.getString("reason")));
+				nextH.setReason(RationaleDBUtil.decode(rs.getString("reason")));
 				nextH.dateStamp = rs.getTimestamp("date");
 //				nextH.dateStamp = rs.getDate("date");
 				history.add(nextH);
@@ -603,6 +688,7 @@ public class Decision extends RationaleElement implements Serializable
 			"decision = " + new Integer(id).toString();
 			
 			rs = stmt.executeQuery(findQuery);
+			constraints.removeAllElements();
 			if (rs != null)
 			{
 				while (rs.next())
@@ -682,6 +768,8 @@ public class Decision extends RationaleElement implements Serializable
 			MessageDialog.openError(new Shell(),	"Delete Error",	"Can't delete when there are sub-elements.");
 			return true;
 		}
+		m_eventGenerator.Destroyed();
+		
 		RationaleDB db = RationaleDB.getHandle();
 		
 		db.deleteRationaleElement(this);
@@ -706,6 +794,20 @@ public class Decision extends RationaleElement implements Serializable
 			this.toDatabase(this.parent, this.ptype);
 		}
 		return newCont;
+	}
+	
+	/**
+	 * Used to set the parent data of the rationale element without
+	 * brigning up the edit alternative GUI (in conjunction with the
+	 * new editor GUI).
+	 * @param parent
+	 */
+	public void setParent(RationaleElement parent) {
+		if (parent != null)
+		{
+			this.parent = parent.getID();
+			this.ptype = parent.getElementType();
+		}
 	}
 	
 	/**
@@ -888,6 +990,13 @@ public class Decision extends RationaleElement implements Serializable
 		return found;
 	}
 	
-	
+	public void setParent(int parent) {
+		this.parent = parent;
+	}
+
+
+	public void setPtype(RationaleElementType ptype) {
+		this.ptype = ptype;
+	}
 	
 }

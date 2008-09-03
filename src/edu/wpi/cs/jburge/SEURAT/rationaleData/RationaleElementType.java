@@ -174,6 +174,11 @@ public final class RationaleElementType implements Serializable {
 	public static final RationaleElementType ALTCONSTREL = new
 	RationaleElementType("Alternative Constraint");
 	/**
+	 * We've added a new type for elements that are candidate rationale not yet adopted
+	 */
+	public static final RationaleElementType CANDIDATE = new
+	RationaleElementType("Candidate");
+	/**
 	 * None - should this be occuring?
 	 */
 	public static final RationaleElementType NONE = new

@@ -17,10 +17,10 @@ import java.sql.ResultSet;
 import java.util.Vector;
 
 import org.eclipse.swt.widgets.Display;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.Text;
+import org.w3c.dom.*;
 
+import SEURAT.events.RationaleElementUpdateEventGenerator;
+import SEURAT.events.RationaleUpdateEvent;
 
 import edu.wpi.cs.jburge.SEURAT.editors.EditClaim;
 import edu.wpi.cs.jburge.SEURAT.inference.ClaimInferences;
@@ -58,6 +58,9 @@ public class Claim extends RationaleElement implements Serializable
 	 * What ontology entry is the claim referring to?
 	 */
 	OntEntry	ontology;
+
+	private RationaleElementUpdateEventGenerator<Claim> m_eventGenerator = 
+		new RationaleElementUpdateEventGenerator<Claim>(this);
 	
 	/**
 	 * Constructor - just calls superclass
@@ -101,7 +104,40 @@ public class Claim extends RationaleElement implements Serializable
 	{
 		return ontology;
 	}
-	
+	public Element toXML(Document ratDoc)
+	{
+		Element claimE;
+		RationaleDB db = RationaleDB.getHandle();
+		String claimID = db.getRef(id);
+		if (claimID != null)
+		{		
+			claimE = ratDoc.createElement("clmref");
+			//set the reference contents
+			Text text = ratDoc.createTextNode(claimID);
+			claimE.appendChild(text);
+		}
+		else 
+		{
+			claimE = ratDoc.createElement("DR:claim");
+			claimID = db.addRef(id);
+			claimE.setAttribute("id", claimID);
+			claimE.setAttribute("name", name);
+			claimE.setAttribute("direction", direction.toString());
+			if (!importance.toString().equals(Importance.DEFAULT.toString()))
+				claimE.setAttribute("importance", importance.toString());
+				
+			//save our description
+			Element descE = ratDoc.createElement("DR:description");
+			//set the reference contents
+			Text descText = ratDoc.createTextNode(description);
+			descE.appendChild(descText);
+			claimE.appendChild(descE);
+
+			claimE.appendChild(ontology.toXML(ratDoc));
+		}
+
+		return claimE;
+	}
 	/**
 	 * Sets the ontology entry associated with the claim. If there already
 	 * is an ontology entry, the reference count is decremented before re-setting
@@ -151,6 +187,10 @@ public class Claim extends RationaleElement implements Serializable
 		Connection conn = db.getConnection();
 		
 		int ourid = 0;
+
+		// Update Event To Inform Subscribers Of Changes
+		// To Rationale
+		RationaleUpdateEvent l_updateEvent;
 		
 		//find out if this requirement is already in the database
 		Statement stmt = null; 
@@ -166,7 +206,7 @@ public class Claim extends RationaleElement implements Serializable
 				
 				//now we need up update our ontology entry, and that's it!
 				String findQuery3 = "SELECT id FROM OntEntries where name='" +
-				RationaleDB.escape(this.ontology.getName()) + "'";
+				RationaleDBUtil.escape(this.ontology.getName()) + "'";
 				rs = stmt.executeQuery(findQuery3); 
 //				***			System.out.println(findQuery3);
 				int ontid;
@@ -183,9 +223,9 @@ public class Claim extends RationaleElement implements Serializable
 				//now, update it with the new information
 				String updateOnt = "UPDATE Claims " +
 				"SET name = '" +
-				RationaleDB.escape(this.name) + "', " +
+				RationaleDBUtil.escape(this.name) + "', " +
 				"description = '" +
-				RationaleDB.escape(this.description) + "', " +
+				RationaleDBUtil.escape(this.description) + "', " +
 				"importance = '" + 
 				this.importance.toString() + "', " +
 				"direction = '" +
@@ -197,6 +237,8 @@ public class Claim extends RationaleElement implements Serializable
 				"id = " + this.id + " " ;
 //				System.out.println(updateOnt);
 				stmt.execute(updateOnt);
+				
+				l_updateEvent = m_eventGenerator.MakeUpdated();
 			}
 			else 
 			{
@@ -206,8 +248,8 @@ public class Claim extends RationaleElement implements Serializable
 				String newArgSt = "INSERT INTO Claims " +
 				"(name, description, direction, importance, enabled) " +
 				"VALUES ('" +
-				RationaleDB.escape(this.name) + "', '" +
-				RationaleDB.escape(this.description) + "', '" +
+				RationaleDBUtil.escape(this.name) + "', '" +
+				RationaleDBUtil.escape(this.description) + "', '" +
 				this.direction.toString() + "', '" +
 				this.importance.toString() + "', " +
 				"'True')";
@@ -215,12 +257,11 @@ public class Claim extends RationaleElement implements Serializable
 //				***			   System.out.println(newArgSt);
 				stmt.execute(newArgSt); 
 				
-				
-				
+				l_updateEvent = m_eventGenerator.MakeCreated();
 			}
 			//now, we need to get our ID
 			String findQuery2 = "SELECT id FROM claims where name='" +
-			RationaleDB.escape(this.name) + "'";
+			RationaleDBUtil.escape(this.name) + "'";
 			rs = stmt.executeQuery(findQuery2); 
 //			***			System.out.println(findQuery2);
 			
@@ -231,13 +272,13 @@ public class Claim extends RationaleElement implements Serializable
 			}
 			else
 			{
-				ourid = 0;
+				ourid = -1;
 			}
 			this.id = ourid;
 			
 			//now we need up update our ontology entry, and that's it!
 			String findQuery3 = "SELECT id FROM OntEntries where name='" +
-			RationaleDB.escape(this.ontology.getName()) + "'";
+			RationaleDBUtil.escape(this.ontology.getName()) + "'";
 			rs = stmt.executeQuery(findQuery3); 
 //			***			System.out.println(findQuery3);
 			int ontid;
@@ -257,6 +298,7 @@ public class Claim extends RationaleElement implements Serializable
 //			***			  System.out.println(updateOnt);
 			stmt.execute(updateOnt);
 			
+			m_eventGenerator.Broadcast(l_updateEvent);
 		} catch (SQLException ex) {
 			RationaleDB.reportError(ex, "Claim.toDatabase", "SQL Error");
 		}
@@ -295,7 +337,7 @@ public class Claim extends RationaleElement implements Serializable
 			
 			if (rs.next())
 			{
-				name = RationaleDB.decode(rs.getString("name"));
+				name = RationaleDBUtil.decode(rs.getString("name"));
 				rs.close();
 				this.fromDatabase(name);
 			}
@@ -319,7 +361,7 @@ public class Claim extends RationaleElement implements Serializable
 		Connection conn = db.getConnection();
 		String findQuery = "";
 		this.name = name;
-		name = RationaleDB.escape(name);
+		name = RationaleDBUtil.escape(name);
 		
 		Statement stmt = null; 
 		ResultSet rs = null; 
@@ -328,7 +370,7 @@ public class Claim extends RationaleElement implements Serializable
 			
 			findQuery = "SELECT *  FROM " +
 			"claims where name = '" +
-			RationaleDB.escape(name)+ "'";
+			RationaleDBUtil.escape(name)+ "'";
 //			***			System.out.println(findQuery);
 			rs = stmt.executeQuery(findQuery);
 			
@@ -338,7 +380,7 @@ public class Claim extends RationaleElement implements Serializable
 			{
 				
 				id = rs.getInt("id");
-				description = RationaleDB.decode(rs.getString("description"));
+				description = RationaleDBUtil.decode(rs.getString("description"));
 				enabled = rs.getBoolean("enabled");
 				direction = (Direction) Direction.fromString(rs.getString("direction"));
 				importance = (Importance) Importance.fromString(rs.getString("importance"));
@@ -356,7 +398,7 @@ public class Claim extends RationaleElement implements Serializable
 				
 				if (rs.next())
 				{
-					String ontName = RationaleDB.decode(rs.getString("name"));
+					String ontName = RationaleDBUtil.decode(rs.getString("name"));
 					ontology = new OntEntry();
 					ontology.fromDatabase(ontName);
 					

@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Vector;
 
 import org.eclipse.core.resources.IResource;
+import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.jface.viewers.IDecoration;
 import org.eclipse.jface.viewers.ILabelProviderListener;

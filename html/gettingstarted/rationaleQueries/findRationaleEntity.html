@@ -3,25 +3,33 @@
 <html>
 <head>
 	<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
-	<title>Find Rationale Entity</title>
+	<title>Finding Rationale Entities</title>
 </head>
-
 <body>
-<h2>Find Rationale Entity</h2>
-The Find Rationale Entity option allows the user to search for particular types 
-of rationale entities (requirements, decisions, alternatives, etc.). The user is 
-first instructed to specify the type of entity as shown in the following figure.
-<p>&nbsp;</p>
+<h2>Finding Rationale Entities</h2>
+<p>
+SEURAT makes it possible to retrieve a list of all the rationale entities
+of a certain type (requirements, decisions, alternatives, etc.). From the
+Eclipse search window navigate to the <i>SEURAT Search Page</i>. 
+</p>
+<ul>
+<li>Select the <i>Entity</i> radio button indicating the search type.</li>
+<li>From the dropdown list select the rationale entity type you want to search for.</li>
+</ul>
 <p align="center"><img border="0" src="../../pics/findEntity.jpg"></p>
-<p align="left">&nbsp;</p>
-<p align="left">This then brings up a list of items of that type, as shown in 
-the following figure. The user can
-search for all or part of the item name to find it in the list. After find it, 
-the user then can bring up the item in an editor by using the &#8220;Edit&#8221; button. The 
-user can also choose to expand it in the hierarchy shown in the Rationale 
-Explorer by using the &#8220;Show&#8221; button. This is helpful if the user wants to know 
-the context around the entity.</p>
-<p align="left">&nbsp;</p>
-<p align="center"><img border="0" src="../../pics/SelectEntity.jpg"></p>
+<p>The results of the query will be placed in the Eclipse search view.
+Each of the column headers can be used to sort the list of rationale elements
+on that column's data. Double clicking on any row in the table will
+open an editor which can be used to manipulate that entity. You may also access
+additional actions by right-clicking on any of the elements in the
+search results.</p>
+<p align="center"><img border="0" src="../../pics/findEntityResults.jpg"></p>
+<dl>
+  <lh>The following is a list of the actions available from the context menu:</lh><br />
+  <dt><b>Open Rationale In Editor</b></dt>
+  <dd>Opens an editor associated with the selected rationale entity or entities</dd>
+  <dt><b>Show Rationale In Rationale Explorer</b></dt>
+  <dd>Requests the Rationale Explorer to reveal the selected rationale entity or entities</dd>
+</dl>
 </body>
 </html>

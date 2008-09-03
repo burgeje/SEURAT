@@ -184,7 +184,7 @@ public class EditConstraint extends NewRationaleElementGUI implements Serializab
 					canceled = false;
 					if (!nameField.getText().trim().equals(""))
 					{
-						ConsistencyChecker checker = new ConsistencyChecker(ourConstraint.getID(), nameField.getText(), "Constraints");
+						ConsistencyChecker checker = new ConsistencyChecker(ourConstraint.getID(), nameField.getText(), "CONSTRAINTS");
 						
 						if(ourConstraint.getName() == nameField.getText() || checker.check())
 						{

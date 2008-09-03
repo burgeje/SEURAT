@@ -171,9 +171,8 @@ public class SelectOntEntry {
 		Enumeration onts = ontList.elements();
 		while (onts.hasMoreElements())
 		{
-			TreeItem next = null;
 			OntEntry child = (OntEntry) onts.nextElement();
-			next = new TreeItem(node, SWT.NONE);
+			TreeItem next = new TreeItem(node, SWT.NONE);
 			next.setText(child.getName());
 			populateTree(next, child.getName());
 		}

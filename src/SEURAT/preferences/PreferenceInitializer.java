@@ -21,7 +21,13 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
 		store.setDefault(PreferenceConstants.P_DATABASE, "SEURAT_base");
 		store.setDefault(PreferenceConstants.P_DATABASEUSER, "root");
 		store.setDefault(PreferenceConstants.P_DATABASEPASSWORD, "");
-		
+		store.setDefault(PreferenceConstants.P_DERBYNAME, "SEURAT_base");
+		store.setDefault(PreferenceConstants.P_DERBYPATHTYPE, PreferenceConstants.DerbyPathType.WORKING_DIRECTORY);
+		store.setDefault(PreferenceConstants.P_DERBYPATH, "./");		
+		store.setDefault(PreferenceConstants.P_DATABASETYPE, PreferenceConstants.DatabaseType.DERBY);
+		store.setDefault(PreferenceConstants.P_MYSQLLOCATION, PreferenceConstants.MySQLLocationType.LOCAL);
+		store.setDefault(PreferenceConstants.P_MYSQLADDRESS, "");
+		store.setDefault(PreferenceConstants.P_MYSQLPORT, "");
 	}
 	
 }

@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<?eclipse version="3.0"?>
+<?eclipse version="3.2"?>
 <plugin
    id="SEURAT"
    name="SEURAT Plug-in"
-   version="2.0.0"
-   provider-name="Janet Burge"
+   version="3.2.0"
+   provider-name="Janet Burge - Miami University"
    class="edu.wpi.cs.jburge.SEURAT.SEURATPlugin">
 
    <runtime>
@@ -12,12 +12,17 @@
          <export name="edu.wpi.cs.jburge.SEURAT.api.*"/>
       </library>
       <library name="mysql-connector-java-3.0.8-stable-bin.jar"/>
+      <library name="derby.jar"/>
    </runtime>
    <requires>
       <import plugin="org.eclipse.core.resources"/>
       <import plugin="org.eclipse.ui"/>
       <import plugin="org.eclipse.jdt.core"/>
       <import plugin="org.eclipse.core.runtime"/>
+      <import plugin="org.eclipse.jface.text"/>
+      <import plugin="org.eclipse.ui.editors"/>
+      <import plugin="org.eclipse.ui.ide"/>
+      <import plugin="org.eclipse.search"/>
    </requires>
 
    <extension
@@ -33,35 +38,88 @@
             class="edu.wpi.cs.jburge.SEURAT.views.RationaleExplorer"
             id="edu.wpi.cs.jburge.SEURAT.views.RationaleExplorer">
       </view>
+          <view
+            name="CandidateRationaleExplorer"
+            icon="icons/Rat.gif"
+            category="edu.wpi.cs.jburge.SEURAT"
+            class="edu.wpi.cs.jburge.SEURAT.views.CandidateRationaleExplorer"
+            id="edu.wpi.cs.jburge.SEURAT.views.CandidateRationaleExplorer">
+      </view>
+      <!--
+      <view
+      	name="OntologyExplorer"
+      	icon="icons/Rat.gif"
+      	category="edu.wpi.cs.jburge.SEURAT"
+      	class="edu.wpi.cs.jburge.SEURAT.views.OntologyViewer"
+      	id="edu.wpi.cs.jburge.SEURAT.views.OntologyViewer">
+      </view>
+      <view
+        name="DesignerExplorer"
+        icon="icons/Rat.gif"
+        category="edu.wpi.cs.jburge.SEURAT"
+        class="edu.wpi.cs.jburge.SEURAT.views.DesignerView"
+        id="edu.wpi.cs.jburge.SEURAT.views.DesignerView">
+      </view>
+      -->
       <view
             name="Rationale Task List"
             icon="icons/Rat.gif"
             category="edu.wpi.cs.jburge.SEURAT"
             class="edu.wpi.cs.jburge.SEURAT.views.RationaleTaskView"
             id="edu.wpi.cs.jburge.SEURAT.views.RationaleTaskView">
-      </view>    
+      </view>   
    </extension>
     
    <extension
-         id="ratmarker"
-         name="Rationale Marker"
-         point="org.eclipse.core.resources.markers">
-      <super
-            type="org.eclipse.core.resources.bookmark">
-      </super>
-      <super
-            type="org.eclipse.core.resources.problemmarker">
-      </super>
-      <super
-            type="org.eclipse.core.resources.textmarker">
-      </super>
-      <persistent
-            value="true">
-      </persistent>
-      <attribute
-            name="alternative">
-      </attribute>
+         id="SEURAT.ratmarker"
+         point="org.eclipse.core.resources.markers"
+         name="Rationale Marker">
+      <persistent value="false"/>
+      <super type="org.eclipse.core.resources.bookmark"/>
+      <super type="org.eclipse.core.resources.problemmarker"/>
+      <super type="org.eclipse.core.resources.textmarker"/>
+      <attribute name="alternative"/>
    </extension>
+   
+   <extension point="org.eclipse.ui.editors.annotationTypes">
+      <type markerType="SEURAT.ratmarker"
+            name="SEURAT.ratmarkerAnnotation">
+      </type>
+   </extension>
+   
+   <extension
+         point="org.eclipse.ui.editors.markerAnnotationSpecification">
+      <specification
+            annotationType="SEURAT.ratmarkerAnnotation"
+            icon="icons/Rat.gif"
+
+            textPreferenceKey="myAppIndication"
+            textPreferenceValue="false"
+            overviewRulerPreferenceKey="myAppIndicationInOverviewRuler"
+            overviewRulerPreferenceValue="false"
+            verticalRulerPreferenceKey="myAppIndicationInVerticalRuler"
+            verticalRulerPreferenceValue="true"
+            highlightPreferenceKey="myAppHighlighting"
+            highlightPreferenceValue="false"
+            colorPreferenceKey="myAppIndicationColor"
+            colorPreferenceValue="0,0,255"
+            presentationLayer="3"
+            showInNextPrevDropdownToolbarAction="false"
+            includeOnPreferencePage="true"
+
+
+isGoToPreviousNavigationTargetKey="ismyAppGoToPreviousNavigationTarget"
+            label="Rationale Marker"
+
+
+showInNextPrevDropdownToolbarActionKey="showmyAppInNextPrevDropdownToolbarAction"
+
+
+isGoToNextNavigationTargetKey="ismyAppRecordGoToNextNavigationTarget"
+             >
+      </specification>
+   </extension>
+   
    <extension
          point="org.eclipse.ui.decorators">
       <decorator
@@ -79,11 +137,31 @@
       </decorator>
    </extension>
 
-
-   
    <extension
    		 point="org.eclipse.ui.popupMenus">
-   		<viewerContribution
+   		 <objectContribution
+   		 	id="edu.wpi.cs.jburge.SEURAT.action.contribution.popup.project"
+   		 	objectClass="org.eclipse.jdt.core.IJavaProject">
+   		 	<action
+   		 		id="edu.wpi.cs.jburge.SEURAT.actions.OpenRationale"
+	      		label="Open Rationale"
+	       		class="edu.wpi.cs.jburge.SEURAT.actions.OpenRationale"	
+           		definitionId="edu.wpi.cs.jburge.SEURAT.actions.OpenRationale"
+	       		enablesFor="1">
+	    		</action>
+	 	    </objectContribution>
+	 	 <objectContribution
+   		 	id="edu.wpi.cs.jburge.SEURAT.action.contribution.popup.project"
+   		 	objectClass="org.eclipse.core.resources.IProject">
+   		 	<action
+   		 		id="edu.wpi.cs.jburge.SEURAT.actions.OpenRationale"
+	      		label="Open Rationale"
+	       		class="edu.wpi.cs.jburge.SEURAT.actions.OpenRationale"	
+           		definitionId="edu.wpi.cs.jburge.SEURAT.actions.OpenRationale"
+	       		enablesFor="1">
+	    		</action>
+	 	   </objectContribution>
+	 	 <viewerContribution
    			id="edu.wpi.cs.jburge.SEURAT.action.contribution.popup.bookmark"
    			targetID="org.eclipse.ui.views.BookmarkNavigator">
    			<action
@@ -94,28 +172,7 @@
    			   id="edu.wpi.cs.jburge.SEURAT.actions.RemoveBookmarkAssociation">
    			  </action>
    		  </viewerContribution>
-     <objectContribution
-           id="SEURAT.contribution1"
-           nameFilter="plugin.xml"
-           objectClass="org.eclipse.core.resources.IFile">
-        <menu
-              id="SEURAT.menu1"
-              label="Rationale"
-              path="additions">
-           <separator name="group1"/>
-        </menu>
-        <action
-              class="SEURAT.popup.actions.AssociateRationale"
-              enablesFor="1"
-              id="SEURAT.newAction"
-              label="Associate Rationale"
-              menubarPath="SEURAT.menu1/group1"/>
-     </objectContribution>
-   	</extension> 	
-   	
-   	   <extension
-   		 point="org.eclipse.ui.popupMenus">
-   		<viewerContribution
+   		 <viewerContribution
    			id="edu.wpi.cs.jburge.SEURAT.action.contribution.popup.explorer"
    			targetID="org.eclipse.jdt.ui.PackageExplorer">
    			<action
@@ -126,25 +183,7 @@
    			   id="edu.wpi.cs.jburge.SEURAT.actions.RemoveRationaleAssociation">
    			  </action>
    		  </viewerContribution>
-   	</extension>
-   	
-   	<extension point = "org.eclipse.ui.popupMenus">
-     <objectContribution
-        id="edu.wpi.cs.jburge.SEURAT.action.contribution.popup.explorer"
-        objectClass="org.eclipse.core.resources.IProject">
-	    <action id="edu.wpi.cs.jburge.SEURAT.actions.OpenRationale"
-	       label="Open Rationale"
-	       menubarPath="additions"
-	       class="edu.wpi.cs.jburge.SEURAT.actions.OpenRationale"	
-	       enablesFor="+">
-	    </action>
-	 </objectContribution>
-	 </extension>
-   	
-   	
-   	<extension
-   		 point="org.eclipse.ui.popupMenus">
-   		<viewerContribution
+   		 <viewerContribution
    			id="edu.wpi.cs.jburge.SEURAT.action.contribution.popup.explorer"
    			targetID="org.eclipse.jdt.ui.PackageExplorer">
    			<action
@@ -155,7 +194,7 @@
    			   id="edu.wpi.cs.jburge.SEURAT.actions.AssociateAlternative">
    			  </action>
    		  </viewerContribution>
-   	</extension>
+	</extension>
  
        <extension
              point="org.eclipse.ui.preferencePages">
@@ -163,6 +202,16 @@
                 class="SEURAT.preferences.SEURATPreferencePage"
                 id="SEURAT.preferences.SEURATPreferencePage"
                 name="SEURAT"/>
+          <page 
+          		class="SEURAT.preferences.SEURATDerbyPreferencePage"
+          		id="SEURAT.preferences.SEURATDerbyPreferencePage"
+          		name="Derby Database Settings"
+          		category="SEURAT.preferences.SEURATPreferencePage"/>
+          <page
+          		class="SEURAT.preferences.SEURATMysqlPreferencePage"
+          		id="SEURAT.preferences.SEURATMysqlPreferencePage"
+          		name="Mysql Database Settings"
+          		category="SEURAT.preferences.SEURATPreferencePage"/>
        </extension>
  
        <extension
@@ -170,16 +219,129 @@
           <initializer class="SEURAT.preferences.PreferenceInitializer"/>
        </extension>
  
-       <extension
-             point="org.eclipse.help.toc">
-          <toc
-                file="toc.xml"
-                primary="true"/>
-          <toc file="tocgettingstarted.xml"/>
-          <toc file="tocreference.xml"/>
-          <toc file="toctasks.xml"/>
-          <toc file="tocsamples.xml"/>
-       </extension>
-   	
-
+ 	   <extension
+             point="org.eclipse.ui.editors">
+          <editor
+                class="SEURAT.editors.RequirementEditor"
+                default="true"
+                extensions="seurat_requirement_editor"
+                icon="icons/newReq.gif"
+                id="SEURAT.editors.RequirementEditor"
+                name="SEURAT Requirement Editor">
+          </editor>
+          <editor
+                class="SEURAT.editors.DecisionEditor"
+                default="true"
+                extensions="seurat_decision_editor"
+                icon="icons/newDec.gif"
+                id="SEURAT.editors.DecisionEditor"
+                name="SEURAT Decision Editor">
+          </editor>
+          <editor
+                class="SEURAT.editors.AlternativeEditor"
+                default="true"
+                extensions="seurat_alternative_editor"
+                icon="icons/newAlt.gif"
+                id="SEURAT.editors.AlternativeEditor"
+                name="SEURAT Alternative Editor">
+          </editor>
+          <editor
+                class="SEURAT.editors.ArgumentEditor"
+                default="true"
+                extensions="seurat_argument_editor"
+                icon="icons/newArg.gif"
+                id="SEURAT.editors.ArgumentEditor"
+                name="SEURAT Argument Editor">
+          </editor>
+          <editor
+                class="SEURAT.editors.TradeoffEditor"
+                default="true"
+                extensions="seurat_tradeoff_editor"
+                icon="icons/Trade.gif"
+                id="SEURAT.editors.TradeoffEditor"
+                name="SEURAT Tradeoff Editor">
+          </editor>
+          <editor
+                class="edu.wpi.cs.jburge.SEURAT.views.GraphicalRationale"
+                default="true"
+                extensions="seurat_graphical_rationale"
+                icon="icons/newReq.gif"
+                id="SEURAT.views.GraphicalRationale"
+                name="SEURAT Graphical Rationale">
+          </editor>
+          <editor
+                class="SEURAT.editors.QuestionEditor"
+                default="true"
+                extensions="seurat_question_editor"
+                icon="icons/newQuest.gif"
+                id="SEURAT.editors.QuestionEditor"
+                name="SEURAT Question Editor">
+          </editor>
+       </extension>	
+       
+	<extension point="org.eclipse.help.toc">
+		<toc
+        	file="toc.xml"
+          	primary="true"/>
+		<toc file="tocgettingstarted.xml"/>
+      	<toc file="tocreference.xml"/>
+     	<toc file="toctasks.xml"/>
+   		<toc file="tocsamples.xml"/>
+	</extension>
+       
+	<extension point="org.eclipse.search.searchPages">
+		<page id="SEURAT.search.searchPage"
+			icon="icons/ratSearch.gif"
+			label="SEURAT Search Page"
+			sizeHint="460,160"
+			extensions="seurat_requirement_editor:90, seurat_decision_editor:90, seurat_alternative_editor:90, seurat_argument_editor:90, seurat_tradeoff_editor:90, seurat_question_editor:90"
+			showScopeSection="false"
+			canSearchEnclosingProjects="false"
+			class="SEURAT.search.SearchPage">
+		</page>
+	</extension>
+       
+	<extension point="org.eclipse.search.searchResultViewPages">
+		<viewPage
+			id="SEURAT.search.entities.EntitySearchResultPage"
+			searchResultClass="SEURAT.search.entities.EntitySearchResultSet"
+			class="SEURAT.search.entities.EntitySearchResultPage">
+		</viewPage>
+		<viewPage
+			id="SEURAT.search.requirements.RequirementSearchResultPage"
+			searchResultClass="SEURAT.search.requirements.RequirementSearchResultSet"
+			class="SEURAT.search.requirements.RequirementSearchResultPage">
+		</viewPage>
+		<viewPage
+			id="SEURAT.search.statusOverrides.StatusOverrideSearchResultPage"
+			searchResultClass="SEURAT.search.statusOverrides.StatusOverrideSearchResultSet"
+			class="SEURAT.search.statusOverrides.StatusOverrideSearchResultPage">
+		</viewPage>
+		<viewPage
+			id="SEURAT.search.importanceOverrides.ImportanceOverrideSearchResultPage"
+			searchResultClass="SEURAT.search.importanceOverrides.ImportanceOverrideSearchResultSet"
+			class="SEURAT.search.importanceOverrides.ImportanceOverrideSearchResultPage">
+		</viewPage>
+		<viewPage
+			id="SEURAT.search.commonArguments.CommonArgumentSearchResultPage"
+			searchResultClass="SEURAT.search.commonArguments.CommonArgumentSearchResultSet"
+			class="SEURAT.search.commonArguments.CommonArgumentSearchResultPage">
+		</viewPage>
+	</extension>
+	
+		<!-- Add A Button To The Search Menu That Opens The SEURAT Search Window -->   
+	<extension point = "org.eclipse.ui.actionSets">
+	   <actionSet id="SEURAT.search.OpenSeuratSearchAction"
+		   label="Open SEURAT Search"
+		   visible="true">
+		   <action id="SEURAT.search.OpenSeuratSearchAction"
+			   menubarPath="org.eclipse.search.menu/dialogGroup"
+			   label="SEURAT Search"
+			   tooltip="Open The SEURAT Search Window"
+			   icon="icons/ratSearch.gif"
+			   class="SEURAT.search.OpenSeuratSearchAction"
+			   >
+		   </action>
+	   </actionSet>
+   </extension>
 </plugin>

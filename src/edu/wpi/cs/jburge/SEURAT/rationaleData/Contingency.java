@@ -18,6 +18,9 @@ import java.util.Vector;
 
 import org.eclipse.swt.widgets.Display;
 
+import SEURAT.events.RationaleElementUpdateEventGenerator;
+import SEURAT.events.RationaleUpdateEvent;
+
 import edu.wpi.cs.jburge.SEURAT.editors.EditContingency;
 
 /**
@@ -41,6 +44,9 @@ public class Contingency extends RationaleElement implements Serializable
 	 * The contingency amount
 	 */
 	float percentage;
+
+	private RationaleElementUpdateEventGenerator<Contingency> m_eventGenerator = 
+		new RationaleElementUpdateEventGenerator<Contingency>(this);
 	
 	public Contingency()
 	{
@@ -96,6 +102,10 @@ public class Contingency extends RationaleElement implements Serializable
 		Connection conn = db.getConnection();
 		
 		int ourid = 0;
+
+		// Update Event To Inform Subscribers Of Changes
+		// To Rationale
+		RationaleUpdateEvent l_updateEvent;
 		
 		//find out if this requirement is already in the database
 		Statement stmt = null; 
@@ -122,13 +132,15 @@ public class Contingency extends RationaleElement implements Serializable
 //				***				System.out.println("already there");
 //				ourid = rs.getInt("id");
 				String updateAssump = "UPDATE Contingencies A " +
-				"SET A.name = '" + RationaleDB.escape(this.name) +
-				"', A.description = '" + RationaleDB.escape(this.description) +
+				"SET A.name = '" + RationaleDBUtil.escape(this.name) +
+				"', A.description = '" + RationaleDBUtil.escape(this.description) +
 				"', A.amount = " + this.percentage +
 				" WHERE " +
 				"A.id = " + this.id + " ";
 //				System.out.println(updateAssump);
 				stmt.execute(updateAssump);
+				
+				l_updateEvent = m_eventGenerator.MakeUpdated();
 			}
 			else 
 			{
@@ -138,15 +150,14 @@ public class Contingency extends RationaleElement implements Serializable
 				String newArgSt = "INSERT INTO Contingencies " +
 				"(name, description, amount) " +
 				"VALUES ('" +
-				RationaleDB.escape(this.name) + "', '" +
-				RationaleDB.escape(this.description) + "', " +
+				RationaleDBUtil.escape(this.name) + "', '" +
+				RationaleDBUtil.escape(this.description) + "', " +
 				this.percentage + ")";
 				
 //				***			   System.out.println(newArgSt);
 				stmt.execute(newArgSt); 
 				
-				
-				
+				l_updateEvent = m_eventGenerator.MakeCreated();				
 			}
 			//now, we need to get our ID
 			String findQuery2 = "SELECT id FROM Contingencies where name='" +
@@ -161,7 +172,7 @@ public class Contingency extends RationaleElement implements Serializable
 			}
 			else
 			{
-				ourid = 0;
+				ourid = -1;
 			}
 			this.id = ourid;
 		} catch (SQLException ex) {
@@ -202,8 +213,8 @@ public class Contingency extends RationaleElement implements Serializable
 			
 			if (rs.next())
 			{
-				name = RationaleDB.decode(rs.getString("name"));
-				description = RationaleDB.decode(rs.getString("description"));
+				name = RationaleDBUtil.decode(rs.getString("name"));
+				description = RationaleDBUtil.decode(rs.getString("description"));
 				percentage = rs.getFloat("amount");
 				rs.close();
 				this.fromDatabase(name);
@@ -229,7 +240,7 @@ public class Contingency extends RationaleElement implements Serializable
 		Connection conn = db.getConnection();
 		String findQuery = "";		
 		this.name = name;
-		name = RationaleDB.escape(name);
+		name = RationaleDBUtil.escape(name);
 		
 		Statement stmt = null; 
 		ResultSet rs = null; 
@@ -246,7 +257,7 @@ public class Contingency extends RationaleElement implements Serializable
 			{
 				
 				id = rs.getInt("id");
-				description = RationaleDB.decode(rs.getString("description"));
+				description = RationaleDBUtil.decode(rs.getString("description"));
 				percentage = rs.getFloat("amount");
 				
 				rs.close();

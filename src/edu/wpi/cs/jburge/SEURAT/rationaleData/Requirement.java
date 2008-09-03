@@ -21,6 +21,8 @@ import edu.wpi.cs.jburge.SEURAT.editors.EditRequirement;
 import edu.wpi.cs.jburge.SEURAT.inference.RequirementInferences;
 import org.w3c.dom.*;
 
+import SEURAT.events.*;
+
 /**
  * Defines the structure of a requirement.
  * @author burgeje
@@ -78,6 +80,9 @@ public class Requirement extends RationaleElement implements Serializable
 	 */
 	Vector<Requirement> m_requirements;
 	
+	private RationaleElementUpdateEventGenerator<Requirement> m_eventGenerator = 
+		new RationaleElementUpdateEventGenerator<Requirement>(this);
+	
 	/**
 	 * Constructor. Sets the initial status to undecided and creates ampty
 	 * vectors for the arguments for and against, and other arguments (dependencies),
@@ -107,7 +112,64 @@ public class Requirement extends RationaleElement implements Serializable
 		m_artifact = newArtifact;
 		m_type = newType;
 	}
-	
+	public Element toXML(Document ratDoc)
+	{
+		Element reqE = ratDoc.createElement("DR:requirement");
+		RationaleDB db = RationaleDB.getHandle();
+		String reqID = db.getRef(id);
+		if (reqID != null)
+		{		
+			reqE = ratDoc.createElement("reqref");
+			//set the reference contents
+			Text text = ratDoc.createTextNode(reqID);
+			reqE.appendChild(text);
+		}
+		else
+		{
+			reqID = db.addRef(id);
+			reqE.setAttribute("id", reqID);
+			reqE.setAttribute("name", name);
+			reqE.setAttribute("reqtype", m_type.toString());
+			reqE.setAttribute("artifact", m_artifact);
+			reqE.setAttribute("status", m_status.toString()); //change when we set up "real" status
+		
+			//save our description
+			Element descE = ratDoc.createElement("DR:description");
+			//set the reference contents
+			Text descText = ratDoc.createTextNode(description);
+			descE.appendChild(descText);
+			reqE.appendChild(descE);
+
+			//now set up our arguments, if any
+			Enumeration args = m_arguments.elements();
+			while (args.hasMoreElements())
+			{
+				Argument arg = (Argument) args.nextElement();
+				reqE.appendChild(arg.toXML(ratDoc));
+			}
+		
+			//now, any sub-requirements
+			Enumeration reqs = m_requirements.elements();
+			while (reqs.hasMoreElements())
+			{
+				Requirement req = (Requirement) reqs.nextElement();
+				reqE.appendChild(req.toXML(ratDoc));
+			}
+			
+			//finally, the history
+			
+			Element ourHist = ratDoc.createElement("DR:history");
+			Enumeration hist = history.elements();
+			while (hist.hasMoreElements())
+			{
+				History his = (History) hist.nextElement();
+				ourHist.appendChild(his.toXML(ratDoc));
+			}
+			reqE.appendChild(ourHist);
+		}
+		return reqE;
+	}
+
 	public RationaleElementType getElementType()
 	{
 		return RationaleElementType.REQUIREMENT;
@@ -115,7 +177,6 @@ public class Requirement extends RationaleElement implements Serializable
 	
 	public void fromDatabase(int reqID)
 	{
-		
 		RationaleDB db = RationaleDB.getHandle();
 		Connection conn = db.getConnection();
 		String findQuery = "";
@@ -125,7 +186,6 @@ public class Requirement extends RationaleElement implements Serializable
 		ResultSet rs = null; 
 //		boolean error = false;
 		try {
-			
 			stmt = conn.createStatement();
 			
 			findQuery = "SELECT name FROM " + 
@@ -136,7 +196,7 @@ public class Requirement extends RationaleElement implements Serializable
 			
 			if (rs.next())
 			{
-				name = RationaleDB.decode(rs.getString("name"));
+				name = RationaleDBUtil.decode(rs.getString("name"));
 				rs.close();
 				this.fromDatabase(name);
 			}
@@ -167,7 +227,10 @@ public class Requirement extends RationaleElement implements Serializable
 	{
 		return m_argumentsAgainst;
 	}
-	
+	public Vector getArguments()
+	{
+		return m_arguments;
+	}	
 	public ReqType getType()
 	{
 		return m_type;
@@ -229,14 +292,14 @@ public class Requirement extends RationaleElement implements Serializable
 		Connection conn = db.getConnection();
 		
 		this.name = rName; //don't forget our name!
-		rName = RationaleDB.escape(rName);
+		rName = RationaleDBUtil.escape(rName);
 		
 		Statement stmt = null;
 		ResultSet rs = null;
 		
 		try {
 			stmt = conn.createStatement(); 
-			String findQuery = "SELECT * FROM requirements where name='" +
+			String findQuery = "SELECT * FROM REQUIREMENTS where name='" +
 			rName + "'";
 //			***			 System.out.println(findQuery);
 			rs = stmt.executeQuery(findQuery); 
@@ -244,7 +307,7 @@ public class Requirement extends RationaleElement implements Serializable
 			if (rs.next())
 			{
 				this.id = rs.getInt("id");
-				this.description = RationaleDB.decode(rs.getString("description"));
+				this.description = RationaleDBUtil.decode(rs.getString("description"));
 				this.m_type = (ReqType) ReqType.fromString(rs.getString("type"));
 				this.m_status = (ReqStatus) ReqStatus.fromString(rs.getString("status"));
 				this.m_artifact = rs.getString("artifact");
@@ -256,20 +319,21 @@ public class Requirement extends RationaleElement implements Serializable
 			
 			//Now, we need to get the lists of arguments for and against
 			//first For
-			String findFor = "SELECT name FROM Arguments where " +
+			String findFor = "SELECT name FROM ARGUMENTS where " +
 			"ptype = 'Requirement' and " +
 			"parent = " + 
 			new Integer(this.id).toString() + " and " +
-			"(type = 'SUPPORTS' or " +
-			"type = 'ADDRESSES' or " +
-			"type = 'SATISFIES' or " +
-			"type = 'PRE-SUPPOSED-BY')";
+			"(type = 'Supports' or " +
+			"type = 'Addresses' or " +
+			"type = 'Satisfies' or " +
+			"type = 'Pre-Supposed-by')";
 //			***			System.out.println(findFor);
 			rs = stmt.executeQuery(findFor); 
 			
+			m_argumentsFor.clear();
 			while (rs.next())
 			{
-				m_argumentsFor.addElement(RationaleDB.decode(rs.getString("name")));
+				m_argumentsFor.addElement(RationaleDBUtil.decode(rs.getString("name")));
 			}
 			rs.close();
 			
@@ -278,15 +342,15 @@ public class Requirement extends RationaleElement implements Serializable
 			"ptype = 'Requirement' and " +
 			"parent = " + 
 			new Integer(this.id).toString() + " and " +
-			"(type = 'DENIES' or " +
-			"type = 'VIOLATES' or " +
-			"type = 'OPPOSED-BY')";
+			"(type = 'Denies' or " +
+			"type = 'Violates' or " +
+			"type = 'Opposed-by')";
 //			***			System.out.println(findAgainst);
 			rs = stmt.executeQuery(findAgainst); 
-			
+			m_argumentsAgainst.clear();
 			while (rs.next())
 			{
-				m_argumentsAgainst.addElement(RationaleDB.decode(rs.getString("name")));
+				m_argumentsAgainst.addElement(RationaleDBUtil.decode(rs.getString("name")));
 			}
 			rs.close();
 			
@@ -300,7 +364,7 @@ public class Requirement extends RationaleElement implements Serializable
 			{
 				History nextH = new History();
 				nextH.setStatus(rs.getString("status"));
-				nextH.setReason(RationaleDB.decode(rs.getString("reason")));
+				nextH.setReason(RationaleDBUtil.decode(rs.getString("reason")));
 				nextH.dateStamp = rs.getTimestamp("date");
 //				nextH.dateStamp = rs.getDate("date");
 				history.add(nextH);
@@ -319,6 +383,10 @@ public class Requirement extends RationaleElement implements Serializable
 	{
 		RationaleDB db = RationaleDB.getHandle();
 		Connection conn = db.getConnection();
+		
+		// Update Event To Inform Subscribers Of Changes
+		// To Rationale
+		RationaleUpdateEvent l_updateEvent;
 		
 		int ourid = this.id;
 		
@@ -339,7 +407,7 @@ public class Requirement extends RationaleElement implements Serializable
 			{
 				String updateParent = "UPDATE Requirements "+
 				"SET name = '" +
-				RationaleDB.escape(this.name) + "', " +				"description = '" +				RationaleDB.escape(this.description) + "', " +
+				RationaleDBUtil.escape(this.name) + "', " +				"description = '" +				RationaleDBUtil.escape(this.description) + "', " +
 				"type = '" +
 				this.m_type.toString() + "', " +				"status = '" +
 				this.m_status.toString() + "', " +				"enabled = '" +
@@ -349,6 +417,8 @@ public class Requirement extends RationaleElement implements Serializable
 				
 //				System.out.println(updateParent);
 				stmt.execute(updateParent);
+				
+				l_updateEvent = m_eventGenerator.MakeUpdated();
 			}
 //			return ourid;
 			else 
@@ -371,8 +441,8 @@ public class Requirement extends RationaleElement implements Serializable
 				String newReqSt = "INSERT INTO Requirements "+
 				"(name, description, type, status, ptype, parent, enabled) " +
 				"VALUES ('" +
-				RationaleDB.escape(this.name) + "', '" +
-				RationaleDB.escape(this.description) + "', '" +
+				RationaleDBUtil.escape(this.name) + "', '" +
+				RationaleDBUtil.escape(this.description) + "', '" +
 				this.m_type.toString() + "', '" +
 				this.m_status.toString() + "', '" +
 				parentTSt + "', " +
@@ -380,7 +450,8 @@ public class Requirement extends RationaleElement implements Serializable
 				enabledStr + "')";
 //				System.out.println(newReqSt);
 				stmt.execute(newReqSt); 
-				
+
+				l_updateEvent = m_eventGenerator.MakeCreated();
 			}
 			
 			//now, we need to get our ID
@@ -395,7 +466,7 @@ public class Requirement extends RationaleElement implements Serializable
 			}
 			else
 			{
-				ourid = 0;
+				ourid = -1;
 			}
 			this.id = ourid;
 			
@@ -431,10 +502,9 @@ public class Requirement extends RationaleElement implements Serializable
 				History his = (History) hist.nextElement();
 				his.toDatabase(ourid, RationaleElementType.REQUIREMENT);
 //				System.out.println("printed history");
-			}
-			
-			
-			
+			}			
+
+			m_eventGenerator.Broadcast(l_updateEvent);
 		} catch (SQLException ex) {
 			RationaleDB.reportError(ex, "Requirement.toDatabase", "SQL Error");
 		}
@@ -553,6 +623,8 @@ public class Requirement extends RationaleElement implements Serializable
 	
 	public boolean delete()
 	{
+		m_eventGenerator.Destroyed();
+		
 		//need to have a way to inform if delete did not happen
 		//can't delete if there are dependencies...
 		if ((this.m_argumentsAgainst.size() > 0) ||

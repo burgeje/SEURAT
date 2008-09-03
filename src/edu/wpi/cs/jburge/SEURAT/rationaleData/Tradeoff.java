@@ -11,7 +11,10 @@ import java.sql.*;
 import java.util.Vector;
 
 import org.eclipse.swt.widgets.Display;
+import org.w3c.dom.*;
 
+import SEURAT.events.RationaleElementUpdateEventGenerator;
+import SEURAT.events.RationaleUpdateEvent;
 import edu.wpi.cs.jburge.SEURAT.editors.EditTradeoff;
 import edu.wpi.cs.jburge.SEURAT.inference.TradeoffInferences;
 
@@ -46,11 +49,65 @@ public class Tradeoff extends RationaleElement implements Serializable
 	 * longer to implement isn't necessarily more flexible. 
 	 */
 	boolean symmetric;
+
+	private RationaleElementUpdateEventGenerator<Tradeoff> m_eventGenerator = 
+		new RationaleElementUpdateEventGenerator<Tradeoff>(this);
 	
 	public Tradeoff()
 	{
 		super();
 	} 
+	
+	public Element toXML(Document ratDoc)
+	{
+		Element tradeE;
+		RationaleDB db = RationaleDB.getHandle();
+		String tradeID = db.getRef(id);
+		if (tradeID != null)
+		{		
+			//this should never be the case but this is left in for completeness
+			if (tradeoff)
+				tradeE = ratDoc.createElement("coref");
+			else
+				tradeE = ratDoc.createElement("tradref");
+			//set the reference contents
+			Text text = ratDoc.createTextNode(tradeID);
+			tradeE.appendChild(text);
+		}
+		else
+		{		
+			
+			tradeID = db.addRef(id);
+			if (tradeoff)
+				tradeE = ratDoc.createElement("DR:tradeoff");
+			else
+				tradeE = ratDoc.createElement("DR:co-occurrence");
+			tradeE.setAttribute("id", tradeID);
+			tradeE.setAttribute("name", name);
+			
+			if (symmetric)
+			{
+				tradeE.setAttribute("symmetric", "true");
+			}
+			else
+			{
+				tradeE.setAttribute("symmetric", "false");
+			}
+			
+			//save our description
+			Element descE = ratDoc.createElement("DR:description");
+			//set the reference contents
+			Text descText = ratDoc.createTextNode(description);
+			descE.appendChild(descText);
+			tradeE.appendChild(descE);
+
+
+			tradeE.appendChild(ont1.toXML(ratDoc));
+			tradeE.appendChild(ont2.toXML(ratDoc));
+		}
+		
+		return tradeE;
+	}
 	
 	/**
 	 * Our constructor
@@ -160,8 +217,10 @@ public class Tradeoff extends RationaleElement implements Serializable
 		Connection conn = db.getConnection();
 		
 		int ourid = 0;
-		
-		
+
+		// Update Event To Inform Subscribers Of Changes
+		// To Rationale
+		RationaleUpdateEvent l_updateEvent;		
 		
 		//find out if this tradeoff is already in the database
 		Statement stmt = null; 
@@ -174,7 +233,7 @@ public class Tradeoff extends RationaleElement implements Serializable
 			
 			//now we need to find our ontology entries, and that's it!
 			String findQuery3 = "SELECT id FROM OntEntries where name='" +
-			RationaleDB.escape(this.ont1.getName()) + "'";
+			RationaleDBUtil.escape(this.ont1.getName()) + "'";
 			rs = stmt.executeQuery(findQuery3); 
 //			***			System.out.println(findQuery3);
 			int ontid1;
@@ -190,7 +249,7 @@ public class Tradeoff extends RationaleElement implements Serializable
 			
 			//now we need to find our ontology entries
 			String findQuery4 = "SELECT id FROM OntEntries where name='" +
-			RationaleDB.escape(this.ont2.getName()) + "'";
+			RationaleDBUtil.escape(this.ont2.getName()) + "'";
 			rs = stmt.executeQuery(findQuery4); 
 //			***			System.out.println(findQuery4);
 			int ontid2;
@@ -234,9 +293,9 @@ public class Tradeoff extends RationaleElement implements Serializable
 				//now, update it with the new information
 				String updateOnt = "UPDATE Tradeoffs " +
 				"SET name = '" +
-				RationaleDB.escape(this.name) + "', " +
+				RationaleDBUtil.escape(this.name) + "', " +
 				"description = '" +
-				RationaleDB.escape(this.description) + "', " +
+				RationaleDBUtil.escape(this.description) + "', " +
 				"type = '" + 
 				trade + "', " +
 				"symmetric = '" +
@@ -247,6 +306,10 @@ public class Tradeoff extends RationaleElement implements Serializable
 				"id = " + this.id + " " ;
 //				System.out.println(updateOnt);
 				stmt.execute(updateOnt);
+				
+				ourid = this.id;
+				
+				l_updateEvent = m_eventGenerator.MakeUpdated();
 				//			System.out.println("sucessfully added?");
 			}
 			else 
@@ -257,8 +320,8 @@ public class Tradeoff extends RationaleElement implements Serializable
 				String newArgSt = "INSERT INTO Tradeoffs " +
 				"(name, description, type, symmetric, ontology1, ontology2) " +
 				"VALUES ('" +
-				RationaleDB.escape(this.name) + "', '" +
-				RationaleDB.escape(this.description) + "', '" +
+				RationaleDBUtil.escape(this.name) + "', '" +
+				RationaleDBUtil.escape(this.description) + "', '" +
 				trade + "', '" +
 				sym + "', " +
 				new Integer(ontid1).toString() + ", " +
@@ -270,7 +333,7 @@ public class Tradeoff extends RationaleElement implements Serializable
 				
 //				now, we need to get our ID
 				String findQuery2 = "SELECT id FROM tradeoffs where name='" +
-				RationaleDB.escape(this.name) + "'";
+				RationaleDBUtil.escape(this.name) + "'";
 				rs = stmt.executeQuery(findQuery2); 
 				
 				if (rs.next())
@@ -280,13 +343,14 @@ public class Tradeoff extends RationaleElement implements Serializable
 				}
 				else
 				{
-					ourid = 0;
+					ourid = -1;
 				}
 				this.id = ourid;
 				
+				l_updateEvent = m_eventGenerator.MakeCreated();
 			}
 			
-			
+			m_eventGenerator.Broadcast(l_updateEvent);
 		} catch (SQLException ex) {
 			RationaleDB.reportError(ex, "Tradeoff.toDatabase", "SQL Error");
 		}
@@ -298,18 +362,55 @@ public class Tradeoff extends RationaleElement implements Serializable
 		return ourid;	
 		
 	}	
+	/**
+	 * Given an id, get a tradeoff from the database.
+	 * 
+	 * TODO make sure this function works
+	 */
+	public void fromDatabase(int id)
+	{		
+		RationaleDB db = RationaleDB.getHandle();
+		Connection conn = db.getConnection();
+		
+		Statement stmt = null; 
+		ResultSet rs = null; 
+		
+		try {
+			String findQuery; 
+			
+			stmt = conn.createStatement();
+			findQuery = "SELECT name FROM " +
+			"tradeoffs where id = " + id;
+			
+			rs = stmt.executeQuery(findQuery);
+			
+			if (rs.next())
+			{
+				String name = RationaleDBUtil.decode(rs.getString("name"));
+				rs.close();
+				
+				fromDatabase(name);
+				
+			}
+			
+		} catch (SQLException ex) {
+			RationaleDB.reportError(ex, "Tradeoff.fromDatabase(int)", "SQL error");
+		}
+		finally { 
+			RationaleDB.releaseResources(stmt, rs);
+		}
+	}	
 	
 	/**
 	 * Given a name, get the tradeoff from the database.
 	 */
 	public void fromDatabase(String name)
-	{
-		
+	{		
 		RationaleDB db = RationaleDB.getHandle();
 		Connection conn = db.getConnection();
 		
 		this.name = name;
-		name = RationaleDB.escape(name);
+		name = RationaleDBUtil.escape(name);
 		
 		Statement stmt = null; 
 		ResultSet rs = null; 
@@ -329,7 +430,7 @@ public class Tradeoff extends RationaleElement implements Serializable
 			{
 				
 				id = rs.getInt("id");
-				description = RationaleDB.decode(rs.getString("description"));
+				description = RationaleDBUtil.decode(rs.getString("description"));
 				symmetric = rs.getBoolean("symmetric");
 				String trade = rs.getString("type");
 				if (trade.compareTo("Tradeoff") == 0)
@@ -342,10 +443,15 @@ public class Tradeoff extends RationaleElement implements Serializable
 				}
 				
 				ont1ID = rs.getInt("ontology1");
-				ont2ID = rs.getInt("ontology2");
+				ont2ID = rs.getInt("ontology2");				
 				
 				//now, find the ontology entry
 				rs.close();
+
+				// hannasm: initialize ontology entries to null to
+				// prevent old data from creeping in if this method
+				// is called multiple times
+				this.ont1 = this.ont2 = null; 
 				
 				//Now, the arguments against
 				String findOntology = "SELECT name FROM OntEntries where " +
@@ -356,7 +462,7 @@ public class Tradeoff extends RationaleElement implements Serializable
 				
 				if (rs.next())
 				{
-					String ontName = RationaleDB.decode(rs.getString("name"));
+					String ontName = RationaleDBUtil.decode(rs.getString("name"));
 					this.ont1 = new OntEntry();
 					this.ont1.fromDatabase(ontName);
 					
@@ -372,7 +478,7 @@ public class Tradeoff extends RationaleElement implements Serializable
 				
 				if (rs.next())
 				{
-					String ontName = RationaleDB.decode(rs.getString("name"));
+					String ontName = RationaleDBUtil.decode(rs.getString("name"));
 					this.ont2 = new OntEntry();
 					this.ont2.fromDatabase(ontName);
 					
@@ -427,6 +533,8 @@ public class Tradeoff extends RationaleElement implements Serializable
 	 */
 	public boolean delete()
 	{
+		m_eventGenerator.Destroyed();
+		
 		//no downward dependencies for tradeoffs
 		RationaleDB db = RationaleDB.getHandle();
 		db.deleteRationaleElement(this);

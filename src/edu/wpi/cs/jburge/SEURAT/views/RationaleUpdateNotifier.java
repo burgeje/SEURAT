@@ -30,8 +30,8 @@ public class RationaleUpdateNotifier implements Runnable {
 	}
 	/**
 	 * Depending on the type of event, run the appropriate method from the listener.
-	 * This could be updating the tree, bringing up the editor for a node, or
-	 * associating an alternative.
+	 * This could be updating the tree, bringing up the editor for a node, associating
+	 * an alternative, or opening a rationale database.
 	 */	
 	public void run()
 	{
@@ -43,9 +43,21 @@ public class RationaleUpdateNotifier implements Runnable {
 		{
 			evl.showRationaleNode(evt);
 		}
-		else if (evt.getUpdateType() == UpdateType.ASSOCIATE);
+		else if (evt.getUpdateType() == UpdateType.ASSOCIATE)
 		{
 			evl.associateAlternative(evt);
+		}
+		else if (evt.getUpdateType() == UpdateType.DATABASE)
+		{
+			evl.openDatabase(evt);
+		}
+		else if (evt.getUpdateType() == UpdateType.STATUS)
+		{
+			evl.updateRationaleStatus(evt);
+		}
+		else if (evt.getUpdateType() == UpdateType.ADD)
+		{
+			evl.addNewElement(evt);
 		}
 	}
 	

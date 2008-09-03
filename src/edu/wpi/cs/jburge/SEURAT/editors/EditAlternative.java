@@ -1,7 +1,6 @@
 
 package edu.wpi.cs.jburge.SEURAT.editors;
 
-import java.awt.Frame;
 import java.io.Serializable;
 import java.util.Enumeration;
 import java.util.Iterator;
@@ -452,9 +451,7 @@ public class EditAlternative extends NewRationaleElementGUI implements Serializa
 							}
 							if (changeOk)
 							{
-								Frame rf = new Frame();
-								ReasonGUI rg = new ReasonGUI(rf);
-								rg.setVisible(true);
+								ReasonGUI rg = new ReasonGUI();
 								String newReason = rg.getReason();
 								ourAlt.setStatus(newStat);
 								//					System.out.println(newStat.toString() + ourAlt.getStatus().toString());

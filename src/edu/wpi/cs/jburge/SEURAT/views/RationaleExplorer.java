@@ -6,10 +6,17 @@ import java.util.*;
 
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.FileDialog;
+import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.part.*;
 import org.eclipse.jface.viewers.*;
+import org.eclipse.jface.window.Window;
 import org.eclipse.jface.action.*;
+import org.eclipse.jface.dialogs.InputDialog;
+import org.eclipse.jface.dialogs.PopupDialog;
 import org.eclipse.jface.dialogs.MessageDialog;
+import org.eclipse.jface.util.IPropertyChangeListener;
+import org.eclipse.jface.util.PropertyChangeEvent;
 import org.eclipse.ui.*;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.core.resources.IResource;
@@ -30,6 +37,7 @@ import edu.wpi.cs.jburge.SEURAT.queries.FindRequirements;
 import edu.wpi.cs.jburge.SEURAT.queries.HistoryDisplay;
 import edu.wpi.cs.jburge.SEURAT.queries.RequirementRelationshipDisplay;
 import edu.wpi.cs.jburge.SEURAT.rationaleData.*;
+import edu.wpi.cs.jburge.SEURAT.reports.*;
 import edu.wpi.cs.jburge.SEURAT.tasks.RationaleTaskList;
 
 import org.eclipse.core.resources.IFile;
@@ -42,10 +50,11 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jface.action.Action;
 
+import SEURAT.editors.*;
+import SEURAT.preferences.PreferenceConstants;
 import SEURAT.xmlIO.RationaleEntry;
 import edu.wpi.cs.jburge.SEURAT.views.TreeParent;
 import edu.wpi.cs.jburge.SEURAT.decorators.*;
-import edu.wpi.cs.jburge.SEURAT.editors.AskQuestionGUI;
 
  /**
   * The Rationale Explorer is the primary display and access mechanism for the rationale.
@@ -57,7 +66,8 @@ import edu.wpi.cs.jburge.SEURAT.editors.AskQuestionGUI;
   * <p>
   */
 
-public class RationaleExplorer extends ViewPart implements ISelectionListener, IRationaleUpdateEventListener {
+public class RationaleExplorer extends ViewPart implements ISelectionListener, IRationaleUpdateEventListener,
+	IPropertyChangeListener{
 	
 	/**
 	 * The view into the tree of rationale
@@ -99,25 +109,9 @@ public class RationaleExplorer extends ViewPart implements ISelectionListener, I
 	 */
 	private Action addElement;
 	/**
-	 * Menu item to add an alternative
-	 */
-	private Action addAlternative;
-	/**
-	 * Menu item to add a decision
-	 */
-	private Action addDecision;
-	/**
-	 * Menu item to add a question
-	 */
-	private Action addQuestion;
-	/**
 	 * Menu item to add a new area of expertise
 	 */
 	private Action addExpertise;
-	/**
-	 * Menu item to add a new argument
-	 */
-	private Action addArgument;
 	/**
 	 * Menu item to delete an element
 	 */
@@ -166,7 +160,26 @@ public class RationaleExplorer extends ViewPart implements ISelectionListener, I
 	 * Menu item to find requirements with a specific status
 	 */
 	private Action findRequirement;
-	
+	/**
+	 * Menu item to create a requirements traceability matrix report
+	 */
+	private Action requirementsTraceabilityMatrix;	
+	/**
+	 * Menu item to show the graphcal rationale
+	 */
+	private Action showGraphicalRationale;
+	/**
+	 * Menu item to generate a rationale subtree report
+	 */
+	private Action generateRatReportFromHere;
+	/**
+	 * Menu item to generate a complete rationale report
+	 */
+	private Action generateRatReport;
+	/**
+	 * Menu item to save the argument ontology to XML
+	 */
+	private Action exportOntology;
 	/**
 	 * Points to our display
 	 */
@@ -183,9 +196,10 @@ public class RationaleExplorer extends ViewPart implements ISelectionListener, I
 	 */
 	private Object obj;
 	/**
-	 * The line number of the resource being selected in the Java file 
+	 * The index for the first character of the artifact we're looking for.  This determines
+	 * where we will place the marker once we find it.
 	 */
-	private int lineNumber;
+	private int cstart;
 	/**
 	 * The Java resource
 	 */
@@ -195,6 +209,22 @@ public class RationaleExplorer extends ViewPart implements ISelectionListener, I
 	 * The name of the alternative involved in an association
 	 */
 	private String alternativeName;
+	
+	private Action showRequirementEditor;
+	private Action addRequirementEditor;
+	private Action addAlternativeEditor;
+	private Action showAlternativeEditor;
+	private Action addDecisionEditor;
+	private Action showDecisionEditor;
+	//private Action addAssumptionEditor;
+	//private Action showAssumptionEditor;
+	private Action addArgumentEditor;
+	private Action showArgumentEditor;
+	private Action addTradeoffEditor;
+	private Action showTradeoffEditor;
+	private Action addQuestionEditor;
+	private Action showQuestionEditor;
+	
 	
 	
 	class NameSorter extends ViewerSorter {
@@ -234,6 +264,10 @@ public class RationaleExplorer extends ViewPart implements ISelectionListener, I
 		contributeToActionBars();
 		
 		viewer.setInput(((RationaleViewContentProvider) viewer.getContentProvider()).initialize());
+		viewer.expandToLevel(2);
+
+		// get associations
+		restoreAssociations.run();
 		
 		//add an action listener for the workbench window
 		getViewSite().getWorkbenchWindow().getSelectionService().addSelectionListener(this);
@@ -242,8 +276,12 @@ public class RationaleExplorer extends ViewPart implements ISelectionListener, I
 		SEURATPlugin plugin = SEURATPlugin.getDefault();
 		plugin.addUpdateListener(this);
 		
+		// add this as a property change listener so we can be notified of preference changes
+		plugin.getPreferenceStore().addPropertyChangeListener(this);
+		
 		//get the initial selected value
 		selectionChanged(null, getViewSite().getWorkbenchWindow().getSelectionService().getSelection());
+	
 	}
 	
 	/**
@@ -278,18 +316,21 @@ public class RationaleExplorer extends ViewPart implements ISelectionListener, I
 	 * @param manager
 	 */
 	private void fillLocalPullDown(IMenuManager manager) {
-		manager.add(findEntity);
-		manager.add(findCommon);
-		manager.add(findRequirement);
-		manager.add(new Separator());
-		manager.add(findOverrides);
-		manager.add(findImportanceOverrides);
+		//manager.add(findEntity);
+		//manager.add(findCommon);
+		//manager.add(findRequirement);
+		//manager.add(new Separator());
+		//manager.add(findOverrides);
+		//manager.add(findImportanceOverrides);
 		manager.add(changeDatabase);
 		manager.add(newRationale);
 		//restoreAssociations exists to re-set the rationale from a database
 		//this would not be used operationally and should be removed.
 		manager.add(restoreAssociations);
 		manager.add(inputRationale);
+		manager.add(new Separator());
+		manager.add(requirementsTraceabilityMatrix);
+		manager.add(showGraphicalRationale);
 //		manager.add(testAction);
 	}
 	
@@ -308,15 +349,19 @@ public class RationaleExplorer extends ViewPart implements ISelectionListener, I
 		if (obj instanceof TreeParent)
 		{
 			TreeParent ourElement = (TreeParent) obj;
+
 			if (ourElement.getType() == RationaleElementType.ALTERNATIVE)
 			{
 				manager.add(editElement);
 				manager.add(deleteElement);
 				manager.add(associate);
-				manager.add(addQuestion);
-				manager.add(addArgument);
-				manager.add(addDecision);
-				manager.add(addAltConstRel);
+				manager.add(addQuestionEditor);
+				manager.add(addArgumentEditor);
+				manager.add(addDecisionEditor);
+				//manager.add(addQuestion);
+				//manager.add(addArgument);
+				//manager.add(addDecision);
+//				manager.add(addAltConstRel);
 				manager.add(showHistory);
 			}
 			else if (ourElement.getType() == RationaleElementType.REQUIREMENT)
@@ -324,9 +369,10 @@ public class RationaleExplorer extends ViewPart implements ISelectionListener, I
 				manager.add(editElement);
 				manager.add(deleteElement);
 //				manager.add(addQuestion);
-				manager.add(addArgument);
+				manager.add(addArgumentEditor);
+				//manager.add(addArgument);
 				manager.add(findRelationships);
-				manager.add(showHistory);
+				manager.add(showHistory);				
 			}
 			else if (ourElement.getType() == RationaleElementType.CLAIM)
 			{
@@ -338,12 +384,17 @@ public class RationaleExplorer extends ViewPart implements ISelectionListener, I
 				manager.add(editElement);
 				manager.add(deleteElement);
 				//decisions can have alternatives or sub-decisions as children
-				if (ourDec.getAlts())
-					manager.add(addAlternative);
-				else
-					manager.add(addDecision);
-				manager.add(addQuestion);
-				manager.add(associateConstraint);
+				if (ourDec.getAlts()) {
+					manager.add(addAlternativeEditor);
+					//manager.add(addAlternative);
+				}					
+				else {
+					manager.add(addDecisionEditor);
+					//manager.add(addDecision);
+				}
+				manager.add(addQuestionEditor);
+				//manager.add(addQuestion);
+				// manager.add(associateConstraint);
 				manager.add(showHistory);
 			}
 			else if (ourElement.getType() == RationaleElementType.ASSUMPTION)
@@ -358,11 +409,15 @@ public class RationaleExplorer extends ViewPart implements ISelectionListener, I
 			{
 				manager.add(editElement);
 				manager.add(deleteElement);
-				manager.add(addArgument);
+				manager.add(addArgumentEditor);
+				//manager.add(addArgument);
 //				manager.add(addQuestion);
 			}
 			else if (ourElement.getType() == RationaleElementType.ONTENTRY)
 			{
+				if (ourElement.getName().compareTo("Argument-Ontology") == 0) {
+					manager.add(exportOntology);
+				}
 				manager.add(editElement);
 				manager.add(addElement);
 			}
@@ -406,19 +461,23 @@ public class RationaleExplorer extends ViewPart implements ISelectionListener, I
 			{
 				if (ourElement.getName().compareTo("Tradeoffs") == 0)
 				{
-					manager.add(addElement);
+					manager.add(addTradeoffEditor);
+					//manager.add(addElement);
 				}
 				else if (ourElement.getName().compareTo("Co-occurrences") == 0)
 				{
-					manager.add(addElement);
+					manager.add(addTradeoffEditor);
+					//manager.add(addElement);
 				}
 				else if (ourElement.getName().compareTo("Requirements") == 0)
 				{
-					manager.add(addElement);
+					manager.add(addRequirementEditor);
+					//manager.add(addElement);
 				}
 				else if (ourElement.getName().compareTo("Decisions") == 0)
 				{
-					manager.add(addElement);
+					manager.add(addDecisionEditor);
+					//manager.add(addElement);
 				}
 				else if (ourElement.getName().compareTo("Design-Contingencies") == 0)
 				{
@@ -441,6 +500,8 @@ public class RationaleExplorer extends ViewPart implements ISelectionListener, I
 			}
 			
 		}
+		manager.add(new Separator());
+		manager.add(generateRatReportFromHere);
 		
 		// Other plug-ins can contribute there actions here
 		manager.add(new Separator("Additions"));
@@ -449,14 +510,61 @@ public class RationaleExplorer extends ViewPart implements ISelectionListener, I
 	private void fillLocalToolBar(IToolBarManager manager) {
 		drillDownAdapter.addNavigationActions(manager);
 	}
-	
+
 	/**
 	 * This method sets up the actions invoked by chosing menu items
 	 *
 	 */
-	private void makeActions() {
+	private void makeActions() {		
+		/* SEURAT ECLIPSE-STYLE EDITORS ACTION DEFINITIONS */
+
+		// Currently unused editors
 		
-//		System.out.println("made some actions?");
+		// Assumption editor removed for consistency reasons (pop-up boxes to select assumption, then
+		// a tab to edit it? would be confusing to users
+		/*addAssumptionEditor = new OpenRationaleEditorAction(AssumptionEditor.class, this, true);
+		addAssumptionEditor.setText("Create New Assumption (With Editor)");
+		addAssumptionEditor.setToolTipText("Create A New Assumption Using The Assumption Editor Window");
+		
+		showAssumptionEditor = new OpenRationaleEditorAction(AssumptionEditor.class, this, false);
+		showAssumptionEditor.setText("Assumption Editor Page");
+		showAssumptionEditor.setToolTipText("Edit An Assumption In An Editor Window");*/
+		
+		// Editors that are used
+		
+		addRequirementEditor = new OpenRationaleEditorAction(RequirementEditor.class, this, true);
+		addRequirementEditor.setText("New Requirement");
+		addRequirementEditor.setToolTipText("Add Requirement");
+		showRequirementEditor = new OpenRationaleEditorAction(RequirementEditor.class, this, false);
+		
+		addAlternativeEditor = new OpenRationaleEditorAction(AlternativeEditor.class, this, true, RationaleElementType.ALTERNATIVE);
+		addAlternativeEditor.setText("New Alternative");
+		addAlternativeEditor.setToolTipText("Add Alternative");
+		showAlternativeEditor = new OpenRationaleEditorAction(AlternativeEditor.class, this, false);
+		
+		addArgumentEditor = new OpenRationaleEditorAction(ArgumentEditor.class, this, true, RationaleElementType.ARGUMENT);
+		addArgumentEditor.setText("New Argument");
+		addArgumentEditor.setToolTipText("Add Argument");
+		showArgumentEditor = new OpenRationaleEditorAction(ArgumentEditor.class, this, false);
+		
+		addDecisionEditor = new OpenRationaleEditorAction(DecisionEditor.class, this, true, RationaleElementType.DECISION);
+		addDecisionEditor.setText("New Decision");
+		addDecisionEditor.setToolTipText("Add Decision");
+		showDecisionEditor = new OpenRationaleEditorAction(DecisionEditor.class, this, false);
+		
+		addTradeoffEditor = new OpenRationaleEditorAction(TradeoffEditor.class, this, true);
+		addTradeoffEditor.setText("New");
+		addTradeoffEditor.setToolTipText("Add Element");
+		showTradeoffEditor = new OpenRationaleEditorAction(TradeoffEditor.class, this, false);
+		
+		addQuestionEditor = new OpenRationaleEditorAction(QuestionEditor.class, this, true, RationaleElementType.QUESTION);
+		addQuestionEditor.setText("New Question");
+		addQuestionEditor.setToolTipText("Add Question");
+		showQuestionEditor = new OpenRationaleEditorAction(QuestionEditor.class, this, false);
+		
+		//Views that open as editors
+		
+		
 		
 		//
 		//associate action - used to associate rationale with a java element
@@ -467,7 +575,7 @@ public class RationaleExplorer extends ViewPart implements ISelectionListener, I
 		//change database
 		changeDatabase = new Action () {
 			public void run() {
-				rebuildTree();				
+				rebuildTree();
 			}
 		};
 		changeDatabase.setText("Change Rationale DB");
@@ -478,13 +586,16 @@ public class RationaleExplorer extends ViewPart implements ISelectionListener, I
 			public void run() {
 				Frame rf = new Frame();
 				String dbName;
-				AskQuestionGUI ask = new AskQuestionGUI(rf, "Enter rationale name");
-				ask.setVisible(true);
-				if (!ask.getCancel())
-				{
-					dbName = ask.getAnswer();
-					RationaleDB.createNewDB(dbName);
-					rebuildTree();
+
+				InputDialog dlg = new InputDialog(Display.getCurrent().getActiveShell(),
+				"New Rationale Database", "Enter the new database name",
+				null, null);
+
+				if (dlg.open() == Window.OK) {
+				dbName = dlg.getValue();
+
+				RationaleDB.createNewDB(dbName);
+				rebuildTree();
 				}
 				
 			}
@@ -543,6 +654,23 @@ public class RationaleExplorer extends ViewPart implements ISelectionListener, I
 		findOverrides.setText("Find Status Overrides");
 		findOverrides.setToolTipText("Displays status items that were overridden");
 		
+		generateRatReportFromHere = new Action(){
+			public void run(){
+				Object selection = viewer.getSelection();
+				GenerateRationaleReport reportGen = new GenerateRationaleReport(viewer.getControl().getShell().getDisplay(), selection);
+			}
+		};
+		generateRatReportFromHere.setText("Generate Rationale Report From Here");
+		generateRatReportFromHere.setToolTipText("Generates a rationale report from this node down.");
+		
+		generateRatReport = new Action(){
+			public void run(){
+				Object selection = viewer.getSelection();
+				GenerateRationaleReport reportGen = new GenerateRationaleReport(viewer.getControl().getShell().getDisplay(), selection);
+			}
+		};
+		generateRatReport.setText("Generate Rationale Report");
+		generateRatReport.setToolTipText("Generates a complete rationale report");
 		
 		//Search for an entity of a particular type 
 		findEntity = new Action() {
@@ -575,6 +703,27 @@ public class RationaleExplorer extends ViewPart implements ISelectionListener, I
 		findRequirement.setText("Find Requirements");
 		findRequirement.setToolTipText("Finds requirements by status");
 		
+		//Requirements traceability matrix report capability
+		requirementsTraceabilityMatrix = new Action() {
+				public void run() {
+					@SuppressWarnings("unused") TraceabilityMatrixDisplay entityF = 
+						new TraceabilityMatrixDisplay(viewer.getControl().getShell());
+				}
+		}; //end of action definition
+		requirementsTraceabilityMatrix.setText("Generate Traceability Matrix");
+		requirementsTraceabilityMatrix.setToolTipText("Generates a requirements traceability matrix");
+		
+		//Graphical Rationale
+		//showGraphicalRationale = new OpenRationaleEditorAction(GraphicalRationale.class, this, true);
+		showGraphicalRationale = new Action() {
+			public void run() {
+				@SuppressWarnings("unused") GraphicalRationalePop graphrat = 
+					new GraphicalRationalePop(viewer.getControl().getShell());
+			}
+		}; 
+		showGraphicalRationale.setText("Show Graphical Rationale");
+		showGraphicalRationale.setToolTipText("Shows the rationale tree graphically");
+		
 		//Show history is used to show a tabular display of the change history for an element
 		showHistory = new Action() {
 			public void run() {
@@ -606,16 +755,42 @@ public class RationaleExplorer extends ViewPart implements ISelectionListener, I
 		
 		//
 		//edit rationale element Action
+		//For the new editors, will get the rationale type and run the appropriate editor.
 		//
 		editElement = new Action() {
 			public void run() {
+				
 				ISelection selection = viewer.getSelection();
 				Object obj = ((IStructuredSelection)selection).getFirstElement();
 				if (obj instanceof TreeParent)
 				{
-					RationaleElement rElement = getElement((TreeParent) obj, false);
-					editElement((TreeParent) obj, rElement, ourDisplay);
-					
+					TreeParent ourElement = (TreeParent) obj;
+
+					if (ourElement.getType() == RationaleElementType.REQUIREMENT) {
+						showRequirementEditor.run();
+					} else if (ourElement.getType() == RationaleElementType.DECISION) {
+						showDecisionEditor.run();
+					} else if (ourElement.getType() == RationaleElementType.ALTERNATIVE) {
+						showAlternativeEditor.run();
+					} else if (ourElement.getType() == RationaleElementType.ARGUMENT) {
+						showArgumentEditor.run();
+					} else if (ourElement.getType() == RationaleElementType.QUESTION) {
+						showQuestionEditor.run();
+					} else if (ourElement.getType() == RationaleElementType.TRADEOFF) {
+						showTradeoffEditor.run();
+					} else if (ourElement.getType() == RationaleElementType.COOCCURRENCE) {
+						showTradeoffEditor.run();
+					} else {
+						try {
+							RationaleElement rElement = getElement((TreeParent) obj, false);
+							editElement((TreeParent) obj, rElement, ourDisplay);
+						} catch (NullPointerException npe) {
+							/* NPE is thrown when we double-click on an invalid element,
+							 such as the root of the tree.  In this case we don't want
+							 to do anything, no error pop-up, just leave it with no effect.
+							 Could change it to expand the tree if possible. */
+						}
+					}
 				}
 			}
 			
@@ -641,62 +816,6 @@ public class RationaleExplorer extends ViewPart implements ISelectionListener, I
 		}; //end add element action definition
 		addElement.setText("New");
 		addElement.setToolTipText("Add Rationale");
-		
-		
-		//
-		//add alternative element Action
-		//
-		addAlternative = new Action() {
-			public void run() {
-				ISelection selection = viewer.getSelection();
-				Object obj = ((IStructuredSelection)selection).getFirstElement();
-				if (obj instanceof TreeParent)
-				{
-					RationaleElement parentElement = getElement((TreeParent) obj, false);
-					Alternative rElement = new Alternative();
-					createNewElement(parentElement, rElement, (TreeParent) obj);
-				}
-			}
-		};
-		addAlternative.setText("New Alternative");
-		addAlternative.setToolTipText("Add Alternative");
-		
-		//
-		//add decision element Action
-		//
-		addDecision = new Action() {
-			public void run() {
-				
-				ISelection selection = viewer.getSelection();
-				Object obj = ((IStructuredSelection)selection).getFirstElement();
-				if (obj instanceof TreeParent)
-				{
-					RationaleElement parentElement = getElement((TreeParent) obj, false);
-					Decision rElement = new Decision();
-					createNewElement(parentElement, rElement, (TreeParent) obj);
-				}
-			}			
-		}; //end new decision action defn.
-		addDecision.setText("New Decision");
-		addDecision.setToolTipText("Add Decision");
-		
-		//
-		//add question element Action
-		//
-		addQuestion = new Action() {
-			public void run() {
-				ISelection selection = viewer.getSelection();
-				Object obj = ((IStructuredSelection)selection).getFirstElement();
-				if (obj instanceof TreeParent)
-				{
-					RationaleElement parentElement = getElement((TreeParent) obj, false);
-					Question rElement = new Question();
-					createNewElement(parentElement, rElement, (TreeParent) obj);
-				}
-			}
-		}; //end add question action
-		addQuestion.setText("New Question");
-		addQuestion.setToolTipText("Add Question");
 		
 		//
 		//add expertise element Action
@@ -734,25 +853,6 @@ public class RationaleExplorer extends ViewPart implements ISelectionListener, I
 		addAltConstRel.setText("Associate Constraint");
 		addAltConstRel.setToolTipText("Associate Constraint");
 		
-		//
-		//add argument element Action
-		//
-		addArgument = new Action() {
-			public void run() {
-				ISelection selection = viewer.getSelection();
-				Object obj = ((IStructuredSelection)selection).getFirstElement();
-				if (obj instanceof TreeParent)
-				{
-					RationaleElement parentElement = getElement((TreeParent) obj, false);
-					Argument rElement = new Argument();
-					createNewElement(parentElement, rElement, (TreeParent) obj);
-				}
-			}
-		}; //end add argument action def.
-		addArgument.setText("New Argumemt");
-		addArgument.setToolTipText("Add Argument");
-//		addArgument.setImageDescriptor(PlatformUI.getWorkbench().getSharedImages().
-//		getImageDescriptor(ISharedImages.IMG_OBJS_INFO_TSK));	
 		
 		//add findRelationships Action
 		//
@@ -890,6 +990,36 @@ public class RationaleExplorer extends ViewPart implements ISelectionListener, I
 		};
 		associateConstraint.setText("Associate Constraint");
 		associateConstraint.setToolTipText("Associate Constraint");
+		
+		// export argument ontology action- saves current argument ontology to XML
+		exportOntology = new Action() {
+			public void run() {
+				Shell shell = new Shell();
+				FileDialog path = new FileDialog(shell, SWT.SAVE);
+				String[] ext = {"*.xml"};
+				String[] name = {"XML (*.xml)"};
+				path.setFilterExtensions(ext);
+				path.setFilterNames(name);
+				// set default path to the static filename from RationaleDB
+				path.setFileName(RationaleDB.getOntName());
+				
+				shell.pack();
+				
+				// Open the path that the user selected
+				String filePath = path.open();
+				
+				RationaleDB db = RationaleDB.getHandle();
+				if (db.exportOntology(filePath)) {
+					showInformation("The argument ontology has been successfully saved to XML.");
+				} else {
+					showInformation("The argument ontology could not be saved to XML.  If you have manually" +
+							" modified your argument-ontology.xml file you may need to delete it and try again.");
+				}
+			}
+		};
+		
+		exportOntology.setText("Export Ontology to XML");
+		exportOntology.setToolTipText("Export the Argument-Ontology to XML");
 	}
 	
 	/**
@@ -901,7 +1031,18 @@ public class RationaleExplorer extends ViewPart implements ISelectionListener, I
 		viewer.addDoubleClickListener(new IDoubleClickListener() {
 			public void doubleClick(DoubleClickEvent event) {
 //				doubleClickAction.run();
-				editElement.run();
+				
+				ISelection selection = viewer.getSelection();
+				Object obj = ((IStructuredSelection)selection).getFirstElement();
+				if (obj instanceof TreeParent)
+				{
+					try {
+						editElement.run();
+					} catch (NullPointerException npe) {
+						/* This means they clicked on an invalid node.
+						 * Don't display an error, just leave it with no effect */
+					}
+				}
 			}
 		});
 	}
@@ -961,7 +1102,7 @@ public class RationaleExplorer extends ViewPart implements ISelectionListener, I
 	 * @param newStatus - on entry, the complete status, on exit, only the new changes to add to the DB
 	 * @return returns a flag indicating if the status changed
 	 */
-	boolean updateStatus(Vector<RationaleStatus> curStatus, Vector<RationaleStatus> newStatus)
+	public boolean updateStatus(Vector<RationaleStatus> curStatus, Vector<RationaleStatus> newStatus)
 	{
 		boolean different = true;
 		Vector<RationaleStatus> removeCur = new Vector<RationaleStatus>();
@@ -998,10 +1139,44 @@ public class RationaleExplorer extends ViewPart implements ISelectionListener, I
 	}
 	
 	/**
+	 * Update status
+	 */
+	private void updateStatus(RationaleElement rElement)
+	{
+		//we update the parent status, not the new element status
+		//this might not be correct...
+		Vector<RationaleStatus> newStat = null;
+		//try updating our own status - shouldn't that automatically get our parent?
+		newStat = rElement.updateStatus();
+		Vector<RationaleStatus> curStatus = null; 
+		UpdateManager manager = UpdateManager.getHandle();
+		curStatus = manager.getInitialStatus();										
+		RationaleTaskList tlist = RationaleTaskList.getHandle();
+		RationaleDB db = RationaleDB.getHandle();
+		if (newStat != null)
+		{
+//			System.out.println("updated status");
+			//Before updating the task list, compare the status lists!
+			updateStatus(curStatus, newStat);
+			//update the database
+			db.addStatus(newStat);
+			//update tasks too
+			tlist.addTasks(newStat);
+		}
+		if (curStatus.size() > 0)
+		{
+			db.removeStatus(curStatus);
+			//update our task list as well
+			tlist.removeTasks(curStatus);
+		}			
+	}
+
+	
+	/**
 	 * Updates the tree branch (to display new children, etc.)
 	 * @param parent - the top of the branch to refresh
 	 */
-	void refreshBranch(TreeParent parent)
+	public void refreshBranch(TreeParent parent)
 	{
 		viewer.refresh(parent);
 		Iterator childrenI = parent.getIterator();
@@ -1019,7 +1194,7 @@ public class RationaleExplorer extends ViewPart implements ISelectionListener, I
 	 * @param newElement - a flag indicating if we are creating a new RationaleElement
 	 * @return the RationaleElement created or read from the database
 	 */
-	RationaleElement getElement(TreeParent treeElement, boolean newElement)
+	public RationaleElement getElement(TreeObject treeElement, boolean newElement)
 	{
 		RationaleElement ourElement = null;
 		RationaleElementType type = treeElement.getType();
@@ -1116,7 +1291,7 @@ public class RationaleExplorer extends ViewPart implements ISelectionListener, I
 				ourElement = new Designer();
 			}
 		}
-		if (!newElement)
+		if (!newElement && !name.equals("imaginary root"))
 		{
 			ourElement.fromDatabase(treeElement.getName());
 		}
@@ -1199,6 +1374,71 @@ public class RationaleExplorer extends ViewPart implements ISelectionListener, I
 		
 	}
 	
+	
+	/**
+	 * Update method for creating a new element using the new editors.  The function
+	 * is similar to the createNewElement method except that this is called from the
+	 * rationale editor itself, creating some minor differences.  This method
+	 * and the editUpdate method, and their "old editor" counterparts, should
+	 * probably be refactored.
+	 * 
+	 * @param p - the parent tree element
+	 * @param e - the new (child) rationale element
+	 * @return the TreeParent object representing the new element - This is done so that
+	 * the rationale editor class that calls this method can get the correct reference to
+	 * the new element and update itself accordingly- otherwise it will be editing the parent!
+	 */
+	public TreeParent createUpdate(TreeParent p, RationaleElement e) {
+		RationaleDB db = RationaleDB.getHandle();		
+
+		// Add The Element TO The Tree
+		TreeParent newEle = addElement(p, e);
+		
+
+		// Update Status Of Element
+		Vector<RationaleStatus> status = null;
+		
+		status = e.updateStatus();
+		
+		// Update Rationale Task List And Database With New Status
+		RationaleTaskList tlist = RationaleTaskList.getHandle();
+		Vector<RationaleStatus> oldStatus = null;
+		UpdateManager manager = UpdateManager.getHandle();
+		
+		oldStatus = manager.getInitialStatus();
+		
+		if( status != null ) {
+			updateStatus(oldStatus, status);
+			db.addStatus(status);
+			tlist.addTasks(status);			
+		}
+		if( oldStatus.size() > 0 ) {
+			db.removeStatus(oldStatus);
+			tlist.removeTasks(oldStatus);
+		}
+		
+		// Refresh Affected Branch Of Tree
+		refreshBranch(p);
+		
+		// Update Anything In Tree Affected By Insertion
+		Vector<TreeObject> treeUpdates = manager.makeUpdates();
+		Iterator<TreeObject> treeIterator = treeUpdates.iterator();
+		while( treeIterator.hasNext() )
+		{
+			getViewer().update((TreeParent)treeIterator.next(), null);
+		}
+		
+		RationaleTreeMap map = RationaleTreeMap.getHandle();		
+		Vector treeObjs = map.getKeys(map.makeKey(e.getName(), e.getElementType()));
+		//if there's more than one we don't care, just get the first
+		viewer.reveal(treeObjs.elementAt(0));
+		viewer.expandToLevel(treeObjs.elementAt(0), 4);
+		
+		return newEle;
+	}
+	
+	public TreeViewer getViewer() { return viewer; }
+	
 	/**
 	 * This is used to assocate different types of rationale elements
 	 * with each other. For example, a constraint has an ontology element associated. A 
@@ -1267,7 +1507,7 @@ public class RationaleExplorer extends ViewPart implements ISelectionListener, I
 	 * @param element - the rationale element being added
 	 * @return the new treeParent that corresponds to the rationaleElement
 	 */
-	TreeParent addElement(TreeParent parent, RationaleElement element)
+	public TreeParent addElement(TreeParent parent, RationaleElement element)
 	{
 		
 		if (element instanceof Tradeoff)
@@ -1319,9 +1559,11 @@ public class RationaleExplorer extends ViewPart implements ISelectionListener, I
 				(element.getElementType() == RationaleElementType.CLAIM) ||
 				(element.getElementType() == RationaleElementType.TRADEOFF))
 		{
+			RationaleViewContentProvider content = ( (RationaleViewContentProvider) viewer.getContentProvider());
+			
 			//for simplicity, we will assume that yes, the structure changed
 			//so, we remove the old element from the tree
-			( (RationaleViewContentProvider) viewer.getContentProvider()).removeElement(parent);
+			content.removeElement(parent);
 			//and then, we create a new element based on the RationaleElement just
 			//modified
 			newParent = addElement(grandParent, element);	
@@ -1380,6 +1622,18 @@ public class RationaleExplorer extends ViewPart implements ISelectionListener, I
 	}
 	
 	/**
+	 * Update method for editing an existing element.  This has the same function as the
+	 * editElement method, but is designed to be called by the new editors instead (there is
+	 * no display passed from the new editors).
+	 * 
+	 * @param p - the selected tree element being edited
+	 * @param e - the rationale element being edited
+	 */
+	public TreeParent editUpdate(TreeParent p, RationaleElement e) {
+		return updateTreeElement(p, e);
+	}
+	
+	/**
 	 * updateTreeElement - updates our tree element after it has been edited. 
 	 * This includes any name changes, any status changes, and adding any new rationale
 	 * tasks to the task list. Yes, this method probably does too much... The database is updated
@@ -1387,7 +1641,7 @@ public class RationaleExplorer extends ViewPart implements ISelectionListener, I
 	 * @param obj - the tree element that was just edited
 	 * @param rElement - the corresponding rationale element
 	 */
-	private void updateTreeElement (TreeParent obj, RationaleElement rElement)
+	private TreeParent updateTreeElement (TreeParent obj, RationaleElement rElement)
 	{
 		RationaleDB db = RationaleDB.getHandle();
 		//need to check to see if the name has changed
@@ -1448,6 +1702,8 @@ public class RationaleExplorer extends ViewPart implements ISelectionListener, I
 //			viewer.update((TreeParent) treeI.next(), null);
 			viewer.refresh((TreeParent) treeI.next());
 		}
+		
+		return newParent;
 	}
 	
 	/**
@@ -1550,7 +1806,7 @@ public class RationaleExplorer extends ViewPart implements ISelectionListener, I
 			boolean selOk = showQuestion(assQ);
 			if (selOk)
 			{
-				lineNumber = 0;
+				cstart = 0;
 				
 				ourRes = null;
 				try {
@@ -1588,9 +1844,10 @@ public class RationaleExplorer extends ViewPart implements ISelectionListener, I
 //						***							System.out.println("Final type = " + nextE.getElementType());
 						if (ourRes == null)
 						{
-//							***								System.out.println("see if there's a working copy");
 							//see if we can get the element from the working copy
-							IJavaElement original = ((ICompilationUnit) ((ICompilationUnit) nextE).getWorkingCopy()).getOriginalElement();
+							IJavaElement original = nextE.getPrimaryElement();
+//							Get working copy has been deprecated
+//							IJavaElement original = ((ICompilationUnit) ((ICompilationUnit) nextE).getWorkingCopy()).getOriginalElement();
 							ourRes = original.getCorrespondingResource();
 							
 						}
@@ -1614,7 +1871,6 @@ public class RationaleExplorer extends ViewPart implements ISelectionListener, I
 							myJavaElement;
 							
 							IType[] myTypes = myCompilationUnit.getTypes();
-							ISourceRange range = null;
 							boolean found = false;
 							int i = 0;
 							while ((!found) && i < myTypes.length)
@@ -1625,8 +1881,8 @@ public class RationaleExplorer extends ViewPart implements ISelectionListener, I
 //									***						   	 	System.out.println("found the class");
 									if (myTypes[i].isClass())
 									{
-										range = myTypes[i].getSourceRange();
 										found = true;
+										cstart = myTypes[i].getNameRange().getOffset();
 									}
 								}
 								else if (navigatorSelection.getElementType() == IJavaElement.FIELD)
@@ -1638,8 +1894,8 @@ public class RationaleExplorer extends ViewPart implements ISelectionListener, I
 										if (myFields[j].getElementName().compareTo(navigatorSelection.getElementName()) == 0)
 										{
 //											***									 	System.out.println("found a type");
-											range = myFields[j].getSourceRange();
 											found = true;
+											cstart = myFields[j].getNameRange().getOffset();
 										}
 									}
 									
@@ -1653,26 +1909,14 @@ public class RationaleExplorer extends ViewPart implements ISelectionListener, I
 										if (myMethods[j].getElementName().compareTo(navigatorSelection.getElementName()) == 0)
 										{
 //											***									 	System.out.println("found a method");
-											range = myMethods[j].getSourceRange();
 											found = true;
+											cstart = myMethods[j].getNameRange().getOffset();
 										}
 									}
 								}
 								//don't forget to increment!
 								i++;
 							} //end while
-							
-							//now, we need to do some parsing.
-							if (range != null)
-							{
-								CompilationUnit parsedUnit = AST.parseCompilationUnit(myCompilationUnit, false);
-								lineNumber = parsedUnit.lineNumber(range.getOffset());
-							}
-							else
-							{
-								lineNumber = 0;
-							}
-							
 						}
 						else
 						{
@@ -1697,13 +1941,15 @@ public class RationaleExplorer extends ViewPart implements ISelectionListener, I
 							try {
 //								***						System.out.println("line number = " + new Integer(lineNumber).toString());
 								IMarker ratM = ourRes.createMarker("SEURAT.ratmarker");
+								String dbname = RationaleDB.getDbName();
 								String markD = "Alt: '" +
-								alternativeName + "'";
+								alternativeName + "'   Rationale DB: '" + dbname + "'";
 								ratM.setAttribute(IMarker.MESSAGE, markD);
-//								ratM.setAttribute(IMarker.CHAR_START, 153);
-//								ratM.setAttribute(IMarker.CHAR_END, 154);
+								ratM.setAttribute(IMarker.CHAR_START, cstart);
+								ratM.setAttribute(IMarker.CHAR_END, cstart+1);
 								ratM.setAttribute(IMarker.SEVERITY, 0);
-								ratM.setAttribute(IMarker.LINE_NUMBER, lineNumber);
+//								ratM.setAttribute(IMarker.LINE_NUMBER, lineNumber);
+								String artName = navigatorSelection.getElementName();
 								ratM.setAttribute("alternative", alternativeName);
 								SEURATResourcePropertiesManager.addPersistentProperty (ourRes,
 										"Rat", "true");
@@ -1711,8 +1957,8 @@ public class RationaleExplorer extends ViewPart implements ISelectionListener, I
 								d.associateAlternative(alternativeName,
 										navigatorSelection.getHandleIdentifier(),
 										ourRes.getName(),
-										navigatorSelection.getElementName(),
-										markD, lineNumber);
+										artName,
+										markD);
 								
 							}
 							catch (CoreException e) {
@@ -1763,6 +2009,19 @@ public class RationaleExplorer extends ViewPart implements ISelectionListener, I
 				"RationaleExplorer",
 				message);
 	}
+	
+	/**
+	 * This method is used to pop-up a message to inform the user that an action has been completed.
+	 * It is used when saving the argument ontology but could easily be re-used elsewhere.
+	 * @param message
+	 * @return return value from the dialog
+	 */
+	private void showInformation(String message) {
+		MessageDialog.openInformation(
+			viewer.getControl().getShell(),
+			"RationaleExplorer",
+			message);
+	}
 	/**
 	 * This method is used to rebuild the tree from a different copy of the database
 	 * 
@@ -1775,7 +2034,244 @@ public class RationaleExplorer extends ViewPart implements ISelectionListener, I
 		viewer.setContentProvider(new RationaleViewContentProvider());
 		//this should re-fresh from the new database
 		viewer.setInput(((RationaleViewContentProvider) viewer.getContentProvider()).initialize());
+		viewer.expandToLevel(2);
 		RationaleTaskList tlist = RationaleTaskList.getHandle();
 		tlist.resetTable();
+		// Restore the associations on startup
+		restoreAssociations.run();
+	}
+	
+	/**
+	 * Simple method to open an associated database.  Most of the work is done for us
+	 * in the createNewDB method; the RationaleExplorer simply needs to get the
+	 * name, call createNewDB, and then make a call to run the changeDatabase action.
+	 * The last step allows the database to be loaded right away.
+	 * 
+	 * @param e - the rationale update event prompting this operation
+	 */
+	public void openDatabase(RationaleUpdateEvent e) {
+		String name;
+		if (e.getIJavaElement() == null) name = (e.getProject().getName()) + "_Rat";
+		else name = ((IJavaProject) e.getIJavaElement()).getElementName() + "_Rat";
+		RationaleDB.createNewDB(name);
+		changeDatabase.run();
+	}
+	
+	/**
+	 * When a candidate rationale element is added to the tree from the Candidate
+	 * Rationale Explorer, an event is triggered to send the new element to be added
+	 * to the tree. At this point, the element (and its children, if applicable) have
+	 * already been added to the database.
+	 */
+	public void addNewElement(RationaleUpdateEvent e)
+	{
+		RationaleElement ele = e.getRationaleElement();
+		//get the tree parent corresponding to the element...
+		RationaleTreeMap map = RationaleTreeMap.getHandle();
+		TreeParent ourNode = null;
+		TreeParent ourParent = null;
+		
+
+		if (ele.getElementType() == RationaleElementType.REQUIREMENT)
+		{
+			Vector treeObjs = map.getKeys(map.makeKey("Requirements", RationaleElementType.RATIONALE));
+			ourParent = (TreeParent) treeObjs.elementAt(0);
+			ourNode = addElement(ourParent, ele);
+			//Now, add our children
+			Requirement req = (Requirement) ele;
+			Iterator children = req.getArguments().iterator();
+			while (children.hasNext())
+			{
+				Argument arg = (Argument) children.next();
+				addNewElement(ourNode, arg);
+			}
+			
+		}
+		else if (ele.getElementType() == RationaleElementType.DECISION)
+		{
+			Decision dec = (Decision) ele;
+			Vector treeObjs = null;
+			//We might be saving the decision as a sub-decision so we need to check
+			if (dec.getParent() <= 0)
+			{
+			 treeObjs = map.getKeys(map.makeKey("Decisions", RationaleElementType.RATIONALE));
+			}
+			else
+			{
+				Decision parentDec = new Decision();
+				parentDec.fromDatabase(dec.getParent());
+				treeObjs = map.getKeys(map.makeKey(parentDec.getName(), RationaleElementType.DECISION));
+			}
+			int pid = 0;
+			while (pid < treeObjs.size())
+			{
+				ourParent = (TreeParent) treeObjs.elementAt(pid);
+				ourNode = addElement(ourParent, ele);
+				pid++;
+			}
+			//Now, add our children
+			Iterator children = dec.getAlternatives().iterator();
+			while (children.hasNext())
+			{
+				Alternative alt = (Alternative) children.next();
+				addNewElement(ourNode, alt);
+			}
+		}
+		else if (ele.getElementType() == RationaleElementType.ALTERNATIVE)
+		{
+			Alternative alt = (Alternative) ele;
+			Vector treeObjs = null;
+			//We might be saving this alternative under a new decision
+							Decision parentDec = new Decision();
+				parentDec.fromDatabase(alt.getParent());
+				treeObjs = map.getKeys(map.makeKey(parentDec.getName(), RationaleElementType.DECISION));
+						int pid = 0;
+			while (pid < treeObjs.size())
+			{
+				ourParent = (TreeParent) treeObjs.elementAt(pid);
+				ourNode = addElement(ourParent, ele);
+				pid++;
+			}
+			//Now, add our children
+			Iterator children = alt.getAllArguments().iterator();
+			while (children.hasNext())
+			{
+				Argument arg = (Argument) children.next();
+				addNewElement(ourNode, arg);
+			}
+		}
+		else if (ele.getElementType() == RationaleElementType.ARGUMENT)
+		{
+			Argument arg = (Argument) ele;
+			Vector treeObjs = null;
+			if (arg.getPtype() == RationaleElementType.REQUIREMENT)
+			{
+				Requirement parentRec = new Requirement();
+				parentRec.fromDatabase(arg.getParent());
+				treeObjs = map.getKeys(map.makeKey(parentRec.getName(), RationaleElementType.REQUIREMENT));
+			}
+			else if (arg.getPtype() == RationaleElementType.ALTERNATIVE)
+			{
+				Alternative parentAlt = new Alternative();
+				parentAlt.fromDatabase(arg.getParent());
+				treeObjs = map.getKeys(map.makeKey(parentAlt.getName(), RationaleElementType.ALTERNATIVE));
+			}
+			else
+			{
+				return;
+			}
+			int pid = 0;
+			while (pid < treeObjs.size())
+			{
+				ourParent = (TreeParent) treeObjs.elementAt(pid);
+				ourNode = addElement(ourParent, ele);
+				pid++;
+			}
+		}
+		if (ourParent != null)
+		{
+		refreshBranch(ourParent);
+		}		
+	}
+	
+	
+	/**
+	 * This is the recursive version of addNewElement that adds a rationale element
+	 */
+	public void addNewElement(TreeParent parent, RationaleElement ele)
+	{
+		//get the tree parent corresponding to the element...
+		RationaleTreeMap map = RationaleTreeMap.getHandle();
+		TreeParent ourNode = null;
+		//update status (will this work?)
+		updateStatus(ele);
+		
+		if (ele.getElementType() == RationaleElementType.ALTERNATIVE)
+		{
+			ourNode = addElement(parent, ele);
+			//Now, add our children
+			Alternative alt = (Alternative) ele;
+			Iterator children = alt.getAllArguments().iterator();
+			while (children.hasNext())
+			{
+				Argument arg = (Argument) children.next();
+				addNewElement(ourNode, arg);
+			}	
+		}
+		else if (ele.getElementType() == RationaleElementType.ARGUMENT)
+		{
+			ourNode = addElement(parent, ele);
+		}
+		updateTreeElement(ourNode, ele);
+		refreshBranch(parent);
+	}
+	
+	/**
+	 * Method to update the rationale status if a status override is removed. This
+	 * was previously done when looking for overrides
+	 * 
+	 * @param e - the rationale update event
+	 */
+	public void updateRationaleStatus(RationaleUpdateEvent e)
+	{
+		RationaleStatus rStat = e.getOurStatus();
+		Vector <RationaleStatus> newStatus = new Vector<RationaleStatus>();
+		newStatus.add(rStat);
+		//Add it back to the task list
+		RationaleTaskList tlist = RationaleTaskList.getHandle();
+		tlist.addTasks(newStatus);
+		//need to update the rationale tree also
+		//need to update our tree item!
+		UpdateManager mgr = UpdateManager.getHandle();
+		RationaleElement ourEle = RationaleDB.getRationaleElement(rStat.getParent(), rStat.getRationaleType());				
+		mgr.addUpdate(rStat.getParent(), ourEle.getName(), rStat.getRationaleType());					
+		mgr.makeTreeUpdates();
+	}
+
+	/**
+	 * Method that handles Rationale Explorer behavior when a change is made to
+	 * the SEURAT preference store.  This method causes the database to be automatically
+	 * reloaded for two types of preference changes:
+	 * -Change in database type (Derby or MySQL)
+	 * -Change in database name (either on the Derby or the MySQL page)
+	 */
+	public void propertyChange(PropertyChangeEvent event) {
+		if (event.getProperty().equals(PreferenceConstants.P_DATABASETYPE) ||
+				event.getProperty().equals(PreferenceConstants.P_DERBYNAME) ||
+				event.getProperty().equals(PreferenceConstants.P_DATABASE)) {
+			rebuildTree(); // Automatically connect to the new database
+			//waitingToConnectRemote = false;  // was part of below code
+		}
+		
+		/* There are some significant problems if we want the database to auto-change when
+		the user changes between local and remote MySQL databases.  For example, we don't know
+		if they are changing the address, port, account info, etc. and have no way of knowing
+		from this method.  Given that, in practice, users will not be changing between local
+		and remote MySQL databases much if at all (they'll either be set up with a local one
+		or a remote multi-user one and only be using that) I decided to leave this code out. */
+		
+		/*else if (event.getProperty().equals(PreferenceConstants.P_MYSQLLOCATION)) {
+			if (event.getNewValue().equals(PreferenceConstants.MySQLLocationType.REMOTE)) {
+				// We need to make sure the location and port are defined, otherwise
+				// we won't be able to connect.  Due to the huge range of possible invalid values
+				// we just do a basic sanity check here.
+				if (!SEURATPlugin.getDefault().getPreferenceStore().getString(PreferenceConstants.P_MYSQLADDRESS).equals("") &&
+						!SEURATPlugin.getDefault().getPreferenceStore().getString(PreferenceConstants.P_MYSQLPORT).equals("")) {
+					rebuildTree();
+					waitingToConnectRemote = false;
+				} else {
+					waitingToConnectRemote = true;
+				}
+			} else {
+				rebuildTree(); // Local, so we can probably go ahead and connect
+				waitingToConnectRemote = false;
+			}
+		}
+		else if (event.getProperty().equals(PreferenceConstants.P_MYSQLPORT) && waitingToConnectRemote) {
+			// We'll try to connect now, but it may not work if they also had to change account info.
+			// It's hard to implement a working system for this, but it seems unlikely to happen in practice.
+			waitingToConnectRemote = false;
+			rebuildTree();
+		}*/
 	}
 }

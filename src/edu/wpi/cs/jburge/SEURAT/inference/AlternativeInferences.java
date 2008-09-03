@@ -70,7 +70,7 @@ public class AlternativeInferences {
 				while (rs.next())
 				{
 					Decision dec = new Decision();
-					dec.fromDatabase(RationaleDB.decode(rs.getString("name")));
+					dec.fromDatabase(RationaleDBUtil.decode(rs.getString("name")));
 					Vector<RationaleStatus> results = inf.updateDecisionStatus(dec);
 					if (results != null)
 					{
@@ -104,7 +104,7 @@ public class AlternativeInferences {
 		Vector<RationaleStatus> newStatus  = new Vector<RationaleStatus>();
 		alt.evaluate(); //this is actually done when it is re-written...
 //		System.out.println("Saving alternative after update");
-		alt.toDatabase(alt.getParent(), alt.getPtype());
+		//alt.toDatabase(alt.getParent(), alt.getPtype());
 		
 		//lets check to see if we have any unanswered questions
 //		check to see if the selected alternative has any questions!
@@ -144,7 +144,7 @@ public class AlternativeInferences {
 				while (rs.next())
 				{
 					Decision dec = new Decision();
-					dec.fromDatabase(RationaleDB.decode(rs.getString("name")));
+					dec.fromDatabase(RationaleDBUtil.decode(rs.getString("name")));
 					Vector<RationaleStatus> results = inf.updateDecisionStatus(dec);
 					if (results != null)
 					{
@@ -173,6 +173,23 @@ public class AlternativeInferences {
 			{
 				newStatus.addAll(relResults);
 			}			 		
+			
+			//need to check to see if there are any arguments that don't have a 
+			//claim/requirement/assumption/etc. (recently reported)
+			Iterator argAll = alt.getAllArguments().iterator();
+			while (argAll.hasNext())
+			{
+				Argument argB = (Argument) argAll.next();
+				if (argB.getCategory() == ArgCategory.NONE)
+				{
+					String problem = "An incomplete argument " + 
+					                 "has been detected for Alt: " + alt.getName() + "'"; 
+					RationaleStatus stat = new RationaleStatus(RationaleErrorLevel.ERROR, problem, 
+							RationaleElementType.ARGUMENT, new java.util.Date(), argB.getID(),
+							RationaleStatusType.ARGUMENT_INCOMPLETE);
+					newStatus.add(stat);					
+				}
+			}
 			
 			//need to check for contradictory arguments
 			//first, for the same argument on opposing sides

@@ -12,7 +12,7 @@ import java.util.*;
 import org.eclipse.jface.viewers.*;
 import org.eclipse.core.resources.ResourcesPlugin;
 import edu.wpi.cs.jburge.SEURAT.rationaleData.*;
-/**
+/** 
  * This provides the content for the RationaleExplorer tree view.
  * @author jburge
  *
@@ -318,6 +318,8 @@ ITreeContentProvider {
 			//add our child
 			String argType = d.getArgumentType(childName);
 			TreeParent argchild = null;
+			if (argType != null)
+			{
 			if (argType.compareTo("Claim") == 0)
 			{
 				String clmName = d.getClaim(childName); 
@@ -359,7 +361,7 @@ ITreeContentProvider {
 					argchild.setActive(false);
 				}
 				RationaleErrorLevel ourStatus = 
-					d.getActiveStatus(altName, RationaleElementType.REQUIREMENT);
+					d.getActiveStatus(altName, RationaleElementType.ALTERNATIVE); //was req?
 				argchild.setStatus(ourStatus);
 			}
 			else
@@ -367,6 +369,7 @@ ITreeContentProvider {
 				System.out.println("No match on the argument type");
 			}
 			child.addChild(argchild);
+			}
 			//add arguments...
 			addArguments(child, childName, RationaleElementType.ARGUMENT);
 			//add questions...

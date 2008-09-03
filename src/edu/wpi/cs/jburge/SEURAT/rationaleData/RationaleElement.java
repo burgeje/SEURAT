@@ -15,6 +15,15 @@ import org.w3c.dom.Element;
  */
 public class RationaleElement implements Serializable
 {
+	@Override
+	public boolean equals(Object obj) {
+		if( obj.getClass().equals(this.getClass()) )
+		{
+			return ((RationaleElement)obj).id == this.id;
+		}
+		return super.equals(obj);
+	}
+
 	/**
 	 * 
 	 */
@@ -53,6 +62,11 @@ public class RationaleElement implements Serializable
 	 *
 	 */
 	boolean fromXML;
+	
+	public RationaleElement getParentElement()
+	{
+		return null;
+	}
 	
 	RationaleElement()
 	{

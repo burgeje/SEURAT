@@ -77,7 +77,7 @@ public class ArgumentInferences {
 				
 				while (rs.next())
 				{
-					String altName = RationaleDB.decode(rs.getString("name"));
+					String altName = RationaleDBUtil.decode(rs.getString("name"));
 					Alternative alt = new Alternative();
 					alt.fromDatabase(altName);
 					newStatus.addAll(inf.updateAlternative(alt));
@@ -94,7 +94,7 @@ public class ArgumentInferences {
 				
 				while (rs.next())
 				{
-					String reqName = RationaleDB.decode(rs.getString("name"));
+					String reqName = RationaleDBUtil.decode(rs.getString("name"));
 					Requirement req = new Requirement();
 					req.fromDatabase(reqName);
 					newStatus.addAll(inf.updateRequirement(req));
@@ -157,7 +157,7 @@ public class ArgumentInferences {
 			
 			while (rs.next())
 			{
-				String argName = RationaleDB.decode(rs.getString("name"));
+				String argName = RationaleDBUtil.decode(rs.getString("name"));
 				Argument arg = new Argument();
 				arg.fromDatabase(argName);
 				

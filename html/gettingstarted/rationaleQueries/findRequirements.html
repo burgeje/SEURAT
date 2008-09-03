@@ -3,17 +3,41 @@
 <html>
 <head>
 	<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
-	<title>Find Requirements</title>
+	<title>Finding Requirements</title>
 </head>
 
 <body>
-<h2>Find Requirements</h2>
-The Find Requirements query lets the user look for requirements by their status. 
-For example, they could get a list of all the violated requirements or all the 
-satisfied requirements. The user selects the type using the display shown in 
-the following figure. The list of requirements is shown in the next figure.<p>&nbsp;</p>
+<h2>Finding Requirements</h2>
+<p>
+SEURAT provides a query that finds requirements with a specific status. This 
+makes it possible to retrieve lists of requirements such as those that have
+been violated, addressed or satisfied. To locate requirements which have
+a certain status:
+</p>
+<ul>
+<li>Locate the <i>SEURAT Search Page</i> from the Eclipse search window.</li>
+<li>Select the <i>Requirement</i> radio button to indicate the search type.</li>
+<li>Use the drop down list to select the Requirement Status which you wish to search for.</li>
+<li>Click the Search button to execute the query.</li>
+</ul> 
 <p align="center"><img border="0" src="../../pics/findRequiremnet.jpg"></p>
-<p align="center">&nbsp;</p>
+<p>
+The results of the search will be placed in the Eclipse search view. Each requirement
+will be listed in a table along with any arguments associated with that requirement. You may
+click on any of the column headers to sort the requirements based on that column's data. 
+Double clicking on a row of the table will open the associated requirement in an editor
+which can be used to make modifications. Right clicking on any of the rows in the table will
+display a context menu containing additional actions you can perform.
+</p>
 <p align="center"><img border="0" src="../../pics/requirementDisplay.jpg"></p>
+<dl>
+  <lh>The following actions are available from the context menu:</lh>
+  <dt><b>Open Requirement</b></dt>
+  <dd>Open an editor for the selected requirement or requirements.</dd>
+  <dt><b>Open Argument</b></b>
+  <dd>Open an editor for the selected argument or arguments.</dd>
+  <dt><b>Open All Associated Rationale</b></dt>
+  <dd>Open an editor for each of the selected requirements and arguments.</dd>
+</dl>
 </body>
 </html>

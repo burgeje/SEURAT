@@ -88,7 +88,17 @@ public final class UpdateType  implements Serializable {
 	 * Associate a rationale element with some code
 	 */
 	public static final UpdateType ASSOCIATE = new UpdateType("Associate");
-	
-	
+	/**
+	 * Open an associated rationale database
+	 */
+	public static final UpdateType DATABASE = new UpdateType("Database");
+	/**
+	 * Update the status in the tree and the task list when an override is removed
+	 */
+	public static final UpdateType STATUS = new UpdateType("Status");
+	/**
+	 * Add a new rationale element (and its children) to the Rationale Explorer tree
+	 */
+	public static final UpdateType ADD = new UpdateType("Add");
 }
 

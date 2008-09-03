@@ -22,6 +22,9 @@ import java.sql.ResultSet;
 
 import org.eclipse.swt.widgets.Display;
 
+import SEURAT.events.RationaleElementUpdateEventGenerator;
+import SEURAT.events.RationaleUpdateEvent;
+
 
 import edu.wpi.cs.jburge.SEURAT.editors.EditAreaExp;
 
@@ -50,7 +53,9 @@ public class AreaExp extends RationaleElement implements Serializable
 	 * figure out what levels we want to be availabe and create a type!
 	 */
 	int level;
-	
+
+	private RationaleElementUpdateEventGenerator<AreaExp> m_eventGenerator = 
+		new RationaleElementUpdateEventGenerator<AreaExp>(this);
 	
 	//constructor called from the XML parsing code
 	public AreaExp()
@@ -102,6 +107,10 @@ public class AreaExp extends RationaleElement implements Serializable
 		Connection conn = db.getConnection();
 		
 		int ourid = 0;
+
+		// Update Event To Inform Subscribers Of Changes
+		// To Rationale
+		RationaleUpdateEvent l_updateEvent;
 		
 		//find out if this requirement is already in the database
 		Statement stmt = null; 
@@ -116,7 +125,7 @@ public class AreaExp extends RationaleElement implements Serializable
 				
 				//now, update it with the new information
 				String updateOnt = "UPDATE AreaExp " +
-				"SET name = '" + RationaleDB.escape(this.name) + 
+				"SET name = '" + RationaleDBUtil.escape(this.name) + 
 				"', des = " +
 				pid + ", " +
 				"area  = " +
@@ -128,12 +137,16 @@ public class AreaExp extends RationaleElement implements Serializable
 				component.getID() + ";";
 				System.out.println(updateOnt);
 				stmt.execute(updateOnt);
+				
+				ourid = this.id;
+				
+				l_updateEvent = m_eventGenerator.MakeUpdated();
 			}
 			else if (pid == 0)
 			{
 				//now, update it with the new information
 				String updateOnt = "UPDATE AreaExp " +
-				"SET name = '" + RationaleDB.escape(this.name) + 
+				"SET name = '" + RationaleDBUtil.escape(this.name) + 
 				"level = " + 
 				this.level +
 				" WHERE " +
@@ -141,6 +154,10 @@ public class AreaExp extends RationaleElement implements Serializable
 				this.getID() + ";";
 				System.out.println(updateOnt);
 				stmt.execute(updateOnt);
+				
+				ourid = this.id;
+				
+				l_updateEvent = m_eventGenerator.MakeUpdated();
 			}
 			else 
 			{
@@ -150,14 +167,21 @@ public class AreaExp extends RationaleElement implements Serializable
 				String newArgSt = "INSERT INTO AreaExp " +
 				"(name, des, area, level) " +
 				"VALUES ('" +
-				RationaleDB.escape(name) + "', " +
+				RationaleDBUtil.escape(name) + "', " +
 				pid + ", " +
 				component.getID() + ", " +
 				level + ")"; 
 				
 				System.out.println(newArgSt);
-				stmt.execute(newArgSt); 
+				stmt.executeUpdate(newArgSt, Statement.RETURN_GENERATED_KEYS); 
+
+				// TODO This code has not been tested
+				ResultSet generatedKey = null;
+				generatedKey = stmt.getGeneratedKeys();
+				generatedKey.next();
+				this.id = ourid = generatedKey.getInt(1); 
 				
+				l_updateEvent = m_eventGenerator.MakeCreated();				
 			}
 			
 		} catch (SQLException ex) {
@@ -196,7 +220,7 @@ public class AreaExp extends RationaleElement implements Serializable
 			
 			if (rs.next())
 			{
-				name = RationaleDB.decode(rs.getString("name"));
+				name = RationaleDBUtil.decode(rs.getString("name"));
 				rs.close();
 				this.fromDatabase(name);
 			}
@@ -220,7 +244,7 @@ public class AreaExp extends RationaleElement implements Serializable
 //		***		System.out.println("ont name = " + name);
 		
 		this.name = name;
-		name = RationaleDB.escape(name);
+		name = RationaleDBUtil.escape(name);
 		
 		Statement stmt = null; 
 		ResultSet rs = null; 
@@ -237,7 +261,7 @@ public class AreaExp extends RationaleElement implements Serializable
 			{
 				
 				id = rs.getInt("id");
-				name = RationaleDB.decode(rs.getString("name"));
+				name = RationaleDBUtil.decode(rs.getString("name"));
 				level = rs.getInt("level");
 				
 				component = new DesignProductEntry();

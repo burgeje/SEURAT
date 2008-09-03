@@ -1,7 +1,6 @@
 
 package edu.wpi.cs.jburge.SEURAT.editors;
 
-import java.awt.Frame;
 import java.io.Serializable;
 import java.util.Enumeration;
 
@@ -225,9 +224,7 @@ public class EditQuestion extends NewRationaleElementGUI implements Serializable
 						QuestionStatus newStat = QuestionStatus.fromString(statusBox.getItem(statusBox.getSelectionIndex()));
 						if (!newStat.toString().equals(ourQuest.getStatus().toString()))
 						{
-							Frame rf = new Frame();
-							ReasonGUI rg = new ReasonGUI(rf);
-							rg.setVisible(true);
+							ReasonGUI rg = new ReasonGUI();
 							String newReason = rg.getReason();
 							ourQuest.setStatus(newStat);
 							//				System.out.println(newStat.toString() + ourQuest.getStatus().toString());

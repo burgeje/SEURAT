@@ -1,0 +1,35 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+	<title>Working with a Multi-User Database</title>
+</head>
+
+<body>
+<h2>Working with a Multi-User Database</h2>
+<p>If you are using a multi-user database, there are some difficulties involved with the synchronization of
+the Rationale Explorer and the maintenance of associations.  Associations are tracked using markers, which
+are saved locally in the workspace and cannot be stored persistently.  To get around this in a multi-user database,
+it is necessary to reload the associations from the database if significant remote changes (such as refactoring)
+have been made to the code containing them.</p>
+
+<p><b>NOTE: When refactoring code that is associated with a rationale database, make sure you have the relevant
+files open when you refactor.  For example, if you are moving a method, you need to have editors open for the
+class the method is in and the class it is being moved to.  Failure to do this can prevent the system
+from detecting the changes!</b></p>  
+
+<p>Associations are restored automatically when a database is loaded.  In addition, you can restore them
+manually by using the "Restore Associations" option on the Rationale Explorer drop-down menu, as demonstrated
+below.  When this is selected, the SEURAT system will go through the associations in the rationale database
+and update the association markers on the local workspace.</p>
+
+<p>Problems may also occur if rationale elements have been added or removed remotely since you began working
+with the database.  These synchronization issues will be addressed in future versions of SEURAT.  For now,
+you can manually reload the database and pick up any remote changes by selecting "Reload Rationale DB" on
+the Rationale Explorer drop-down menu.  The screenshot below shows the drop-down menu in use.</p>
+
+<p>&nbsp;</p>
+<p align="center"><img border="0" src="../pics/SEURAT_Team_1_MultiUser.png"></p>
+</body>
+</html>

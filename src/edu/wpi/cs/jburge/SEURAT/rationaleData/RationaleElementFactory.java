@@ -93,6 +93,10 @@ public final class RationaleElementFactory {
 		{
 			return new Tradeoff(true);
 		}
+		else if (type == RationaleElementType.CANDIDATE)
+		{
+			return new CandidateRationale(RationaleElementType.NONE);
+		}
 		else
 		{
 			System.out.println("Couldn't create item!!!");

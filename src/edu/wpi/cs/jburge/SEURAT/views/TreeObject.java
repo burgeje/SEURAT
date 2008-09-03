@@ -28,6 +28,10 @@ public class TreeObject implements IAdaptable {
 	 */
 	private TreeParent parent;
 	/**
+	 * The alternative parent (if working with Candidates)
+	 */
+	private CandidateTreeParent altParent;
+	/**
 	 * The element's status
 	 */
 	private RationaleErrorLevel status;
@@ -87,10 +91,16 @@ public class TreeObject implements IAdaptable {
 	public void setParent(TreeParent parent) {
 		this.parent = parent;
 	}
+	
+	public void setAltParent(CandidateTreeParent parent) {
+		this.altParent = parent;
+	}
 	public TreeParent getParent() {
 		return parent;
 	}
-	
+	public CandidateTreeParent getAltParent() {
+		return altParent;
+	}
 	public void setActive(boolean act)
 	{
 		active = act;
