@@ -1,9 +1,12 @@
 package SEURAT.editors;
 
 import java.util.Enumeration;
+import java.util.Iterator;
 import java.util.Vector;
 
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionAdapter;
+import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -20,8 +23,11 @@ import SEURAT.events.RationaleUpdateEvent;
 import edu.wpi.cs.jburge.SEURAT.editors.ConsistencyChecker;
 import edu.wpi.cs.jburge.SEURAT.editors.DisplayUtilities;
 import edu.wpi.cs.jburge.SEURAT.editors.ReasonGUI;
+import edu.wpi.cs.jburge.SEURAT.editors.SelectOntEntry;
 import edu.wpi.cs.jburge.SEURAT.rationaleData.Argument;
 import edu.wpi.cs.jburge.SEURAT.rationaleData.History;
+import edu.wpi.cs.jburge.SEURAT.rationaleData.Importance;
+import edu.wpi.cs.jburge.SEURAT.rationaleData.OntEntry;
 import edu.wpi.cs.jburge.SEURAT.rationaleData.RationaleDB;
 import edu.wpi.cs.jburge.SEURAT.rationaleData.RationaleElement;
 import edu.wpi.cs.jburge.SEURAT.rationaleData.RationaleElementType;
@@ -63,6 +69,14 @@ public class RequirementEditor extends RationaleEditorBase {
 		 * Last known good status
 		 */
 		int status;
+		/**
+		 * last known good importance
+		 */
+		int importance;
+		/**
+		 * last known enabled/disabled status
+		 */
+		boolean enabled;
 	}
 	
 	/**
@@ -89,10 +103,21 @@ public class RequirementEditor extends RationaleEditorBase {
 	 */  
 	private Combo typeBox;
 	/**
+	 * Combo box to select importance
+	 */
+	private Combo importanceBox;
+	/**
+	 * The ontology entry description
+	 */
+	private Label ontDesc;
+	/**
 	 * The status of the requiement (violated, addressed, etc.)
 	 */
 	private Combo statusBox;
-	
+	/**
+	 * Button to select an argument ontology entry
+	 */
+	private Button selOntButton;
 	/**
 	 * Arguments for the requirement
 	 */
@@ -101,7 +126,7 @@ public class RequirementEditor extends RationaleEditorBase {
 	 * Arguments against the requirement
 	 */
 	private List againstModel;
-	
+	Composite ourParent;
 	/**
 	 * Member variable used to store the last known good values
 	 * of editor data.
@@ -175,6 +200,12 @@ public class RequirementEditor extends RationaleEditorBase {
 		
 		if( statusBox != null )
 			dataCache.status = statusBox.getSelectionIndex();
+		
+		if( importanceBox != null )
+			dataCache.importance = importanceBox.getSelectionIndex();
+		
+		//This dataCache field is used a bit differently...
+		dataCache.enabled = enableButton.getSelection();
 	}
 
 	/* (non-Javadoc)
@@ -238,6 +269,26 @@ public class RequirementEditor extends RationaleEditorBase {
 				index++;
 			}
 			dataCache.status = statusBox.getSelectionIndex();
+		}
+		else
+			l_dirty = true;
+		
+		if( importanceBox.getSelectionIndex() == dataCache.importance )
+		{
+			Enumeration impEnum = Importance.elements();
+			int l=0;
+			Importance itype;
+			while (impEnum.hasMoreElements())
+			{
+				itype = (Importance) impEnum.nextElement();
+				
+				if (itype.toString().compareTo(getRequirement().getImportance().toString()) == 0)
+				{
+					importanceBox.select(l);
+					dataCache.importance = importanceBox.getSelectionIndex();
+				}
+				l++;
+			}
 		}
 		else
 			l_dirty = true;
@@ -428,6 +479,7 @@ public class RequirementEditor extends RationaleEditorBase {
 		{
 			getRequirement().setType(ReqType.FR);
 			getRequirement().setStatus(ReqStatus.UNDECIDED);
+			getRequirement().setImportance(Importance.ESSENTIAL);
 		}
 		/* - do we need to update our status first? probably not...
 		 else
@@ -489,6 +541,39 @@ public class RequirementEditor extends RationaleEditorBase {
 		gridData.horizontalAlignment = GridData.FILL;
 		typeBox.setLayoutData(gridData);
 		
+		typeBox.addSelectionListener(new SelectionAdapter() {
+			
+			public void widgetSelected(SelectionEvent event) 
+			{
+				ReqType rType = ReqType.fromString(typeBox.getItem(typeBox.getSelectionIndex()));
+				if (rType == ReqType.NFR)
+				{
+					selOntButton.setEnabled(true);
+					getRequirement().setImportance(Importance.DEFAULT);
+				}
+				else
+				{
+					selOntButton.setEnabled(false);
+					getRequirement().setImportance(Importance.ESSENTIAL);
+					getRequirement().setOntology(null);
+				}
+				
+				//Make sure our new importance is selected in the widget!
+				Importance itype;
+				Enumeration impEnum = Importance.elements();
+				int l = 0;
+				while (impEnum.hasMoreElements())
+				{
+					itype = (Importance) impEnum.nextElement();
+					if (itype.toString().compareTo(getRequirement().getImportance().toString()) == 0)
+					{
+						importanceBox.select(l);
+					}
+					l++;
+				}
+			}
+		});
+		
 		new Label(parent, SWT.NONE).setText("Status:");
 		statusBox = new Combo(parent, SWT.NONE);
 		statusBox.addModifyListener(getNeedsSaveListener());
@@ -526,6 +611,75 @@ public class RequirementEditor extends RationaleEditorBase {
 		gridData.horizontalAlignment = GridData.FILL;
 		artifactField.setLayoutData(gridData);
 		
+	new Label(parent, SWT.NONE).setText("Importance:");
+		
+		importanceBox = new Combo(parent, SWT.NONE);
+		Enumeration impEnum = Importance.elements();
+		int l=0;
+		Importance itype;
+		while (impEnum.hasMoreElements())
+		{
+			itype = (Importance) impEnum.nextElement();
+			importanceBox.add( itype.toString() );
+			if (itype.toString().compareTo(getRequirement().getImportance().toString()) == 0)
+			{
+				importanceBox.select(l);
+			}
+			l++;
+		}
+		gridData = new GridData(GridData.HORIZONTAL_ALIGN_FILL);
+		gridData.grabExcessHorizontalSpace = true;
+		gridData.horizontalAlignment = GridData.FILL;
+		importanceBox.setLayoutData(gridData);
+		importanceBox.addModifyListener(getNeedsSaveListener());
+		
+		new Label(parent, SWT.NONE).setText("Ontology Entry:");
+		ontDesc = new Label(parent, SWT.WRAP);
+		
+		if (!isCreating() && ((getRequirement().getOntology() != null) && (getRequirement().getOntology().getID() > 0)))
+		{
+			ontDesc.setText(getRequirement().getOntology().toString());
+		}
+		else
+		{
+			ontDesc.setText("Undefined");
+		}
+		gridData = new GridData(GridData.HORIZONTAL_ALIGN_FILL);
+		gridData.horizontalSpan = 2;
+		ontDesc.setLayoutData(gridData);
+		
+//		new Label(shell, SWT.NONE).setText(" ");
+		
+		selOntButton = new Button(parent, SWT.PUSH); 
+		selOntButton.setText("Select");
+		gridData = new GridData(GridData.HORIZONTAL_ALIGN_FILL | GridData.VERTICAL_ALIGN_BEGINNING);
+		selOntButton.setLayoutData(gridData);
+		ourParent = parent;
+		
+		if (getRequirement().getType() == ReqType.FR)
+		{
+			selOntButton.setEnabled(false);
+		}
+
+		selOntButton.addSelectionListener(new SelectionAdapter() {
+			
+			public void widgetSelected(SelectionEvent event) 
+			{
+				OntEntry newOnt = null;
+				SelectOntEntry ar = new SelectOntEntry(ourParent.getDisplay(), true);
+				/*
+				 SelectOntEntryGUI ar = new SelectOntEntryGUI(lf, true);
+				 ar.show();
+				 */
+				newOnt = ar.getSelOntEntry();
+				if (newOnt != null)
+				{
+					getRequirement().setOntology(newOnt);
+					ontDesc.setText(newOnt.toString());
+				}
+				
+			}
+		});
 		
 		new Label(parent, SWT.NONE).setText("Arguments For");
 		new Label(parent, SWT.NONE).setText(" ");
@@ -639,6 +793,16 @@ public class RequirementEditor extends RationaleEditorBase {
 	 * @see SEURAT.editors.RationaleEditorBase#saveData()
 	 */
 	public boolean saveData() {
+		
+		//We need to get changes in importance or enabled/disabled propagated without infinite loops!
+		boolean updateArguments;
+		
+		updateArguments = false;
+		
+		//check to see if the ontology entry is specified
+		if ((ReqType.fromString(typeBox.getItem(typeBox.getSelectionIndex())) == ReqType.FR) 
+				|| (getRequirement().getOntology() != null))
+		{
 		ConsistencyChecker checker = new ConsistencyChecker(getRequirement().getID(), nameField.getText(), "Requirements");
 		
 		if(!nameField.getText().trim().equals("") &&
@@ -648,6 +812,8 @@ public class RequirementEditor extends RationaleEditorBase {
 			getRequirement().setDescription(descArea.getText());
 			getRequirement().setType(ReqType.fromString(typeBox.getItem(typeBox.getSelectionIndex())));
 			getRequirement().setArtifact(artifactField.getText());
+			getRequirement().setImportance( Importance.fromString(importanceBox.getItem(importanceBox.getSelectionIndex())));
+
 			getRequirement().setEnabled(enableButton.getSelection());
 			
 			if( isCreating() ) {
@@ -668,9 +834,29 @@ public class RequirementEditor extends RationaleEditorBase {
 					//				getRequirement().toDatabase(getRequirement().getParent(), RationaleElementType.fromString(getRequirement().getPtype()));
 					//				newHist.toDatabase(getRequirement().getID(), RationaleElementType.REQUIREMENT);
 				}
+				
+				//find out if we have any changes in importance or status
+				if ((getRequirement().getEnabled() != dataCache.enabled) || (getRequirement().getImportance() != Importance.fromString(importanceBox.getItem(dataCache.importance))))
+				{
+					System.out.println("change in Requirement importance");
+					System.out.println(getRequirement().getEnabled());
+					System.out.println(getRequirement().getImportance());
+					updateArguments = true; //we need to re-compute the evaluations
+				}
 			}
 //			since this is a save, not an add, the type and parent are ignored
 			getRequirement().setID(getRequirement().toDatabase(getRequirement().getParent(), RationaleElementType.fromString(getRequirement().getPtype())));
+			
+			//we need to update any arguments that this requirement is in. 
+			Vector<Argument> argsUsing = RationaleDB.getDependentArguments(getRequirement().getID());
+			Iterator argI = argsUsing.iterator();
+			while (argI.hasNext())
+			{
+				Argument arg = (Argument) argI.next();
+				
+				//for now, don't get the status change - we're hoping this will do what we need
+				arg.updateStatus();
+			}
 			return true;
 		}
 		else
@@ -686,6 +872,17 @@ public class RequirementEditor extends RationaleEditorBase {
 			mbox.open();
 		}
 		return false;
+		}
+		else
+		{
+			String l_message = "";
+			l_message += "All non-functional requirements must have an associated ontology entry.";
+			MessageBox mbox = new MessageBox(getSite().getShell(), SWT.ICON_ERROR);
+			mbox.setMessage(l_message);
+			mbox.setText("Missing Ontology Entry");
+			mbox.open();
+			return false;
+		}
 	}
 	
 	/**
