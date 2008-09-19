@@ -8,6 +8,7 @@ package edu.wpi.cs.jburge.SEURAT.inference;
 
 import java.sql.*;
 import java.util.*;
+
 import edu.wpi.cs.jburge.SEURAT.rationaleData.*;
 
 /**
@@ -36,6 +37,7 @@ public class OntologyInferences {
 		//first, find what arguments are affected and evaluate them
 		
 		Vector<String> claimNames = new Vector<String>();
+		Vector<String> reqNames = new Vector<String>();
 		
 		RationaleDB db = RationaleDB.getHandle();
 		Connection conn = db.getConnection();
@@ -44,6 +46,8 @@ public class OntologyInferences {
 		ResultSet rs = null; 
 		String findQuery = "";
 		//	boolean error = false;
+		
+		//check claims
 		try {
 			stmt = conn.createStatement();
 			
@@ -66,6 +70,49 @@ public class OntologyInferences {
 				
 				ClaimInferences inf = new ClaimInferences();
 				newStatus.addAll(inf.updateClaim(ourclaim));
+			}
+			
+		} catch (SQLException ex) {
+			RationaleDB.reportError(ex, "OntologyInferences.updateOntEntry",
+					findQuery);
+		}
+		finally { 
+			RationaleDB.releaseResources(stmt, rs);
+		}
+		
+		//Now, do the same thing for requirements
+		try {
+			stmt = conn.createStatement();
+			
+			findQuery = "SELECT name  FROM " +
+			"requirements where " +
+			"ontology = " + entry.getID();
+//			System.out.println(findQuery);
+			rs = stmt.executeQuery(findQuery);
+			
+			while (rs.next())
+			{
+				reqNames.add(RationaleDBUtil.decode(rs.getString("name")));
+			}
+			
+			Enumeration requirements = reqNames.elements();
+			while (requirements.hasMoreElements())
+			{
+				Requirement ourreq = new Requirement();
+				ourreq.fromDatabase((String) requirements.nextElement());
+				//We can pretty much assume that the importance has changed so to be
+				//safe, we'll go with the direct update of the argument
+				//we need to update any arguments that this requirement is in. 
+				Vector<Argument> argsUsing = RationaleDB.getDependentArguments(ourreq.getID());
+				Iterator argI = argsUsing.iterator();
+				Vector<RationaleStatus> argStatus = new Vector<RationaleStatus>(); 
+				while (argI.hasNext())
+				{
+					Argument arg = (Argument) argI.next();				
+					//for now, don't get the status change - we're hoping this will do what we need
+					argStatus = arg.updateStatus();
+				}
+				newStatus.addAll(argStatus);
 			}
 			
 		} catch (SQLException ex) {
