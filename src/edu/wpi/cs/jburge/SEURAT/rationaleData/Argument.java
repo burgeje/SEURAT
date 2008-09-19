@@ -540,15 +540,24 @@ public class Argument extends RationaleElement implements Serializable
 		else if (category == ArgCategory.REQUIREMENT)
 		{
 //			***				System.out.println("req imp");
-			if ((requirement.getStatus() != ReqStatus.REJECTED) &&
-					(requirement.getStatus() != ReqStatus.RETRACTED) &&
-					(requirement.getEnabled()))
+			if (importance != Importance.DEFAULT)
 			{
-				impVal = 1.0; //requirements are always essential!
+				impVal = importance.getValue();
 			}
-			else
+			else 
 			{
-				impVal = 0.0; //ignore if requirement is not valid
+				if ((requirement.getStatus() != ReqStatus.REJECTED) &&
+						(requirement.getStatus() != ReqStatus.RETRACTED) &&
+						(requirement.getEnabled()))
+				{
+					impVal = requirement.getImportanceVal();
+					//changed to now allow importance values for requirements
+//					impVal = 1.0; //requirements are always essential!
+				}
+				else
+				{
+					impVal = 0.0; //ignore if requirement is not valid
+				}
 			}
 
 		}
