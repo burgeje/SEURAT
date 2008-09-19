@@ -186,12 +186,23 @@ public class DecisionInferences {
 								(nreq.getStatus() != ReqStatus.RETRACTED) &&
 								(nreq.getEnabled()))
 						{
+							if (nreq.getType() == ReqType.FR)
+							{
 							String problem = "Selected alt '" + selAlt.getName() + "' violates requirement " + nreq.getName();
 							RationaleStatus stat = new RationaleStatus(RationaleErrorLevel.ERROR, problem, 
 									RationaleElementType.DECISION, new java.util.Date(), ourDec.getID(),
 									RationaleStatusType.ALT_REQ_VIOLATION);	
 							ourStatus.add(stat);
 							ourStatus.addAll(nreq.updateStatus());		
+							}
+							{
+								String problem = "Selected alt '" + selAlt.getName() + "' violates non-functional requirement " + nreq.getName();
+								RationaleStatus stat = new RationaleStatus(RationaleErrorLevel.WARNING, problem, 
+										RationaleElementType.DECISION, new java.util.Date(), ourDec.getID(),
+										RationaleStatusType.NFR_VIOLATION);	
+								ourStatus.add(stat);
+								ourStatus.addAll(nreq.updateStatus());									
+							}
 						}
 
 					}
