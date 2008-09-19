@@ -184,6 +184,7 @@ public class CandidateRationale extends RationaleElement {
 			req.setDescription(description);
 			req.setType(ReqType.FR);
 			req.setStatus(ReqStatus.UNDECIDED);
+			req.setImportance(Importance.ESSENTIAL);
 			int id = req.toDatabase(parent, ptype);
 			req.setID(id);
 			//Now, we need to step through all our children...
