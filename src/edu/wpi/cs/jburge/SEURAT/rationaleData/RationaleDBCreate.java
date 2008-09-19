@@ -957,6 +957,8 @@ public class RationaleDBCreate
 		+ tablePart("parent INTEGER  default NULL")
 		+ tablePart("enabled varchar(255) default NULL")
 		+ tablePart("status varchar(255) default NULL")
+		+ tablePart("importance varchar(255) default NULL")
+		+ tablePart("ontology INTEGER  default NULL")
 		+ endTable("PRIMARY KEY  (id)");
 	}
 	
