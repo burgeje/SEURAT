@@ -1526,6 +1526,11 @@ public class RationaleExplorer extends ViewPart implements ISelectionListener, I
 			//will need a special claim provider
 			return ( (RationaleViewContentProvider) viewer.getContentProvider()).addClaim(parent, (Claim) element);
 		}
+		else if (element instanceof Requirement)
+		{
+			//need a special requirement provider because now we can have NFRs
+			return ( (RationaleViewContentProvider) viewer.getContentProvider()).addRequirement(parent, (Requirement) element);
+		}	
 		/*
 		 else if (element instanceof AltConstRel)
 		 {
@@ -1555,6 +1560,7 @@ public class RationaleExplorer extends ViewPart implements ISelectionListener, I
 		TreeParent newParent;
 		//now, check to see if there is likely to be a structural change
 		if ((element.getElementType() == RationaleElementType.ARGUMENT) ||
+				(element.getElementType() == RationaleElementType.REQUIREMENT) ||
 				(element.getElementType() == RationaleElementType.COOCCURRENCE) ||
 				(element.getElementType() == RationaleElementType.CLAIM) ||
 				(element.getElementType() == RationaleElementType.TRADEOFF))
