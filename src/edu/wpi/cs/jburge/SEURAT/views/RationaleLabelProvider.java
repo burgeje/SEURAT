@@ -42,6 +42,13 @@ public class RationaleLabelProvider extends LabelProvider {
 		}
 		ImageDescriptor descriptor = null;
 		if (element.getType() == RationaleElementType.REQUIREMENT) {
+			Requirement ourReq = (Requirement) RationaleDB.getRationaleElement(
+					element.getName(), RationaleElementType.REQUIREMENT);
+			boolean nfr = false;
+			if (ourReq.getType() == ReqType.NFR)
+			{
+				nfr = true;
+			}
 			if (element.getStatus() == RationaleErrorLevel.ERROR) {
 				if (element.getActive()) {
 					descriptor = SEURATPlugin
@@ -53,18 +60,44 @@ public class RationaleLabelProvider extends LabelProvider {
 				}
 			} else if (element.getStatus() == RationaleErrorLevel.WARNING) {
 				if (element.getActive()) {
-					descriptor = SEURATPlugin
-							.getImageDescriptor("newReq_warning.gif");
+					if (nfr)
+					{
+						descriptor = SEURATPlugin
+						.getImageDescriptor("NFR_warning.gif");
+					}
+					else
+					{
+						descriptor = SEURATPlugin
+						.getImageDescriptor("newReq_warning.gif");
+					}
+
 				} else {
 					descriptor = SEURATPlugin
 							.getImageDescriptor("newReq_warning_Disabled2.gif");
 				}
 			} else {
 				if (element.getActive()) {
-					descriptor = SEURATPlugin.getImageDescriptor("newReq.gif");
+					if (nfr)
+					{
+						descriptor = SEURATPlugin
+						.getImageDescriptor("NFR.gif");
+					}
+					else
+					{
+						descriptor = SEURATPlugin.getImageDescriptor("newReq.gif");						
+					}
+					
 				} else {
-					descriptor = SEURATPlugin
-							.getImageDescriptor("newReq_Disabled2.gif");
+					if (nfr)
+					{
+						descriptor = SEURATPlugin.getImageDescriptor("NFR_disabled.gif");
+					}
+					else
+					{
+						descriptor = SEURATPlugin
+						.getImageDescriptor("newReq_Disabled2.gif");
+					}
+
 				}
 			}
 		} else if (element.getType() == RationaleElementType.DECISION) {
