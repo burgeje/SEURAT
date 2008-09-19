@@ -220,6 +220,13 @@ ITreeContentProvider {
 			req.fromDatabase(childName);
 			parent.addChild(child);
 			child.setActive(req.getEnabled());
+			//check to see if there is a related ontology entry
+			if ((req.getType() == ReqType.NFR) && (req.getOntology() != null))
+			{
+					String ontName = req.getOntology().getName();
+					TreeParent ontchild = new TreeParent(ontName, RationaleElementType.ONTENTRY);
+					child.addChild(ontchild);
+				}
 			//add our arguments
 			addArguments(child, childName, RationaleElementType.REQUIREMENT);
 			//add any questions
@@ -698,7 +705,24 @@ ITreeContentProvider {
 		return child;
 	}
 	
-	
+	/**
+	 * Add a claim to the tree
+	 * @param parent the parent node
+	 * @param clm the claim
+	 * @return the new tree node just added
+	 */
+	public TreeParent addRequirement(TreeParent parent, Requirement req)
+	{
+		TreeParent child = new TreeParent(req.getName(), RationaleElementType.REQUIREMENT);				
+		parent.addChild(child);
+//		addOntEntry(child, trade.getOnt1());
+//		addOntEntry(child, trade.getOnt2());
+		if (req.getOntology() != null)
+		{
+			addNewElement(child, req.getOntology());
+		}
+		return child;
+	}	
 	/**
 	 * Add a new element to the tree
 	 * @param parent the parent node
