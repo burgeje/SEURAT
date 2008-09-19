@@ -96,6 +96,12 @@ public final class RationaleStatusType implements Serializable
 	 */
 	public static final RationaleStatusType ALT_REQ_VIOLATION = new
 	RationaleStatusType("Alt_Violates_Requirement");
+	
+	/**
+	 * An alternative is selected that violates a non-functional requirement
+	 */
+	public static final RationaleStatusType NFR_VIOLATION = new
+	RationaleStatusType("Violates_NFR");
 	/**
 	 * A tradeoff has been violated.
 	 */
