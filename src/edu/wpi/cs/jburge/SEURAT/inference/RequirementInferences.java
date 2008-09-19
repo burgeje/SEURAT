@@ -79,7 +79,8 @@ public class RequirementInferences {
 					{
 						Alternative alt = new Alternative();
 						alt.fromDatabase(parent);
-						if (alt.getStatus() == AlternativeStatus.ADOPTED)
+						//we only report violations for FRs
+						if ((req.getType() == ReqType.FR) && (alt.getStatus() == AlternativeStatus.ADOPTED))
 						{
 							req.setStatus(ReqStatus.VIOLATED);
 							rstat = ReqStatus.VIOLATED;	
