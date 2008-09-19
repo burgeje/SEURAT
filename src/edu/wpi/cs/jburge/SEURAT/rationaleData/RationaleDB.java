@@ -840,6 +840,49 @@ public final class RationaleDB implements Serializable {
 		}
 		return dependent;
 	}
+	
+	/**
+	 * Get all  arguments that argue about a specific requirement
+	 * @param reqID - the requirement ID
+	 * @return the dependent alternatives
+	 */
+	public static Vector<Argument> getDependentArguments(int reqID) {
+		Vector<Argument> dependent = new Vector<Argument>();
+		Statement stmt = null;
+		ResultSet rs = null;
+		String findQuery = "";
+		try {
+			Vector<Integer> argV = new Vector<Integer>();
+			stmt = conn.createStatement();
+			findQuery = "SELECT id from " 
+				+ RationaleDBUtil.escapeTableName("arguments") 
+				+ " where argtype = 'Requirement'"
+				+ " and requirement = "
+				+ new Integer(reqID).toString();
+			//***			System.out.println(findQuery);
+			rs = stmt.executeQuery(findQuery);
+			while (rs.next()) {
+					int altID = rs.getInt("id");
+					argV.add(new Integer(altID));
+			}
+
+			if (argV.size() > 0) {
+				Iterator argI = argV.iterator();
+				while (argI.hasNext()) {
+					Argument relArg = new Argument();
+					relArg.fromDatabase(((Integer) argI.next()).intValue());
+					dependent.add(relArg);
+				}
+			}
+
+		} catch (SQLException ex) {
+			reportError(ex, "Error in getting arguments that argue the requirement", findQuery);
+		} finally {
+			releaseResources(stmt, rs);
+
+		}
+		return dependent;
+	}
 
 	/**
 	 * Get all dependent alternatives that are dependent on a parent where the
