@@ -63,6 +63,16 @@ public class Requirement extends RationaleElement implements Serializable
 	ReqStatus m_status;		
 	
 	/**
+	 * What ontology entry is the requirement referring to?
+	 */
+	OntEntry	ontology;
+	
+	/**
+	 * How important is the requirement?
+	 */
+	Importance importance;
+	
+	/**
 	 * List of the names of arguments for this requirement
 	 */
 	Vector<String> m_argumentsAgainst;
@@ -304,6 +314,8 @@ public class Requirement extends RationaleElement implements Serializable
 //			***			 System.out.println(findQuery);
 			rs = stmt.executeQuery(findQuery); 
 			
+			int ontologyID = 0;
+			
 			if (rs.next())
 			{
 				this.id = rs.getInt("id");
@@ -313,8 +325,35 @@ public class Requirement extends RationaleElement implements Serializable
 				this.m_artifact = rs.getString("artifact");
 				this.m_parent = rs.getInt("parent");
 				this.m_ptype = rs.getString("ptype");
+				importance = (Importance) Importance.fromString(rs.getString("importance"));
+				ontologyID = rs.getInt("ontology");
 				this.enabled = (rs.getString("enabled").compareTo("True") == 0);
-				rs.close();
+				
+			}
+			
+			rs.close();
+			
+			//Find the ontology entry if it exists
+			if (ontologyID > 0)
+			{
+			String findOntology = "SELECT name FROM OntEntries where " +
+			"id = " +
+			new Integer(ontologyID).toString(); 
+//			***				System.out.println(findOntology);
+			rs = stmt.executeQuery(findOntology); 
+			
+			if (rs.next())
+			{
+				String ontName = RationaleDBUtil.decode(rs.getString("name"));
+				ontology = new OntEntry();
+				ontology.fromDatabase(ontName);
+				
+			}
+			rs.close();	
+			}
+			else
+			{
+				ontology = null;
 			}
 			
 			//Now, we need to get the lists of arguments for and against
@@ -405,13 +444,41 @@ public class Requirement extends RationaleElement implements Serializable
 			
 			if (inDatabase(parentID, ptype))
 			{
+				int ontid;
+				if (ontology != null)
+				{
+				
+				//now we need up update our ontology entry, and that's it!
+				String findQuery3 = "SELECT id FROM OntEntries where name='" +
+				RationaleDBUtil.escape(this.ontology.getName()) + "'";
+				rs = stmt.executeQuery(findQuery3); 
+//				***			System.out.println(findQuery3);
+
+				if (rs.next())
+				{
+					ontid = rs.getInt("id");
+					rs.close();
+				}
+				else
+				{
+					ontid = 0;
+				}
+				}
+				else
+				{
+					ontid = 0;
+				}
+				
 				String updateParent = "UPDATE Requirements "+
 				"SET name = '" +
 				RationaleDBUtil.escape(this.name) + "', " +				"description = '" +				RationaleDBUtil.escape(this.description) + "', " +
 				"type = '" +
 				this.m_type.toString() + "', " +				"status = '" +
 				this.m_status.toString() + "', " +				"enabled = '" +
-				enabledStr + "' " +
+				enabledStr + "', " +
+				"importance = '" + 
+				this.importance.toString() + "', " +
+				"ontology = " + new Integer(ontid).toString() +
 				" WHERE " +
 				"id = " + this.id + " " ;
 				
@@ -439,7 +506,7 @@ public class Requirement extends RationaleElement implements Serializable
 					parentTSt = ptype.toString();
 				}
 				String newReqSt = "INSERT INTO Requirements "+
-				"(name, description, type, status, ptype, parent, enabled) " +
+				"(name, description, type, status, ptype, parent, importance, enabled) " +
 				"VALUES ('" +
 				RationaleDBUtil.escape(this.name) + "', '" +
 				RationaleDBUtil.escape(this.description) + "', '" +
@@ -447,6 +514,7 @@ public class Requirement extends RationaleElement implements Serializable
 				this.m_status.toString() + "', '" +
 				parentTSt + "', " +
 				parentSt + ", '" +
+				this.importance.toString() + "', '" +
 				enabledStr + "')";
 //				System.out.println(newReqSt);
 				stmt.execute(newReqSt); 
@@ -470,6 +538,30 @@ public class Requirement extends RationaleElement implements Serializable
 			}
 			this.id = ourid;
 			
+			if (ontology != null)
+			{
+			//now we need up update our ontology entry, and that's it!
+			String findQuery3 = "SELECT id FROM OntEntries where name='" +
+			RationaleDBUtil.escape(this.ontology.getName()) + "'";
+			rs = stmt.executeQuery(findQuery3); 
+//			***			System.out.println(findQuery3);
+			int ontid;
+			if (rs.next())
+			{
+				ontid = rs.getInt("id");
+				rs.close();
+			}
+			else
+			{
+				ontid = 0;
+			}
+			String updateOnt = "UPDATE Requirements R " +
+			"SET R.ontology = " + new Integer(ontid).toString() +
+			" WHERE " +
+			"R.id = " + ourid + " " ;
+//			***			  System.out.println(updateOnt);
+			stmt.execute(updateOnt);
+			}
 			/* This should be done elsewhere???   no, this should be fixed...
 			 //in either case, we want to update any sub-requirements in case
 			  //they are new!
@@ -757,6 +849,60 @@ public class Requirement extends RationaleElement implements Serializable
 		}
 		
 		
+	}
+
+	public OntEntry getOntology() {
+		return ontology;
+	}
+
+	/**
+	 * Sets the ontology entry associated with the requirement. If there already
+	 * is an ontology entry, the reference count is decremented before re-setting
+	 * the entry. After setting the entry, the new entry's reference count is incremented.
+	 * @param ont - the new ontology entry
+	 */
+	public void setOntology(OntEntry ont)
+	{
+		if (ontology != null)
+		{
+			ontology.decRefs();
+		}
+		ontology = ont;
+		if (ont != null)
+		{
+			ont.incRefs();
+		}		
+	}
+
+	public Importance getImportance() {
+		return importance;
+	}
+	
+	/**
+	 * Get the importance value for the requirement. If the importance is set to default,
+	 * the importance needs to come from the ontology entry.
+	 * @return the importance
+	 */
+	public double getImportanceVal()
+	{
+		if (!enabled)
+			return 0.0;
+		
+		if (importance == Importance.DEFAULT)
+		{
+//			***			System.out.println("getting importance from ontology");
+			return (ontology.getImportance()).getValue();
+		}
+		else
+		{
+//			***			System.out.println("getting importance from ourself");
+			return importance.getValue();
+		}
+	}
+	
+
+	public void setImportance(Importance importance) {
+		this.importance = importance;
 	}
 	
 	
