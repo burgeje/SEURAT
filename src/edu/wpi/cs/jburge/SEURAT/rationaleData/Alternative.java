@@ -818,7 +818,7 @@ public class Alternative extends RationaleElement implements Serializable {
 				"parent = " + 
 				new Integer(this.id).toString() + " and " +
 				"(type = 'NONE' )";
-								System.out.println(findUnafil);
+				//**				System.out.println(findUnafil);
 				rs = stmt.executeQuery(findUnafil); 
 				
 				while (rs.next())
