@@ -252,6 +252,7 @@ IPropertyChangeListener {
 				manager.add(editElement);
 				manager.add(deleteElement);
 				manager.add(adoptElement);
+				manager.add(adoptElementUnderRequirement);
 			}
 			else if (ourElement.getType() == RationaleElementType.DECISION)
 			{
@@ -267,6 +268,22 @@ IPropertyChangeListener {
 				manager.add(moveElement);
 				manager.add(adoptElementUnderRequirement);
 				manager.add(adoptElementUnderAlternative);
+			}
+			else if (ourElement.getType() == RationaleElementType.ASSUMPTION)
+			{
+				manager.add(editElement);
+				manager.add(deleteElement);
+				manager.add(moveElement);
+//				manager.add(adoptElementUnderArgument);
+			}
+			else if (ourElement.getType() == RationaleElementType.QUESTION)
+			{
+				manager.add(editElement);
+				manager.add(deleteElement);
+				manager.add(moveElement);
+				manager.add(adoptElementUnderDecision);
+				manager.add(adoptElementUnderAlternative);
+				
 			}
 	
 		}
@@ -395,6 +412,29 @@ IPropertyChangeListener {
 		adoptElementUnderDecision.setText("Adopt Under Decision");
 		adoptElementUnderDecision.setToolTipText("Adopt As Rationale");
 
+		//
+		// move rationale element action
+		//
+		adoptElementUnderRequirement = new Action() {
+			public void run() {
+				ISelection selection = viewer.getSelection();
+				Object obj = ((IStructuredSelection)selection).getFirstElement();
+				CandidateTreeParent parent;
+				if (obj instanceof CandidateTreeParent)
+				{
+					RationaleElement rElement = getElement((CandidateTreeParent) obj, false);
+					//We need to display a list of new parent elements and select which one we want
+					SelectItem sel = new SelectItem(ourDisplay, RationaleElementType.REQUIREMENT);
+					Requirement parentRat = (Requirement) sel.getNewItem();
+					parent = adoptElement((CandidateTreeParent) obj, rElement, parentRat.getID(), RationaleElementType.REQUIREMENT,  ourDisplay);
+					refreshBranch(parent);					
+				}
+
+			}
+			
+		}; //end of the edit element action definition
+		adoptElementUnderRequirement.setText("Adopt Under Requirement");
+		adoptElementUnderRequirement.setToolTipText("Adopt As Rationale");
 		//
 		// move rationale element action
 		//

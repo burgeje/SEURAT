@@ -231,7 +231,7 @@ ITreeContentProvider {
 				child.addChild(tChild);
 				tChild.setActive(true);
 				
-				//and our children's children (last level, promise!)
+				//and our children's children 
 				Enumeration grandchildren = nextC.getChildren().elements();
 				while (grandchildren.hasMoreElements())
 				{
@@ -239,6 +239,16 @@ ITreeContentProvider {
 					CandidateTreeParent gChild = new CandidateTreeParent(nextG.getName(), nextG.getType());
 					tChild.addChild(gChild);
 					gChild.setActive(true);
+					
+					//great grand children...
+					Enumeration ggrandchildren = nextG.getChildren().elements();
+					while (ggrandchildren.hasMoreElements())
+					{
+						CandidateRationale nextGG = (CandidateRationale) ggrandchildren.nextElement();
+						CandidateTreeParent ggChild = new CandidateTreeParent(nextGG.getName(), nextGG.getType());
+						gChild.addChild(ggChild);
+						ggChild.setActive(true);
+					}
 				}
 			}
 		}			

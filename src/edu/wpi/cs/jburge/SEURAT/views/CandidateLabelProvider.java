@@ -47,6 +47,10 @@ public class CandidateLabelProvider extends LabelProvider {
 			
 		} else if (element.getType() == RationaleElementType.DECISION) {
 			descriptor = SEURATPlugin.getImageDescriptor("newDec.gif");
+		} else if (element.getType() == RationaleElementType.QUESTION) {
+			descriptor = SEURATPlugin.getImageDescriptor("newQuest.gif");
+		} else if (element.getType() == RationaleElementType.ASSUMPTION) {
+			descriptor = SEURATPlugin.getImageDescriptor("newAssump.gif");
 		}
 		else if (element.getType() == RationaleElementType.ALTERNATIVE){
 			//We need to actually look at the element to find the right icon
