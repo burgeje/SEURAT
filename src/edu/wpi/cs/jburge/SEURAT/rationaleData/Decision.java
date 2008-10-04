@@ -810,6 +810,17 @@ public class Decision extends RationaleElement implements Serializable
 		}
 	}
 	
+	public boolean hasParent()
+	{
+		if (parent > 0)
+		{
+			return true;
+		}
+		else
+		{
+			return false;
+		}
+	}
 	/**
 	 * Inference over the decision to determine if the status should
 	 * be changed.
