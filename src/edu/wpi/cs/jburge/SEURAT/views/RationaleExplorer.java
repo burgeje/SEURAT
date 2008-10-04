@@ -1771,9 +1771,17 @@ public class RationaleExplorer extends ViewPart implements ISelectionListener, I
 		//get the tree parent corresponding to the element...
 		RationaleTreeMap map = RationaleTreeMap.getHandle();
 		Vector treeObjs = map.getKeys(map.makeKey(ele.getName(), ele.getElementType()));
-		//if there's more than one we don't care, just get the first
+		/* We used to just look at the top element
 		viewer.reveal(treeObjs.elementAt(0));
-		viewer.expandToLevel(treeObjs.elementAt(0), 4);
+		viewer.expandToLevel(treeObjs.elementAt(0), 4); */
+		//expand *all* the occurences!
+		Iterator<TreeObject> treeIterator = treeObjs.iterator();
+		while( treeIterator.hasNext() )
+		{
+			TreeObject treeEle = (TreeObject) treeIterator.next();
+			viewer.reveal(treeEle);
+			viewer.expandToLevel(treeEle, 4);
+		}
 		
 		
 	}
