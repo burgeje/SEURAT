@@ -817,6 +817,7 @@ public class RequirementEditor extends RationaleEditorBase {
 			getRequirement().setEnabled(enableButton.getSelection());
 			
 			if( isCreating() ) {
+				getRequirement().setParent(getParentElement());
 				getRequirement().setStatus( ReqStatus.fromString(statusBox.getItem(statusBox.getSelectionIndex())));
 				getRequirement().updateHistory(new History(getRequirement().getStatus().toString(), "Initial Entry"));
 				
