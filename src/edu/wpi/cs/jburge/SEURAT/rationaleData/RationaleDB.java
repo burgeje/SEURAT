@@ -885,6 +885,48 @@ public final class RationaleDB implements Serializable {
 	}
 
 	/**
+	 * Get all  arguments that argue about a specific requirement
+	 * @param reqID - the requirement ID
+	 * @return the dependent alternatives
+	 */
+	public static Vector<Argument> getDependentAssumptionArguments(int reqID) {
+		Vector<Argument> dependent = new Vector<Argument>();
+		Statement stmt = null;
+		ResultSet rs = null;
+		String findQuery = "";
+		try {
+			Vector<Integer> argV = new Vector<Integer>();
+			stmt = conn.createStatement();
+			findQuery = "SELECT id from " 
+				+ RationaleDBUtil.escapeTableName("arguments") 
+				+ " where argtype = 'Assumption"
+				+ " and assumption = "
+				+ new Integer(reqID).toString();
+			//***			System.out.println(findQuery);
+			rs = stmt.executeQuery(findQuery);
+			while (rs.next()) {
+					int altID = rs.getInt("id");
+					argV.add(new Integer(altID));
+			}
+
+			if (argV.size() > 0) {
+				Iterator argI = argV.iterator();
+				while (argI.hasNext()) {
+					Argument relArg = new Argument();
+					relArg.fromDatabase(((Integer) argI.next()).intValue());
+					dependent.add(relArg);
+				}
+			}
+
+		} catch (SQLException ex) {
+			reportError(ex, "Error in getting arguments that argue the requirement", findQuery);
+		} finally {
+			releaseResources(stmt, rs);
+
+		}
+		return dependent;
+	}
+	/**
 	 * Get all dependent alternatives that are dependent on a parent where the
 	 * dependency is of a particular argument type
 	 * @param alt - the alternative
@@ -1069,7 +1111,7 @@ public final class RationaleDB implements Serializable {
 	 * @param element - the element type
 	 * @return the table name
 	 */
-	public String getTableName(RationaleElementType element) {
+	public static String getTableName(RationaleElementType element) {
 		if (element == RationaleElementType.REQUIREMENT) {
 			return ("requirements");
 		} else if (element == RationaleElementType.DECISION) {
@@ -1862,6 +1904,47 @@ public final class RationaleDB implements Serializable {
 		return ourElements;
 
 	}
+	
+	/**
+	 * Find out if a  particular element exists and has the passed in name
+	 * @param name - the name of the element
+	 * @param type - the type of element we are looking for
+	 * @return - the list of names
+	 */
+	public static boolean elementExists(String name, RationaleElementType type) {
+		
+		boolean exists;
+		exists = false;
+		int id = -1;
+		
+		Vector<String> ourElements = new Vector<String>();
+		String tableName = RationaleDB.getTableName(type);
+		String findQuery = "";
+		Statement stmt = null;
+		ResultSet rs = null;
+		try {
+			stmt = conn.createStatement();
+			findQuery = "SELECT id FROM " 
+				+ RationaleDBUtil.escapeTableName(tableName) + " " 
+				+ "WHERE name = '" +
+				name + "' ";
+			System.out.println(findQuery);
+			rs = stmt.executeQuery(findQuery);
+
+			while (rs.next()) {
+				int nextID = rs.getInt("id");
+				exists = true;
+			}
+			rs.close();
+
+		} catch (SQLException ex) {
+			reportError(ex, "Error in elementExists", findQuery);
+		} finally {
+			releaseResources(stmt, rs);
+		}
+		return exists;
+
+	}
 	/**
 	 * Get a list of all "potential new parents" for a particular type of candidate rationale element
 	 * @param type - the type of element whose new parent we are looking for
@@ -1881,6 +1964,14 @@ public final class RationaleDB implements Serializable {
 			else if (type == RationaleElementType.ARGUMENT)
 			{
 				findQuery = "SELECT name FROM candidates where type='Requirement' or type='Alternative'";	
+			}
+			else if (type == RationaleElementType.ASSUMPTION)
+			{
+				findQuery = "SELECT name FROM candidates where type='Argument'";
+			}
+			else if (type == RationaleElementType.QUESTION)
+			{
+				findQuery = "SELECT name FROM candidates where type='Decision' or type='Alternative'";	
 			}
 			else
 			{
