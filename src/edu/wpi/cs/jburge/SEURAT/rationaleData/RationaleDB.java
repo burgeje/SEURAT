@@ -1906,6 +1906,49 @@ public final class RationaleDB implements Serializable {
 	}
 	
 	/**
+	 * Get a list of names of all elements in the database that have a
+	 * particular rationale element type and where the name contains a search string
+	 * @param type - the type of element we are looking for
+	 * @param sstring - the substring we want to find in the name
+	 * @return - the list of names
+	 */
+	public Vector<String> getNameList(RationaleElementType type, String sstring) {
+		Vector<String> ourElements = new Vector<String>();
+		String tableName = this.getTableName(type);
+		String findQuery = "";
+		Statement stmt = null;
+		ResultSet rs = null;
+		try {
+			stmt = conn.createStatement();
+			String additional = "";
+			if (type == RationaleElementType.TRADEOFF) {
+				additional = "WHERE type = 'Tradeoff'";
+			}
+			else if (type == RationaleElementType.COOCCURRENCE) {
+				additional = "WHERE type = 'Co-Occurrence'";
+			}
+			findQuery = "SELECT name FROM " 
+				+ RationaleDBUtil.escapeTableName(tableName) + " " 
+				+ additional 
+				+ "WHERE name LIKE" + "'%" + sstring + "%'"
+				+ " ORDER BY name ASC";
+			System.out.println(findQuery);
+			rs = stmt.executeQuery(findQuery);
+
+			while (rs.next()) {
+				ourElements
+				.addElement(RationaleDBUtil.decode(rs.getString("name")));
+			}
+
+		} catch (SQLException ex) {
+			reportError(ex, "Error in getNameList with Search String", findQuery);
+		} finally {
+			releaseResources(stmt, rs);
+		}
+		return ourElements;
+
+	}
+	/**
 	 * Find out if a  particular element exists and has the passed in name
 	 * @param name - the name of the element
 	 * @param type - the type of element we are looking for
