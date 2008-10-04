@@ -96,7 +96,7 @@ public class SearchPage extends DialogPage implements ISearchPage {
 			}
 
 			// TODO: Handle Error When Invalid Selection
-			l_query = new EntitySearchQuery(l_type);
+			l_query = new EntitySearchQuery(l_type, l_control.m_SearchString.getText());
 		}
 		else
 		if( m_SearchTypeData.m_SpecialParameters instanceof RequirementStatusControl )
@@ -338,6 +338,10 @@ public class SearchPage extends DialogPage implements ISearchPage {
 	 */
 	Composite m_ControlMain;
 	/**
+	 * Lower level element to hold the search string
+	 */
+	Composite m_SearchComposite;
+	/**
 	 * Descriptive Label For The SEURAT Search Page
 	 */
 	Label m_MainLabel;	
@@ -361,6 +365,7 @@ public class SearchPage extends DialogPage implements ISearchPage {
 	class EntitySearchControl
 	{
 		Combo m_EntityTypes;
+		Text m_SearchString;
 		
 		public EntitySearchControl(Composite pParent)
 		{
@@ -378,6 +383,22 @@ public class SearchPage extends DialogPage implements ISearchPage {
 			}
 			m_EntityTypes.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_FILL));
 			m_EntityTypes.select(0);
+			
+			m_SearchComposite = new Composite(pParent, SWT.NONE);
+			
+			GridLayout ssLayout = new GridLayout(2, true);
+			ssLayout.marginLeft = 5;
+			ssLayout.marginRight = 5;
+			ssLayout.verticalSpacing = 5;
+			ssLayout.horizontalSpacing = 5;
+			
+			
+			m_SearchComposite.setLayout(ssLayout);
+			
+			new Label(m_SearchComposite, SWT.NONE).setText("Search Text (case sensitive):");
+			
+			m_SearchString = new Text(m_SearchComposite, SWT.SINGLE | SWT.BORDER);
+			m_SearchString.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_FILL));
 		}
 	}
 
