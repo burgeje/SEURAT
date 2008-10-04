@@ -123,10 +123,18 @@ public class CandidateRationale extends RationaleElement {
 	{
 		RationaleElement newRat;
 
+		boolean exists = RationaleDB.elementExists(name, type);
+		
+		String nameID = "";
+		
+		if (exists)
+		{
+			nameID = Integer.toString(this.getID());
+		}
 		if (type == RationaleElementType.ARGUMENT)
 		{
 			Argument arg = new Argument();
-			arg.setName(name);
+			arg.setName(name + nameID);
 			arg.setDescription(description);
 			arg.setCategory(ArgCategory.NONE);
 			if (qualifier != null)
@@ -142,14 +150,48 @@ public class CandidateRationale extends RationaleElement {
 			arg.setAmount(10);	
 			arg.setParent(parent);
 			arg.setPtype(ptype);
+			//Now, we need to step through all our children...
+			Iterator candidateKids = this.children.iterator();
+			while (candidateKids.hasNext())
+			{
+				CandidateRationale kid;
+				kid = (CandidateRationale) candidateKids.next();
+				if (kid.getType() == RationaleElementType.ASSUMPTION)
+				{
+				Assumption newAssump = (Assumption) kid.createRationale(id, RationaleElementType.ALTERNATIVE);
+				arg.setAssumption(newAssump);
+				}
+			}	
 			int id = arg.toDatabase(parent, ptype);
 			arg.setID(id);
 			newRat = arg;
 		}
+		else if (type == RationaleElementType.ASSUMPTION)
+		{
+			Assumption assump = new Assumption();
+			assump.setName(name + nameID);
+			assump.setDescription(description);
+			assump.setImportance(Importance.MODERATE);
+			int id = assump.toDatabase();
+			assump.setID(id);
+			newRat = assump;
+		}
+		else if (type == RationaleElementType.QUESTION)
+		{
+			Question quest = new Question();
+			quest.setName(name + nameID);
+			quest.setDescription(description);
+			quest.setStatus(QuestionStatus.UNANSWERED);
+			quest.setParent(parent);
+			quest.setPtype(ptype);
+			int id = quest.toDatabase(parent, ptype);
+			quest.setID(id);
+			newRat = quest;
+		}
 		else if (type == RationaleElementType.ALTERNATIVE)
 		{
 			Alternative alt = new Alternative();
-			alt.setName(name);
+			alt.setName(name + nameID);
 			alt.setDescription(description);
 			if (qualifier != null)
 			{
@@ -169,8 +211,16 @@ public class CandidateRationale extends RationaleElement {
 			{
 				CandidateRationale kid;
 				kid = (CandidateRationale) candidateKids.next();
+				if (kid.getType() == RationaleElementType.ARGUMENT)
+				{
 				Argument newArg = (Argument) kid.createRationale(id, RationaleElementType.ALTERNATIVE);
 				alt.addArgument(newArg);
+				}
+				else if (kid.getType() == RationaleElementType.QUESTION)
+				{
+					Question newQuest = (Question) kid.createRationale(id, RationaleElementType.ALTERNATIVE);
+					alt.addQuestion(newQuest);
+				}
 			}	
 			//Unlike the others, this can nest three deep and we risk not having the alternative relationships written
 			//to the DB unless we do it here.
@@ -180,11 +230,13 @@ public class CandidateRationale extends RationaleElement {
 		else if (type == RationaleElementType.REQUIREMENT)
 		{
 			Requirement req = new Requirement();
-			req.setName(name);
+			req.setName(name + nameID);
 			req.setDescription(description);
 			req.setType(ReqType.FR);
 			req.setStatus(ReqStatus.UNDECIDED);
 			req.setImportance(Importance.ESSENTIAL);
+			req.setParent(parent);
+			req.setPtype(ptype);
 			int id = req.toDatabase(parent, ptype);
 			req.setID(id);
 			//Now, we need to step through all our children...
@@ -201,7 +253,7 @@ public class CandidateRationale extends RationaleElement {
 		else if (type == RationaleElementType.DECISION)
 		{
 			Decision dec = new Decision();
-			dec.setName(name);
+			dec.setName(name + nameID);
 			dec.setDescription(description);
 			dec.setType(DecisionType.SINGLECHOICE);
 			dec.setStatus(DecisionStatus.UNRESOLVED);
@@ -217,8 +269,16 @@ public class CandidateRationale extends RationaleElement {
 			{
 				CandidateRationale kid;
 				kid = (CandidateRationale) candidateKids.next();
+				if (kid.getType() == RationaleElementType.ALTERNATIVE)
+				{
 				Alternative newAlt = (Alternative) kid.createRationale(id, RationaleElementType.DECISION);
 				dec.addAlternative(newAlt);
+				}
+				else if (kid.getType() == RationaleElementType.QUESTION)
+				{
+					Question newQuest = (Question) kid.createRationale(id, RationaleElementType.DECISION);
+					dec.addQuestion(newQuest);
+				}
 			}	
 			newRat = dec;				
 		}
@@ -551,7 +611,16 @@ public class CandidateRationale extends RationaleElement {
 		this.source = source;
 		
 		//get our name
-		name = candN.getAttribute("name");
+		String tname = candN.getAttribute("name");
+		if (tname.length() > 250)
+		{
+			name = tname.substring(0, 250);
+			System.out.println("Truncated name");
+		}
+		else
+		{
+			name = tname;
+		}
 			
 		Node descN = candN.getFirstChild();
 		//get the description
@@ -560,7 +629,14 @@ public class CandidateRationale extends RationaleElement {
 		if (descT instanceof Text) {
 			Text text = (Text) descT;
 			String data = text.getData();
+			if (data.length() > 250)
+			{
+				setDescription(data.substring(0, 250));
+			}
+			else
+			{
 			setDescription(data);
+			}
 		}
 		Element nextChild = (Element) descN.getNextSibling();
 		while (nextChild != null)
@@ -596,6 +672,19 @@ public class CandidateRationale extends RationaleElement {
 				nextReq.fromXML(nextChild, source);
 				this.addChild(nextReq);
 	    	}
+	    	else if (nextName.compareTo("DR:question") == 0)
+	    	{
+	    		CandidateRationale nextReq = new CandidateRationale(RationaleElementType.QUESTION);
+				nextReq.fromXML(nextChild, source);
+				this.addChild(nextReq);	    		
+	    	}
+	    	else if (nextName.compareTo("DR:assumption") == 0)
+	    	{
+	    		CandidateRationale nextReq = new CandidateRationale(RationaleElementType.ASSUMPTION);
+				nextReq.fromXML(nextChild, source);
+				this.addChild(nextReq);	    		
+	    	}
+	    		
 	    	nextChild = (Element) nextChild.getNextSibling();
 		}
 		
