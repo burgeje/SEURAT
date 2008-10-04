@@ -370,6 +370,7 @@ public class RationaleExplorer extends ViewPart implements ISelectionListener, I
 				manager.add(deleteElement);
 //				manager.add(addQuestion);
 				manager.add(addArgumentEditor);
+				manager.add(addRequirementEditor);
 				//manager.add(addArgument);
 				manager.add(findRelationships);
 				manager.add(showHistory);				
@@ -2072,6 +2073,7 @@ public class RationaleExplorer extends ViewPart implements ISelectionListener, I
 	public void addNewElement(RationaleUpdateEvent e)
 	{
 		RationaleElement ele = e.getRationaleElement();
+
 		//get the tree parent corresponding to the element...
 		RationaleTreeMap map = RationaleTreeMap.getHandle();
 		TreeParent ourNode = null;
@@ -2080,11 +2082,27 @@ public class RationaleExplorer extends ViewPart implements ISelectionListener, I
 
 		if (ele.getElementType() == RationaleElementType.REQUIREMENT)
 		{
-			Vector treeObjs = map.getKeys(map.makeKey("Requirements", RationaleElementType.RATIONALE));
-			ourParent = (TreeParent) treeObjs.elementAt(0);
-			ourNode = addElement(ourParent, ele);
-			//Now, add our children
 			Requirement req = (Requirement) ele;
+			Vector treeObjs;
+			//We might be saving the requirement as a sub-requirement so we need to check
+			if (req.getParent() <= 0)
+			{
+   			     treeObjs = map.getKeys(map.makeKey("Requirements", RationaleElementType.RATIONALE));
+			}
+			else
+			{
+				Requirement parentReq = new Requirement();
+				parentReq.fromDatabase(req.getParent());
+				treeObjs = map.getKeys(map.makeKey(parentReq.getName(), RationaleElementType.REQUIREMENT));
+			}
+			int pid = 0;
+			while (pid < treeObjs.size())
+			{
+				ourParent = (TreeParent) treeObjs.elementAt(pid);
+				ourNode = addElement(ourParent, ele);
+				pid++;
+			}
+			//Now, add our children
 			Iterator children = req.getArguments().iterator();
 			while (children.hasNext())
 			{
@@ -2115,12 +2133,19 @@ public class RationaleExplorer extends ViewPart implements ISelectionListener, I
 				ourNode = addElement(ourParent, ele);
 				pid++;
 			}
-			//Now, add our children
+			//Now, add our children alternatives
 			Iterator children = dec.getAlternatives().iterator();
 			while (children.hasNext())
 			{
 				Alternative alt = (Alternative) children.next();
 				addNewElement(ourNode, alt);
+			}
+			//Add any questions
+			Iterator qchildren = dec.getQuestions().iterator();
+			while (qchildren.hasNext())
+			{
+				Question quest = (Question) qchildren.next();
+				addNewElement(ourNode, quest);
 			}
 		}
 		else if (ele.getElementType() == RationaleElementType.ALTERNATIVE)
@@ -2144,6 +2169,13 @@ public class RationaleExplorer extends ViewPart implements ISelectionListener, I
 			{
 				Argument arg = (Argument) children.next();
 				addNewElement(ourNode, arg);
+			}
+			//Add any questions
+			Iterator qchildren = alt.getQuestions().iterator();
+			while (qchildren.hasNext())
+			{
+				Question quest = (Question) children.next();
+				addNewElement(ourNode, quest);
 			}
 		}
 		else if (ele.getElementType() == RationaleElementType.ARGUMENT)
@@ -2174,6 +2206,67 @@ public class RationaleExplorer extends ViewPart implements ISelectionListener, I
 				pid++;
 			}
 		}
+		else if (ele.getElementType() == RationaleElementType.QUESTION)
+		{
+			Question quest = (Question) ele;
+			Vector treeObjs = null;
+			if (quest.getPtype() == RationaleElementType.REQUIREMENT)
+			{
+				Requirement parentRec = new Requirement();
+				parentRec.fromDatabase(quest.getParent());
+				treeObjs = map.getKeys(map.makeKey(parentRec.getName(), RationaleElementType.REQUIREMENT));
+			}
+			else if (quest.getPtype() == RationaleElementType.ALTERNATIVE)
+			{
+				Alternative parentAlt = new Alternative();
+				parentAlt.fromDatabase(quest.getParent());
+				treeObjs = map.getKeys(map.makeKey(parentAlt.getName(), RationaleElementType.ALTERNATIVE));
+			}
+			else if (quest.getPtype() == RationaleElementType.DECISION)
+			{
+				Decision parentDec = new Decision();
+				parentDec.fromDatabase(quest.getParent());
+				treeObjs = map.getKeys(map.makeKey(parentDec.getName(), RationaleElementType.DECISION));
+			}
+			else
+			{
+				return;
+			}
+			int pid = 0;
+			while (pid < treeObjs.size())
+			{
+				ourParent = (TreeParent) treeObjs.elementAt(pid);
+				ourNode = addElement(ourParent, ele);
+				pid++;
+			}
+		} //end check question
+		
+		else if (ele.getElementType() == RationaleElementType.ASSUMPTION)
+		{
+			//Get the actual assumption to get the actual assumption ID
+			Assumption ourAssump = new Assumption();
+			ourAssump.fromDatabase(ele.getName());
+			
+			Vector args = RationaleDB.getDependentAssumptionArguments(ourAssump.getID());
+			
+			Iterator argI = args.iterator();
+			while (argI.hasNext())
+			{
+				Argument arg = (Argument) argI.next();
+				Vector treeObjs;
+
+					treeObjs = map.getKeys(map.makeKey(arg.getName(), RationaleElementType.ARGUMENT));
+				int pid = 0;
+				while (pid < treeObjs.size())
+				{
+					ourParent = (TreeParent) treeObjs.elementAt(pid);
+					ourNode = addElement(ourParent, ele);
+					pid++;
+				}				
+			}
+			
+		}
+		
 		if (ourParent != null)
 		{
 		refreshBranch(ourParent);
@@ -2202,9 +2295,32 @@ public class RationaleExplorer extends ViewPart implements ISelectionListener, I
 			{
 				Argument arg = (Argument) children.next();
 				addNewElement(ourNode, arg);
-			}	
+			}
+			//Add any questions
+			Iterator qchildren = alt.getQuestions().iterator();
+			while (qchildren.hasNext())
+			{
+				Question quest = (Question) qchildren.next();
+				addNewElement(ourNode, quest);
+			}
 		}
 		else if (ele.getElementType() == RationaleElementType.ARGUMENT)
+		{
+			ourNode = addElement(parent, ele);
+			
+			//check if we have an assumption
+			Argument arg = (Argument) ele;
+			if (arg.getAssumption() != null)
+			{
+				Assumption assump = arg.getAssumption();
+				addNewElement(ourNode, assump);
+			}
+		}
+		else if (ele.getElementType() == RationaleElementType.QUESTION)
+		{
+			ourNode = addElement(parent, ele);
+		}
+		else if (ele.getElementType() == RationaleElementType.ASSUMPTION)
 		{
 			ourNode = addElement(parent, ele);
 		}
