@@ -115,6 +115,15 @@ public class Assumption extends RationaleElement implements Serializable
 		}
 	}
 	
+	/**
+	 * Set our importance
+	 * @param imp
+	 */
+	public void setImportance(Importance imp)
+	{
+		importance = imp;
+	}
+	
 	
 	/**
 	 * Save the assumption to the database
