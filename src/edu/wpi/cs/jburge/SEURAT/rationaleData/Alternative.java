@@ -868,7 +868,7 @@ public class Alternative extends RationaleElement implements Serializable {
 				
 				Vector<String> decNames = new Vector<String>();
 				String findQuery2 = "SELECT name from DECISIONS where " +
-				"ptype = '" + RationaleElementType.DECISION.toString() +
+				"ptype = '" + RationaleElementType.ALTERNATIVE.toString() +
 				"' and parent = " + new Integer(id).toString();
 //				***				System.out.println(findQuery2);
 				rs = stmt.executeQuery(findQuery2);	
