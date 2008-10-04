@@ -35,6 +35,10 @@ public class EntitySearchQuery implements ISearchQuery {
 	 */
 	private RationaleElementType m_SearchType;
 	/**
+	 * Substring to look for
+	 */
+	private String m_SearchString;
+	/**
 	 * Number of results found by the search
 	 */
 	private int m_Results = 0;
@@ -42,9 +46,10 @@ public class EntitySearchQuery implements ISearchQuery {
 	/**
 	 * @param pType the type of rationale element to search for
 	 */
-	public EntitySearchQuery(RationaleElementType pType) {
+	public EntitySearchQuery(RationaleElementType pType, String searchString) {
 		m_SearchResult = new EntitySearchResultSet(this);
 		m_SearchType = pType;
+		m_SearchString = searchString;
 	}
 	
 	/* (non-Javadoc)
@@ -82,7 +87,7 @@ public class EntitySearchQuery implements ISearchQuery {
 	 */
 	public IStatus run(IProgressMonitor pProgress) throws OperationCanceledException {		
 		RationaleDB l_db = RationaleDB.getHandle();	
-		Vector l_names = l_db.getNameList(m_SearchType);
+		Vector l_names = l_db.getNameList(m_SearchType, m_SearchString);
 		
 		m_Results = 0;
 		
