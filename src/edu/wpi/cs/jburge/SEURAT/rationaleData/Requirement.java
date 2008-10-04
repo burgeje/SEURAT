@@ -224,6 +224,7 @@ public class Requirement extends RationaleElement implements Serializable
 		return m_parent;
 	}
 	
+	
 	public String getPtype()
 	{
 		return m_ptype;
@@ -244,6 +245,44 @@ public class Requirement extends RationaleElement implements Serializable
 	public ReqType getType()
 	{
 		return m_type;
+	}
+	
+	public void setParent(RationaleElement parent)
+	{
+		if (parent != null)
+		{
+			this.m_parent = parent.getID();
+			this.m_ptype = parent.getElementType().toString();
+		}
+	}
+	
+	public void setParent(int parent) {
+		this.m_parent = parent;
+	}
+
+
+	public void setPtype(RationaleElementType ptype) {
+		if (ptype != null)
+		{
+			this.m_ptype = ptype.toString();
+		}
+		else
+		{
+			this.m_ptype = null;
+		}
+		
+	}
+	
+	public boolean hasParent()
+	{
+		if (m_parent > 0)
+		{
+			return true;
+		}
+		else
+		{
+			return false;
+		}
 	}
 	
 	public void setType(ReqType newtype)
