@@ -197,6 +197,15 @@ ITreeContentProvider {
 		return invisibleRoot;
 	}
 	
+	private boolean atTop(String parentName, RationaleElementType parentType)
+	{
+		boolean top = false;
+		if ((parentName == null) || (parentType == null))
+		{
+			top = true;
+		}
+		return top;
+	}
 	/**
 	 * Add the requirements to our tree that live "below" the passed in
 	 * parent element
@@ -209,6 +218,7 @@ ITreeContentProvider {
 		RationaleDB d = RationaleDB.getHandle();
 		Vector reqList = d.getRequirements(parentName, parentType);
 		Enumeration reqs =reqList.elements();
+		boolean top = atTop(parentName, parentType);
 		while (reqs.hasMoreElements())
 		{
 //			String childName = (String) reqs.nextElement();
@@ -218,22 +228,25 @@ ITreeContentProvider {
 			String childName = child.getName();
 			Requirement req = new Requirement();
 			req.fromDatabase(childName);
-			parent.addChild(child);
-			child.setActive(req.getEnabled());
-			//check to see if there is a related ontology entry
-			if ((req.getType() == ReqType.NFR) && (req.getOntology() != null))
+			if (!(req.hasParent() && top))
 			{
+				parent.addChild(child);
+				child.setActive(req.getEnabled());
+				//check to see if there is a related ontology entry
+				if ((req.getType() == ReqType.NFR) && (req.getOntology() != null))
+				{
 					String ontName = req.getOntology().getName();
 					TreeParent ontchild = new TreeParent(ontName, RationaleElementType.ONTENTRY);
 					child.addChild(ontchild);
 				}
-			//add our arguments
-			addArguments(child, childName, RationaleElementType.REQUIREMENT);
-			//add any questions
-			addQuestions(child, childName, RationaleElementType.REQUIREMENT);
-			addRequirements(child, childName, RationaleElementType.REQUIREMENT);
-			//add sub-decisions....
-			addDecisions(child, childName, RationaleElementType.REQUIREMENT);
+				//add our arguments
+				addArguments(child, childName, RationaleElementType.REQUIREMENT);
+				//add any questions
+				addQuestions(child, childName, RationaleElementType.REQUIREMENT);
+				addRequirements(child, childName, RationaleElementType.REQUIREMENT);
+				//add sub-decisions....
+				addDecisions(child, childName, RationaleElementType.REQUIREMENT);
+			}
 		}			
 	}
 	
@@ -248,6 +261,7 @@ ITreeContentProvider {
 		RationaleDB d = RationaleDB.getHandle();
 		Vector reqList = d.getDecisions(parentName, parentType);
 		Enumeration decs = reqList.elements();
+		boolean top = atTop(parentName, parentType);
 		while (decs.hasMoreElements())
 		{
 //			String childName = (String) decs.nextElement();
@@ -255,16 +269,20 @@ ITreeContentProvider {
 //			RationaleElementType.DECISION);
 			TreeParent child = (TreeParent) decs.nextElement();
 			String childName = child.getName(); 
-			parent.addChild(child);
-			//add alternatives...
-			addAlternatives(child, childName, RationaleElementType.DECISION);
-			//add questions...
-			addQuestions(child, childName, RationaleElementType.DECISION);
-			//add sub-decisions
-			addDecisions(child, childName, RationaleElementType.DECISION);
-			//add sub-decisions....
-			addConstraints(child, childName, RationaleElementType.DECISION);
-			
+			Decision dec = new Decision();
+			dec.fromDatabase(childName);
+			if (!(dec.hasParent() && top))
+			{
+				parent.addChild(child);
+				//add alternatives...
+				addAlternatives(child, childName, RationaleElementType.DECISION);
+				//add questions...
+				addQuestions(child, childName, RationaleElementType.DECISION);
+				//add sub-decisions
+				addDecisions(child, childName, RationaleElementType.DECISION);
+				//add sub-decisions....
+				addConstraints(child, childName, RationaleElementType.DECISION);
+			}
 		}			
 	}
 	
