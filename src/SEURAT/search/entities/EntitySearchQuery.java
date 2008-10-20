@@ -87,27 +87,51 @@ public class EntitySearchQuery implements ISearchQuery {
 	 */
 	public IStatus run(IProgressMonitor pProgress) throws OperationCanceledException {		
 		RationaleDB l_db = RationaleDB.getHandle();	
-		Vector l_names = l_db.getNameList(m_SearchType, m_SearchString);
 		
-		m_Results = 0;
+		//Need to decide what types of elements to search for
+		RationaleElementType l_type = null;
+		Vector<RationaleElementType> searchEle = new Vector<RationaleElementType>();
 		
-		// Technically we've already done the heavy lifting here
-		pProgress.beginTask(
-				"Searching for Rationale Entities of Type " + m_SearchType.toString(),
-				l_names.size()
-		);
-		
-		// TODO EMBED DB QUERY RETRIEVING IMPORTANCE OVERRIDES HERE?
-		
-		for( Object l_element : l_names )
+		if (m_SearchType != null)
 		{
-			RationaleElement l_ele = RationaleDB.getRationaleElement(l_element.toString(), m_SearchType);
-			
-			m_SearchResult.addMatch(new EntitySearchResultMatch(l_ele));
-			m_Results++;
-			pProgress.worked(1);
+			searchEle.add(m_SearchType);
+		}
+		else
+		{
+			//now, the true meaning of "All" would be all the possible types but we will
+			//restrict this to just requirements, decisions, alternatives, arguments, and assumptions
+			searchEle.add(RationaleElementType.REQUIREMENT);
+			searchEle.add(RationaleElementType.DECISION);
+			searchEle.add(RationaleElementType.ALTERNATIVE);
+			searchEle.add(RationaleElementType.ARGUMENT);
+			searchEle.add(RationaleElementType.ASSUMPTION);
 		}
 		
+		Enumeration l_i = searchEle.elements();
+		while (l_i.hasMoreElements())
+		{
+			RationaleElementType sType = (RationaleElementType) l_i.nextElement();
+			Vector l_names = l_db.getNameList(sType, m_SearchString);
+
+			m_Results = 0;
+
+			// Technically we've already done the heavy lifting here
+			pProgress.beginTask(
+					"Searching for Rationale Entities of Type " + sType.toString(),
+					l_names.size()
+			);
+
+			// TODO EMBED DB QUERY RETRIEVING IMPORTANCE OVERRIDES HERE?
+
+			for( Object l_element : l_names )
+			{
+				RationaleElement l_ele = RationaleDB.getRationaleElement(l_element.toString(), sType);
+
+				m_SearchResult.addMatch(new EntitySearchResultMatch(l_ele));
+				m_Results++;
+				pProgress.worked(1);
+			}
+		}
 		// Finished
 		pProgress.done();
         return Status.OK_STATUS;
