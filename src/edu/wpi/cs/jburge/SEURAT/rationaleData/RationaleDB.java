@@ -1930,7 +1930,7 @@ public final class RationaleDB implements Serializable {
 			findQuery = "SELECT name FROM " 
 				+ RationaleDBUtil.escapeTableName(tableName) + " " 
 				+ additional 
-				+ "WHERE name LIKE" + "'%" + sstring + "%'"
+				+ "WHERE upper(name) LIKE" + " upper('%" + sstring + "%')"
 				+ " ORDER BY name ASC";
 			System.out.println(findQuery);
 			rs = stmt.executeQuery(findQuery);
