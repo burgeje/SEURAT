@@ -88,11 +88,14 @@ public class SearchPage extends DialogPage implements ISearchPage {
 			EntitySearchControl l_control = (EntitySearchControl)m_SearchTypeData.m_SpecialParameters;
 			RationaleElementType l_type = null;
 			Enumeration l_i = RationaleElementType.elements();
-			while (l_i.hasMoreElements())
+			if (l_control.m_EntityTypes.getSelectionIndex() != 0)
 			{
-				l_type = (RationaleElementType)l_i.nextElement();
-				if( l_type.toString().equals(l_control.m_EntityTypes.getText()) )
-					break;
+				while (l_i.hasMoreElements())
+				{
+					l_type = (RationaleElementType)l_i.nextElement();
+					if( l_type.toString().equals(l_control.m_EntityTypes.getText()) )
+						break;
+				}
 			}
 
 			// TODO: Handle Error When Invalid Selection
@@ -370,6 +373,9 @@ public class SearchPage extends DialogPage implements ISearchPage {
 		public EntitySearchControl(Composite pParent)
 		{
 			m_EntityTypes = new Combo(pParent, SWT.NONE);
+			
+			//default to searching on "all" types
+			m_EntityTypes.add("All");
 			
 			Enumeration typeEnum = RationaleElementType.elements();
 			while (typeEnum.hasMoreElements())
