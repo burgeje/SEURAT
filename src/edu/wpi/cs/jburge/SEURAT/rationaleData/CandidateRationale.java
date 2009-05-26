@@ -309,8 +309,8 @@ public class CandidateRationale extends RationaleElement {
 			insertQuery = "INSERT INTO Sources " +
 			"(source, parent, ptype) " +
 			"VALUES ('" +
-			RationaleDBUtil.escape(source) + "', '" +
-			new Integer(newRat.id).toString() + "', '" + 
+			RationaleDBUtil.escape(source) + "', " +
+			new Integer(newRat.id).toString() + ", '" + 
 			this.getType().toString() + "')";
 		
 			stmt.execute(insertQuery); 

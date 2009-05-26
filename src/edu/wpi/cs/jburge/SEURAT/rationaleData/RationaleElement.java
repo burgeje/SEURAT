@@ -1,6 +1,10 @@
 
 package edu.wpi.cs.jburge.SEURAT.rationaleData;
 
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.*;
 import java.io.*;
 
@@ -24,6 +28,12 @@ public class RationaleElement implements Serializable
 		return super.equals(obj);
 	}
 
+	/**
+	 * The unique ID of our parent. Requirements and Decisions are always top level but
+	 * alternatives and arguments will have parents.
+	 */
+	int parent;
+	
 	/**
 	 * 
 	 */
@@ -68,7 +78,7 @@ public class RationaleElement implements Serializable
 		return null;
 	}
 	
-	RationaleElement()
+	public RationaleElement()
 	{
 		id = -1;
 		lastID++;
@@ -270,6 +280,6 @@ public class RationaleElement implements Serializable
 			
 		}
 	}
-	
+
 	
 }

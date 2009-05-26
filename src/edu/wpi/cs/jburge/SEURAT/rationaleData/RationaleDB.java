@@ -142,7 +142,7 @@ public final class RationaleDB implements Serializable {
 		}
 	/**
 	 * Rationale DB Constructor. This MUST remain PRIVATE in order for this
-	 * class to stay a singleton. This class sets up the JDBC database
+	 * class to stay a d. This class sets up the JDBC database
 	 * connection using the information from the preferences.
 	 * @param x - unused parameter.
 	 */
@@ -1691,6 +1691,61 @@ public final class RationaleDB implements Serializable {
 		}
 		return onts;
 	}
+	
+	/**
+	 * Return a list of child element entries given the parent for treeview display
+	 * @param parentName - the name of the parent
+	 * @param type - specify the type of element
+	 * @return a list of child elements - the actual elements, not just names
+	 */
+	public Vector<String> getElements_TreeView(String parentName, RationaleElementType type,boolean firstTime) {
+		
+		Vector<String> elements = new Vector<String>();
+		ResultSet rs = null;
+		try {
+			RationaleDB db = RationaleDB.getHandle();
+			Connection conn = db.getConnection();
+			Statement stmt = null;
+			String selectStr="";
+			if(firstTime)
+			{
+				if (type==RationaleElementType.REQUIREMENT)
+					selectStr="Select * from (SELECT a.id as childID,a.name as childName,a.parent as parentID,b.name as parentName FROM (requirements as a) left join (requirements as b) on (a.parent=b.id)) as t where t.parentName is null";
+				else if (type==RationaleElementType.DECISION)
+					selectStr="Select * from (SELECT a.id as childID,a.name as childName,a.parent as parentID,b.name as parentName FROM (decisions as a) left join (decisions as b) on (a.parent=b.id)) as t where t.parentName is null";
+				else if (type==RationaleElementType.ALTERNATIVE)
+					selectStr="Select * from (SELECT a.id as childID,a.ptype,a.name as childName,a.parent as parentID,b.name as parentName FROM (alternatives as a) left join (alternatives as b) on (a.parent=b.id)) as t where t.ptype="+"'Decision'";
+				else if (type==RationaleElementType.ARGUMENT)
+					selectStr="Select * from (SELECT a.id as childID,a.name as childName,a.parent as parentID,b.name as parentName FROM (arguments as a) left join (arguments as b) on (a.parent=b.id)) as t where t.parentName is null";
+			}
+			else
+			{
+				if (type==RationaleElementType.REQUIREMENT)
+					selectStr="Select * from (SELECT a.id as childID,a.name as childName,a.parent as parentID,b.name as parentName FROM (requirements as a) left join (requirements as b) on (a.parent=b.id)) as t where t.parentName="+"'"+parentName+"'";
+				else if (type==RationaleElementType.DECISION)
+					selectStr="Select * from (SELECT a.id as childID,a.name as childName,a.parent as parentID,b.name as parentName FROM (decisions as a) left join (decisions as b) on (a.parent=b.id)) as t where t.parentName="+"'"+parentName+"'";
+				else if (type==RationaleElementType.ALTERNATIVE)
+					selectStr="Select * from (SELECT a.id as childID,a.name as childName,a.parent as parentID,b.name as parentName FROM (alternatives as a) left join (alternatives as b) on (a.parent=b.id)) as t where t.parentName="+"'"+parentName+"'";
+				else if (type==RationaleElementType.ARGUMENT)
+					selectStr="Select * from (SELECT a.id as childID,a.name as childName,a.parent as parentID,b.name as parentName FROM (arguments as a) left join (arguments as b) on (a.parent=b.id)) as t where t.parentName="+"'"+parentName+"'";
+			}
+//			System.out.println(selectStr);
+			stmt = conn.createStatement();
+			rs = stmt.executeQuery(selectStr);
+			while (rs.next()) {			
+					String name = "";
+					name = rs.getString("childName");
+					elements.addElement(name);
+			}
+			rs.close();
+		} catch (SQLException ex) {
+			reportError(ex, "Error in getElements_TreeView method", "getOntologyElements");
+		} finally {
+			releaseResources(null, rs);
+		}
+		return elements;
+	}
+	
 
 	/**
 	 * Given a parent constraint, return a list of sub-constraints
@@ -2034,8 +2089,107 @@ public final class RationaleDB implements Serializable {
 			releaseResources(stmt, rs);
 		}
 		return ourElements;
-		
 	}
+	
+	/**
+	 * Get a list of all "potential new parents" for a particular type of rationale element
+	 * @param type - the type of element whose new parent we are looking for
+	 * @return - the list of names
+	 */
+	public Vector<String> getRationaleElementList(RationaleElementType type) {
+		Vector<String> ourElements = new Vector<String>();
+		String findQuery = "";
+		Statement stmt = null;
+		ResultSet rs = null;
+		try {
+			stmt = conn.createStatement();
+			if (type == RationaleElementType.ALTERNATIVE)
+			{
+				findQuery = "SELECT name FROM decisions";
+			}
+/*			else if (type == RationaleElementType.ARGUMENT)
+			{
+				findQuery = "(SELECT name FROM requirements) union (select name FROM alternatives)";	
+			} */
+			else if (type == RationaleElementType.REQUIREMENT)
+			{
+				findQuery = "SELECT name FROM requirements";	
+			}
+			else if (type == RationaleElementType.DECISION)
+			{
+				findQuery = "select name FROM alternatives";
+			}
+			else if (type == RationaleElementType.QUESTION)
+			{
+				findQuery = "SELECT decisions.name,alternatives.name FROM decisions ,alternatives";	
+			}
+			else
+			{
+				return null;
+			}
+			System.out.println(findQuery);
+			rs = stmt.executeQuery(findQuery);
+			
+			while (rs.next()) {
+				ourElements
+				.addElement(RationaleDBUtil.decode(rs.getString("name")));
+			}
+			
+		} catch (SQLException ex) {
+			reportError(ex, "Error in getNameList", findQuery);
+		} finally {
+			releaseResources(stmt, rs);
+		}
+		return ourElements;	
+	}
+	
+	/**
+	 * Get a list of all "potential new parents" for Argument type of rationale element
+	 * @param type - the type of element whose new parent we are looking for
+	 * @param ptype - parent's the type of element
+	 * @return - the list of names
+	 */
+	public Vector<String> getRationaleElementList(RationaleElementType type, RationaleElementType ptype ) {
+		Vector<String> ourElements = new Vector<String>();
+		String findQuery = "";
+		Statement stmt = null;
+		ResultSet rs = null;
+		try {
+			stmt = conn.createStatement();
+			
+			if (type == RationaleElementType.ARGUMENT && ptype== RationaleElementType.REQUIREMENT)
+			{
+				findQuery = "SELECT name FROM requirements";	
+			}
+			if (type == RationaleElementType.ARGUMENT && ptype== RationaleElementType.ALTERNATIVE)
+			{
+				findQuery = "select name FROM alternatives";	
+			}
+			if (type == RationaleElementType.DECISION && ptype== RationaleElementType.DECISION)
+			{
+				findQuery = "SELECT name FROM decisions";	
+			}
+			if (type == RationaleElementType.DECISION && ptype== RationaleElementType.ALTERNATIVE)
+			{
+				findQuery = "select name FROM alternatives";	
+			}
+			System.out.println(findQuery);
+			rs = stmt.executeQuery(findQuery);
+			
+			while (rs.next()) {
+				ourElements
+				.addElement(RationaleDBUtil.decode(rs.getString("name")));
+			}
+			
+		} catch (SQLException ex) {
+			reportError(ex, "Error in getNameList", findQuery);
+		} finally {
+			releaseResources(stmt, rs);
+		}
+		return ourElements;
+	}
+	
+	
 	/**
 	 * Returns a list of TreeParent items (to put in the tree from the RationaleExplorer)
 	 * from the database given the parent name, the element type, and the parent type.

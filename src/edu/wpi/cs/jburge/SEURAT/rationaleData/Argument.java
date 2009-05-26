@@ -851,8 +851,237 @@ public class Argument extends RationaleElement implements Serializable
 
 		return ourid;	
 
-	}	
+	}
+	
+	/*
+	/**
+	 * this method is for move Requirement in RationaleExplorer. and newEle is
+	 * fake parameter, it just helps to find the entry.
+	 */
+	public int toDatabase(int parent, RationaleElementType ptype,boolean newEle)
+	{
+		RationaleDB db = RationaleDB.getHandle();
+		Connection conn = db.getConnection();
 
+		// Update Event To Inform Subscribers Of Changes
+		// To Rationale
+		RationaleUpdateEvent l_updateEvent;
+
+		int ourid = 0;
+
+		//find out if this requirement is already in the database
+		Statement stmt = null; 
+		ResultSet rs = null; 
+
+//		***		System.out.println("Saving to the database");
+
+		try {
+			stmt = conn.createStatement(); 
+
+
+			String updateD;
+			if (designer == null)
+				updateD = "null";
+			else
+				updateD = new Integer(designer.getID()).toString();
+
+
+			if (inDatabase(parent,ptype))
+			{
+				String updateParent = "UPDATE arguments D " +
+				"SET D.parent = " + new Integer(parent).toString() +
+				", D.ptype = '" + ptype.toString() +
+				"', D.name = '" + RationaleDBUtil.escape(name) +
+				"', D.description = '" + RationaleDBUtil.escape(description) +
+				"', D.type = '" + type.toString() +
+				"', D.plausibility = '" + plausibility.toString() +
+				"', D.importance = '" + importance.toString() +
+				"', D.amount = " + new Integer(amount).toString() +
+				" WHERE " +
+				"D.id = " + this.id + " " ;
+				System.out.println(updateParent);
+				stmt.execute(updateParent);
+
+				l_updateEvent = m_eventGenerator.MakeUpdated();
+			}
+			else 
+			{
+
+				//now, we have determined that the requirement is new
+				String parentRSt = new Integer(parent).toString();
+
+				String newArgSt;
+
+				//If this is a newly imported candidate, some of this information will
+				//not exist. 
+				if (type == ArgType.NONE)
+				{
+					newArgSt = "INSERT INTO Arguments " +
+					"(name, description, type, plausibility, importance, amount, ptype, parent, designer) " +
+					"VALUES ('" +
+					RationaleDBUtil.escape(this.name) + "', '" +
+					RationaleDBUtil.escape(this.description) + "', '" +
+					this.type.toString() + "', '" +
+					this.plausibility.toString() + "', '" +
+					this.importance.toString() + "', " +
+					new Integer(this.amount).toString() + ", '" +
+					ptype.toString() + "', " +
+					parentRSt + ", " +
+					updateD + ")";					
+				}
+				else
+				{
+					newArgSt = "INSERT INTO Arguments " +
+					"(name, description, type, plausibility, importance, amount, ptype, parent, designer) " +
+					"VALUES ('" +
+					RationaleDBUtil.escape(this.name) + "', '" +
+					RationaleDBUtil.escape(this.description) + "', '" +
+					this.type.toString() + "', '" +
+					this.plausibility.toString() + "', '" +
+					this.importance.toString() + "', " +
+					new Integer(this.amount).toString() + ", '" +
+					ptype.toString() + "', " +
+					parentRSt + ", " +
+					updateD + ")";
+
+				}
+
+//				System.out.println(newArgSt);
+				stmt.execute(newArgSt); 
+
+				l_updateEvent = m_eventGenerator.MakeCreated();
+			}
+			//in either case, we want to update any sub-requirements in case
+			//they are new!
+			//now, we need to get our ID
+			String findQuery2 = "SELECT id FROM arguments where name='" +
+			RationaleDBUtil.escape(this.name) + "' and parent = " + this.parent;
+			rs = stmt.executeQuery(findQuery2); 
+//			***			System.out.println(findQuery2);
+
+			if (rs.next())
+			{
+				ourid = rs.getInt("id");
+				rs.close();
+			}
+			else
+			{
+				ourid = -1;
+			}
+
+			this.id = ourid;
+
+//			System.out.println("category = " + category.toString());
+			//now, we need to either find, or create, our argument subject
+			//now the hard part - what is our argument about?
+//			if (assumption != null)
+			if (category == ArgCategory.ASSUMPTION)
+			{
+				//create the assumption
+				int asmid = assumption.toDatabase();
+				String setReq = "UPDATE Arguments A " +
+				"SET A.assumption = " + new Integer(asmid).toString() +
+				", A.argtype = '" + ArgCategory.ASSUMPTION.toString() +
+				"' WHERE A.id = " + new Integer(ourid).toString() +
+				" ";   
+//				System.out.println(setReq);
+				stmt.execute(setReq);
+			}
+//			else if (alternative != null)
+			else if (category == ArgCategory.ALTERNATIVE)
+			{
+				//get the ID for our alternative (presumably it exists)
+				String findAlt = "SELECT id from Alternatives where name = '" +
+				RationaleDBUtil.escape(alternative.getName()) + "'";
+				rs = stmt.executeQuery(findAlt); 
+//				***			 System.out.println(findAlt);
+				int altid = 0;
+				if (rs.next())
+				{
+					altid = rs.getInt("id");
+					rs.close();
+				}
+				String setReq = "UPDATE Arguments A " +
+				"SET A.alternative = " + new Integer(altid).toString() +
+				", A.argtype = '" + ArgCategory.ALTERNATIVE.toString() +
+				"' WHERE A.id = " + new Integer(ourid).toString() +
+				" ";   
+//				System.out.println(setReq);
+				stmt.execute(setReq);
+
+			}
+			else if (category == ArgCategory.CLAIM)
+//				else if (claim != null)
+			{
+				//create the claim - if it exists, this returns the id
+				int clmid = claim.toDatabase();
+				String setReq = "UPDATE Arguments A " +
+				"SET A.claim = " + new Integer(clmid).toString() +
+				", A.argtype = '" + ArgCategory.CLAIM.toString() +
+				"' WHERE A.id = " + new Integer(ourid).toString() +
+				" ";   
+//				System.out.println(setReq);
+				stmt.execute(setReq);
+
+
+			}
+			else if (category == ArgCategory.REQUIREMENT)
+//				else if (requirement != null)
+			{
+				//get the ID for the requirement
+				String findReq = "SELECT id from Requirements where name = '" +
+				RationaleDBUtil.escape(requirement.getName()) + "'";
+				rs = stmt.executeQuery(findReq); 
+//				***				System.out.println(findReq);
+				int reqid = 0;
+				if (rs.next())
+				{
+					reqid = rs.getInt("id");
+					rs.close();
+				}
+				String setReq = "UPDATE Arguments A " +
+				"SET A.requirement = " + new Integer(reqid).toString() +
+				", A.argtype = '" + ArgCategory.REQUIREMENT.toString() +
+				"' WHERE A.id = " + new Integer(ourid).toString() +
+				" ";   		
+				stmt.execute(setReq);
+//				System.out.println(setReq);
+			}
+
+			Enumeration args = getAllArguments().elements();
+			while (args.hasMoreElements()) {
+				Argument arg = (Argument) args.nextElement();
+				arg.toDatabase(ourid, arg.getPtype());
+			}
+
+			Enumeration quests = questions.elements();
+			while (quests.hasMoreElements()) {
+				Question quest = (Question) quests.nextElement();
+				quest.toDatabase(ourid, RationaleElementType.ARGUMENT);
+			}
+
+			m_eventGenerator.Broadcast(l_updateEvent);
+		} 
+		catch (RuntimeException ex)
+		{
+			System.out.println(ex.getMessage());
+			System.out.println(ex.getStackTrace());
+			throw(ex);
+		}
+		catch (SQLException ex) {
+			RationaleDB.reportError(ex, "Argument.toDatabase", "SQL Error");
+		}
+
+
+		finally { 
+			RationaleDB.releaseResources(stmt, rs);
+
+		}
+
+		return ourid;	
+
+	}
+    
 	public RationaleElement getParentElement()
 	{
 		return RationaleDB.getRationaleElement(this.parent, this.ptype);
