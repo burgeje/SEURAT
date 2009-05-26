@@ -127,22 +127,33 @@ public class EditCandidateRationale extends NewRationaleElementGUI implements Se
 					canceled = false;
 					//int statusIndex;
 					
-					ConsistencyChecker checker = new ConsistencyChecker(ourCandidate.getID(), nameField.getText(), "Assumptions");
-					
+					ConsistencyChecker checker = new ConsistencyChecker(ourCandidate.getID(), nameField.getText(),"candidates");
+//					System.out.println((ourCandidate.getType()).toString());
+//					System.out.println(checker.check());
 					if(ourCandidate.getName() == nameField.getText() || checker.check())
 					{
 						ourCandidate.setName(nameField.getText());
 						ourCandidate.setDescription(descArea.getText());
 						//since this is a save, not an add, the type and parent are ignored
 						ourCandidate.toDatabase(ourCandidate.getParent(), false);
-						
+//						System.out.println("I am in the saving!");
+//						System.out.println(ourCandidate.getType());
 						//			RationaleDB db = RationaleDB.getHandle();
 						//			db.addAssumption(ourAssump);
 						
 						shell.close();
 						shell.dispose();
 					}
-					
+/*					else
+					{
+						String l_message = "";
+						l_message += "Name Invalid. Duplicated Name.";
+						MessageBox mbox = new MessageBox(shell, SWT.ICON_ERROR);
+						mbox.setMessage(l_message);
+						mbox.setText("Name Invalid");
+						mbox.open();
+					}
+*/					
 				}
 			});
 		}
