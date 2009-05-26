@@ -13,6 +13,8 @@ import javax.xml.parsers.ParserConfigurationException;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.FileDialog;
+import org.eclipse.swt.widgets.MessageBox;
+import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Tree;
 import org.eclipse.ui.part.*;
 import org.eclipse.jface.util.IPropertyChangeListener;
@@ -29,8 +31,10 @@ import org.eclipse.jdt.core.*;
 
 import edu.wpi.cs.jburge.SEURAT.SEURATPlugin;
 import edu.wpi.cs.jburge.SEURAT.actions.*;
+import edu.wpi.cs.jburge.SEURAT.editors.ConsistencyChecker;
 import edu.wpi.cs.jburge.SEURAT.editors.SelectCandidate;
 import edu.wpi.cs.jburge.SEURAT.editors.SelectItem;
+import edu.wpi.cs.jburge.SEURAT.editors.SelectType;
 import edu.wpi.cs.jburge.SEURAT.inference.*;
 //import edu.wpi.cs.jburge.SEURAT.queries.EditEntity;
 import edu.wpi.cs.jburge.SEURAT.queries.FindImportanceOverrides;
@@ -108,6 +112,11 @@ IPropertyChangeListener {
 	 * Menu item to adopt an element and its children
 	 */
 	private Action adoptElement;
+	
+	/**
+	 * Menu item to adopt an element and its children
+	 */
+	private Action changeElementType;
 	/**
 	 * Menu item to adopt an element under an alternative
 	 */
@@ -246,6 +255,8 @@ IPropertyChangeListener {
 				manager.add(moveElement);
 				manager.add(adoptElement);
 				manager.add(adoptElementUnderDecision);
+				manager.add(changeElementType);
+				
 			}
 			else if (ourElement.getType() == RationaleElementType.REQUIREMENT)
 			{
@@ -253,6 +264,7 @@ IPropertyChangeListener {
 				manager.add(deleteElement);
 				manager.add(adoptElement);
 				manager.add(adoptElementUnderRequirement);
+				manager.add(changeElementType);
 			}
 			else if (ourElement.getType() == RationaleElementType.DECISION)
 			{
@@ -260,6 +272,7 @@ IPropertyChangeListener {
 				manager.add(deleteElement);
 				manager.add(adoptElement);
 				manager.add(adoptElementUnderDecision);
+				manager.add(changeElementType);
 			}
 			else if (ourElement.getType() == RationaleElementType.ARGUMENT)
 			{
@@ -268,12 +281,14 @@ IPropertyChangeListener {
 				manager.add(moveElement);
 				manager.add(adoptElementUnderRequirement);
 				manager.add(adoptElementUnderAlternative);
+				manager.add(changeElementType);
 			}
 			else if (ourElement.getType() == RationaleElementType.ASSUMPTION)
 			{
 				manager.add(editElement);
 				manager.add(deleteElement);
 				manager.add(moveElement);
+				manager.add(changeElementType);
 //				manager.add(adoptElementUnderArgument);
 			}
 			else if (ourElement.getType() == RationaleElementType.QUESTION)
@@ -283,6 +298,7 @@ IPropertyChangeListener {
 				manager.add(moveElement);
 				manager.add(adoptElementUnderDecision);
 				manager.add(adoptElementUnderAlternative);
+				manager.add(changeElementType);
 				
 			}
 	
@@ -412,6 +428,406 @@ IPropertyChangeListener {
 		adoptElementUnderDecision.setText("Adopt Under Decision");
 		adoptElementUnderDecision.setToolTipText("Adopt As Rationale");
 
+		//
+
+		//change rationale element type Action
+		//
+		changeElementType = new Action() {
+			public void run() {
+				ISelection selection = viewer.getSelection();
+				Object obj = ((IStructuredSelection)selection).getFirstElement();
+				//We need to display a list of new parent elements and select which one we want
+				RationaleElement rElement = getElement((CandidateTreeParent) obj, false);
+				SelectType eleType = new SelectType(ourDisplay);
+				String type=eleType.getType();
+				String typeSelected=(((CandidateTreeParent) obj).getType()).toString();
+				
+				//Change Requirement element type
+				if(typeSelected.compareTo("Requirement")==0)
+				{
+					// change Requirement to Decision
+					if (type.equals("Decision"))
+					{
+						CandidateRationale ele = (CandidateRationale) rElement;
+//						System.out.println("abc");
+						if((ele.getChildren()).isEmpty())
+						{
+//							ConsistencyChecker checker = new ConsistencyChecker(ele.getID(), ele.getName(),(ele.getType()).toString());
+//							if(checker.check())
+							
+							ele.setParent(0);
+							ele.setType(RationaleElementType.DECISION);
+							ele.toDatabase(0, false);
+//							System.out.println("above ele.getName()");
+//							System.out.println(ele.getName());
+							rebuildTree();
+//							System.out.println(ele.getName());
+				/*			RationaleTreeMap map = RationaleTreeMap.getHandle();
+						    Vector treeObjs = map.getKeys(map.makeKey(ele.getName(), RationaleElementType.DECISION));
+							Iterator<TreeObject> treeIterator = treeObjs.iterator();
+							System.out.println("I am in treeIterator.hasNext()");
+							TreeObject treeEle = (TreeObject) treeIterator.next();
+//							viewer.reveal(treeEle);
+							viewer.expandToLevel(treeEle, 4); */ // This just does not work I don't know why. So instead, use below
+							viewer.expandAll();
+						}
+						else
+						{
+							System.out.println("change Requirement to Argument error box");
+							String l_message = "";
+							l_message += "The element you selected at least have a child."
+								+ " Please move all elements under the element first.";
+							MessageBox mbox = new MessageBox(getSite().getShell(), SWT.ICON_ERROR);
+							mbox.setMessage(l_message);
+							mbox.setText("Element selected have a child");
+							mbox.open();
+						}
+					}
+					
+					// change Requirement to Argument
+					if (type.equals("Argument"))
+					{
+						CandidateRationale ele = (CandidateRationale) rElement;
+						if((ele.getChildren()).isEmpty())
+						{
+								CandidateTreeParent parent;
+								// We have to change the element type first, to make fit the RationaleDB.java in order to display all Decision and Alternative
+								ele.setType(RationaleElementType.ARGUMENT);
+								parent = moveElement((CandidateTreeParent) obj, ele, ourDisplay);
+//								System.out.println(parent);
+								if(parent==null)
+								{
+									String l_message = "";
+									l_message += "Error. Can not selected element itself.";
+									MessageBox mbox = new MessageBox(getSite().getShell(), SWT.ICON_ERROR);
+									mbox.setMessage(l_message);
+									mbox.setText("Selected Element Itself Error");
+									mbox.open();
+								}
+								refreshBranch(parent);					
+						}
+						else
+						{
+//							System.out.println("change Requirement to Argument error box");
+							String l_message = "";
+							l_message += "The element you selected at least have a child."
+								+ " Please move all elements under the element first.";
+//							l_message += "||||||change Requirement to Argument";
+							MessageBox mbox = new MessageBox(getSite().getShell(), SWT.ICON_ERROR);
+							mbox.setMessage(l_message);
+							mbox.setText("Element selected have a child");
+							mbox.open();
+						}
+					}
+					
+					// change Requirement to Alternative
+					if (type.equals("Alternative"))
+					{
+						CandidateRationale ele = (CandidateRationale) rElement;
+						if((ele.getChildren()).isEmpty())
+						{
+							if (obj instanceof CandidateTreeParent)
+							{
+								CandidateTreeParent parent;
+								// We have to change the element type first, to make fit the RationaleDB.java in order to display all Decision and Alternative
+								ele.setType(RationaleElementType.ALTERNATIVE);
+								parent = moveElement((CandidateTreeParent) obj, ele, ourDisplay);
+								refreshBranch(parent);					
+							}
+						}
+						else
+						{
+//							System.out.println("change Requirement to Alternative error box");
+							String l_message = "";
+							l_message += "The element you selected at least have a child."
+								+ " Please move all elements under the element first.";
+//							l_message += "||||||change Requirement to Alternative";
+							MessageBox mbox = new MessageBox(getSite().getShell(), SWT.ICON_ERROR);
+							mbox.setMessage(l_message);
+							mbox.setText("Element selected have a child");
+							mbox.open();
+						}
+					}
+				}//end of Change Requirement element type
+
+				
+				//Change Decision element type
+				if(typeSelected.compareTo("Decision")==0)
+				{
+					// change Decision to Requirement
+					if (type.equals("Requirement"))
+					{
+						CandidateRationale ele = (CandidateRationale) rElement;
+						if((ele.getChildren()).isEmpty())
+						{
+							ele.setParent(0);
+							ele.setType(RationaleElementType.REQUIREMENT);
+							ele.toDatabase(0, false);
+							//CandidateTreeParent parent;
+							rebuildTree();
+							viewer.expandAll();
+						}
+						else
+						{
+							String l_message = "";
+							l_message += "The element you selected at least have a child."
+								+ " Please move all elements under the element first.";
+//							l_message += "||||||change Decision to Requirement";
+							MessageBox mbox = new MessageBox(getSite().getShell(), SWT.ICON_ERROR);
+							mbox.setMessage(l_message);
+							mbox.setText("Element selected have a child");
+							mbox.open();
+						}
+					}
+					
+					// change Decision to Argument
+					if (type.equals("Argument"))
+					{
+						CandidateRationale ele = (CandidateRationale) rElement;
+						if((ele.getChildren()).isEmpty())
+						{
+							if (obj instanceof CandidateTreeParent)
+							{
+								CandidateTreeParent parent;
+								// We have to change the element type first, to make fit the RationaleDB.java in order to display all Decision and Alternative
+								ele.setType(RationaleElementType.ARGUMENT);
+								parent = moveElement((CandidateTreeParent) obj, ele, ourDisplay);
+								refreshBranch(parent);					
+							}
+						}
+						else
+						{
+							String l_message = "";
+							l_message += "The element you selected at least have a child."
+								+ " Please move all elements under the element first.";
+							MessageBox mbox = new MessageBox(getSite().getShell(), SWT.ICON_ERROR);
+//							l_message += "||||||change Decision to Argument";
+							mbox.setMessage(l_message);
+							mbox.setText("Element selected have a child");
+							mbox.open();
+						}
+					}
+					
+					// change Decision to Alternative
+					if (type.equals("Alternative"))
+					{
+						CandidateRationale ele = (CandidateRationale) rElement;
+						if((ele.getChildren()).isEmpty())
+						{
+							if (obj instanceof CandidateTreeParent)
+							{
+								CandidateTreeParent parent;
+								// We have to change the element type first, to make fit the RationaleDB.java in order to display all Alternative
+								ele.setType(RationaleElementType.ALTERNATIVE);
+								parent = moveElement((CandidateTreeParent) obj, ele, ourDisplay);
+								if(parent==null)
+								{
+									String l_message = "";
+									l_message += "Error. Can not selected element itself.";
+									MessageBox mbox = new MessageBox(getSite().getShell(), SWT.ICON_ERROR);
+									mbox.setMessage(l_message);
+									mbox.setText("Selected Element Itself Error");
+									mbox.open();
+								}
+								refreshBranch(parent);					
+							}
+						}
+						else
+						{
+							String l_message = "";
+							l_message += "The element you selected at least have a child."
+								+ " Please move all elements under the element first.";
+//							l_message += "||||||change Decision to Alternative";
+							MessageBox mbox = new MessageBox(getSite().getShell(), SWT.ICON_ERROR);
+							mbox.setMessage(l_message);
+							mbox.setText("Element selected have a child");
+							mbox.open();
+						}
+					}
+				}//end of Change Decision element type
+				
+				
+				//Change Alternative element type
+				if(typeSelected.compareTo("Alternative")==0)
+				{
+					// change Alternative to Decision
+					if (type.equals("Decision"))
+					{
+						CandidateRationale ele = (CandidateRationale) rElement;
+						if((ele.getChildren()).isEmpty())
+						{
+							ele.setParent(0);
+							ele.setType(RationaleElementType.DECISION);
+							ele.toDatabase(0, false);
+							rebuildTree();
+							viewer.expandAll();
+						}
+						else
+						{
+							String l_message = "";
+							l_message += "The element you selected at least have a child."
+								+ " Please move all elements under the element first.";
+//							l_message += "||||||change Alternative to Decision";
+							MessageBox mbox = new MessageBox(getSite().getShell(), SWT.ICON_ERROR);
+							mbox.setMessage(l_message);
+							mbox.setText("Element selected have a child");
+							mbox.open();
+						}
+					}
+					
+					// change Alternative to Requirement
+					if (type.equals("Requirement"))
+					{
+						CandidateRationale ele = (CandidateRationale) rElement;
+						if((ele.getChildren()).isEmpty())
+						{
+							ele.setParent(0);
+							ele.setType(RationaleElementType.REQUIREMENT);
+							ele.toDatabase(0, false);
+							rebuildTree();
+							viewer.expandAll();
+						}
+						else
+						{
+							String l_message = "";
+							l_message += "The element you selected at least have a child."
+								+ " Please move all elements under the element first.";
+//							l_message += "||||||change Alternative to Requirement";
+							MessageBox mbox = new MessageBox(getSite().getShell(), SWT.ICON_ERROR);
+							mbox.setMessage(l_message);
+							mbox.setText("Element selected have a child");
+							mbox.open();
+						}
+					}
+					
+					// change Alternative to Argument
+					if (type.equals("Argument"))
+					{
+						CandidateRationale ele = (CandidateRationale) rElement;
+						if((ele.getChildren()).isEmpty())
+						{
+							if (obj instanceof CandidateTreeParent)
+							{
+								CandidateTreeParent parent;
+								// We have to change the element type first, to make fit the RationaleDB.java in order to display all Decision and Alternative
+								ele.setType(RationaleElementType.ARGUMENT);
+								parent = moveElement((CandidateTreeParent) obj, ele, ourDisplay);
+								if(parent==null)
+								{
+									String l_message = "";
+									l_message += "Error. Can not selected element itself.";
+									MessageBox mbox = new MessageBox(getSite().getShell(), SWT.ICON_ERROR);
+									mbox.setMessage(l_message);
+									mbox.setText("Selected Element Itself Error");
+									mbox.open();
+								}
+								refreshBranch(parent);					
+							}
+						}
+						else
+						{
+							String l_message = "";
+							l_message += "The element you selected at least have a child."
+								+ " Please move all elements under the element first.";
+//							l_message += "||||||change Alternative to Argument";
+							MessageBox mbox = new MessageBox(getSite().getShell(), SWT.ICON_ERROR);
+							mbox.setMessage(l_message);
+							mbox.setText("Element selected have a child");
+							mbox.open();
+						}
+					}
+				}//end of Change Alternative element type
+		
+				
+				//Change Argument element type
+				if(typeSelected.compareTo("Argument")==0)
+				{
+					//System.out.println("In Argument"); // for testing
+					// change Argument to Requirement
+					if (type.equals("Requirement"))
+					{
+						CandidateRationale ele = (CandidateRationale) rElement;
+						if((ele.getChildren()).isEmpty())
+						{
+							ele.setParent(0);
+							ele.setType(RationaleElementType.REQUIREMENT);
+							ele.toDatabase(0, false);
+							rebuildTree();
+							viewer.expandAll();
+						}
+						else
+						{
+							String l_message = "";
+							l_message += "The element you selected at least have a child."
+								+ " Please move all elements under the element first.";
+//							l_message += "||||||change Argument to Requirement";
+							MessageBox mbox = new MessageBox(getSite().getShell(), SWT.ICON_ERROR);
+							mbox.setMessage(l_message);
+							mbox.setText("Element selected have a child");
+							mbox.open();
+						}
+					}
+					
+					// change Argument to Decision
+					if (type.equals("Decision"))
+					{
+						CandidateRationale ele = (CandidateRationale) rElement;
+						if((ele.getChildren()).isEmpty())
+						{
+							ele.setParent(0);
+							ele.setType(RationaleElementType.DECISION);
+							ele.toDatabase(0, false);
+							rebuildTree();
+							viewer.expandAll();
+						}
+						else
+						{
+							String l_message = "";
+							l_message += "The element you selected at least have a child."
+								+ " Please move all elements under the element first.";
+//							l_message += "||||||change Argument to Decision";
+							MessageBox mbox = new MessageBox(getSite().getShell(), SWT.ICON_ERROR);
+							mbox.setMessage(l_message);
+							mbox.setText("Element selected have a child");
+							mbox.open();
+						}
+					}
+					
+					// change Argument to Alternative
+					if (type.equals("Alternative"))
+					{
+						CandidateRationale ele = (CandidateRationale) rElement;
+						if((ele.getChildren()).isEmpty())
+						{
+							if (obj instanceof CandidateTreeParent)
+							{
+								CandidateTreeParent parent;
+								// We have to change the element type first, to make fit the RationaleDB.java in order to display all Alternative
+								ele.setType(RationaleElementType.ALTERNATIVE);
+								parent = moveElement((CandidateTreeParent) obj, ele, ourDisplay);
+								refreshBranch(parent);					
+							}
+						}
+						else
+						{
+							String l_message = "";
+							l_message += "The element you selected at least have a child."
+								+ " Please move all elements under the element first.";
+							//l_message += "||||||change Argument to Alternative";
+							MessageBox mbox = new MessageBox(getSite().getShell(), SWT.ICON_ERROR);
+							mbox.setMessage(l_message);
+							mbox.setText("Element selected have a child");
+							mbox.open();
+						}
+					}
+				}//the end of Change Argument element type
+			}
+			
+		}; //change rationale element type action definition
+		changeElementType.setText("Change Element Type");
+		changeElementType.setToolTipText("Change Element Type");
+		
+		
 		//
 		// move rationale element action
 		//
@@ -738,6 +1154,12 @@ IPropertyChangeListener {
 		//We need to display a list of new parent elements and select which one we want
 		SelectCandidate sel = new SelectCandidate(theDisplay, ele.getType());
 		CandidateRationale parentRat = (CandidateRationale) sel.getNewItem();
+		System.out.println(ele.getType());
+		System.out.println(ele.getName());
+		if(((String)parentRat.getName()).equals((String)ele.getName()))
+		{
+			return null;
+		}
 		
 		//change our ID and write the element to the database
 		ele.setParent(parentRat.getID());
