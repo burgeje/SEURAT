@@ -172,6 +172,10 @@ ITreeContentProvider {
 		}
 		return match;
 	}
+	
+	private CandidateTreeParent reqtop;
+	private CandidateTreeParent dectop;
+	
 	/**
 	 * Initialize our tree from the database.  
 	 * @return the root of the tree
@@ -190,16 +194,26 @@ ITreeContentProvider {
 		//..... put the decisions into a hash table so when we create a list of
 		//all decisions we don't reuse them. Or should we reuse them? Yes for now
 		
-		CandidateTreeParent reqtop = new CandidateTreeParent("Requirements", RationaleElementType.RATIONALE);
+		reqtop = new CandidateTreeParent("Requirements", RationaleElementType.RATIONALE);
 		root.addChild(reqtop);
 		addElements(reqtop, RationaleElementType.REQUIREMENT);
-		CandidateTreeParent dectop = new CandidateTreeParent("Decisions", RationaleElementType.RATIONALE);
+		dectop = new CandidateTreeParent("Decisions", RationaleElementType.RATIONALE);
 		addElements(dectop, RationaleElementType.DECISION);
 		root.addChild(dectop);
 		
 	
 		return invisibleRoot;
 	}
+	
+	public CandidateTreeParent getReqtop()
+	{
+		return this.reqtop;
+	}
+	public CandidateTreeParent getDectop()
+	{
+		return this.dectop;
+	}
+	
 	
 	/**
 	 * Add the requirements to our tree that live "below" the passed in

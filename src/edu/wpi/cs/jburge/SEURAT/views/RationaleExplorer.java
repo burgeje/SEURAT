@@ -26,7 +26,12 @@ import org.eclipse.jdt.core.*;
 
 import edu.wpi.cs.jburge.SEURAT.SEURATPlugin;
 import edu.wpi.cs.jburge.SEURAT.actions.*;
+import edu.wpi.cs.jburge.SEURAT.editors.SelectCandidate;
 import edu.wpi.cs.jburge.SEURAT.editors.SelectItem;
+import edu.wpi.cs.jburge.SEURAT.editors.SelectRationaleElement;
+import edu.wpi.cs.jburge.SEURAT.editors.SelectRationaleElementForArgAndDec;
+import edu.wpi.cs.jburge.SEURAT.editors.SelectRationaleElement_Treeview;
+import edu.wpi.cs.jburge.SEURAT.editors.SelectType;
 import edu.wpi.cs.jburge.SEURAT.inference.*;
 //import edu.wpi.cs.jburge.SEURAT.queries.EditEntity;
 import edu.wpi.cs.jburge.SEURAT.queries.FindImportanceOverrides;
@@ -50,6 +55,9 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jface.action.Action;
 
+import com.sun.org.apache.xml.internal.dtm.ref.DTMDefaultBaseIterators.ChildrenIterator;
+
+import edu.wpi.cs.jburge.SEURAT.rationaleData.Argument;
 import SEURAT.editors.*;
 import SEURAT.preferences.PreferenceConstants;
 import SEURAT.xmlIO.RationaleEntry;
@@ -225,6 +233,24 @@ public class RationaleExplorer extends ViewPart implements ISelectionListener, I
 	private Action addQuestionEditor;
 	private Action showQuestionEditor;
 	
+	/**
+	 * Menu item to move an element
+	 */
+	private Action moveElement;
+	
+	private Action moveArgElementUnderReq;
+	
+	private Action moveArgElementUnderAlt;
+	
+	private Action moveDecElementUnderDec;
+	
+	private Action moveDecElementUnderAlt;
+	
+	
+	/**
+	 * Menu item to adopt an element and its children
+	 */
+//	private Action changeElementType;
 	
 	
 	class NameSorter extends ViewerSorter {
@@ -353,6 +379,7 @@ public class RationaleExplorer extends ViewPart implements ISelectionListener, I
 			if (ourElement.getType() == RationaleElementType.ALTERNATIVE)
 			{
 				manager.add(editElement);
+				manager.add(moveElement);
 				manager.add(deleteElement);
 				manager.add(associate);
 				manager.add(addQuestionEditor);
@@ -363,26 +390,33 @@ public class RationaleExplorer extends ViewPart implements ISelectionListener, I
 				//manager.add(addDecision);
 //				manager.add(addAltConstRel);
 				manager.add(showHistory);
+//				manager.add(changeElementType);
+				
 			}
 			else if (ourElement.getType() == RationaleElementType.REQUIREMENT)
 			{
 				manager.add(editElement);
+				manager.add(moveElement);
 				manager.add(deleteElement);
 //				manager.add(addQuestion);
 				manager.add(addArgumentEditor);
 				manager.add(addRequirementEditor);
 				//manager.add(addArgument);
 				manager.add(findRelationships);
-				manager.add(showHistory);				
+				manager.add(showHistory);
+		
 			}
 			else if (ourElement.getType() == RationaleElementType.CLAIM)
 			{
 				manager.add(editElement);
+//				manager.add(changeElementType);
 			}
 			else if (ourElement.getType() == RationaleElementType.DECISION)
 			{
 				Decision ourDec = (Decision) RationaleDB.getRationaleElement(ourElement.getName(), RationaleElementType.DECISION);
 				manager.add(editElement);
+				manager.add(moveDecElementUnderDec);
+				manager.add(moveDecElementUnderAlt);
 				manager.add(deleteElement);
 				//decisions can have alternatives or sub-decisions as children
 				if (ourDec.getAlts()) {
@@ -397,20 +431,28 @@ public class RationaleExplorer extends ViewPart implements ISelectionListener, I
 				//manager.add(addQuestion);
 				// manager.add(associateConstraint);
 				manager.add(showHistory);
+				
 			}
 			else if (ourElement.getType() == RationaleElementType.ASSUMPTION)
 			{
 				manager.add(editElement);
+				manager.add(moveElement);
+//				manager.add(changeElementType);
 			}
 			else if (ourElement.getType() == RationaleElementType.EXPERTISE)
 			{
 				manager.add(editElement);
+//				manager.add(changeElementType);
 			}
 			else if (ourElement.getType() == RationaleElementType.ARGUMENT)
 			{
 				manager.add(editElement);
 				manager.add(deleteElement);
 				manager.add(addArgumentEditor);
+				manager.add(moveArgElementUnderReq);
+				manager.add(moveArgElementUnderAlt);
+				
+//				manager.add(changeElementType);
 				//manager.add(addArgument);
 //				manager.add(addQuestion);
 			}
@@ -451,8 +493,11 @@ public class RationaleExplorer extends ViewPart implements ISelectionListener, I
 			else if (ourElement.getType() == RationaleElementType.QUESTION)
 			{
 				manager.add(editElement);
+				manager.add(moveElement);
 				manager.add(deleteElement);
 				manager.add(showHistory);
+				
+//				manager.add(changeElementType);
 			}
 			else if (ourElement.getType() == RationaleElementType.ALTCONSTREL)
 			{
@@ -818,6 +863,136 @@ public class RationaleExplorer extends ViewPart implements ISelectionListener, I
 		addElement.setText("New");
 		addElement.setToolTipText("Add Rationale");
 		
+		//
+		//Move Element
+		//
+		moveElement= new Action() {
+			public void run() {
+				ISelection selection = viewer.getSelection();
+				Object obj = ((IStructuredSelection)selection).getFirstElement();
+				TreeParent parent;
+				TreeParent beingMovedEle;
+//				sel= SelectRationaleElement();
+				if (obj instanceof TreeParent)
+				{
+					RationaleElement rElement = getElement((TreeParent) obj, false);
+					parent = moveElement((TreeParent) obj, rElement, ourDisplay);
+//					refreshBranch(parent);
+//					beingMovedEle = ((RationaleViewContentProvider) viewer.getContentProvider()).findRationaleElement(((TreeParent)obj).getName());
+//					refreshBranch(beingMovedEle);
+				}
+				rebuildTree();
+				viewer.expandToLevel(4);
+			}			
+		}; //end add element action definition
+		moveElement.setText("Move");
+		moveElement.setToolTipText("Add Rationale");
+		
+		moveArgElementUnderReq= new Action() {
+			public void run() {
+				ISelection selection = viewer.getSelection();
+				Object obj = ((IStructuredSelection)selection).getFirstElement();
+				TreeParent parent;
+				TreeParent beingMovedEle;
+//				sel= SelectRationaleElement();
+				if (obj instanceof TreeParent)
+				{
+					RationaleElement rElement = getElement((TreeParent) obj, false);
+					parent = moveArgElementUnderReq((TreeParent) obj, rElement, ourDisplay);
+
+					
+				}
+				rebuildTree();
+				viewer.expandToLevel(4);
+			}
+		}; //end add element action definition
+		moveArgElementUnderReq.setText("Move Element Under Requirement");
+		moveArgElementUnderReq.setToolTipText("Add Rationale");
+		
+		moveArgElementUnderAlt= new Action() {
+			public void run() {
+				ISelection selection = viewer.getSelection();
+				Object obj = ((IStructuredSelection)selection).getFirstElement();
+				TreeParent parent;
+				TreeParent beingMovedEle;
+//				sel= SelectRationaleElement();
+				if (obj instanceof TreeParent)
+				{
+					RationaleElement rElement = getElement((TreeParent) obj, false);
+					parent = moveArgElementUnderAlt((TreeParent) obj, rElement, ourDisplay);
+//					refreshBranch(parent);
+					beingMovedEle = ((RationaleViewContentProvider) viewer.getContentProvider()).findRationaleElement(((TreeParent)obj).getName());
+					refreshBranch(beingMovedEle);
+				}
+				rebuildTree();
+				viewer.expandToLevel(4);
+			}			
+		}; //end add element action definition
+		moveArgElementUnderAlt.setText("Move Element Under Alternative");
+		moveArgElementUnderAlt.setToolTipText("Add Rationale");
+		
+		moveDecElementUnderDec= new Action() {
+			public void run() {
+				ISelection selection = viewer.getSelection();
+				Object obj = ((IStructuredSelection)selection).getFirstElement();
+				TreeParent parent;
+				TreeParent beingMovedEle;
+//				sel= SelectRationaleElement();
+				if (obj instanceof TreeParent)
+				{
+					RationaleElement rElement = getElement((TreeParent) obj, false);
+					parent = moveDecElementUnderDecision((TreeParent) obj, rElement, ourDisplay);
+//					refreshBranch(parent);
+//					beingMovedEle = ((RationaleViewContentProvider) viewer.getContentProvider()).findRationaleElement(((TreeParent)obj).getName());
+//					refreshBranch(beingMovedEle);
+				}
+				rebuildTree();
+				viewer.expandToLevel(4);
+			}			
+		}; 
+		moveDecElementUnderDec.setText("Move Element Under Decision");
+		moveDecElementUnderDec.setToolTipText("Add Rationale");
+		
+		moveDecElementUnderAlt= new Action() {
+			public void run() {
+				ISelection selection = viewer.getSelection();
+				Object obj = ((IStructuredSelection)selection).getFirstElement();
+				TreeParent parent;
+				TreeParent beingMovedEle;
+//				sel= SelectRationaleElement();
+				if (obj instanceof TreeParent)
+				{
+					RationaleElement rElement = getElement((TreeParent) obj, false);
+					parent = moveDecElementUnderAlt((TreeParent) obj, rElement, ourDisplay);
+//					refreshBranch(parent);
+//					beingMovedEle = ((RationaleViewContentProvider) viewer.getContentProvider()).findRationaleElement(((TreeParent)obj).getName());
+//					refreshBranch(beingMovedEle);
+				}
+				rebuildTree();
+				viewer.expandToLevel(4);
+			}			
+		}; 
+		moveDecElementUnderAlt.setText("Move Element Under Alternative");
+		moveDecElementUnderAlt.setToolTipText("Add Rationale");
+		
+		//
+		//Change Element Type
+		//
+/*		changeElementType= new Action() {
+			public void run() {
+				ISelection selection = viewer.getSelection();
+				Object obj = ((IStructuredSelection)selection).getFirstElement();
+				//We need to display a list of new parent elements and select which one we want
+				RationaleElement rElement = getElement((CandidateTreeParent) obj, false);
+				SelectType eleType = new SelectType(ourDisplay);
+				String type=eleType.getType();
+				String typeSelected=(((CandidateTreeParent) obj).getType()).toString();
+				
+			}			
+		}; //end add element action definition
+		changeElementType.setText("Change Element Type");
+		changeElementType.setToolTipText("Add Rationale");
+*/		
 		//
 		//add expertise element Action
 		//
@@ -2281,7 +2456,371 @@ public class RationaleExplorer extends ViewPart implements ISelectionListener, I
 		}		
 	}
 	
+	private boolean isItsChild(TreeParent child,String name)
+	{
+		System.out.println(child.getName());
+		if ((child.getName()).compareTo(name)==0)
+		{
+			return true;
+		}
+		else
+		{
+			if ((child.getChildrenList()).isEmpty())
+				return false;
+			else
+			{
+				ArrayList<TreeObject> children=child.getChildrenList();
+				for(int i=0; i< children.size(); i++)
+				{
+					if(isItsChild((TreeParent)children.get(i),name)==true)
+						return true;
+				}
+			}
+		}
+		return false;
+	}
 	
+	/**
+	 * This is the code called when we move an element to a different part of the tree
+	 * @param obj - the selected tree element being moved
+	 * @param rElement - the rationale Element being moved
+	 * @param theDisplay - the parent display
+	 */
+	private TreeParent moveElement(TreeParent obj, RationaleElement rElement, Display theDisplay)
+	{
+		TreeParent newParentTreeParent;
+		TreeParent newChildTreeParent;
+
+//		System.out.println(obj.getType());
+//		SelectRationaleElement sel= new SelectRationaleElement(theDisplay, obj.getType());
+		SelectRationaleElement_Treeview sel= new SelectRationaleElement_Treeview(theDisplay, obj.getType());
+		RationaleElement parentRat = (RationaleElement) sel.getSelEle();
+//		sel.getNewItem();
+		
+		if(((String)parentRat.getName()).equals((String)rElement.getName()))
+		{
+			return null;
+		}
+		ArrayList<TreeObject> children=obj.getChildrenList();
+		
+		for(int i=0;i<children.size();i++)
+		{
+//			TreeParent abc=(TreeParent)children.get(i);
+			if (isItsChild((TreeParent)children.get(i),parentRat.getName())==true)
+			{
+				return null;
+			}
+		}
+
+		
+		//Move requirement under requirement
+		if(obj.getType()==RationaleElementType.REQUIREMENT)
+		{
+			Requirement req = new Requirement();
+			req.fromDatabase(obj.getName());
+			req.setParent(parentRat.getID());
+			req.toDatabase(parentRat.getID(),RationaleElementType.REQUIREMENT,false);
+		}
+		//Move alternative under decision
+		if(obj.getType()==RationaleElementType.ALTERNATIVE)
+		{
+			Alternative alt = new Alternative();
+			alt.fromDatabase(obj.getName());
+			alt.setParent(parentRat.getID());
+			alt.toDatabase(parentRat.getID(), RationaleElementType.DECISION,false);
+		}
+		//Move argument under alternative or requirement
+		if(obj.getType()==RationaleElementType.ARGUMENT)
+		{
+			Argument arg = new Argument();
+			arg.fromDatabase(obj.getName());
+			arg.setParent(parentRat.getID());
+			if(parentRat.getElementType()==RationaleElementType.REQUIREMENT)
+				arg.toDatabase(parentRat.getID(), RationaleElementType.REQUIREMENT,false);
+			if(parentRat.getElementType()==RationaleElementType.ALTERNATIVE)
+				arg.toDatabase(parentRat.getID(), RationaleElementType.ALTERNATIVE,false);
+		}
+		//Move decision under alternative:
+		if(obj.getType()==RationaleElementType.DECISION)
+		{
+			Decision dec = new Decision();
+			dec.fromDatabase(obj.getName());
+		    dec.setParent(parentRat.getID());
+		    dec.toDatabase(parentRat.getID(), RationaleElementType.ALTERNATIVE);
+		}
+		if(obj.getType()==RationaleElementType.ASSUMPTION)
+		{
+			/* for future use
+			Assumption assupt = new Assumption();
+			assupt.fromDatabase(obj.getName()));
+			assupt.set
+			*/
+		}
+		if(obj.getType()==RationaleElementType.CLAIM)
+		{
+			// for future use
+		}
+		if(obj.getType()==RationaleElementType.QUESTION)
+		{
+			// for future use
+		}
+	
+		//now, we need to find the new parent in our tree... 
+		newParentTreeParent = ((RationaleViewContentProvider) viewer.getContentProvider()).findRationaleElement(parentRat.getName());
+		
+		//delete from the old parent
+		TreeParent oldParentTreeParent = (TreeParent)obj.getParent();
+		//remove the old element from the tree
+		( (RationaleViewContentProvider) viewer.getContentProvider()).removeElement((TreeParent) obj);
+		//re-draw this branch of the tree
+		refreshBranch(oldParentTreeParent);		
+		//add to our new parent
+		newChildTreeParent = addElement(newParentTreeParent, (RationaleElement) rElement);
+		refreshBranch(newParentTreeParent);
+		newParentTreeParent = ((RationaleViewContentProvider) viewer.getContentProvider()).findRationaleElement(rElement.getName());
+		refreshBranch(newParentTreeParent);
+		return newParentTreeParent;
+	}
+	
+	/**
+	 * This is the code called when we move an Argument element under Requirement element
+	 * @param obj - the selected tree element being moved
+	 * @param rElement - the rationale Element being moved
+	 * @param theDisplay - the parent display
+	 */
+	private TreeParent moveArgElementUnderReq(TreeParent obj, RationaleElement rElement, Display theDisplay)
+	{
+		TreeParent newParentTreeParent;
+		TreeParent newChildTreeParent;
+
+//		System.out.println(obj.getType());
+		SelectRationaleElement_Treeview sel= new SelectRationaleElement_Treeview(theDisplay, RationaleElementType.ARGUMENT, RationaleElementType.REQUIREMENT);
+		RationaleElement parentRat = (RationaleElement) sel.getSelEle();
+		
+		if(((String)parentRat.getName()).equals((String)rElement.getName()))
+		{
+			return null;
+		}
+		ArrayList<TreeObject> children=obj.getChildrenList();
+		
+		for(int i=0;i<children.size();i++)
+		{
+//			TreeParent abc=(TreeParent)children.get(i);
+			if (isItsChild((TreeParent)children.get(i),parentRat.getName())==true)
+			{
+				return null;
+			}
+		}
+		
+		if(obj.getType()==RationaleElementType.ARGUMENT)
+		{
+			Argument arg = new Argument();
+			arg.fromDatabase(obj.getName());
+			arg.setParent(parentRat.getID());
+			arg.toDatabase(parentRat.getID(), RationaleElementType.REQUIREMENT,false);
+		}
+		//Move decision under alternative:
+		
+		//now, we need to find the new parent in our tree... 
+		newParentTreeParent = ((RationaleViewContentProvider) viewer.getContentProvider()).findRationaleElement(parentRat.getName());
+		
+		//delete from the old parent
+		TreeParent oldParentTreeParent = (TreeParent)obj.getParent();
+		//remove the old element from the tree
+		( (RationaleViewContentProvider) viewer.getContentProvider()).removeElement((TreeParent) obj);
+		//re-draw this branch of the tree
+		refreshBranch(oldParentTreeParent);
+		//add to our new parent
+		newChildTreeParent = addElement(newParentTreeParent, (RationaleElement) rElement);
+		refreshBranch(newParentTreeParent);
+		newParentTreeParent = ((RationaleViewContentProvider) viewer.getContentProvider()).findRationaleElement(rElement.getName());
+		refreshBranch(newParentTreeParent);
+		return newParentTreeParent;
+	}
+	
+	/**
+	 * This is the code called when we move an Argument element under Alternative element
+	 * @param obj - the selected tree element being moved
+	 * @param rElement - the rationale Element being moved
+	 * @param theDisplay - the parent display
+	 */
+	private TreeParent moveArgElementUnderAlt(TreeParent obj, RationaleElement rElement, Display theDisplay)
+	{
+		TreeParent newParentTreeParent;
+		TreeParent newChildTreeParent;
+
+//		System.out.println(obj.getType());
+		SelectRationaleElementForArgAndDec sel= new SelectRationaleElementForArgAndDec(theDisplay, RationaleElementType.ARGUMENT, RationaleElementType.ALTERNATIVE);
+		RationaleElement parentRat = (RationaleElement) sel.getNewItem();
+		if(((String)parentRat.getName()).equals((String)rElement.getName()))
+		{
+			return null;
+		}
+		ArrayList<TreeObject> children=obj.getChildrenList();
+		
+		for(int i=0;i<children.size();i++)
+		{
+//			TreeParent abc=(TreeParent)children.get(i);
+			if (isItsChild((TreeParent)children.get(i),parentRat.getName())==true)
+			{
+				return null;
+			}
+		}
+		if(obj.getType()==RationaleElementType.ARGUMENT)
+		{
+			Argument arg = new Argument();
+			arg.fromDatabase(obj.getName());
+/*			String childName=(arg.getAlternative()).getName();
+			boolean flag=childName.equals(parentRat.getName());
+			if(flag)
+			{
+//				System.out.println("It won't do stupid things now");
+				return null;
+			}*/
+			arg.setParent(parentRat.getID());
+			arg.toDatabase(parentRat.getID(), RationaleElementType.ALTERNATIVE,false);
+		}
+		//Move decision under alternative:
+		
+		//now, we need to find the new parent in our tree... 
+		newParentTreeParent = ((RationaleViewContentProvider) viewer.getContentProvider()).findRationaleElement(parentRat.getName());
+		
+		//delete from the old parent
+		TreeParent oldParentTreeParent = (TreeParent)obj.getParent();
+		//remove the old element from the tree
+		( (RationaleViewContentProvider) viewer.getContentProvider()).removeElement((TreeParent) obj);
+		//re-draw this branch of the tree
+		refreshBranch(oldParentTreeParent);
+		//add to our new parent
+		newChildTreeParent = addElement(newParentTreeParent, (RationaleElement) rElement);
+		refreshBranch(newParentTreeParent);
+		newParentTreeParent = ((RationaleViewContentProvider) viewer.getContentProvider()).findRationaleElement(rElement.getName());
+		refreshBranch(newParentTreeParent);
+		return newParentTreeParent;
+	}
+	
+	/**
+	 * This is the code called when we move a Decision element under Alternative Element
+	 * @param obj - the selected tree element being moved
+	 * @param rElement - the rationale Element being moved
+	 * @param theDisplay - the parent display
+	 */
+	private TreeParent moveDecElementUnderAlt(TreeParent obj, RationaleElement rElement, Display theDisplay)
+	{
+		TreeParent newParentTreeParent;
+		TreeParent newChildTreeParent;
+
+//		System.out.println(obj.getType());
+		SelectRationaleElementForArgAndDec sel= new SelectRationaleElementForArgAndDec(theDisplay, RationaleElementType.DECISION, RationaleElementType.ALTERNATIVE);
+		RationaleElement parentRat = (RationaleElement) sel.getNewItem();
+		if(((String)parentRat.getName()).equals((String)rElement.getName()))
+		{
+			return null;
+		}
+		ArrayList<TreeObject> children=obj.getChildrenList();
+		
+		for(int i=0;i<children.size();i++)
+		{
+//			TreeParent abc=(TreeParent)children.get(i);
+			if (isItsChild((TreeParent)children.get(i),parentRat.getName())==true)
+			{
+				return null;
+			}
+		}
+		if(obj.getType()==RationaleElementType.DECISION)
+		{
+			Decision dec = new Decision();
+			dec.fromDatabase(obj.getName());
+/*			String childName=(arg.getAlternative()).getName();
+			boolean flag=childName.equals(parentRat.getName());
+			if(flag)
+			{
+//				System.out.println("It won't do stupid things now");
+				return null;
+			}*/
+			dec.setParent(parentRat.getID());
+			dec.toDatabase(parentRat.getID(), RationaleElementType.ALTERNATIVE);
+		}
+		//Move decision under alternative:
+		
+		//now, we need to find the new parent in our tree... 
+		newParentTreeParent = ((RationaleViewContentProvider) viewer.getContentProvider()).findRationaleElement(parentRat.getName());
+		
+		//delete from the old parent
+		TreeParent oldParentTreeParent = (TreeParent)obj.getParent();
+		//remove the old element from the tree
+		( (RationaleViewContentProvider) viewer.getContentProvider()).removeElement((TreeParent) obj);
+		//re-draw this branch of the tree
+		refreshBranch(oldParentTreeParent);
+		//add to our new parent
+		newChildTreeParent = addElement(newParentTreeParent, (RationaleElement) rElement);
+		refreshBranch(newParentTreeParent);
+		newParentTreeParent = ((RationaleViewContentProvider) viewer.getContentProvider()).findRationaleElement(rElement.getName());
+		refreshBranch(newParentTreeParent);
+		return newParentTreeParent;
+	}
+	/**
+	 * This is the code called when we move a Decision element under Decision Element
+	 * @param obj - the selected tree element being moved
+	 * @param rElement - the rationale Element being moved
+	 * @param theDisplay - the parent display
+	 */
+	private TreeParent moveDecElementUnderDecision(TreeParent obj, RationaleElement rElement, Display theDisplay)
+	{
+		TreeParent newParentTreeParent;
+		TreeParent newChildTreeParent;
+
+//		System.out.println(obj.getType());
+		SelectRationaleElement_Treeview sel= new SelectRationaleElement_Treeview(theDisplay, RationaleElementType.DECISION, RationaleElementType.DECISION);
+		RationaleElement parentRat = (RationaleElement) sel.getSelEle();
+		if(((String)parentRat.getName()).equals((String)rElement.getName()))
+		{
+			return null;
+		}
+		
+		//To find out whether the parent selected is the element's child in a recursion way
+		ArrayList<TreeObject> children=obj.getChildrenList();
+		
+		for(int i=0;i<children.size();i++)
+		{
+//			TreeParent abc=(TreeParent)children.get(i);
+			if (isItsChild((TreeParent)children.get(i),parentRat.getName())==true)
+			{
+				return null;
+			}
+		}
+		if(obj.getType()==RationaleElementType.DECISION)
+		{
+			Decision dec = new Decision();
+			dec.fromDatabase(obj.getName());
+/*			String childName=(arg.getAlternative()).getName();
+			boolean flag=childName.equals(parentRat.getName());
+			if(flag)
+			{
+//				System.out.println("It won't do stupid things now");
+				return null;
+			}*/
+			dec.setParent(parentRat.getID());
+			dec.toDatabase(parentRat.getID(), RationaleElementType.DECISION);
+		}
+		//Move decision under alternative:
+		
+		//now, we need to find the new parent in our tree... 
+		newParentTreeParent = ((RationaleViewContentProvider) viewer.getContentProvider()).findRationaleElement(parentRat.getName());
+		
+		//delete from the old parent
+		TreeParent oldParentTreeParent = (TreeParent)obj.getParent();
+		//remove the old element from the tree
+		( (RationaleViewContentProvider) viewer.getContentProvider()).removeElement((TreeParent) obj);
+		//re-draw this branch of the tree
+		refreshBranch(oldParentTreeParent);
+		//add to our new parent
+		newChildTreeParent = addElement(newParentTreeParent, (RationaleElement) rElement);
+		refreshBranch(newParentTreeParent);
+		newParentTreeParent = ((RationaleViewContentProvider) viewer.getContentProvider()).findRationaleElement(rElement.getName());
+		refreshBranch(newParentTreeParent);
+		return newParentTreeParent;
+	}
 	/**
 	 * This is the recursive version of addNewElement that adds a rationale element
 	 */
@@ -2372,6 +2911,8 @@ public class RationaleExplorer extends ViewPart implements ISelectionListener, I
 			rebuildTree(); // Automatically connect to the new database
 			//waitingToConnectRemote = false;  // was part of below code
 		}
+		
+		
 		
 		/* There are some significant problems if we want the database to auto-change when
 		the user changes between local and remote MySQL databases.  For example, we don't know

@@ -767,4 +767,40 @@ ITreeContentProvider {
 		//not removing in an iterator
 		parent.removeChild(child, false);
 	}
+	
+	/**
+	 * Find the Rationale Element with a particular name
+	 * @return our tree parent
+	 */
+	public TreeParent findRationaleElement(String name)
+	{
+		TreeParent ourParent;
+		ourParent = findRationaleElement(invisibleRoot, name);
+		return ourParent;
+	}
+	
+	/**
+	 * Find candidate (recursive version)
+	 * 
+	 */
+	private TreeParent findRationaleElement(TreeParent node, String name)
+	{
+		TreeParent match = null;
+		if (node.getName().compareTo(name) == 0)
+		{
+			match = node;
+		}
+		else if (node.hasChildren())
+		{
+			//lets get our children
+			TreeObject[] children = node.getChildren();
+			int index = 0;
+			while ((index < children.length) && (match == null))
+			{
+				match = findRationaleElement((TreeParent) children[index], name);
+				index++;
+			}
+		}
+		return match;
+	}
 }

@@ -39,6 +39,10 @@ public class TreeParent extends TreeObject {
 		map.addItem(key, this); 
 	}
 	
+	public ArrayList<TreeObject> getChildrenList(){
+		return this.children;
+	}
+	
 	/**
 	 * Add a new child to the tree
 	 * @param child the new child
