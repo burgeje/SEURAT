@@ -179,10 +179,9 @@ public class SelectCandidate {
 			
 			public void widgetSelected(SelectionEvent event) {
 				String name = entityList.getItem(entityList.getSelectionIndex());
-				ourItem  = 
-					RationaleDB.getRationaleElement(name, RationaleElementType.CANDIDATE);				shell.close();
+				ourItem  = RationaleDB.getRationaleElement(name, RationaleElementType.CANDIDATE);				
+				shell.close();
 				shell.dispose();
-				
 			}
 		});
 		
