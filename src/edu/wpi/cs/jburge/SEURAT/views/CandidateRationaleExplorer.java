@@ -1,14 +1,30 @@
 package edu.wpi.cs.jburge.SEURAT.views;
 
 import java.awt.Frame;
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.StringReader;
+import java.io.StringWriter;
 import java.util.*;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipException;
+import java.util.zip.ZipFile;
 
 import javax.swing.JFileChooser;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.OutputKeys;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerConfigurationException;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
 
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
@@ -58,6 +74,9 @@ import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jface.action.Action;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
 import SEURAT.preferences.PreferenceConstants;
@@ -65,21 +84,21 @@ import SEURAT.xmlIO.RationaleEntry;
 import edu.wpi.cs.jburge.SEURAT.views.TreeParent;
 import edu.wpi.cs.jburge.SEURAT.decorators.*;
 
- /**
-  * The Candidate Rationale Explorer is used as temporary storage for
-  * rationale elements extracted from documents that haven't yet been imported into the 
-  * SEURAT rationale-base.
-  * It is essentially a tree view with different icons specifying the different types of 
-  * rationale elements and their status.
-  * <p>
-  * The view uses a label provider to define how model
-  * objects should be presented in the view. 
-  * <p>
-  */
+/**
+ * The Candidate Rationale Explorer is used as temporary storage for
+ * rationale elements extracted from documents that haven't yet been imported into the 
+ * SEURAT rationale-base.
+ * It is essentially a tree view with different icons specifying the different types of 
+ * rationale elements and their status.
+ * <p>
+ * The view uses a label provider to define how model
+ * objects should be presented in the view. 
+ * <p>
+ */
 
 public class CandidateRationaleExplorer extends ViewPart implements ISelectionListener, IRationaleUpdateEventListener,
 IPropertyChangeListener {
-	
+
 	/**
 	 * The view into the tree of rationale
 	 */
@@ -92,7 +111,7 @@ IPropertyChangeListener {
 	 * ?
 	 */
 	private DrillDownAdapter drillDownAdapter;
-	
+
 	/**
 	 * Menu item to edit an element
 	 */
@@ -102,17 +121,17 @@ IPropertyChangeListener {
 	 * Menu item to delete an element
 	 */
 	private Action deleteElement;
-	
+
 	/**
 	 * Menu item to move an element
 	 */
 	private Action moveElement;
-	
+
 	/**
 	 * Menu item to adopt an element and its children
 	 */
 	private Action adoptElement;
-	
+
 	/**
 	 * Menu item to adopt an element and its children
 	 */
@@ -134,27 +153,27 @@ IPropertyChangeListener {
 	 */
 	private Action inputRationale;
 
-	
+
 	/**
 	 * Points to our display
 	 */
 	private Display ourDisplay;
-	
-//	protected TreeParent invisibleRoot;
-	
-	
+
+	//	protected TreeParent invisibleRoot;
+
+
 	class NameSorter extends ViewerSorter {
 	}
-	
-	
-	
+
+
+
 	/**
 	 * The constructor.
 	 */
 	public CandidateRationaleExplorer() {
-		
+
 	}
-	
+
 	/**
 	 * This is a callback that will allow us
 	 * to create the viewer and initialize it.
@@ -167,10 +186,10 @@ IPropertyChangeListener {
 		viewer.setLabelProvider(labelProvider);
 		viewer.setSorter(null);
 		viewer.setInput(ResourcesPlugin.getWorkspace());
-		
+
 		//get our display information so we can use it later
 		ourDisplay = viewer.getControl().getDisplay();
-		
+
 		//initialize our update manager
 		UpdateManager mgr = UpdateManager.getHandle();
 		mgr.setTree(viewer);
@@ -178,25 +197,25 @@ IPropertyChangeListener {
 		hookContextMenu();
 		hookDoubleClickAction();
 		contributeToActionBars();
-		
+
 		viewer.setInput(((CandidateRationaleContentProvider) viewer.getContentProvider()).initialize());
 		viewer.expandToLevel(2);
-		
+
 		//add an action listener for the workbench window
 		getViewSite().getWorkbenchWindow().getSelectionService().addSelectionListener(this);
-		
+
 		//add an action listener for this so we can get events
 		SEURATPlugin plugin = SEURATPlugin.getDefault();
 		plugin.addUpdateListener(this);
-		
+
 		// add this as a property change listener so we can be notified of preference changes
 		plugin.getPreferenceStore().addPropertyChangeListener(this);
-		
+
 		//get the initial selected value
 		selectionChanged(null, getViewSite().getWorkbenchWindow().getSelectionService().getSelection());
-		
+
 	}
-	
+
 	/**
 	 * Set up our context menu
 	 *
@@ -213,7 +232,7 @@ IPropertyChangeListener {
 		viewer.getControl().setMenu(menu);
 		getSite().registerContextMenu(menuMgr, viewer);
 	}
-	
+
 	/**
 	 * Set up our action bars - toolbar, pull down
 	 *
@@ -223,16 +242,16 @@ IPropertyChangeListener {
 		fillLocalPullDown(bars.getMenuManager());
 		fillLocalToolBar(bars.getToolBarManager());
 	}
-	
+
 	/**
 	 * This method is used to populate the pulldown menu on this view.
 	 * @param manager
 	 */
 	private void fillLocalPullDown(IMenuManager manager) {
 		manager.add(inputRationale);
-//		manager.add(testAction);
+		//		manager.add(testAction);
 	}
-	
+
 	/**
 	 * This method is used to populate the context menus for each of the different
 	 * types of rationale elements.
@@ -242,9 +261,9 @@ IPropertyChangeListener {
 	private void fillContextMenu(IMenuManager manager) {
 		ISelection selection = viewer.getSelection();
 		Object obj = ((IStructuredSelection)selection).getFirstElement();
-		
-//		Object curObj = ((IStructuredSelection)curSel).getFirstElement();
-		
+
+		//		Object curObj = ((IStructuredSelection)curSel).getFirstElement();
+
 		if (obj instanceof CandidateTreeParent)
 		{
 			CandidateTreeParent ourElement = (CandidateTreeParent) obj;
@@ -256,7 +275,7 @@ IPropertyChangeListener {
 				manager.add(adoptElement);
 				manager.add(adoptElementUnderDecision);
 				manager.add(changeElementType);
-				
+
 			}
 			else if (ourElement.getType() == RationaleElementType.REQUIREMENT)
 			{
@@ -289,7 +308,7 @@ IPropertyChangeListener {
 				manager.add(deleteElement);
 				manager.add(moveElement);
 				manager.add(changeElementType);
-//				manager.add(adoptElementUnderArgument);
+				//				manager.add(adoptElementUnderArgument);
 			}
 			else if (ourElement.getType() == RationaleElementType.QUESTION)
 			{
@@ -299,49 +318,70 @@ IPropertyChangeListener {
 				manager.add(adoptElementUnderDecision);
 				manager.add(adoptElementUnderAlternative);
 				manager.add(changeElementType);
-				
+
 			}
-	
+
 		}
-		
+
 		// Other plug-ins can contribute there actions here
 		manager.add(new Separator("Additions"));
 	}
-	
+
 	private void fillLocalToolBar(IToolBarManager manager) {
 		drillDownAdapter.addNavigationActions(manager);
 	}
-	
+
 	/**
 	 * This method sets up the actions invoked by chosing menu items
 	 *
 	 */
 	private void makeActions() {
-		
-//		System.out.println("made some actions?");
-		
-		
+
+		//		System.out.println("made some actions?");
+
+
 		//
 		// input Rationale
 		//
 		inputRationale = new Action() {
 			public void run() {
-					FileDialog fd = new FileDialog(viewer.getControl().getShell(), SWT.OPEN);
-			        fd.setText("Select");
-			        fd.setFilterPath(".");
-			        String[] filterExt = { "*.xml", "*.*" };
-			        fd.setFilterExtensions(filterExt);
-			        String selected = fd.open();
-			        System.out.println(selected);
-			        ImportXMLFile(selected);
 
-				
+				FileDialog fd = new FileDialog(viewer.getControl().getShell(), SWT.OPEN);
+				fd.setText("Select");
+				fd.setFilterPath(".");
+				//String[] filterExt = { "*.xml", "*.*" };
+				String[] filterExt = { "*.docx", "*.*" };
+				fd.setFilterExtensions(filterExt);
+				String docFile=fd.open();
+				//String selected = fd.open();
+				String selected;
+				try {
+					selected = readFile(docFile).getName();
+					System.out.println(selected);
+					ImportXMLFile(selected);
+				} catch (ZipException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (SAXException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (ParserConfigurationException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+
+
+
+
 			}
 		}; //end of the action definition		
 		inputRationale.setText("Input Rationale");
 		inputRationale.setToolTipText("Input Rationale from XML Files");
-		
-	
+
+
 		//
 		//edit rationale element Action
 		//
@@ -353,15 +393,15 @@ IPropertyChangeListener {
 				{
 					RationaleElement rElement = getElement((CandidateTreeParent) obj, false);
 					editElement((CandidateTreeParent) obj, rElement, ourDisplay);
-					
+
 				}
 				refreshBranch((CandidateTreeParent) obj);
 			}
-			
+
 		}; //end of the edit element action definition
 		editElement.setText("Edit");
 		editElement.setToolTipText("Edit Rationale");
-		
+
 		//
 		// move rationale element action
 		//
@@ -378,7 +418,7 @@ IPropertyChangeListener {
 				}
 
 			}
-			
+
 		}; //end of the edit element action definition
 		moveElement.setText("Move");
 		moveElement.setToolTipText("Move Rationale");
@@ -399,11 +439,11 @@ IPropertyChangeListener {
 				}
 
 			}
-			
+
 		}; //end of the edit element action definition
 		adoptElement.setText("Adopt");
 		adoptElement.setToolTipText("Adopt As Rationale");
-		
+
 		//
 		// move rationale element action
 		//
@@ -423,7 +463,7 @@ IPropertyChangeListener {
 				}
 
 			}
-			
+
 		}; //end of the edit element action definition
 		adoptElementUnderDecision.setText("Adopt Under Decision");
 		adoptElementUnderDecision.setToolTipText("Adopt As Rationale");
@@ -441,7 +481,7 @@ IPropertyChangeListener {
 				SelectType eleType = new SelectType(ourDisplay);
 				String type=eleType.getType();
 				String typeSelected=(((CandidateTreeParent) obj).getType()).toString();
-				
+
 				//Change Requirement element type
 				if(typeSelected.compareTo("Requirement")==0)
 				{
@@ -449,20 +489,20 @@ IPropertyChangeListener {
 					if (type.equals("Decision"))
 					{
 						CandidateRationale ele = (CandidateRationale) rElement;
-//						System.out.println("abc");
+						//						System.out.println("abc");
 						if((ele.getChildren()).isEmpty())
 						{
-//							ConsistencyChecker checker = new ConsistencyChecker(ele.getID(), ele.getName(),(ele.getType()).toString());
-//							if(checker.check())
-							
+							//							ConsistencyChecker checker = new ConsistencyChecker(ele.getID(), ele.getName(),(ele.getType()).toString());
+							//							if(checker.check())
+
 							ele.setParent(0);
 							ele.setType(RationaleElementType.DECISION);
 							ele.toDatabase(0, false);
-//							System.out.println("above ele.getName()");
-//							System.out.println(ele.getName());
+							//							System.out.println("above ele.getName()");
+							//							System.out.println(ele.getName());
 							rebuildTree();
-//							System.out.println(ele.getName());
-				/*			RationaleTreeMap map = RationaleTreeMap.getHandle();
+							//							System.out.println(ele.getName());
+							/*			RationaleTreeMap map = RationaleTreeMap.getHandle();
 						    Vector treeObjs = map.getKeys(map.makeKey(ele.getName(), RationaleElementType.DECISION));
 							Iterator<TreeObject> treeIterator = treeObjs.iterator();
 							System.out.println("I am in treeIterator.hasNext()");
@@ -483,43 +523,43 @@ IPropertyChangeListener {
 							mbox.open();
 						}
 					}
-					
+
 					// change Requirement to Argument
 					if (type.equals("Argument"))
 					{
 						CandidateRationale ele = (CandidateRationale) rElement;
 						if((ele.getChildren()).isEmpty())
 						{
-								CandidateTreeParent parent;
-								// We have to change the element type first, to make fit the RationaleDB.java in order to display all Decision and Alternative
-								ele.setType(RationaleElementType.ARGUMENT);
-								parent = moveElement((CandidateTreeParent) obj, ele, ourDisplay);
-//								System.out.println(parent);
-								if(parent==null)
-								{
-									String l_message = "";
-									l_message += "Error. Can not selected element itself.";
-									MessageBox mbox = new MessageBox(getSite().getShell(), SWT.ICON_ERROR);
-									mbox.setMessage(l_message);
-									mbox.setText("Selected Element Itself Error");
-									mbox.open();
-								}
-								refreshBranch(parent);					
+							CandidateTreeParent parent;
+							// We have to change the element type first, to make fit the RationaleDB.java in order to display all Decision and Alternative
+							ele.setType(RationaleElementType.ARGUMENT);
+							parent = moveElement((CandidateTreeParent) obj, ele, ourDisplay);
+							//								System.out.println(parent);
+							if(parent==null)
+							{
+								String l_message = "";
+								l_message += "Error. Can not selected element itself.";
+								MessageBox mbox = new MessageBox(getSite().getShell(), SWT.ICON_ERROR);
+								mbox.setMessage(l_message);
+								mbox.setText("Selected Element Itself Error");
+								mbox.open();
+							}
+							refreshBranch(parent);					
 						}
 						else
 						{
-//							System.out.println("change Requirement to Argument error box");
+							//							System.out.println("change Requirement to Argument error box");
 							String l_message = "";
 							l_message += "The element you selected at least have a child."
 								+ " Please move all elements under the element first.";
-//							l_message += "||||||change Requirement to Argument";
+							//							l_message += "||||||change Requirement to Argument";
 							MessageBox mbox = new MessageBox(getSite().getShell(), SWT.ICON_ERROR);
 							mbox.setMessage(l_message);
 							mbox.setText("Element selected have a child");
 							mbox.open();
 						}
 					}
-					
+
 					// change Requirement to Alternative
 					if (type.equals("Alternative"))
 					{
@@ -537,11 +577,11 @@ IPropertyChangeListener {
 						}
 						else
 						{
-//							System.out.println("change Requirement to Alternative error box");
+							//							System.out.println("change Requirement to Alternative error box");
 							String l_message = "";
 							l_message += "The element you selected at least have a child."
 								+ " Please move all elements under the element first.";
-//							l_message += "||||||change Requirement to Alternative";
+							//							l_message += "||||||change Requirement to Alternative";
 							MessageBox mbox = new MessageBox(getSite().getShell(), SWT.ICON_ERROR);
 							mbox.setMessage(l_message);
 							mbox.setText("Element selected have a child");
@@ -550,7 +590,7 @@ IPropertyChangeListener {
 					}
 				}//end of Change Requirement element type
 
-				
+
 				//Change Decision element type
 				if(typeSelected.compareTo("Decision")==0)
 				{
@@ -572,14 +612,14 @@ IPropertyChangeListener {
 							String l_message = "";
 							l_message += "The element you selected at least have a child."
 								+ " Please move all elements under the element first.";
-//							l_message += "||||||change Decision to Requirement";
+							//							l_message += "||||||change Decision to Requirement";
 							MessageBox mbox = new MessageBox(getSite().getShell(), SWT.ICON_ERROR);
 							mbox.setMessage(l_message);
 							mbox.setText("Element selected have a child");
 							mbox.open();
 						}
 					}
-					
+
 					// change Decision to Argument
 					if (type.equals("Argument"))
 					{
@@ -601,13 +641,13 @@ IPropertyChangeListener {
 							l_message += "The element you selected at least have a child."
 								+ " Please move all elements under the element first.";
 							MessageBox mbox = new MessageBox(getSite().getShell(), SWT.ICON_ERROR);
-//							l_message += "||||||change Decision to Argument";
+							//							l_message += "||||||change Decision to Argument";
 							mbox.setMessage(l_message);
 							mbox.setText("Element selected have a child");
 							mbox.open();
 						}
 					}
-					
+
 					// change Decision to Alternative
 					if (type.equals("Alternative"))
 					{
@@ -637,7 +677,7 @@ IPropertyChangeListener {
 							String l_message = "";
 							l_message += "The element you selected at least have a child."
 								+ " Please move all elements under the element first.";
-//							l_message += "||||||change Decision to Alternative";
+							//							l_message += "||||||change Decision to Alternative";
 							MessageBox mbox = new MessageBox(getSite().getShell(), SWT.ICON_ERROR);
 							mbox.setMessage(l_message);
 							mbox.setText("Element selected have a child");
@@ -645,8 +685,8 @@ IPropertyChangeListener {
 						}
 					}
 				}//end of Change Decision element type
-				
-				
+
+
 				//Change Alternative element type
 				if(typeSelected.compareTo("Alternative")==0)
 				{
@@ -667,14 +707,14 @@ IPropertyChangeListener {
 							String l_message = "";
 							l_message += "The element you selected at least have a child."
 								+ " Please move all elements under the element first.";
-//							l_message += "||||||change Alternative to Decision";
+							//							l_message += "||||||change Alternative to Decision";
 							MessageBox mbox = new MessageBox(getSite().getShell(), SWT.ICON_ERROR);
 							mbox.setMessage(l_message);
 							mbox.setText("Element selected have a child");
 							mbox.open();
 						}
 					}
-					
+
 					// change Alternative to Requirement
 					if (type.equals("Requirement"))
 					{
@@ -692,14 +732,14 @@ IPropertyChangeListener {
 							String l_message = "";
 							l_message += "The element you selected at least have a child."
 								+ " Please move all elements under the element first.";
-//							l_message += "||||||change Alternative to Requirement";
+							//							l_message += "||||||change Alternative to Requirement";
 							MessageBox mbox = new MessageBox(getSite().getShell(), SWT.ICON_ERROR);
 							mbox.setMessage(l_message);
 							mbox.setText("Element selected have a child");
 							mbox.open();
 						}
 					}
-					
+
 					// change Alternative to Argument
 					if (type.equals("Argument"))
 					{
@@ -729,7 +769,7 @@ IPropertyChangeListener {
 							String l_message = "";
 							l_message += "The element you selected at least have a child."
 								+ " Please move all elements under the element first.";
-//							l_message += "||||||change Alternative to Argument";
+							//							l_message += "||||||change Alternative to Argument";
 							MessageBox mbox = new MessageBox(getSite().getShell(), SWT.ICON_ERROR);
 							mbox.setMessage(l_message);
 							mbox.setText("Element selected have a child");
@@ -737,8 +777,8 @@ IPropertyChangeListener {
 						}
 					}
 				}//end of Change Alternative element type
-		
-				
+
+
 				//Change Argument element type
 				if(typeSelected.compareTo("Argument")==0)
 				{
@@ -760,14 +800,14 @@ IPropertyChangeListener {
 							String l_message = "";
 							l_message += "The element you selected at least have a child."
 								+ " Please move all elements under the element first.";
-//							l_message += "||||||change Argument to Requirement";
+							//							l_message += "||||||change Argument to Requirement";
 							MessageBox mbox = new MessageBox(getSite().getShell(), SWT.ICON_ERROR);
 							mbox.setMessage(l_message);
 							mbox.setText("Element selected have a child");
 							mbox.open();
 						}
 					}
-					
+
 					// change Argument to Decision
 					if (type.equals("Decision"))
 					{
@@ -785,14 +825,14 @@ IPropertyChangeListener {
 							String l_message = "";
 							l_message += "The element you selected at least have a child."
 								+ " Please move all elements under the element first.";
-//							l_message += "||||||change Argument to Decision";
+							//							l_message += "||||||change Argument to Decision";
 							MessageBox mbox = new MessageBox(getSite().getShell(), SWT.ICON_ERROR);
 							mbox.setMessage(l_message);
 							mbox.setText("Element selected have a child");
 							mbox.open();
 						}
 					}
-					
+
 					// change Argument to Alternative
 					if (type.equals("Alternative"))
 					{
@@ -822,12 +862,12 @@ IPropertyChangeListener {
 					}
 				}//the end of Change Argument element type
 			}
-			
+
 		}; //change rationale element type action definition
 		changeElementType.setText("Change Element Type");
 		changeElementType.setToolTipText("Change Element Type");
-		
-		
+
+
 		//
 		// move rationale element action
 		//
@@ -847,7 +887,7 @@ IPropertyChangeListener {
 				}
 
 			}
-			
+
 		}; //end of the edit element action definition
 		adoptElementUnderRequirement.setText("Adopt Under Requirement");
 		adoptElementUnderRequirement.setToolTipText("Adopt As Rationale");
@@ -870,7 +910,7 @@ IPropertyChangeListener {
 				}
 
 			}
-			
+
 		}; //end of the edit element action definition
 		adoptElementUnderRequirement.setText("Adopt Under Requirement");
 		adoptElementUnderRequirement.setToolTipText("Adopt As Rationale");
@@ -894,7 +934,7 @@ IPropertyChangeListener {
 				}
 
 			}
-			
+
 		}; //end of the edit element action definition
 		adoptElementUnderAlternative.setText("Adopt Under Alternative");
 		adoptElementUnderAlternative.setToolTipText("Adopt As Rationale");
@@ -903,7 +943,7 @@ IPropertyChangeListener {
 		//
 		deleteElement = new Action() {
 			public void run() {
-				
+
 				RationaleDB db = RationaleDB.getHandle();
 				ISelection selection = viewer.getSelection();
 				Object obj = ((IStructuredSelection)selection).getFirstElement();
@@ -913,24 +953,24 @@ IPropertyChangeListener {
 					boolean canceled = rElement.delete();
 					if (!canceled)
 					{
-						
+
 						//before we update our tree, we need to make sure we 
 						//do any "structural" updates!
 						//			TreeParent newParent = removeElement((TreeParent) obj);
 						CandidateTreeParent objDeleted = (CandidateTreeParent) obj;
-							removeElement(objDeleted);					
-						
+						removeElement(objDeleted);					
+
 					}
 				}
 			}
-			
+
 		};
 		deleteElement.setText("Delete");
 		deleteElement.setToolTipText("Delete Rationale");
-//		deleteElement.setImageDescriptor(PlatformUI.getWorkbench().getSharedImages().
-//		getImageDescriptor(ISharedImages.IMG_OBJS_INFO_TSK));				
+		//		deleteElement.setImageDescriptor(PlatformUI.getWorkbench().getSharedImages().
+		//		getImageDescriptor(ISharedImages.IMG_OBJS_INFO_TSK));				
 	}
-	
+
 	/**
 	 * hookDoubleClickAction is used to edit the rationale elements when you 
 	 * double-click them
@@ -939,12 +979,12 @@ IPropertyChangeListener {
 	private void hookDoubleClickAction() {
 		viewer.addDoubleClickListener(new IDoubleClickListener() {
 			public void doubleClick(DoubleClickEvent event) {
-//				doubleClickAction.run();
+				//				doubleClickAction.run();
 				editElement.run();
 			}
 		});
 	}
-	
+
 	/**
 	 * shows a message to the user
 	 * @param message
@@ -955,7 +995,7 @@ IPropertyChangeListener {
 	 "RationaleExplorer",
 	 message);
 	 } */
-	
+
 	/**
 	 * Passing the focus request to the viewer's control.
 	 */
@@ -963,15 +1003,15 @@ IPropertyChangeListener {
 		viewer.getControl().setFocus();
 	}
 
-	
+
 	public void dispose() {
 		super.dispose();
 	}
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.ISelectionListener#selectionChanged(org.eclipse.ui.IWorkbenchPart, org.eclipse.jface.viewers.ISelection)
 	 */
-	
-	
+
+
 	/**
 	 * Updates the tree branch (to display new children, etc.)
 	 * @param parent - the top of the branch to refresh
@@ -985,7 +1025,7 @@ IPropertyChangeListener {
 			refreshBranch((CandidateTreeParent) childrenI.next());
 		}
 	}
-	
+
 	/**
 	 * This method serves as a factory method that either creates a new element of the
 	 * type specified by the treeElement passed in to it or that uses the name of the treeElement
@@ -1030,16 +1070,16 @@ IPropertyChangeListener {
 		if (!canceled)
 		{
 			//need to add the new element to the tree...
-//			CandidateTreeParent newChild = new CandidateTreeParent(rElement.getName(), rElement.getElementType());				
-//			((TreeParent) obj).addChild(newChild);
+			//			CandidateTreeParent newChild = new CandidateTreeParent(rElement.getName(), rElement.getElementType());				
+			//			((TreeParent) obj).addChild(newChild);
 			System.out.println("name in createNewElement = " + rElement.getName());
 			addElement((CandidateTreeParent) obj, rElement);
 			//add our new element
 			refreshBranch((CandidateTreeParent) obj);
 		}
-		
+
 	}
-	
+
 
 	/**
 	 * Adding a new element to our rationale tree
@@ -1060,7 +1100,7 @@ IPropertyChangeListener {
 		}
 		return addedParent;
 	}
-	
+
 	/**
 	 * Refreshes the display of a tree element. This is called after an element is
 	 * edited (I believe adding an element has its own refresh). The only types that
@@ -1090,15 +1130,15 @@ IPropertyChangeListener {
 			newParent = addElement(grandParent, element);	
 			refreshBranch(grandParent);		
 			return newParent;	
-			
+
 		}
 		else
 		{
 			return parent;
 		}
-		
+
 	}
-	
+
 	/**
 	 * Removes an element from the tree. This is done when something is deleted but
 	 * also done if the underlying tree structure is changed (the old is removed, and a new
@@ -1117,9 +1157,9 @@ IPropertyChangeListener {
 		return grandParent;
 
 	}
-	
+
 	//
-	
+
 	/**
 	 * This is the editing code that is called in response to a menu item from
 	 * the tree OR on receipt of an event from the task list.
@@ -1129,16 +1169,16 @@ IPropertyChangeListener {
 	 */
 	private void editElement (CandidateTreeParent obj, RationaleElement rElement, Display theDisplay)
 	{
-//		boolean canceled = rElement.display();
+		//		boolean canceled = rElement.display();
 		boolean canceled = rElement.display(viewer.getControl().getShell().getDisplay());
-//		System.out.println("canceled? = " + canceled);
+		//		System.out.println("canceled? = " + canceled);
 		if (!canceled)
 		{
 			updateTreeElement(obj, rElement);
 		}
-		
+
 	}
-	
+
 	/**
 	 * This is the code called when we move an element to a different part of the tree
 	 * @param obj - the selected tree element being moved
@@ -1150,7 +1190,7 @@ IPropertyChangeListener {
 		CandidateTreeParent newParentTreeParent;
 		CandidateTreeParent newChildTreeParent;
 		CandidateRationale ele = (CandidateRationale) rElement;
-		
+
 		//We need to display a list of new parent elements and select which one we want
 		SelectCandidate sel = new SelectCandidate(theDisplay, ele.getType());
 		CandidateRationale parentRat = (CandidateRationale) sel.getNewItem();
@@ -1160,11 +1200,11 @@ IPropertyChangeListener {
 		{
 			return null;
 		}
-		
+
 		//change our ID and write the element to the database
 		ele.setParent(parentRat.getID());
 		ele.toDatabase(parentRat.getID(), false);
-		
+
 		//now, we need to find the new parent in our tree... 
 		newParentTreeParent = ((CandidateRationaleContentProvider) viewer.getContentProvider()).findCandidate(parentRat.getName());
 		//delete from the old parent
@@ -1191,19 +1231,19 @@ IPropertyChangeListener {
 		CandidateTreeParent newChildTreeParent;
 		CandidateRationale ele = (CandidateRationale) rElement;
 		RationaleElement newElement;
-	
+
 		//this element won't be adopted under a parent so we don't need to choose one. We do
 		//need to create it from the candidate though...
 		newElement = ele.createRationale(pid, ptype);
-		
-		
+
+
 		//Now, delete our candidate rationale, recursively
 		ele.deleteAll();
 
 		//Now, the trick - we need to add it to the tree of rationale!
 		RationaleUpdateEvent addEvt = new RationaleUpdateEvent(this);
 		addEvt.fireUpdateEvent(newElement, viewer.getControl().getDisplay(), UpdateType.ADD);
-		
+
 		//delete from the old parent
 		CandidateTreeParent oldParentTreeParent = (CandidateTreeParent)obj.getAltParent();
 		//remove the old element from the tree
@@ -1211,7 +1251,7 @@ IPropertyChangeListener {
 
 		return oldParentTreeParent;
 	}
-	
+
 	/**
 	 * This is the code called when we decide to adopt an element and its children as rationale.
 	 * @param obj - the selected tree element being moved
@@ -1223,17 +1263,17 @@ IPropertyChangeListener {
 		CandidateTreeParent newParentTreeParent;
 		CandidateTreeParent newChildTreeParent;
 		CandidateRationale ele = (CandidateRationale) rElement;
-		
+
 		//Now, we may or may not have a parent item. Requirements
-		
+
 		//We need to display a list of new parent elements and select which one we want
 		SelectCandidate sel = new SelectCandidate(theDisplay, ele.getType());
 		CandidateRationale parentRat = (CandidateRationale) sel.getNewItem();
-		
+
 		//change our ID and write the element to the database
 		ele.setParent(parentRat.getID());
 		ele.toDatabase(parentRat.getID(), false);
-		
+
 		//now, we need to find the new parent in our tree... 
 		newParentTreeParent = ((CandidateRationaleContentProvider) viewer.getContentProvider()).findCandidate(parentRat.getName());
 		//delete from the old parent
@@ -1260,7 +1300,7 @@ IPropertyChangeListener {
 		//need to check to see if the name has changed
 		if (obj.getName().compareTo(rElement.getName()) != 0)
 		{
-//			System.out.println("name has changed");
+			//			System.out.println("name has changed");
 			//need to save the old and new names and make the changes
 			updateName(obj.getName(), rElement.getName(), rElement.getElementType());
 		}
@@ -1270,11 +1310,11 @@ IPropertyChangeListener {
 		//now make our updates
 		//update what is displayed in the tree
 		//how do I update if name changes?
-//		System.out.println(rElement.getName() + ": enabled = " + new Boolean(rElement.getEnabled()).toString());
+		//		System.out.println(rElement.getName() + ": enabled = " + new Boolean(rElement.getEnabled()).toString());
 		newParent.update(rElement.getName(), rElement.getEnabled());
 
 	}
-	
+
 	/**
 	 * this updates the RationaleTreeMap that uses the name of the rationale elements
 	 * to find all its occurrences in the tree
@@ -1285,9 +1325,9 @@ IPropertyChangeListener {
 	public void updateName(String oldName, String newName, RationaleElementType type)
 	{
 		//shouldn't need to do anything here?
-		
+
 	}
-	
+
 	//we are now going to assume that the editing is done by the time
 	//we receive the event
 	/**
@@ -1300,9 +1340,9 @@ IPropertyChangeListener {
 	public void updateRationaleTree(RationaleUpdateEvent e)
 	{
 		//shouldn't need to do anything here?
-		
+
 	}
-	
+
 	/**
 	 * This method is used to pop-up a question to ask user whether to go on with the job
 	 * It is used for the association.
@@ -1315,7 +1355,7 @@ IPropertyChangeListener {
 				"RationaleExplorer",
 				message);
 	}
-	
+
 	/**
 	 * Read in the XML file and import data into the database
 	 */
@@ -1325,13 +1365,28 @@ IPropertyChangeListener {
 		Document ratDoc;
 		try {
 			DocumentBuilder builder = factory.newDocumentBuilder();
-			ratDoc = builder.parse(new File(inputFile));
+
+			StringBuffer sb = new StringBuffer();
+
+			try {
+				BufferedReader in = new BufferedReader(new FileReader(inputFile));
+				String str;
+				while ((str = in.readLine()) != null) {
+					sb.append(str);
+				}
+				in.close();
+			} catch (IOException e) {
+				System.err.println(e.toString());
+			}
+
+			//			ratDoc = builder.parse(new File(inputFile));
+			ratDoc = builder.parse(new InputSource(new StringReader(sb.toString())));
 			readXMLData(ratDoc);
-			
+
 			//We need to re-build the tree. One way would have been to simply add each element
 			//to the tree as it is created (most efficient?) but we'll just re-build it
 			rebuildTree();
-			
+
 		} catch (SAXException sce) {
 			System.err.println( sce.toString());
 			System.err.println ("Creating a new Database");
@@ -1345,52 +1400,52 @@ IPropertyChangeListener {
 			System.err.println ("Creating a new Database");
 			return;
 		}
-		
+
 
 	}
-	
-    private static void readXMLData(Document ratDoc)
-    {
-    	//Get a handle to our database
-    	RationaleDB db = RationaleDB.getHandle();
-    	Element ratTop = ratDoc.getDocumentElement();
-    	//this should be our parent Rationale element
-    	String source = ratTop.getAttribute("source");
-    	
-    	Element ratNext = (Element) ratTop.getFirstChild();
-    	while (ratNext != null)
-    	{
-    		String nextName;
-	    	nextName = ratNext.getNodeName();
-	    	
-	    	int parentID;
-//	    	System.out.println(nextName);
-	    	//here we check the type, then process
-	    	if (nextName.compareTo("DR:requirement") == 0)
-	    	{
+
+	private static void readXMLData(Document ratDoc)
+	{
+		//Get a handle to our database
+		RationaleDB db = RationaleDB.getHandle();
+		Element ratTop = ratDoc.getDocumentElement();
+		//this should be our parent Rationale element
+		String source = ratTop.getAttribute("source");
+
+		Element ratNext = (Element) ratTop.getFirstChild();
+		while (ratNext != null)
+		{
+			String nextName;
+			nextName = ratNext.getNodeName();
+
+			int parentID;
+			//	    	System.out.println(nextName);
+			//here we check the type, then process
+			if (nextName.compareTo("DR:requirement") == 0)
+			{
 				CandidateRationale nextReq = new CandidateRationale(RationaleElementType.REQUIREMENT);
-//				s.addRequirement(nextReq);
+				//				s.addRequirement(nextReq);
 				nextReq.fromXML(ratNext, source);
 				parentID = nextReq.toDatabase(0, true);
-				
-				//now, check for any arguments for/against the req
-				
-	    	}
-	    	else if ((nextName.compareTo("DR:decisionproblem") == 0) ||
-	    			 (nextName.compareTo("DR:decision") == 0))
-	    	{
-	    		//process decision
-	    		CandidateRationale nextDec = new CandidateRationale(RationaleElementType.DECISION);
-	    		nextDec.fromXML(ratNext, source);
-	    		parentID = nextDec.toDatabase(0, true);
-	    		
-	    		//now, check for any alternatives and arguments
 
-	    	}
-	    	ratNext = (Element) ratNext.getNextSibling();
-    	}
-   	
-    }
+				//now, check for any arguments for/against the req
+
+			}
+			else if ((nextName.compareTo("DR:decisionproblem") == 0) ||
+					(nextName.compareTo("DR:decision") == 0))
+			{
+				//process decision
+				CandidateRationale nextDec = new CandidateRationale(RationaleElementType.DECISION);
+				nextDec.fromXML(ratNext, source);
+				parentID = nextDec.toDatabase(0, true);
+
+				//now, check for any alternatives and arguments
+
+			}
+			ratNext = (Element) ratNext.getNextSibling();
+		}
+
+	}
 	/**
 	 * This method is used to rebuild the tree from a different copy of the database
 	 * 
@@ -1408,33 +1463,33 @@ IPropertyChangeListener {
 
 	public void selectionChanged(IWorkbenchPart part, ISelection selection) {
 		// not needed for this class
-		
+
 	}
 
 	public void addNewElement(RationaleUpdateEvent e) {
 		// not needed for this class
-		
+
 	}
 
 	public void associateAlternative(RationaleUpdateEvent e) {
 		// not needed for this class
-		
+
 	}
 
 	public void openDatabase(RationaleUpdateEvent e) {
 		// need to re-build our tree - will we have timing issues?
 		rebuildTree();
-		
+
 	}
 
 	public void showRationaleNode(RationaleUpdateEvent e) {
 		// Not needed - we only need to show using the viewer
-		
+
 	}
 
 	public void updateRationaleStatus(RationaleUpdateEvent e) {
 		// Not needed - no status on candidates
-		
+
 	}
 
 	public void propertyChange(PropertyChangeEvent event) {
@@ -1443,7 +1498,267 @@ IPropertyChangeListener {
 				event.getProperty().equals(PreferenceConstants.P_DATABASE)) {
 			rebuildTree(); // Automatically connect to the new database
 		}
-		
+
 	}
-	
+	/**
+	 * Reads a Word file that contains tagged rationale and creates a temporary xml file
+	 * that can then be imported into SEURAT as candidate rationale
+	 * @param fileName - the name of the Word file
+	 * @return the XML file containing the candidate rationale
+	 * @throws IOException
+	 * @throws ZipException
+	 * @throws SAXException
+	 * @throws ParserConfigurationException
+	 */
+	public File readFile(String fileName)throws IOException, ZipException, SAXException,ParserConfigurationException
+	{
+		String output="output.xml";
+		File f=new File(output);
+		try
+		{
+			String input=fileName;
+			ZipFile zipFile=new ZipFile(new File(input),ZipFile.OPEN_READ);
+			HashMap<String,String> commentMap = new HashMap<String,String>();
+			HashMap<String,rationaleNode> rationale=new HashMap<String,rationaleNode>();
+			List<String> commentOrder=new ArrayList();
+
+			//Need to parse two different files - the comments file and the document file
+			ZipEntry commentXML=zipFile.getEntry("word/comments.xml");
+			ZipEntry documentXML=zipFile.getEntry("word/document.xml");
+			InputStream commentXMLIS=zipFile.getInputStream(commentXML);
+			InputStream documentXMLIS=zipFile.getInputStream(documentXML);
+			DocumentBuilderFactory dbf1=DocumentBuilderFactory.newInstance();
+			DocumentBuilderFactory dbf2=DocumentBuilderFactory.newInstance();
+			org.w3c.dom.Document db1 = dbf1.newDocumentBuilder().parse(commentXMLIS);
+			org.w3c.dom.Document db2 = dbf2.newDocumentBuilder().parse(documentXMLIS);
+			db1.getDocumentElement().normalize();
+			db2.getDocumentElement().normalize();  
+
+			Node node=db1.getDocumentElement();
+			for(Node child=node.getFirstChild();child!=null;child=child.getNextSibling())
+			{
+				if(child.getNodeName()=="w:comment")
+				{
+					commentMap.put(child.getAttributes().item(2).getNodeValue(),child.getTextContent());
+				}
+				recurse(child);
+			}
+
+			List<String> activeComments=new ArrayList();
+			Node documentNode=db2.getDocumentElement();
+			Node c;
+			for(Node ch=documentNode.getFirstChild().getFirstChild();ch!=null;ch=ch.getNextSibling())
+			{
+				NodeList list=ch.getChildNodes();
+				for(int k=0;k<list.getLength();++k)
+				{
+					c=list.item(k);
+					if(c.getNodeName()=="w:commentRangeStart")
+					{
+						commentOrder.add(c.getAttributes().item(0).getNodeValue());
+						activeComments.add(c.getAttributes().item(0).getNodeValue());
+						String ourComment=commentMap.get(c.getAttributes().item(0).getNodeValue());
+						if(ourComment!=null)
+						{
+							rationaleNode ele=new rationaleNode(ourComment);
+							rationale.put(c.getAttributes().item(0).getNodeValue(), ele);
+						}
+					}
+					else if(c.getNodeName()=="w:r")
+					{
+						Node textNode=c.getFirstChild();
+						while ((textNode != null) && (textNode.getNodeName() != "w:t"))
+								{
+							textNode = textNode.getNextSibling();
+								}
+						if (textNode != null)
+						{
+						String text=textNode.getTextContent();
+						//first child might not be the text node!
+						for(String cmtID:activeComments)
+						{
+							rationaleNode update=rationale.get(cmtID);
+							if(update!=null)
+							{
+								update.elementContents=update.elementContents+text;
+								rationale.remove(cmtID);
+								rationale.put(cmtID, update);
+							}
+						}
+						}
+					}
+					else if(c.getNodeName()=="w:commentRangeEnd")
+					{
+						Node id=c.getAttributes().item(0);
+						String idStr=id.getNodeValue();
+						activeComments.remove(idStr);
+					}
+
+				}
+
+				recurse(ch);
+			}
+
+			org.w3c.dom.Document xmlDoc=null;
+			DocumentBuilderFactory factory=DocumentBuilderFactory.newInstance();
+			DocumentBuilder builder=factory.newDocumentBuilder();
+			String nmSpace="http://www.users.muohio.edu/burgeje/Rationale";
+			xmlDoc=builder.newDocument();
+			xmlDoc.setXmlVersion("1.0");
+			xmlDoc.setXmlStandalone(true);
+			Element root=xmlDoc.createElementNS(nmSpace, "DR:rationale");
+			root.setAttribute("source", input);
+
+			Element reqNode=null;
+			Element decNode=null;
+			Element altNode=null;
+
+			for(String nextCmt:commentOrder)
+			{
+				rationaleNode nextRat=rationale.get(nextCmt);
+				if(nextRat!=null)
+				{
+					if(nextRat.elementType.equals("requirement"))
+					{
+						if(reqNode!=null)
+						{
+							root.appendChild(reqNode);
+						}
+						reqNode=xmlDoc.createElementNS(nmSpace, "DR:requirement");
+						reqNode.setAttribute("name", nextRat.elementContents);
+						Element descNode=xmlDoc.createElementNS(nmSpace, "DR:description");
+						descNode.appendChild(xmlDoc.createTextNode(nextRat.elementContents));
+						reqNode.appendChild(descNode);
+					}
+					else if(nextRat.elementType.equals("decision"))
+					{
+						if(reqNode!=null)
+						{
+							root.appendChild(reqNode);
+						}
+						if(decNode!=null)
+						{
+							root.appendChild(decNode);
+						}
+						decNode=xmlDoc.createElementNS(nmSpace, "DR:decision");
+						decNode.setAttribute("name", nextRat.elementContents);
+						Element descNode=xmlDoc.createElementNS(nmSpace, "DR:description");
+						descNode.appendChild(xmlDoc.createTextNode(nextRat.elementContents));
+						decNode.appendChild(descNode);
+					}
+					else if((nextRat.elementType.equals("alternative"))|| nextRat.elementType.equals("alternative-selected"))
+					{
+						altNode=xmlDoc.createElementNS(nmSpace, "DR:alternative");
+						altNode.setAttribute("name", nextRat.elementContents);
+						if(nextRat.elementType.equals("alternative-selected"))
+						{
+							altNode.setAttribute("status", "Adopted");
+						}
+						Element descNode=xmlDoc.createElementNS(nmSpace, "DR:description");
+						descNode.appendChild(xmlDoc.createTextNode(nextRat.elementContents));
+						altNode.appendChild(descNode);
+
+						if(decNode!=null)
+						{
+							decNode.appendChild(altNode);
+						}
+						else
+						{
+							decNode=xmlDoc.createElementNS(nmSpace, "DR:decision");
+							decNode.setAttribute("name", "unknown");
+							Element descNode2=xmlDoc.createElementNS(nmSpace, "DR:description");
+							descNode2.appendChild(xmlDoc.createTextNode("unknown"));
+							decNode.appendChild(descNode2);
+							decNode.appendChild(altNode);
+						}
+					}
+					else if(nextRat.elementType.equals("argument")||nextRat.elementType.equals("argument-for")||nextRat.elementType.equals("argument-against"))
+					{
+						Element argNode=xmlDoc.createElementNS(nmSpace, "DR:argument");
+						argNode.setAttribute("name", nextRat.elementContents);
+						if(nextRat.elementContents.equals("argument-for"))
+						{
+							argNode.setAttribute("argtype", "Supports");
+						}
+						else if(nextRat.elementType.equals("argument-against"))
+						{
+							argNode.setAttribute("argtype", "Denies");
+						}
+						Element descNode=xmlDoc.createElementNS(nmSpace, "DR:description");
+						descNode.appendChild(xmlDoc.createTextNode(nextRat.elementContents));
+						argNode.appendChild(descNode);
+						if(altNode!=null)
+						{
+							altNode.appendChild(argNode);
+						}
+						else if(reqNode!=null)
+						{
+							reqNode.appendChild(argNode);
+						}
+						else
+						{
+							reqNode=xmlDoc.createElementNS(nmSpace, "DR:requirement");
+							reqNode.setAttribute("name", "unknown");
+							Element descNode3=xmlDoc.createElementNS(nmSpace, "DR:description");
+							descNode3.appendChild(xmlDoc.createTextNode("unknown"));
+							reqNode.appendChild(descNode3);
+							reqNode.appendChild(argNode);
+						}
+
+					}
+				}
+			}//end for
+			if(reqNode!=null)
+			{
+				root.appendChild(reqNode);
+			}
+			if(decNode!=null)
+			{
+				root.appendChild(decNode);
+			}
+			xmlDoc.appendChild(root);
+			//String output="output.xml";
+			//File f=new File(output);
+			TransformerFactory transfac = TransformerFactory.newInstance();
+			Transformer trans = transfac.newTransformer();
+			trans.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "no");
+			trans.setOutputProperty(OutputKeys.INDENT, "no");
+			//create a string from the xml tree
+			StringWriter sw = new StringWriter();
+			StreamResult result = new StreamResult(sw);
+			DOMSource source = new DOMSource(xmlDoc);
+			trans.transform(source, result);
+			String xmlString = sw.toString();
+			//System.out.println(xmlString);
+			// write the file
+			FileWriter fw = new FileWriter(f);
+			fw.write(xmlString);
+			fw.close();
+
+		}
+		catch(IOException e)
+		{
+			System.err.println(e.toString());
+		}
+		catch (TransformerConfigurationException e) {
+			System.err.println( e.toString());
+		} catch (TransformerException tfe) {
+			System.err.println( tfe.toString());
+		}
+		catch (Exception e)
+		{
+			System.out.println("Other exception?");
+			System.err.println(e.toString());
+		}
+
+		System.out.println("Created output.xml file");
+		return f;
+	}
+	private static void recurse(Node node) {
+		for(Node child=node.getFirstChild();child!=null;child=child.getNextSibling())
+		{
+			if (child.hasChildNodes()) recurse(child);
+		}
+	}
+
 }
