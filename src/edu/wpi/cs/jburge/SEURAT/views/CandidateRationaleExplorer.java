@@ -1618,7 +1618,7 @@ IPropertyChangeListener {
 				rationaleNode nextRat=rationale.get(nextCmt);
 				if(nextRat!=null)
 				{
-					if(nextRat.elementType.equals("requirement"))
+					if(nextRat.elementType.toLowerCase().equals("requirement"))
 					{
 						if(reqNode!=null)
 						{
@@ -1630,7 +1630,7 @@ IPropertyChangeListener {
 						descNode.appendChild(xmlDoc.createTextNode(nextRat.elementContents));
 						reqNode.appendChild(descNode);
 					}
-					else if(nextRat.elementType.equals("decision"))
+					else if(nextRat.elementType.toLowerCase().equals("decision"))
 					{
 						if(reqNode!=null)
 						{
@@ -1646,11 +1646,11 @@ IPropertyChangeListener {
 						descNode.appendChild(xmlDoc.createTextNode(nextRat.elementContents));
 						decNode.appendChild(descNode);
 					}
-					else if((nextRat.elementType.equals("alternative"))|| nextRat.elementType.equals("alternative-selected"))
+					else if((nextRat.elementType.toLowerCase().equals("alternative"))|| nextRat.elementType.toLowerCase().equals("alternative-selected"))
 					{
 						altNode=xmlDoc.createElementNS(nmSpace, "DR:alternative");
 						altNode.setAttribute("name", nextRat.elementContents);
-						if(nextRat.elementType.equals("alternative-selected"))
+						if(nextRat.elementType.toLowerCase().equals("alternative-selected"))
 						{
 							altNode.setAttribute("status", "Adopted");
 						}
@@ -1672,7 +1672,7 @@ IPropertyChangeListener {
 							decNode.appendChild(altNode);
 						}
 					}
-					else if(nextRat.elementType.equals("argument")||nextRat.elementType.equals("argument-for")||nextRat.elementType.equals("argument-against"))
+					else if(nextRat.elementType.toLowerCase().equals("argument")||nextRat.elementType.toLowerCase().equals("argument-for")||nextRat.elementType.equals("argument-against"))
 					{
 						Element argNode=xmlDoc.createElementNS(nmSpace, "DR:argument");
 						argNode.setAttribute("name", nextRat.elementContents);
@@ -1680,7 +1680,7 @@ IPropertyChangeListener {
 						{
 							argNode.setAttribute("argtype", "Supports");
 						}
-						else if(nextRat.elementType.equals("argument-against"))
+						else if(nextRat.elementType.toLowerCase().equals("argument-against"))
 						{
 							argNode.setAttribute("argtype", "Denies");
 						}
