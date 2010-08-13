@@ -1,8 +1,25 @@
 package edu.wpi.cs.jburge.SEURAT.views;
 
 import java.awt.Frame;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.StringReader;
+import java.io.StringWriter;
 import java.util.*;
+import java.util.zip.ZipException;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.OutputKeys;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
 
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
@@ -54,6 +71,11 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jface.action.Action;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
 
 import com.sun.org.apache.xml.internal.dtm.ref.DTMDefaultBaseIterators.ChildrenIterator;
 
@@ -156,6 +178,18 @@ public class RationaleExplorer extends ViewPart implements ISelectionListener, I
 	 * Menu item to input rationale from an XML file
 	 */
 	private Action inputRationale;
+	/**
+	 * Menu item to import XFeature model as rationale
+	 */
+	private Action importXFeature;
+	/**
+	 * Menu item to export rationale as an XFeature application model
+	 */
+	private Action exportXFeature;
+	/**
+	 * Menu item to import TEI requirements and create arguments (not for delivery!)
+	 */
+	private Action importTEIRequirements;
 	/**
 	 * Menu item to look for entities of a particular type
 	 */
@@ -357,6 +391,10 @@ public class RationaleExplorer extends ViewPart implements ISelectionListener, I
 		manager.add(new Separator());
 		manager.add(requirementsTraceabilityMatrix);
 		manager.add(showGraphicalRationale);
+		manager.add(new Separator());
+		manager.add(importXFeature);
+		manager.add(exportXFeature);
+		manager.add(importTEIRequirements);
 //		manager.add(testAction);
 	}
 	
@@ -621,7 +659,7 @@ public class RationaleExplorer extends ViewPart implements ISelectionListener, I
 		//change database
 		changeDatabase = new Action () {
 			public void run() {
-				rebuildTree();
+				rebuildTree(false);
 			}
 		};
 		changeDatabase.setText("Change Rationale DB");
@@ -641,7 +679,7 @@ public class RationaleExplorer extends ViewPart implements ISelectionListener, I
 				dbName = dlg.getValue();
 
 				RationaleDB.createNewDB(dbName);
-				rebuildTree();
+				rebuildTree(false);
 				}
 				
 			}
@@ -654,7 +692,7 @@ public class RationaleExplorer extends ViewPart implements ISelectionListener, I
 		//
 		inputRationale = new Action() {
 			public void run() {
-				@SuppressWarnings("unused") RationaleEntry re;
+				RationaleEntry re;
 				try {
 					re = new RationaleEntry();
 					
@@ -668,7 +706,76 @@ public class RationaleExplorer extends ViewPart implements ISelectionListener, I
 		inputRationale.setText("Input Rationale");
 		inputRationale.setToolTipText("Input Rationale from XML Files");
 		
+		//
+		// import XFeature information
+		importXFeature = new Action() {
+			public void run() {
+
+				FileDialog fd = new FileDialog(viewer.getControl().getShell(), SWT.OPEN);
+				fd.setText("Select");
+				fd.setFilterPath(".");
+				String[] filterExt = { "*.xfm", "*.*" };
+				fd.setFilterExtensions(filterExt);
+				String xfmFile=fd.open();
+
+				
+				//Now, get the name for our new database
+				String dbName;
+
+				InputDialog dlg = new InputDialog(Display.getCurrent().getActiveShell(),
+				"New Rationale Database", "Enter the new database name",
+				null, null);
+
+				if (dlg.open() == Window.OK) {
+				dbName = dlg.getValue();
+
+				RationaleDB.createNewDB(dbName);
+				
+				ImportXFeatureFile(xfmFile);
+				}
+
+			}
+		}; //end of the action definition		
+		importXFeature.setText("Import XFeature");
+		importXFeature.setToolTipText("Input Rationale from an XFeature file");
 		
+		//
+		// import XFeature information
+		exportXFeature = new Action() {
+			public void run() {
+
+				FileDialog fd = new FileDialog(viewer.getControl().getShell(), SWT.OPEN);
+				fd.setText("Select");
+				fd.setFilterPath(".");
+				String[] filterExt = { "*.xfm", "*.*" };
+				fd.setFilterExtensions(filterExt);
+				String xfmFile=fd.open();
+				
+				ExportXFeatureFile(xfmFile);
+
+			}
+		}; //end of the action definition		
+		exportXFeature.setText("Export XFeature");
+		exportXFeature.setToolTipText("Convert rationale to an XFeature application model");
+		
+		//
+		// import XFeature information
+		importTEIRequirements = new Action() {
+			public void run() {
+
+				FileDialog fd = new FileDialog(viewer.getControl().getShell(), SWT.OPEN);
+				fd.setText("Select");
+				fd.setFilterPath(".");
+				String[] filterExt = { "*.xml", "*.*" };
+				fd.setFilterExtensions(filterExt);
+				String xmlFile=fd.open();
+				
+				ImportTEIReqs(xmlFile);
+
+			}
+		}; //end of the action definition		
+		importTEIRequirements.setText("Export TEI Requirements");
+		importTEIRequirements.setToolTipText("Read in TEI Requirements and create matching arguments");
 		
 		//
 		// find Overrides
@@ -881,7 +988,7 @@ public class RationaleExplorer extends ViewPart implements ISelectionListener, I
 //					beingMovedEle = ((RationaleViewContentProvider) viewer.getContentProvider()).findRationaleElement(((TreeParent)obj).getName());
 //					refreshBranch(beingMovedEle);
 				}
-				rebuildTree();
+				rebuildTree(false);
 				viewer.expandToLevel(4);
 			}			
 		}; //end add element action definition
@@ -902,7 +1009,7 @@ public class RationaleExplorer extends ViewPart implements ISelectionListener, I
 
 					
 				}
-				rebuildTree();
+				rebuildTree(false);
 				viewer.expandToLevel(4);
 			}
 		}; //end add element action definition
@@ -924,7 +1031,7 @@ public class RationaleExplorer extends ViewPart implements ISelectionListener, I
 					beingMovedEle = ((RationaleViewContentProvider) viewer.getContentProvider()).findRationaleElement(((TreeParent)obj).getName());
 					refreshBranch(beingMovedEle);
 				}
-				rebuildTree();
+				rebuildTree(false);
 				viewer.expandToLevel(4);
 			}			
 		}; //end add element action definition
@@ -946,7 +1053,7 @@ public class RationaleExplorer extends ViewPart implements ISelectionListener, I
 //					beingMovedEle = ((RationaleViewContentProvider) viewer.getContentProvider()).findRationaleElement(((TreeParent)obj).getName());
 //					refreshBranch(beingMovedEle);
 				}
-				rebuildTree();
+				rebuildTree(false);
 				viewer.expandToLevel(4);
 			}			
 		}; 
@@ -968,7 +1075,7 @@ public class RationaleExplorer extends ViewPart implements ISelectionListener, I
 //					beingMovedEle = ((RationaleViewContentProvider) viewer.getContentProvider()).findRationaleElement(((TreeParent)obj).getName());
 //					refreshBranch(beingMovedEle);
 				}
-				rebuildTree();
+				rebuildTree(false);
 				viewer.expandToLevel(4);
 			}			
 		}; 
@@ -2216,7 +2323,7 @@ public class RationaleExplorer extends ViewPart implements ISelectionListener, I
 	 * This method is used to rebuild the tree from a different copy of the database
 	 * 
 	 */
-	public void rebuildTree()
+	public void rebuildTree(boolean newStatus)
 	{
 		RationaleDB.resetConnection();
 		viewer.getTree().removeAll();
@@ -2227,9 +2334,67 @@ public class RationaleExplorer extends ViewPart implements ISelectionListener, I
 		viewer.expandToLevel(2);
 		RationaleTaskList tlist = RationaleTaskList.getHandle();
 		tlist.resetTable();
+		if (newStatus)
+		{
+			//We need to re-set the status value for each element in the tree
+			TreeParent root = (TreeParent) viewer.getInput();
+			resetStatus(root);
+		}
 		// Restore the associations on startup
 		restoreAssociations.run();
 	}
+	
+	/**
+	 * This method resets status when a tree is built by adding elements from XML
+	 * 
+	 */
+	public void resetStatus(TreeParent node)
+	{
+//		updateTreeElement (TreeParent obj, RationaleElement rElement)
+		ArrayList<TreeObject> children = node.getChildrenList();
+		Iterator childI = children.iterator();
+		try
+		{
+		while (childI.hasNext())
+		{
+
+			Object childO = childI.next();
+			if (childO instanceof TreeParent)
+			{
+				TreeParent treeNode = (TreeParent) childO;
+				if (	(treeNode.getType() == RationaleElementType.REQUIREMENT) ||
+						(treeNode.getType() == RationaleElementType.DECISION) ||
+						(treeNode.getType() == RationaleElementType.ALTERNATIVE) ||
+						(treeNode.getType() == RationaleElementType.ARGUMENT) || 
+						(treeNode.getType() == RationaleElementType.QUESTION))
+				{
+					RationaleElement ele = getElement(treeNode, false);
+					if (ele != null)
+					{
+					updateTreeElement(treeNode, ele);
+					resetStatus(treeNode);
+					}
+				}
+				else if (treeNode.getType() == RationaleElementType.RATIONALE)
+				{
+					resetStatus(treeNode);
+				}
+				else
+				{
+					System.out.println("other type = " + treeNode.getType());
+				}
+
+				
+			}
+
+		}
+		}
+		catch (Exception ex)
+		{
+			System.out.println("Strange exception in Reset status");
+		}
+	}
+	 
 	
 	/**
 	 * Simple method to open an associated database.  Most of the work is done for us
@@ -2908,7 +3073,7 @@ public class RationaleExplorer extends ViewPart implements ISelectionListener, I
 		if (event.getProperty().equals(PreferenceConstants.P_DATABASETYPE) ||
 				event.getProperty().equals(PreferenceConstants.P_DERBYNAME) ||
 				event.getProperty().equals(PreferenceConstants.P_DATABASE)) {
-			rebuildTree(); // Automatically connect to the new database
+			rebuildTree(false); // Automatically connect to the new database
 			//waitingToConnectRemote = false;  // was part of below code
 		}
 		
@@ -2944,5 +3109,747 @@ public class RationaleExplorer extends ViewPart implements ISelectionListener, I
 			waitingToConnectRemote = false;
 			rebuildTree();
 		}*/
+	}
+	
+	private void ExportXFeatureFile(String outputFile)
+	{
+		DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+		Document xfeatureDoc;
+		try {
+			DocumentBuilder builder = factory.newDocumentBuilder();
+
+			StringBuffer sb = new StringBuffer();
+
+			try {
+				BufferedReader in = new BufferedReader(new FileReader(outputFile));
+				String str;
+				while ((str = in.readLine()) != null) {
+					sb.append(str);
+				}
+				in.close();
+			} catch (IOException e) {
+				System.err.println(e.toString());
+			}
+
+			xfeatureDoc = builder.parse(new InputSource(new StringReader(sb.toString())));
+			createXFeatureXML(xfeatureDoc);
+			
+			//Need to re-write the file 
+			TransformerFactory transfac = TransformerFactory.newInstance();
+			Transformer trans = transfac.newTransformer();
+			trans.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "no");
+			trans.setOutputProperty(OutputKeys.INDENT, "no");
+			//create a string from the xml tree
+			StringWriter sw = new StringWriter();
+			StreamResult result = new StreamResult(sw);
+			DOMSource source = new DOMSource(xfeatureDoc);
+			trans.transform(source, result);
+			String xmlString = sw.toString();
+			// write the file
+			File f=new File(outputFile);
+
+			FileWriter fw = new FileWriter(f);
+			fw.write(xmlString);
+			fw.close();
+
+		} catch (SAXException sce) {
+			System.err.println( sce.toString());
+			System.err.println ("SAX Exception parsing xfm file");
+			return;
+		} catch (IOException ioe) {
+			System.err.println (ioe.toString());
+			System.err.println ("I/O Exception parsing xfm file");
+			return;
+		} catch (ParserConfigurationException pce) {
+			System.err.println (pce.toString());
+			System.err.println ("Parser configuration exception with xfm file");
+			return;
+		} catch (TransformerException e) {
+			// TODO Auto-generated catch block
+			System.err.println("Error in transforming");
+			e.printStackTrace();
+		}
+
+	}
+	private void createXFeatureXML(Document xfeatureDoc) {
+
+		Element xfeatureTop = xfeatureDoc.getDocumentElement();
+		String nmSpace=xfeatureTop.getNamespaceURI();
+		//this should be the fm:FeatureModel element
+		String source = xfeatureTop.getAttribute("fm:value");
+		String name = xfeatureTop.getNodeName();
+		
+		Vector<XFeatureMapping> xfeatureroot = RationaleDB.getToplevelMappings();
+		Iterator xI = xfeatureroot.iterator();
+		XFeatureMapping xRoot = (XFeatureMapping) xI.next(); //hopefully just one!!!
+		
+		Element rootNode = xfeatureDoc.createElement("fm:" + xRoot.getNodeName());
+		rootNode.setAttribute("fm:value", xRoot.getNodeName());
+		xfeatureTop.appendChild(rootNode);
+		
+		//Retrieve the XFeature nodes
+		Vector<XFeatureMapping> xfeaturenodes = RationaleDB.getDependentMappings(xRoot.getId());
+		xI = xfeaturenodes.iterator();
+		while (xI.hasNext())
+		{
+			XFeatureMapping xNode = (XFeatureMapping) xI.next();
+			if (xNode.getNodeType().equals(XFeatureNodeType.SOLITARYFEATURENODE))
+			{
+				decodeSolitaryFeature(xfeatureDoc, rootNode, xNode);
+			}
+			else if (xNode.getNodeType().equals(XFeatureNodeType.GROUPNODE))
+			{
+				decodeGroupFeature(xfeatureDoc, rootNode, xNode);
+			}
+		}
+	}
+
+	private void decodeGroupFeature(Document xfeatureDoc, Element xfeatureTop, XFeatureMapping xNode) {
+		// Get our alternatives!
+		Vector<XFeatureMapping> xfeatureAlts = RationaleDB.getDependentMappings(xNode.getId());
+		Iterator xI = xfeatureAlts.iterator();
+		while (xI.hasNext())
+		{
+			XFeatureMapping xAlt = (XFeatureMapping) xI.next();
+			if (xAlt.getRationaleType().equals(RationaleElementType.ALTERNATIVE))
+			{
+				Alternative cardAlt = new Alternative();
+				cardAlt.fromDatabase(xAlt.getRationaleID());
+				//If the alternative is not selected we can ignore it
+				if (cardAlt.getStatus().equals(AlternativeStatus.ADOPTED))
+				{
+					//Is there a sub-decision on how many?
+					Vector<XFeatureMapping> xfeaturenodes = RationaleDB.getDependentMappings(xAlt.getId());
+					//If there aren't any sub-nodes, then this was a feature with a cardinality of one
+					if (xfeaturenodes.isEmpty())
+					{
+						Element testNode = xfeatureDoc.createElement("fm:" + xAlt.getNodeName());
+						testNode.setAttribute("fm:value", xAlt.getNodeName());
+						xfeatureTop.appendChild(testNode);					
+					}
+					//Otherwise, there are some sub-features we need to take care of
+					else
+					{
+						xI = xfeaturenodes.iterator();
+						boolean addedSelf = false;
+						while (xI.hasNext())
+						{
+							XFeatureMapping xDec = (XFeatureMapping) xI.next();
+							if (xDec.getNodeType().equals(XFeatureNodeType.SOLITARYFEATURENODE))
+							{
+								if (xDec.getNodeName().equals(xAlt.getNodeName()))
+								{
+									addedSelf = true;
+								}
+								decodeSolitaryFeature(xfeatureDoc, xfeatureTop, xDec);
+							}
+							else if (xDec.getNodeType().equals(XFeatureNodeType.GROUPNODE))
+								{
+								if (!addedSelf)
+								{
+								//First, add ourself (assume a cardinality of one)
+								Element testNode = xfeatureDoc.createElement("fm:" + xAlt.getNodeName());
+								testNode.setAttribute("fm:value", xAlt.getNodeName());
+								xfeatureTop.appendChild(testNode);
+									decodeGroupFeature(xfeatureDoc, testNode, xDec);
+								}
+								else
+								{
+									decodeGroupFeature(xfeatureDoc, xfeatureTop, xDec);
+								}
+								}
+						}
+					}	
+				}
+			}
+		}
+	}
+
+	private void decodeSolitaryFeature(Document xfeatureDoc, Element xfeatureTop,
+			XFeatureMapping xNode) {
+		// Get our alternatives!
+		Vector<XFeatureMapping> xfeatureAlts = RationaleDB.getDependentMappings(xNode.getId());
+		Iterator xI = xfeatureAlts.iterator();
+		while (xI.hasNext())
+		{
+			XFeatureMapping xAlt = (XFeatureMapping) xI.next();
+			if (xAlt.getRationaleType().equals(RationaleElementType.ALTERNATIVE))
+			{
+				Alternative cardAlt = new Alternative();
+				cardAlt.fromDatabase(xAlt.getRationaleID());
+				//If the alternative is not selected we can ignore it
+				if (cardAlt.getStatus().equals(AlternativeStatus.ADOPTED))
+				{
+					Element testNode = null;
+					//we have a selected feature!
+					if ((xAlt.getNodeType().equals(XFeatureNodeType.SOLITARYFEATURECARDINALITYONE)) ||
+						(xAlt.getNodeType().equals(XFeatureNodeType.GROUPEDFEATURECARDINALITYONE)))
+					{
+						testNode = xfeatureDoc.createElement("fm:" + xAlt.getNodeName());
+						testNode.setAttribute("fm:value", xAlt.getNodeName());
+						xfeatureTop.appendChild(testNode);
+					}
+					//more than one?
+					else if ((xAlt.getNodeType().equals(XFeatureNodeType.SOLITARYFEATURECARDINALITYMANY)) ||
+							(xAlt.getNodeType().equals(XFeatureNodeType.GROUPEDFEATURECARDINALITYMANY)))
+					{
+						testNode = xfeatureDoc.createElement("fm:" + xAlt.getNodeName()); 
+						testNode.setAttribute("fm:value", xAlt.getNodeName() + "One");
+						xfeatureTop.appendChild(testNode);
+						testNode = xfeatureDoc.createElement("fm:" + xAlt.getNodeName()); 
+						testNode.setAttribute("fm:value", xAlt.getNodeName() + "Mult");
+					}
+					if (testNode != null)
+					{
+						//Are there sub-decisions under the alternative (unlikely)?
+						Vector<XFeatureMapping> xfeaturenodes = RationaleDB.getDependentMappings(xAlt.getId());
+						Iterator xI2 = xfeaturenodes.iterator();
+						while (xI2.hasNext())
+						{
+							XFeatureMapping chNode = (XFeatureMapping) xI2.next();
+							if (chNode.getNodeType().equals(XFeatureNodeType.SOLITARYFEATURENODE))
+							{
+								decodeSolitaryFeature(xfeatureDoc, testNode, chNode);
+							}
+							else if (chNode.getNodeType().equals(XFeatureNodeType.GROUPNODE))
+							{
+								decodeGroupFeature(xfeatureDoc, testNode, chNode);
+							}
+						}
+					}
+
+				}
+			}
+			else {
+				if (xAlt.getNodeType().equals(XFeatureNodeType.SOLITARYFEATURENODE))
+				{
+					decodeSolitaryFeature(xfeatureDoc, xfeatureTop, xAlt);
+				}
+				else if (xAlt.getNodeType().equals(XFeatureNodeType.GROUPNODE))
+				{
+					decodeGroupFeature(xfeatureDoc, xfeatureTop, xAlt);
+				}
+			}
+		}
+		
+	}
+
+
+
+	private Element findChildElement(Element parentNode)
+	{
+		Element childNode = null;
+		Node nextChild = parentNode.getFirstChild();
+		while ((childNode == null) && (nextChild != null))
+		{
+			if (nextChild instanceof Element)
+			{
+				childNode = (Element) nextChild;
+			}
+			else
+			{
+				nextChild = nextChild.getNextSibling();
+			}
+		}
+		return childNode;
+	}
+	
+	private Element findSiblingElement(Element prevNode)
+	{
+		Element siblingNode = null;
+		Node nextSib = prevNode.getNextSibling();
+		while ((siblingNode == null) && (nextSib != null))
+		{
+			if (nextSib instanceof Element)
+			{
+				siblingNode = (Element) nextSib;
+			}
+			else
+			{
+				nextSib = nextSib.getNextSibling();
+			}
+		}
+		return siblingNode;
+	}
+	private  void readXFeatureXML(Document xfeatureDoc)
+	{
+
+		Element xfeatureTop = xfeatureDoc.getDocumentElement();
+		//this should be the fm:FeatureModel element
+		String source = xfeatureTop.getAttribute("fm:value");
+		String name = xfeatureTop.getNodeName();
+		//Now, get the root of the feature model tree
+		Element xfeatureRoot =  findChildElement(xfeatureTop);
+		String name2 = xfeatureRoot.getNodeName();
+		String source2 = xfeatureRoot.getAttribute("fm:value");
+		//Need to store the mapping into the database. In this case, there is no corresponding rationale element
+		XFeatureMapping xmap = new XFeatureMapping(0, RationaleElementType.NONE, 
+				XFeatureNodeType.ROOTFEATURENODE, source2, -1);
+		int xID = xmap.toDatabase();
+		
+		if (xfeatureRoot == null)
+		{
+			System.out.println("Null root?");
+			return;
+		}
+		Element xfeatureNext = findChildElement(xfeatureRoot);
+		while (xfeatureNext != null)
+		{
+			int id = interpretFeature(xfeatureNext, 0, RationaleElementType.DECISION, xID);
+			xfeatureNext = (Element) findSiblingElement(xfeatureNext);
+		}
+	}
+	
+	private Element findCardinalityNode(Element xfeatureNext)
+	{
+		Element childNode = findChildElement(xfeatureNext);
+		while ((childNode != null) && (! (childNode.getNodeName().contains("Cardinality"))))
+		{
+			childNode = (Element) findSiblingElement(childNode);
+		}
+		return childNode;
+	}
+	private int interpretFeature(Element xfeatureNext, int parentID, RationaleElementType ptype, int parent)
+	{
+		//Get a handle to our database
+		RationaleDB db = RationaleDB.getHandle();
+		int ourID = 0;
+		int cardMin = 1;
+		int cardMax = 1;
+		int altxID = 0;
+		String nodeType = xfeatureNext.getNodeName();
+		Element cardNode = null;
+		if (!nodeType.contains("Cardinality"))
+		{
+			cardNode = findCardinalityNode(xfeatureNext);
+		}
+	
+		if (cardNode != null)
+		{
+			try
+			{
+			cardMin = Integer.parseInt(cardNode.getAttribute("fm:cardMin"));
+			}
+			catch (Exception ex)
+			{
+				cardMin = 0;
+			}
+
+			try
+			{
+				cardMax = Integer.parseInt(cardNode.getAttribute("fm:cardMax"));
+			}
+			catch (Exception ex)
+			{
+				cardMax = 5;
+			}
+		}
+		if ((nodeType.equals("fm:SolitaryFeatureNode")) || (nodeType.equals("fm:SolitaryFeature")))
+		{
+			String decName = xfeatureNext.getAttribute("fm:value");
+			Decision dec;
+			dec = (Decision) getElement(new TreeObject("unused", RationaleElementType.DECISION), true);
+			dec.setName("How many " + decName);
+			dec.setDescription(decName + " needs to be selected");
+			dec.setStatus(DecisionStatus.UNRESOLVED);
+			dec.setPhase(Phase.DESIGN);
+			dec.setParent(parentID);
+			dec.setPtype(ptype);
+			dec.setType(DecisionType.SINGLECHOICE);
+			int decID;
+			decID = dec.toDatabase(parentID, ptype);
+			XFeatureMapping xmap = new XFeatureMapping(decID, RationaleElementType.DECISION, 
+					XFeatureNodeType.SOLITARYFEATURENODE, decName, parent);
+			int xID = xmap.toDatabase();
+			
+			if (cardMin == 0)
+			{
+				Alternative alt;
+				alt = new Alternative();
+				alt.setName("No " + decName);
+				alt.setDescription(alt.getName());
+				alt.setEnabled(true);
+				alt.setPtype(RationaleElementType.DECISION);
+				alt.setParent(decID);
+				int altID = alt.toDatabase(decID, RationaleElementType.DECISION);
+				xmap = new XFeatureMapping(altID, RationaleElementType.ALTERNATIVE, 
+						XFeatureNodeType.SOLITARYFEATURECARDINALITYZERO, decName, xID);
+				altxID = xmap.toDatabase();
+			}
+			if (cardMax > 1)
+			{
+				Alternative alt;
+				alt = new Alternative();
+				alt.setName("Multiple " + decName);
+				alt.setDescription(alt.getName());
+				alt.setEnabled(true);
+				alt.setPtype(RationaleElementType.DECISION);
+				alt.setParent(decID);
+				alt.toDatabase(decID, RationaleElementType.DECISION);
+				int altID = alt.toDatabase(decID, RationaleElementType.DECISION);
+				xmap = new XFeatureMapping(altID, RationaleElementType.ALTERNATIVE, 
+						XFeatureNodeType.SOLITARYFEATURECARDINALITYMANY, decName, xID);
+				altxID = xmap.toDatabase();
+			}
+			if ((cardMax == 1) || (cardMin == 1))
+			{
+				Alternative alt;
+				alt = new Alternative();
+				alt.setName("One " + decName);
+				alt.setDescription(alt.getName());
+				alt.setEnabled(true);
+				alt.setPtype(RationaleElementType.DECISION);
+				alt.setParent(decID);
+				if ((cardMax == 1) && (cardMin==1))
+				{
+					alt.setStatus(AlternativeStatus.ADOPTED);
+				}		
+				alt.toDatabase(decID, RationaleElementType.DECISION);
+				int altID = alt.toDatabase(decID, RationaleElementType.DECISION);
+				xmap = new XFeatureMapping(altID, RationaleElementType.ALTERNATIVE, 
+						XFeatureNodeType.SOLITARYFEATURECARDINALITYONE, decName, xID);
+				altxID = xmap.toDatabase();
+			}
+			Element nextFeatureNode =  findChildElement(xfeatureNext);
+			while (nextFeatureNode != null)
+			{
+				int tmp = interpretFeature(nextFeatureNode, decID, RationaleElementType.DECISION, altxID);
+				nextFeatureNode = (Element) findSiblingElement(nextFeatureNode);
+			}
+		}
+		else if ((nodeType.equals("fm:GroupNode")) || (nodeType.equals("fm:FeatureGroup")))
+		{
+			String decName = xfeatureNext.getAttribute("fm:value");
+			Decision dec;
+			dec = (Decision) getElement(new TreeObject("unused", RationaleElementType.DECISION), true);
+			dec.setName(decName);
+			dec.setDescription(decName + " needs to be selected");
+			dec.setStatus(DecisionStatus.UNRESOLVED);
+			dec.setPhase(Phase.DESIGN);
+			dec.setParent(parentID);
+			dec.setPtype(ptype);
+			if (cardMax > 1)
+			{
+				dec.setType(DecisionType.MULTIPLECHOICE);
+			}
+			else
+			{
+				dec.setType(DecisionType.SINGLECHOICE);
+			}
+			int decID;
+			decID = dec.toDatabase(parentID, ptype);
+			XFeatureMapping xmap = new XFeatureMapping(decID, RationaleElementType.DECISION, 
+					XFeatureNodeType.GROUPNODE, decName, parent);
+			int xID = xmap.toDatabase();
+			Element groupedFeatureNode =  findChildElement(xfeatureNext);
+			while (groupedFeatureNode != null)
+			{
+				int tmp = interpretFeature(groupedFeatureNode, decID, RationaleElementType.DECISION, xID);
+				groupedFeatureNode = (Element) findSiblingElement(groupedFeatureNode);
+			}
+			
+		}
+		else if ((nodeType.equals("fm:GroupedFeatureNode")) || (nodeType.equals("fm:GroupedFeature")))
+		{
+			String altName = xfeatureNext.getAttribute("fm:value");
+			Alternative alt;
+			int altID;
+			alt = new Alternative();
+			alt.setName(altName);
+			alt.setDescription(alt.getName());
+			alt.setEnabled(true);
+			alt.setPtype(ptype);
+			alt.setParent(parentID);
+			altID = alt.toDatabase(parentID, ptype);
+			XFeatureMapping xmap = new XFeatureMapping(altID, RationaleElementType.ALTERNATIVE, 
+					XFeatureNodeType.GROUPEDFEATURENODE, altName, parent);
+			int xID = xmap.toDatabase();
+			//If cardinality does not max out at 1, need to create a decision on how many
+			if (cardMax > 1)
+			{
+				Decision dec;
+				dec = (Decision) getElement(new TreeObject("unused", RationaleElementType.DECISION), true);
+				dec.setName("How many " + altName);
+				dec.setDescription(altName + " needs to be selected");
+				dec.setStatus(DecisionStatus.UNRESOLVED);
+				dec.setPhase(Phase.DESIGN);
+				dec.setParent(altID);
+				dec.setPtype(RationaleElementType.ALTERNATIVE);
+				dec.setType(DecisionType.SINGLECHOICE);
+				int decID;
+				decID = dec.toDatabase(altID, RationaleElementType.ALTERNATIVE);
+				XFeatureMapping xdmap = new XFeatureMapping(decID, RationaleElementType.DECISION, 
+						XFeatureNodeType.GROUPEDFEATUREDECISION, altName, xID);
+				int dxID = xdmap.toDatabase();
+				if (cardMax > 1)
+				{
+					alt = new Alternative();
+					alt.setName("Multiple " + altName);
+					alt.setDescription(alt.getName());
+					alt.setEnabled(true);
+					alt.setPtype(RationaleElementType.DECISION);
+					alt.setParent(decID);
+					altID = alt.toDatabase(decID, RationaleElementType.DECISION);
+					XFeatureMapping xamap = new XFeatureMapping(altID, RationaleElementType.ALTERNATIVE, 
+							XFeatureNodeType.GROUPEDFEATURECARDINALITYMANY, altName, dxID);
+					xamap.toDatabase();
+				}
+				if ((cardMax == 1) || (cardMin == 1))
+				{
+					alt = new Alternative();
+					alt.setName("One " + altName);
+					alt.setDescription(alt.getName());
+					alt.setEnabled(true);
+					alt.setPtype(RationaleElementType.DECISION);
+					alt.setParent(decID);
+					altID = alt.toDatabase(decID, RationaleElementType.DECISION);
+					XFeatureMapping xamap = new XFeatureMapping(altID, RationaleElementType.ALTERNATIVE, 
+							XFeatureNodeType.GROUPEDFEATURECARDINALITYONE, altName, dxID);
+					xamap.toDatabase();
+				}
+			}
+			Element nextFeatureNode =  findChildElement(xfeatureNext);
+			while (nextFeatureNode != null)
+			{
+				int tmp = interpretFeature(nextFeatureNode, altID, RationaleElementType.ALTERNATIVE, xID);
+				nextFeatureNode = (Element) findSiblingElement(nextFeatureNode);
+			}
+		}
+		
+
+		return ourID;
+	}
+	
+
+	/**
+	 * Read in the XML file and import data into the database
+	 */
+	private void ImportXFeatureFile(String inputFile)
+	{
+		DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+		Document xfeatureDoc;
+		try {
+			DocumentBuilder builder = factory.newDocumentBuilder();
+
+			StringBuffer sb = new StringBuffer();
+
+			try {
+				BufferedReader in = new BufferedReader(new FileReader(inputFile));
+				String str;
+				while ((str = in.readLine()) != null) {
+					sb.append(str);
+				}
+				in.close();
+			} catch (IOException e) {
+				System.err.println(e.toString());
+			}
+
+			xfeatureDoc = builder.parse(new InputSource(new StringReader(sb.toString())));
+			readXFeatureXML(xfeatureDoc);
+
+			//We need to re-build the tree. One way would have been to simply add each element
+			//to the tree as it is created (most efficient?) but we'll just re-build it
+			rebuildTree(true);
+
+		} catch (SAXException sce) {
+			System.err.println( sce.toString());
+			System.err.println ("SAX Exception parsing xfm file");
+			return;
+		} catch (IOException ioe) {
+			System.err.println (ioe.toString());
+			System.err.println ("I/O Exception parsing xfm file");
+			return;
+		} catch (ParserConfigurationException pce) {
+			System.err.println (pce.toString());
+			System.err.println ("Parser configuration exception with xfm file");
+			return;
+		}
+
+	}
+	/**
+	 * Read in the TEI XML File. Create requirements and create arguments. This is not
+	 * a permanent piece of functionality but is added as a convenience.
+	 */
+	private void ImportTEIReqs(String inputFile)
+	{
+		DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+		Document teiDoc;
+		try {
+			DocumentBuilder builder = factory.newDocumentBuilder();
+
+			StringBuffer sb = new StringBuffer();
+
+			try {
+				BufferedReader in = new BufferedReader(new FileReader(inputFile));
+				String str;
+				while ((str = in.readLine()) != null) {
+					sb.append(str);
+				}
+				in.close();
+			} catch (IOException e) {
+				System.err.println(e.toString());
+			}
+
+			teiDoc = builder.parse(new InputSource(new StringReader(sb.toString())));
+			readTEIXML(teiDoc);
+
+			//We need to re-build the tree. One way would have been to simply add each element
+			//to the tree as it is created (most efficient?) but we'll just re-build it
+			rebuildTree(true);
+
+		} catch (SAXException sce) {
+			System.err.println( sce.toString());
+			System.err.println ("SAX Exception parsing xfm file");
+			return;
+		} catch (IOException ioe) {
+			System.err.println (ioe.toString());
+			System.err.println ("I/O Exception parsing xfm file");
+			return;
+		} catch (ParserConfigurationException pce) {
+			System.err.println (pce.toString());
+			System.err.println ("Parser configuration exception with xfm file");
+			return;
+		}
+
+	}
+	
+	private void readTEIXML(Document teiDoc) {
+		Element xfeatureTop = teiDoc.getDocumentElement();
+		//this should be the element list. we need to keep going
+		Element rootEle = findChildElement(xfeatureTop);
+		//That should be the root. Now we need to find the correlation
+		while (!rootEle.getTagName().equals("correlation"))
+		{
+			rootEle = findSiblingElement(rootEle);
+		}
+		Element ele = findChildElement(rootEle);
+		while (ele != null)
+		{
+			decodeElement(ele);
+			ele = findSiblingElement(ele);
+		}
+
+	}
+
+	private void decodeElement(Element ele) {
+		Element nameEle = findChildElement(ele);
+		if (nameEle == null)
+			return;
+		Element reqEle = findSiblingElement(nameEle);
+		Element reasonEle = findSiblingElement(reqEle);
+		String name = nameEle.getTextContent();
+		String req = reqEle.getTextContent();
+		String desc = reasonEle.getTextContent();
+		
+		//First, create a requirement with the name and reason
+		Requirement teiReq = new Requirement();
+		teiReq.setName(req);
+		teiReq.setDescription(desc);
+//		teiReq.setDescription("");
+		teiReq.setType(ReqType.FR);
+		teiReq.setOntology(null);
+		teiReq.setImportance(Importance.ESSENTIAL);
+		teiReq.setEnabled(false);
+		int rID = teiReq.toDatabase(-1, RationaleElementType.RATIONALE);
+		//Now, where do we need to add arguments?
+		//Retrieve the XFeature nodes
+		Vector<XFeatureMapping> xfeaturenodes = RationaleDB.getDependentMappings(name);
+		Iterator xI = xfeaturenodes.iterator();
+		while (xI.hasNext())
+		{
+			XFeatureMapping xNode = (XFeatureMapping) xI.next();
+			//Is this an argument against?
+			if ((xNode.getNodeType() == XFeatureNodeType.GROUPEDFEATURECARDINALITYZERO) ||
+					(xNode.getNodeType() == XFeatureNodeType.SOLITARYFEATURECARDINALITYZERO))
+			{
+				Argument arg = new Argument();
+				arg.setName("Violates requirement " + req);
+				arg.setRequirement(teiReq);
+				arg.setType(ArgType.VIOLATES);
+				arg.setParent(xNode.getRationaleID());
+				arg.setPtype(RationaleElementType.ALTERNATIVE);
+				arg.setAmount(5);
+				arg.setEnabled(true);
+				arg.setImportance(Importance.DEFAULT);
+				arg.setPlausibility(Plausibility.CERTAIN);
+				arg.updateStatus();
+				arg.toDatabase(xNode.getRationaleID(), RationaleElementType.ALTERNATIVE);
+			}
+			else if ((xNode.getNodeType() == XFeatureNodeType.GROUPEDFEATURECARDINALITYONE))
+			{
+				Argument arg = new Argument();
+				arg.setName("Satisfies requirement " + req);
+				arg.setRequirement(teiReq);
+				arg.setType(ArgType.SATISFIES);
+				arg.setParent(xNode.getRationaleID());
+				arg.setPtype(RationaleElementType.ALTERNATIVE);
+				arg.setPlausibility(Plausibility.CERTAIN);
+				arg.setAmount(5);
+				arg.setEnabled(true);
+				arg.setImportance(Importance.DEFAULT);
+				arg.updateStatus();
+				arg.toDatabase(xNode.getRationaleID(), RationaleElementType.ALTERNATIVE);				
+			}
+			else if ((xNode.getNodeType() == XFeatureNodeType.GROUPEDFEATURECARDINALITYMANY))
+			{
+				Argument arg = new Argument();
+				arg.setName("Choosing more than one satisfies requirement " + req);
+				arg.setRequirement(teiReq);
+				arg.setType(ArgType.SATISFIES);
+				arg.setParent(xNode.getRationaleID());
+				arg.setPlausibility(Plausibility.CERTAIN);
+				arg.setPtype(RationaleElementType.ALTERNATIVE);
+				arg.setAmount(5);
+				arg.setEnabled(true);
+				arg.setImportance(Importance.DEFAULT);
+				arg.updateStatus();
+				arg.toDatabase(xNode.getRationaleID(), RationaleElementType.ALTERNATIVE);
+			}
+			else if ((xNode.getNodeType() == XFeatureNodeType.GROUPEDFEATURENODE))
+			{
+				Argument arg = new Argument();
+				arg.setName("Choosing one satisfies requirement " + req);
+				arg.setRequirement(teiReq);
+				arg.setType(ArgType.SATISFIES);
+				arg.setParent(xNode.getRationaleID());
+				arg.setPtype(RationaleElementType.ALTERNATIVE);
+				arg.setPlausibility(Plausibility.CERTAIN);
+				arg.setAmount(5);
+				arg.setEnabled(true);
+				arg.setImportance(Importance.DEFAULT);
+				arg.updateStatus();
+				arg.toDatabase(xNode.getRationaleID(), RationaleElementType.ALTERNATIVE);
+			}
+			else if ((xNode.getNodeType() == XFeatureNodeType.SOLITARYFEATURECARDINALITYONE))
+			{
+				Argument arg = new Argument();
+				arg.setName("One feature satisfies requirement " + req);
+				arg.setRequirement(teiReq);
+				arg.setType(ArgType.SATISFIES);
+				arg.setParent(xNode.getRationaleID());
+				arg.setPtype(RationaleElementType.ALTERNATIVE);
+				arg.setPlausibility(Plausibility.CERTAIN);
+				arg.setAmount(5);
+				arg.setEnabled(true);
+				arg.setImportance(Importance.DEFAULT);
+				arg.updateStatus();
+				arg.toDatabase(xNode.getRationaleID(), RationaleElementType.ALTERNATIVE);	
+			}
+			else if ((xNode.getNodeType() == XFeatureNodeType.SOLITARYFEATURECARDINALITYMANY))
+			{
+				Argument arg = new Argument();
+				arg.setName("Multiple features satisfies requirement " + req);
+				arg.setRequirement(teiReq);
+				arg.setType(ArgType.SATISFIES);
+				arg.setParent(xNode.getRationaleID());
+				arg.setPtype(RationaleElementType.ALTERNATIVE);
+				arg.setAmount(5);
+				arg.setPlausibility(Plausibility.CERTAIN);
+				arg.setEnabled(true);
+				arg.setImportance(Importance.DEFAULT);
+				arg.updateStatus();
+				arg.toDatabase(xNode.getRationaleID(), RationaleElementType.ALTERNATIVE);
+			}
+		}
 	}
 }

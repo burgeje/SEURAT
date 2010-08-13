@@ -150,8 +150,9 @@ public class DecisionInferences {
 				{
 
 					//anyone against us?
-					if (selAlt.getArgumentsAgainst().size() > 0)
+					if ((selAlt.getArgumentsAgainst().size() > 0) && (selAlt.evaluate() != 0))
 					{
+
 						//this is an error
 						String problem = "Alt '" + selAlt.getName() + " selected for " + ourDec.getName() +
 						"' has arguments against it but none for it.";	

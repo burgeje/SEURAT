@@ -401,7 +401,7 @@ public class SearchPage extends DialogPage implements ISearchPage {
 			
 			m_SearchComposite.setLayout(ssLayout);
 			
-			new Label(m_SearchComposite, SWT.NONE).setText("Search Text (case sensitive):");
+			new Label(m_SearchComposite, SWT.NONE).setText("Search Text:");
 			
 			m_SearchString = new Text(m_SearchComposite, SWT.SINGLE | SWT.BORDER);
 			m_SearchString.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_FILL));

@@ -196,13 +196,13 @@ public class RationaleStatus {
 				
 				//now, we have determined that the status item is new
 				String parentRSt = new Integer(parent).toString();
-				System.out.println("parent");	
+//				System.out.println("parent");	
 				
 				Timestamp time = new Timestamp((new java.util.Date()).getTime());
-				System.out.println(this.description);
+/*				System.out.println(this.description);
 				System.out.println(this.status.toString());
 				System.out.println(this.type.toString());
-				System.out.println(this.stype.toString());
+				System.out.println(this.stype.toString()); */
 				String newStatSt = "INSERT INTO Status "+
 				"(date, description, type, ptype, parent, status, override) " +
 				"VALUES ('" +
@@ -215,7 +215,7 @@ public class RationaleStatus {
 				stype.toString() + "', '" +
 				"No')";
 				
-				System.out.println(newStatSt);
+//				System.out.println(newStatSt);
 				stmt.execute(newStatSt); 
 				
 			}

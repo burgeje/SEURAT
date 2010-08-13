@@ -100,9 +100,13 @@ public class RationaleDBUtil
 		if (txt == null) {
 			return new String("");
 		}
+		if (txt.length() > 255)
+		{
+			txt = txt.substring(0, 254);
+		}
 		
 		if( checkDBType() == DBTypes.MYSQL ) {
-			Matcher matcher = Pattern.compile("([\'\"])").matcher(txt);
+			Matcher matcher = Pattern.compile("([\'\"\'])").matcher(txt);
 			String out = matcher.replaceAll("\\\\$1");
 			//   	System.out.println(out);
 			return out;

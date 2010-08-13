@@ -2,6 +2,7 @@ package edu.wpi.cs.jburge.SEURAT.rationaleData;
 
 import instrumentation.DataLog;
 
+import java.io.Serializable;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -22,7 +23,7 @@ import edu.wpi.cs.jburge.SEURAT.editors.ConsistencyChecker;
 import edu.wpi.cs.jburge.SEURAT.editors.EditCandidateRationale;
 import edu.wpi.cs.jburge.SEURAT.editors.EditDecision;
 
-public class CandidateRationale extends RationaleElement {
+public class CandidateRationale extends RationaleElement implements Serializable {
 
 	/**
 	 * Serial number - required by Java for serialization
@@ -62,6 +63,7 @@ public class CandidateRationale extends RationaleElement {
 	public CandidateRationale(RationaleElementType ourType)
 	{
 		type = ourType;
+		source = "";
 		children = new Vector<CandidateRationale>();
 	}
 	

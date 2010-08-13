@@ -79,10 +79,10 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
+import SEURAT.editors.CandidateRationaleEditor;
+import SEURAT.editors.OpenCandidateRationaleEditorAction;
 import SEURAT.preferences.PreferenceConstants;
-import SEURAT.xmlIO.RationaleEntry;
-import edu.wpi.cs.jburge.SEURAT.views.TreeParent;
-import edu.wpi.cs.jburge.SEURAT.decorators.*;
+
 
 /**
  * The Candidate Rationale Explorer is used as temporary storage for
@@ -153,7 +153,11 @@ IPropertyChangeListener {
 	 */
 	private Action inputRationale;
 
-
+	private Action showCandidateEditor;
+	private Action addRequirementCandidateEditor;
+	private Action addDecisionCandidateEditor;
+	private Action addAlternativeCandidateEditor;
+	private Action addArgumentCandidateEditor;
 	/**
 	 * Points to our display
 	 */
@@ -269,7 +273,7 @@ IPropertyChangeListener {
 			CandidateTreeParent ourElement = (CandidateTreeParent) obj;
 			if (ourElement.getType() == RationaleElementType.ALTERNATIVE)
 			{
-				manager.add(editElement);
+				manager.add(showCandidateEditor);
 				manager.add(deleteElement);
 				manager.add(moveElement);
 				manager.add(adoptElement);
@@ -279,7 +283,7 @@ IPropertyChangeListener {
 			}
 			else if (ourElement.getType() == RationaleElementType.REQUIREMENT)
 			{
-				manager.add(editElement);
+				manager.add(showCandidateEditor);
 				manager.add(deleteElement);
 				manager.add(adoptElement);
 				manager.add(adoptElementUnderRequirement);
@@ -287,7 +291,7 @@ IPropertyChangeListener {
 			}
 			else if (ourElement.getType() == RationaleElementType.DECISION)
 			{
-				manager.add(editElement);
+				manager.add(showCandidateEditor);
 				manager.add(deleteElement);
 				manager.add(adoptElement);
 				manager.add(adoptElementUnderDecision);
@@ -295,7 +299,7 @@ IPropertyChangeListener {
 			}
 			else if (ourElement.getType() == RationaleElementType.ARGUMENT)
 			{
-				manager.add(editElement);
+				manager.add(showCandidateEditor);
 				manager.add(deleteElement);
 				manager.add(moveElement);
 				manager.add(adoptElementUnderRequirement);
@@ -304,7 +308,7 @@ IPropertyChangeListener {
 			}
 			else if (ourElement.getType() == RationaleElementType.ASSUMPTION)
 			{
-				manager.add(editElement);
+				manager.add(showCandidateEditor);
 				manager.add(deleteElement);
 				manager.add(moveElement);
 				manager.add(changeElementType);
@@ -312,7 +316,7 @@ IPropertyChangeListener {
 			}
 			else if (ourElement.getType() == RationaleElementType.QUESTION)
 			{
-				manager.add(editElement);
+				manager.add(showCandidateEditor);
 				manager.add(deleteElement);
 				manager.add(moveElement);
 				manager.add(adoptElementUnderDecision);
@@ -320,7 +324,20 @@ IPropertyChangeListener {
 				manager.add(changeElementType);
 
 			}
+			else if (ourElement.getType() == RationaleElementType.RATIONALE)
+			{
 
+				if (ourElement.getName().compareTo("Requirements") == 0)
+				{
+					manager.add(addRequirementCandidateEditor);
+					//manager.add(addElement);
+				}
+				else if (ourElement.getName().compareTo("Decisions") == 0)
+				{
+					manager.add(addDecisionCandidateEditor);
+					//manager.add(addElement);
+				}
+			}
 		}
 
 		// Other plug-ins can contribute there actions here
@@ -339,7 +356,24 @@ IPropertyChangeListener {
 
 		//		System.out.println("made some actions?");
 
-
+		//Eclipse-style editor definition
+		addRequirementCandidateEditor = new OpenCandidateRationaleEditorAction(CandidateRationaleEditor.class, this, true, RationaleElementType.REQUIREMENT);
+		addRequirementCandidateEditor.setText("New Requirement Candidate");
+		addRequirementCandidateEditor.setToolTipText("Add Requirement Candidate");
+		addDecisionCandidateEditor = new OpenCandidateRationaleEditorAction(CandidateRationaleEditor.class, this, true, RationaleElementType.DECISION);
+		addDecisionCandidateEditor.setText("New Decision Candidate");
+		addDecisionCandidateEditor.setToolTipText("Add Decision Candidate");
+		addAlternativeCandidateEditor = new OpenCandidateRationaleEditorAction(CandidateRationaleEditor.class, this, true, RationaleElementType.ALTERNATIVE);
+		addAlternativeCandidateEditor.setText("New Alternative Candidate");
+		addAlternativeCandidateEditor.setToolTipText("Add Alternative Candidate");
+		addArgumentCandidateEditor = new OpenCandidateRationaleEditorAction(CandidateRationaleEditor.class, this, true, RationaleElementType.ARGUMENT);
+		addArgumentCandidateEditor.setText("New Argument Candidate");
+		addArgumentCandidateEditor.setToolTipText("Add Argument Candidate");
+		
+		//Just need one action for edits
+		showCandidateEditor = new OpenCandidateRationaleEditorAction(CandidateRationaleEditor.class, this, false);
+		showCandidateEditor.setText("Edit Rationale");
+		showCandidateEditor.setToolTipText("Edit Rationale Candidate");
 		//
 		// input Rationale
 		//
@@ -980,7 +1014,7 @@ IPropertyChangeListener {
 		viewer.addDoubleClickListener(new IDoubleClickListener() {
 			public void doubleClick(DoubleClickEvent event) {
 				//				doubleClickAction.run();
-				editElement.run();
+				showCandidateEditor.run();
 			}
 		});
 	}
@@ -1034,7 +1068,7 @@ IPropertyChangeListener {
 	 * @param newElement - a flag indicating if we are creating a new RationaleElement
 	 * @return the RationaleElement created or read from the database
 	 */
-	RationaleElement getElement(CandidateTreeParent treeElement, boolean newElement)
+	public RationaleElement getElement(CandidateTreeParent treeElement, boolean newElement)
 	{
 		RationaleElement ourElement = null;
 		RationaleElementType type = treeElement.getType();
@@ -1046,6 +1080,7 @@ IPropertyChangeListener {
 		}
 		return ourElement;
 	}
+	public TreeViewer getViewer() { return viewer; }
 	/*	I'm not sure why this is here - no one seems to call it.
 	 boolean updateAll(TreeParent treeElement)
 	 {
@@ -1295,24 +1330,25 @@ IPropertyChangeListener {
 	 * @param obj - the tree element that was just edited
 	 * @param rElement - the corresponding rationale element
 	 */
-	private void updateTreeElement (CandidateTreeParent obj, RationaleElement rElement)
+	private CandidateTreeParent updateTreeElement (CandidateTreeParent obj, RationaleElement rElement)
 	{
 		//need to check to see if the name has changed
 		if (obj.getName().compareTo(rElement.getName()) != 0)
 		{
 			//			System.out.println("name has changed");
 			//need to save the old and new names and make the changes
-			updateName(obj.getName(), rElement.getName(), rElement.getElementType());
+			updateName(obj, rElement.getName(), rElement.getElementType());
 		}
 		//before we update our tree, we need to make sure we 
 		//do any "structural" updates!
 		CandidateTreeParent newParent = refreshElement((CandidateTreeParent) obj, rElement);
+		refreshBranch(newParent);
 		//now make our updates
 		//update what is displayed in the tree
 		//how do I update if name changes?
 		//		System.out.println(rElement.getName() + ": enabled = " + new Boolean(rElement.getEnabled()).toString());
 		newParent.update(rElement.getName(), rElement.getEnabled());
-
+		return newParent; //correct return value?
 	}
 
 	/**
@@ -1322,10 +1358,10 @@ IPropertyChangeListener {
 	 * @param newName - the new name
 	 * @param type - the rationale element type
 	 */
-	public void updateName(String oldName, String newName, RationaleElementType type)
+	public void updateName(CandidateTreeParent oldParent, String newName, RationaleElementType type)
 	{
 		//shouldn't need to do anything here?
-
+		oldParent.setName(newName);
 	}
 
 	//we are now going to assume that the editing is done by the time
@@ -1759,6 +1795,84 @@ IPropertyChangeListener {
 		{
 			if (child.hasChildNodes()) recurse(child);
 		}
+	}
+	
+	/**
+	 * Update method for editing an existing element.  This has the same function as the
+	 * editElement method, but is designed to be called by the new editors instead (there is
+	 * no display passed from the new editors).
+	 * 
+	 * @param p - the selected tree element being edited
+	 * @param e - the rationale element being edited
+	 */
+	public CandidateTreeParent editUpdate(CandidateTreeParent p, RationaleElement e) {
+		return updateTreeElement(p, e);
+	}
+	
+
+	/**
+	 * Update method for creating a new element using the new editors.  The function
+	 * is similar to the createNewElement method except that this is called from the
+	 * rationale editor itself, creating some minor differences.  This method
+	 * and the editUpdate method, and their "old editor" counterparts, should
+	 * probably be refactored.
+	 * 
+	 * @param p - the parent tree element
+	 * @param e - the new (child) rationale element
+	 * @return the TreeParent object representing the new element - This is done so that
+	 * the rationale editor class that calls this method can get the correct reference to
+	 * the new element and update itself accordingly- otherwise it will be editing the parent!
+	 */
+	public CandidateTreeParent createUpdate(CandidateTreeParent p, RationaleElement e) {
+		RationaleDB db = RationaleDB.getHandle();		
+
+		// Add The Element TO The Tree
+		CandidateTreeParent newEle = addElement(p, e);
+		
+/* There shouldn't be any status for candidate rationale
+		// Update Status Of Element
+		Vector<RationaleStatus> status = null;
+		
+		status = e.updateStatus();
+		
+		// Update Rationale Task List And Database With New Status
+		RationaleTaskList tlist = RationaleTaskList.getHandle();
+		Vector<RationaleStatus> oldStatus = null;
+		UpdateManager manager = UpdateManager.getHandle();
+		
+		oldStatus = manager.getInitialStatus();
+		
+		if( status != null ) {
+			updateStatus(oldStatus, status);
+			db.addStatus(status);
+			tlist.addTasks(status);			
+		}
+		if( oldStatus.size() > 0 ) {
+			db.removeStatus(oldStatus);
+			tlist.removeTasks(oldStatus);
+		}
+		
+	*/	
+		
+		// Refresh Affected Branch Of Tree
+		refreshBranch(p);
+	/*	
+		// Update Anything In Tree Affected By Insertion
+		Vector<TreeObject> treeUpdates = manager.makeUpdates();
+		Iterator<TreeObject> treeIterator = treeUpdates.iterator();
+		while( treeIterator.hasNext() )
+		{
+			getViewer().update((TreeParent)treeIterator.next(), null);
+		}
+		
+		RationaleTreeMap map = RationaleTreeMap.getHandle();		
+		Vector treeObjs = map.getKeys(map.makeKey(e.getName(), e.getElementType()));
+		//if there's more than one we don't care, just get the first
+		viewer.reveal(treeObjs.elementAt(0));
+		viewer.expandToLevel(treeObjs.elementAt(0), 4);
+		
+		*/
+		return newEle;
 	}
 
 }

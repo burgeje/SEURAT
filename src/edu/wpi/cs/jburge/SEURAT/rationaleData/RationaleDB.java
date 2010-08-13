@@ -1033,7 +1033,7 @@ public final class RationaleDB implements Serializable {
 					findQuery = "SELECT status from " 
 						+ RationaleDBUtil.escapeTableName("alternatives") 
 						+ " where "
-						+ "name = '" + alt.getName() + "'";
+						+ "name = '" + RationaleDBUtil.escape(alt.getName()) + "'";
 					rs = stmt.executeQuery(findQuery);
 					if (rs.next()) {
 						String stat = rs.getString("status");
@@ -3626,6 +3626,100 @@ public final class RationaleDB implements Serializable {
 		System.out.println("done adding decisions");
 	}
 
+	/**
+	 * Get all top-level XFeature mapping nodes
+	 * @return the top level elements
+	 */
+	public static Vector<XFeatureMapping> getToplevelMappings() {
+		Vector<XFeatureMapping> xfeaturenodes = new Vector<XFeatureMapping>();
+		Statement stmt = null;
+		ResultSet rs = null;
+		String findQuery = "";
+		try {
+			stmt = conn.createStatement();
+			findQuery = "SELECT * from " 
+				+ RationaleDBUtil.escapeTableName("xfeaturemapping") 
+				+ " where parent < 1";
+			//***			System.out.println(findQuery);
+			rs = stmt.executeQuery(findQuery);
+			while (rs.next()) {
+					int mapID = rs.getInt("id");
+					XFeatureMapping xNode = new XFeatureMapping();
+					xNode.fromDatabase(mapID);
+					xfeaturenodes.add(xNode);
+			}
+
+		} catch (SQLException ex) {
+			reportError(ex, "Error in getting top level xfeature elements", findQuery);
+		} finally {
+			releaseResources(stmt, rs);
+
+		}
+		return xfeaturenodes;
+	}
+	/**
+	 * Get all top-level XFeature mapping nodes
+	 * @return the top level elements
+	 */
+	public static Vector<XFeatureMapping> getDependentMappings(int parent) {
+		Vector<XFeatureMapping> dependent = new Vector<XFeatureMapping>();
+		Statement stmt = null;
+		ResultSet rs = null;
+		String findQuery = "";
+		try {
+			stmt = conn.createStatement();
+			findQuery = "SELECT * from " 
+				+ RationaleDBUtil.escapeTableName("xfeaturemapping") 
+				+ " where parent = " + parent;
+			//***			System.out.println(findQuery);
+			rs = stmt.executeQuery(findQuery);
+			while (rs.next()) {
+					int mapID = rs.getInt("id");
+					XFeatureMapping relArg = new XFeatureMapping();
+					relArg.fromDatabase(mapID);
+					dependent.add(relArg);
+			}
+
+		} catch (SQLException ex) {
+			reportError(ex, "Error in getting dependent xfeature elements", findQuery);
+		} finally {
+			releaseResources(stmt, rs);
+
+		}
+		return dependent;
+	}
+	/**
+	 * Get all top-level XFeature mapping nodes
+	 * @return the top level elements
+	 */
+	public static Vector<XFeatureMapping> getDependentMappings(String xnodeName) {
+		Vector<XFeatureMapping> dependent = new Vector<XFeatureMapping>();
+		Statement stmt = null;
+		ResultSet rs = null;
+		String findQuery = "";
+		try {
+			stmt = conn.createStatement();
+			findQuery = "SELECT * from " 
+				+ RationaleDBUtil.escapeTableName("xfeaturemapping") 
+				+ " where nodename = '" + xnodeName
+				+ "' and rattype = 'Alternative'";
+			//***			System.out.println(findQuery);
+			rs = stmt.executeQuery(findQuery);
+			while (rs.next()) {
+					int mapID = rs.getInt("id");
+					XFeatureMapping relArg = new XFeatureMapping();
+					relArg.fromDatabase(mapID);
+					dependent.add(relArg);
+			}
+
+		} catch (SQLException ex) {
+			reportError(ex, "Error in getting dependent xfeature elements", findQuery);
+		} finally {
+			releaseResources(stmt, rs);
+
+		}
+		return dependent;
+	}
 	/*
 	 public static void  main (String [] argv)
 	 {

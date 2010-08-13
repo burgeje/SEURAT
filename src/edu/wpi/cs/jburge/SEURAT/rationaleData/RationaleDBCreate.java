@@ -791,7 +791,22 @@ public class RationaleDBCreate
 	}
 
 	/**
-	 * Returns the decisions table statement.
+	 * Returns the XFeature mapping table statement
+	 * @return String containing the statement
+	 */
+	
+	public static final String CREATE_XFEATUREMAPPING() {
+		return beginTable("xfeaturemapping")
+		+ tablePart("id INTEGER NOT NULL " + autoIncrement())
+		+ tablePart("ratid INTEGER default NULL")
+		+ tablePart("rattype varchar(255) default NULL")
+		+ tablePart("nodetype varchar(255) default NULL")
+		+ tablePart("nodename varchar(255) default NULL")
+		+ tablePart("parent INTEGER default NULL")
+		+ endTable("PRIMARY KEY (id)");
+	}	
+	/**
+	 * Returns the contingencies table statement.
 	 * @return String containing the statement
 	 */
 	public static final String CREATE_CONTINGENCIES() {
@@ -1053,7 +1068,8 @@ return beginTable("candidates")
 			CREATE_STATUS(),
 			CREATE_TRADEOFFS(),
 			CREATE_CANDIDATES(),
-			CREATE_SOURCES()
+			CREATE_SOURCES(),
+			CREATE_XFEATUREMAPPING()
 		};
 	};
 	

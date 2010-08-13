@@ -3,7 +3,7 @@
 <plugin
    id="SEURAT"
    name="SEURAT Plug-in"
-   version="3.2.2"
+   version="5.0.0.qualifier"
    provider-name="Janet Burge - Miami University"
    class="edu.wpi.cs.jburge.SEURAT.SEURATPlugin">
 
@@ -276,6 +276,14 @@ isGoToNextNavigationTargetKey="ismyAppRecordGoToNextNavigationTarget"
                 icon="icons/newQuest.gif"
                 id="SEURAT.editors.QuestionEditor"
                 name="SEURAT Question Editor">
+          </editor>
+          <editor
+                class="SEURAT.editors.CandidateRationaleEditor"
+                default="true"
+                extensions="seurat_candidate_rationale_editor"
+                icon="icons/Rat.gif"
+                id="SEURAT.editors.CandidateRationaleEditor"
+                name="SEURAT Candidate Rationale Editor">
           </editor>
        </extension>	
        

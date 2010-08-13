@@ -135,8 +135,8 @@ public class Requirement extends RationaleElement implements Serializable {
 			reqE.setAttribute("reqtype", m_type.toString());
 			reqE.setAttribute("artifact", m_artifact);
 			reqE.setAttribute("status", m_status.toString()); // change when we
-																// set up "real"
-																// status
+			// set up "real"
+			// status
 
 			// save our description
 			Element descE = ratDoc.createElement("DR:description");
@@ -189,7 +189,7 @@ public class Requirement extends RationaleElement implements Serializable {
 			stmt = conn.createStatement();
 
 			findQuery = "SELECT name FROM " + "requirements where id = "
-					+ new Integer(reqID).toString();
+			+ new Integer(reqID).toString();
 			// *** System.out.println(findQuery);
 			rs = stmt.executeQuery(findQuery);
 
@@ -313,7 +313,7 @@ public class Requirement extends RationaleElement implements Serializable {
 		try {
 			stmt = conn.createStatement();
 			String findQuery = "SELECT * FROM REQUIREMENTS where name='"
-					+ rName + "'";
+				+ rName + "'";
 			// *** System.out.println(findQuery);
 			rs = stmt.executeQuery(findQuery);
 
@@ -324,7 +324,7 @@ public class Requirement extends RationaleElement implements Serializable {
 				this.description = RationaleDBUtil.decode(rs
 						.getString("description"));
 				this.m_type = (ReqType) ReqType
-						.fromString(rs.getString("type"));
+				.fromString(rs.getString("type"));
 				this.m_status = (ReqStatus) ReqStatus.fromString(rs
 						.getString("status"));
 				this.m_artifact = rs.getString("artifact");
@@ -342,7 +342,7 @@ public class Requirement extends RationaleElement implements Serializable {
 			// Find the ontology entry if it exists
 			if (ontologyID > 0) {
 				String findOntology = "SELECT name FROM OntEntries where "
-						+ "id = " + new Integer(ontologyID).toString();
+					+ "id = " + new Integer(ontologyID).toString();
 				// *** System.out.println(findOntology);
 				rs = stmt.executeQuery(findOntology);
 
@@ -361,10 +361,10 @@ public class Requirement extends RationaleElement implements Serializable {
 			// Now, we need to get the lists of arguments for and against
 			// first For
 			String findFor = "SELECT name FROM ARGUMENTS where "
-					+ "ptype = 'Requirement' and " + "parent = "
-					+ new Integer(this.id).toString() + " and "
-					+ "(type = 'Supports' or " + "type = 'Addresses' or "
-					+ "type = 'Satisfies' or " + "type = 'Pre-Supposed-by')";
+				+ "ptype = 'Requirement' and " + "parent = "
+				+ new Integer(this.id).toString() + " and "
+				+ "(type = 'Supports' or " + "type = 'Addresses' or "
+				+ "type = 'Satisfies' or " + "type = 'Pre-Supposed-by')";
 			// *** System.out.println(findFor);
 			rs = stmt.executeQuery(findFor);
 
@@ -377,10 +377,10 @@ public class Requirement extends RationaleElement implements Serializable {
 
 			// Now, the arguments against
 			String findAgainst = "SELECT name FROM Arguments where "
-					+ "ptype = 'Requirement' and " + "parent = "
-					+ new Integer(this.id).toString() + " and "
-					+ "(type = 'Denies' or " + "type = 'Violates' or "
-					+ "type = 'Opposed-by')";
+				+ "ptype = 'Requirement' and " + "parent = "
+				+ new Integer(this.id).toString() + " and "
+				+ "(type = 'Denies' or " + "type = 'Violates' or "
+				+ "type = 'Opposed-by')";
 			// *** System.out.println(findAgainst);
 			rs = stmt.executeQuery(findAgainst);
 			m_argumentsAgainst.clear();
@@ -393,7 +393,7 @@ public class Requirement extends RationaleElement implements Serializable {
 			// find history
 			// no, not last - need history too
 			String findQuery5 = "SELECT * from HISTORY where ptype = 'Requirement' and "
-					+ "parent = " + Integer.toString(id);
+				+ "parent = " + Integer.toString(id);
 			// *** System.out.println(findQuery5);
 			rs = stmt.executeQuery(findQuery5);
 			while (rs.next()) {
@@ -407,7 +407,7 @@ public class Requirement extends RationaleElement implements Serializable {
 
 		} catch (SQLException ex) {
 			RationaleDB.reportError(ex, "Requirement.fromDatabase(String)",
-					"SQL Error");
+			"SQL Error");
 		}
 
 		finally {
@@ -445,8 +445,8 @@ public class Requirement extends RationaleElement implements Serializable {
 
 					// now we need up update our ontology entry, and that's it!
 					String findQuery3 = "SELECT id FROM OntEntries where name='"
-							+ RationaleDBUtil.escape(this.ontology.getName())
-							+ "'";
+						+ RationaleDBUtil.escape(this.ontology.getName())
+						+ "'";
 					rs = stmt.executeQuery(findQuery3);
 					// *** System.out.println(findQuery3);
 
@@ -461,17 +461,17 @@ public class Requirement extends RationaleElement implements Serializable {
 				}
 
 				String updateParent = "UPDATE Requirements " + "SET name = '"
-						+ RationaleDBUtil.escape(this.name) + "', "
-						+"parent="
-						+new Integer(parent).toString()
-						+ ",description = '"
-						+ RationaleDBUtil.escape(this.description) + "', "
-						+ "type = '" + this.m_type.toString() + "', "
-						+ "status = '" + this.m_status.toString() + "', "
-						+ "enabled = '" + enabledStr + "', " + "importance = '"
-						+ this.importance.toString() + "', " + "ontology = "
-						+ new Integer(ontid).toString() + " WHERE " + "id = "
-						+ this.id + " ";
+				+ RationaleDBUtil.escape(this.name) + "', "
+				+"parent="
+				+new Integer(parent).toString()
+				+ ",description = '"
+				+ RationaleDBUtil.escape(this.description) + "', "
+				+ "type = '" + this.m_type.toString() + "', "
+				+ "status = '" + this.m_status.toString() + "', "
+				+ "enabled = '" + enabledStr + "', " + "importance = '"
+				+ this.importance.toString() + "', " + "ontology = "
+				+ new Integer(ontid).toString() + " WHERE " + "id = "
+				+ this.id + " ";
 
 				// System.out.println(updateParent);
 				stmt.execute(updateParent);
@@ -493,13 +493,13 @@ public class Requirement extends RationaleElement implements Serializable {
 					parentTSt = ptype.toString();
 				}
 				String newReqSt = "INSERT INTO Requirements "
-						+ "(name, description, type, status, ptype, parent, importance, enabled) "
-						+ "VALUES ('" + RationaleDBUtil.escape(this.name)
-						+ "', '" + RationaleDBUtil.escape(this.description)
-						+ "', '" + this.m_type.toString() + "', '"
-						+ this.m_status.toString() + "', '" + parentTSt + "', "
-						+ parentSt + ", '" + this.importance.toString()
-						+ "', '" + enabledStr + "')";
+					+ "(name, description, type, status, ptype, parent, importance, enabled) "
+					+ "VALUES ('" + RationaleDBUtil.escape(this.name)
+					+ "', '" + RationaleDBUtil.escape(this.description)
+					+ "', '" + this.m_type.toString() + "', '"
+					+ this.m_status.toString() + "', '" + parentTSt + "', "
+					+ parentSt + ", '" + this.importance.toString()
+					+ "', '" + enabledStr + "')";
 				// System.out.println(newReqSt);
 				stmt.execute(newReqSt);
 
@@ -508,7 +508,7 @@ public class Requirement extends RationaleElement implements Serializable {
 
 			// now, we need to get our ID
 			String findQuery2 = "SELECT id FROM requirements where name='"
-					+ this.name + "'";
+				+ RationaleDBUtil.escape(this.name) + "'";
 			rs = stmt.executeQuery(findQuery2);
 
 			if (rs.next()) {
@@ -522,7 +522,7 @@ public class Requirement extends RationaleElement implements Serializable {
 			if (ontology != null) {
 				// now we need up update our ontology entry, and that's it!
 				String findQuery3 = "SELECT id FROM OntEntries where name='"
-						+ RationaleDBUtil.escape(this.ontology.getName()) + "'";
+					+ RationaleDBUtil.escape(this.ontology.getName()) + "'";
 				rs = stmt.executeQuery(findQuery3);
 				// *** System.out.println(findQuery3);
 				int ontid;
@@ -533,8 +533,8 @@ public class Requirement extends RationaleElement implements Serializable {
 					ontid = 0;
 				}
 				String updateOnt = "UPDATE Requirements R "
-						+ "SET R.ontology = " + new Integer(ontid).toString()
-						+ " WHERE " + "R.id = " + ourid + " ";
+					+ "SET R.ontology = " + new Integer(ontid).toString()
+					+ " WHERE " + "R.id = " + ourid + " ";
 				// *** System.out.println(updateOnt);
 				stmt.execute(updateOnt);
 			}
@@ -621,7 +621,7 @@ public class Requirement extends RationaleElement implements Serializable {
 
 			// now, we need to get our ID
 			String findQuery2 = "SELECT id FROM requirements where name='"
-					+ this.name + "'";
+				+ this.name + "'";
 			rs = stmt.executeQuery(findQuery2);
 
 			if (rs.next()) {
@@ -635,7 +635,7 @@ public class Requirement extends RationaleElement implements Serializable {
 			if (ontology != null) {
 				// now we need up update our ontology entry, and that's it!
 				String findQuery3 = "SELECT id FROM OntEntries where name='"
-						+ RationaleDBUtil.escape(this.ontology.getName()) + "'";
+					+ RationaleDBUtil.escape(this.ontology.getName()) + "'";
 				rs = stmt.executeQuery(findQuery3);
 				// *** System.out.println(findQuery3);
 				int ontid;
@@ -646,8 +646,8 @@ public class Requirement extends RationaleElement implements Serializable {
 					ontid = 0;
 				}
 				String updateOnt = "UPDATE Requirements R "
-						+ "SET R.ontology = " + new Integer(ontid).toString()
-						+ " WHERE " + "R.id = " + ourid + " ";
+					+ "SET R.ontology = " + new Integer(ontid).toString()
+					+ " WHERE " + "R.id = " + ourid + " ";
 				// *** System.out.println(updateOnt);
 				stmt.execute(updateOnt);
 			}
@@ -691,7 +691,7 @@ public class Requirement extends RationaleElement implements Serializable {
 			try {
 				stmt = conn.createStatement();
 				findQuery = "SELECT id, parent FROM requirements where name='"
-						+ this.name + "'";
+					+ this.name + "'";
 				System.out.println(findQuery);
 				rs = stmt.executeQuery(findQuery);
 
@@ -704,7 +704,7 @@ public class Requirement extends RationaleElement implements Serializable {
 			} catch (SQLException ex) {
 				// handle any errors
 				RationaleDB
-						.reportError(ex, "Requirement.inDatabase", findQuery);
+				.reportError(ex, "Requirement.inDatabase", findQuery);
 			} finally {
 				RationaleDB.releaseResources(stmt, rs);
 			}
@@ -721,7 +721,7 @@ public class Requirement extends RationaleElement implements Serializable {
 	public boolean display(Display disp) {
 		EditRequirement ar = new EditRequirement(disp, this, false);
 		String msg = "Edited requirement " + this.getName() + " "
-				+ ar.getCanceled();
+		+ ar.getCanceled();
 		DataLog d = DataLog.getHandle();
 		d.writeData(msg);
 		// System.out.println("this after = " + this.getStatus().toString());
@@ -759,7 +759,7 @@ public class Requirement extends RationaleElement implements Serializable {
 		if ((this.m_argumentsAgainst.size() > 0)
 				|| (this.m_argumentsFor.size() > 0)) {
 			MessageDialog.openError(new Shell(), "Delete Error",
-					"Can't delete when there are sub-elements.");
+			"Can't delete when there are sub-elements.");
 			return true;
 		}
 		RationaleDB db = RationaleDB.getHandle();
@@ -767,13 +767,13 @@ public class Requirement extends RationaleElement implements Serializable {
 		int argCount = db.countArgReferences(this);
 		if (argCount > 0) {
 			MessageDialog.openError(new Shell(), "Delete Error",
-					"Can't delete when there are referring arguments.");
+			"Can't delete when there are referring arguments.");
 		}
 
 		// are there any dependencies on this item?
 		if (db.dependentAlternatives(this)) {
 			MessageDialog.openError(new Shell(), "Delete Error",
-					"Can't delete when there are dependencies.");
+			"Can't delete when there are dependencies.");
 			return true;
 		}
 		db.deleteRationaleElement(this);
