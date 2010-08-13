@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?eclipse version="3.2"?>
 <plugin
-   id="SEURAT"
+   id="SEURAT" 
    name="SEURAT Plug-in"
    version="5.0.0.qualifier"
    provider-name="Janet Burge - Miami University"
