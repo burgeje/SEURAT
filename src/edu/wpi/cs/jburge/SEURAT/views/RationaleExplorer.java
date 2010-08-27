@@ -11,6 +11,7 @@ import java.io.StringWriter;
 import java.util.*;
 import java.util.zip.ZipException;
 
+import javax.swing.JOptionPane;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -2093,6 +2094,11 @@ public class RationaleExplorer extends ViewPart implements ISelectionListener, I
 			//if there is no alternative selected, provide a select items of alternative
 			else{
 				SelectItem selectItem = new SelectItem(ourDisplay, RationaleElementType.fromString("Alternative"));
+				//DEBUG: Is this where the infinite loop is? (YQ)
+				if (selectItem.getNewItem() == null){
+					JOptionPane.showMessageDialog(null, "Detected a NULL item on RationalExplorer.java line 2099", "NULL ITEM ERROR", JOptionPane.ERROR_MESSAGE);
+					System.out.println("NULL Pointer at line 2099 in RationaleExplorer.java Expect Crashes");
+				}
 				alternativeName=selectItem.getNewItem().getName();
 			}
 			
