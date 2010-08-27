@@ -2217,8 +2217,8 @@ public final class RationaleDB implements Serializable {
 				int pid = 0;
 				findQuery = "SELECT id FROM " 
 					+ RationaleDBUtil.escapeTableName(getTableName(parentType))
-					+ "  WHERE name= \"" + RationaleDBUtil.escape(parentName)
-					+ "\"";
+					+ "  WHERE name= '" + RationaleDBUtil.escape(parentName)
+					+ "'";
 				// changed ' to " (YQ)
 				rs = stmt.executeQuery(findQuery);
 				if (rs.next()) {
