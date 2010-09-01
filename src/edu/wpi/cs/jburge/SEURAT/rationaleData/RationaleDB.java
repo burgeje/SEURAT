@@ -201,8 +201,8 @@ public final class RationaleDB implements Serializable {
 		try {
 			// The newInstance() call is a work around for some
 			// broken Java implementations
-
-			Class.forName("com.mysql.jdbc.Driver").newInstance();
+			com.mysql.jdbc.Driver.class.newInstance();
+			//Class.forName("com.mysql.jdbc.Driver").newInstance();
 		} catch (Exception ex) {
 			// handle the error
 			int i = 0;
@@ -303,9 +303,9 @@ public final class RationaleDB implements Serializable {
 		props.put("databaseName", l_dbPath);
 
 		try {
-			final String DRIVER = "org.apache.derby.jdbc.EmbeddedDriver";
-
-			Class.forName(DRIVER).newInstance();
+			//final String DRIVER = "org.apache.derby.jdbc.EmbeddedDriver";
+			org.apache.derby.jdbc.EmbeddedDriver.class.newInstance();
+			//Class.forName(DRIVER).newInstance();
 		} catch (Exception ex) {
 			// handle the error
 			int i = 0;
@@ -387,7 +387,8 @@ public final class RationaleDB implements Serializable {
 			}
 		}
 		
-		l_stmt.close();		
+		l_stmt.close();	
+
 	}
 
 	/**
@@ -2219,7 +2220,6 @@ public final class RationaleDB implements Serializable {
 					+ RationaleDBUtil.escapeTableName(getTableName(parentType))
 					+ "  WHERE name= '" + RationaleDBUtil.escape(parentName)
 					+ "'";
-				// changed ' to " (YQ)
 				rs = stmt.executeQuery(findQuery);
 				if (rs.next()) {
 					pid = rs.getInt("id");
