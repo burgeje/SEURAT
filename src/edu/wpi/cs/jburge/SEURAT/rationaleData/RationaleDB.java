@@ -436,8 +436,8 @@ public final class RationaleDB implements Serializable {
 				+ " where parentName = ?");
 			m_ontEntriesQuery.setEscapeProcessing(true);
 		} catch( SQLException eError ) {
-			int doNothing;
-			doNothing = 0;
+			//int doNothing;
+			//doNothing = 0;
 		}
 		try {
 			if( m_ontEntryFromDB != null )
@@ -448,8 +448,8 @@ public final class RationaleDB implements Serializable {
 					+ " where name = ?");
 			m_ontEntryFromDB.setEscapeProcessing(true);
 		} catch( SQLException eError ) {
-			int doNothing;
-			doNothing = 0;
+			//int doNothing;
+			//doNothing = 0;
 		}
 	}
 	
@@ -868,7 +868,7 @@ public final class RationaleDB implements Serializable {
 			}
 
 			if (argV.size() > 0) {
-				Iterator argI = argV.iterator();
+				Iterator<Integer> argI = argV.iterator();
 				while (argI.hasNext()) {
 					Argument relArg = new Argument();
 					relArg.fromDatabase(((Integer) argI.next()).intValue());
@@ -911,7 +911,7 @@ public final class RationaleDB implements Serializable {
 			}
 
 			if (argV.size() > 0) {
-				Iterator argI = argV.iterator();
+				Iterator<Integer> argI = argV.iterator();
 				while (argI.hasNext()) {
 					Argument relArg = new Argument();
 					relArg.fromDatabase(((Integer) argI.next()).intValue());
@@ -960,7 +960,7 @@ public final class RationaleDB implements Serializable {
 			}
 
 			if (altV.size() > 0) {
-				Iterator altI = altV.iterator();
+				Iterator<Integer> altI = altV.iterator();
 				while (altI.hasNext()) {
 					Alternative relAlt = new Alternative();
 					relAlt.fromDatabase(((Integer) altI.next()).intValue());
@@ -1014,18 +1014,18 @@ public final class RationaleDB implements Serializable {
 	 * @param parentType - the type of the parent
 	 * @return a vector of alternatives
 	 */
-	public Vector getAlternatives(String parentName,
+	public Vector<TreeParent> getAlternatives(String parentName,
 			RationaleElementType parentType) {
 		String findQuery = "";
 		//    	return getElements(parentName, "alternatives", parentType);
-		Vector altTree = getTreeElements(parentName, "alternatives", parentType);
+		Vector<TreeParent> altTree = getTreeElements(parentName, "alternatives", parentType);
 		if (altTree != null) {
 			Statement stmt = null;
 			ResultSet rs = null;
 			try {
 				stmt = conn.createStatement();
 				//we need to find out if we are selected
-				Enumeration alts = altTree.elements();
+				Enumeration<TreeParent> alts = altTree.elements();
 				while (alts.hasMoreElements()) {
 					TreeParent alt = (TreeParent) alts.nextElement();
 					alt.setActive(false);
@@ -1063,7 +1063,7 @@ public final class RationaleDB implements Serializable {
 	 * @param parentType - the type of the parent
 	 * @return the arguments
 	 */
-	public Vector getArguments(String parentName,
+	public Vector<TreeParent> getArguments(String parentName,
 			RationaleElementType parentType) {
 		//    	return getElements(parentName, "arguments", parentType);
 		return getTreeElements(parentName, "arguments", parentType);
@@ -1091,7 +1091,7 @@ public final class RationaleDB implements Serializable {
 				//				rs.close();
 			}
 
-			Iterator decI = decNames.iterator();
+			Iterator<String> decI = decNames.iterator();
 			while (decI.hasNext()) {
 				Decision dec = new Decision();
 				dec.fromDatabase((String) decI.next());
@@ -1294,7 +1294,7 @@ public final class RationaleDB implements Serializable {
 			}
 
 			findQuery = "SELECT name FROM " 
-				+ RationaleDBUtil.escapeTableName(this.getTableName(elementType)) 
+				+ RationaleDBUtil.escapeTableName(RationaleDB.getTableName(elementType)) 
 				+ " WHERE id = " + new Integer(pid).toString();
 
 			rs = stmt.executeQuery(findQuery);
@@ -1404,7 +1404,7 @@ public final class RationaleDB implements Serializable {
 			}
 			rs.close();
 			//Now, finally, get our children
-			Enumeration ids = children.elements();
+			Enumeration<String> ids = children.elements();
 			while (ids.hasMoreElements()) {
 				findQuery = "SELECT name FROM "
 					+ RationaleDBUtil.escapeTableName("ontentries") + " "
@@ -1532,7 +1532,7 @@ public final class RationaleDB implements Serializable {
 				rs.close();
 			}
 			//Now, finally, get our children
-			Enumeration ids = children.elements();
+			Enumeration<String> ids = children.elements();
 			while (ids.hasMoreElements()) {
 				findQuery = "SELECT name FROM " 
 					+ RationaleDBUtil.escapeTableName("CONSTRAINTS") + " " 
@@ -1646,7 +1646,7 @@ public final class RationaleDB implements Serializable {
 			}
 			rs.close();
 			//Now, finally, get our children
-			Enumeration ids = children.elements();
+			Enumeration<String> ids = children.elements();
 			while (ids.hasMoreElements()) {
 				findQuery = "SELECT name FROM " 
 					+ RationaleDBUtil.escapeTableName("DesignComponents") + " " 
@@ -1790,7 +1790,7 @@ public final class RationaleDB implements Serializable {
 			}
 			rs.close();
 			//Now, finally, get our children
-			Enumeration ids = children.elements();
+			Enumeration<String> ids = children.elements();
 			while (ids.hasMoreElements()) {
 				findQuery = "SELECT name FROM "
 					+ RationaleDBUtil.escape("CONSTRAINTS") + " "
@@ -1858,7 +1858,7 @@ public final class RationaleDB implements Serializable {
 			}
 			rs.close();
 			//Now, finally, get our children
-			Enumeration ids = children.elements();
+			Enumeration<String> ids = children.elements();
 			while (ids.hasMoreElements()) {
 				findQuery = "SELECT name FROM "
 					+ RationaleDBUtil.escapeTableName("DesignComponents") + " "
@@ -1928,7 +1928,7 @@ public final class RationaleDB implements Serializable {
 	 */
 	public Vector<String> getNameList(RationaleElementType type) {
 		Vector<String> ourElements = new Vector<String>();
-		String tableName = this.getTableName(type);
+		String tableName = RationaleDB.getTableName(type);
 		String findQuery = "";
 		Statement stmt = null;
 		ResultSet rs = null;
@@ -1970,7 +1970,7 @@ public final class RationaleDB implements Serializable {
 	 */
 	public Vector<String> getNameList(RationaleElementType type, String sstring) {
 		Vector<String> ourElements = new Vector<String>();
-		String tableName = this.getTableName(type);
+		String tableName = RationaleDB.getTableName(type);
 		String findQuery = "";
 		Statement stmt = null;
 		ResultSet rs = null;
@@ -2014,9 +2014,9 @@ public final class RationaleDB implements Serializable {
 		
 		boolean exists;
 		exists = false;
-		int id = -1;
+		//int id = -1;
 		
-		Vector<String> ourElements = new Vector<String>();
+		//Vector<String> ourElements = new Vector<String>();
 		String tableName = RationaleDB.getTableName(type);
 		String findQuery = "";
 		Statement stmt = null;
@@ -2031,7 +2031,7 @@ public final class RationaleDB implements Serializable {
 			rs = stmt.executeQuery(findQuery);
 
 			while (rs.next()) {
-				int nextID = rs.getInt("id");
+				//int nextID = rs.getInt("id");
 				exists = true;
 			}
 			rs.close();
@@ -2231,19 +2231,20 @@ public final class RationaleDB implements Serializable {
 							+ " for name " + parentName);
 					return (new Vector<TreeParent>());
 				}
-
+				/*already have parentType==null in the front. This can't happen.
 				if (parentType == null) {
 					findQuery = "SELECT name FROM " 
 						+ RationaleDBUtil.escapeTableName(elementType) + " "
 						+ " WHERE parent = " + new Integer(pid).toString()
 						+ " ORDER BY name ASC";
 				} else {
+				*/
 					findQuery = "SELECT name FROM " 
 						+ RationaleDBUtil.escapeTableName(elementType) + " "
 						+ " WHERE parent = " + new Integer(pid).toString()
 						+ " AND ptype = '" + parentType.toString()
 						+ "' ORDER BY name ASC";
-				}
+				//}
 
 			}
 			if (error) {
@@ -2265,7 +2266,7 @@ public final class RationaleDB implements Serializable {
 					|| (type == RationaleElementType.DECISION)
 					|| (type == RationaleElementType.ALTERNATIVE)) {
 
-				Enumeration stats = treeElementList.elements();
+				Enumeration<TreeParent> stats = treeElementList.elements();
 				while (stats.hasMoreElements()) {
 					TreeParent element = (TreeParent) stats.nextElement();
 					RationaleErrorLevel ourStatus = getActiveStatus(element
@@ -2299,7 +2300,7 @@ public final class RationaleDB implements Serializable {
 		String findQuery = "";
 		Statement stmt = null;
 		ResultSet rs = null;
-		boolean error = false;
+		//boolean error = false;
 		try {
 			stmt = conn.createStatement();
 			findQuery = "Select name FROM candidates where type = '" + 
@@ -2565,7 +2566,7 @@ public final class RationaleDB implements Serializable {
 		tradeoffNames = getTradeoffs(RationaleElementType.TRADEOFF);
 		tradeoffNames.addAll(getTradeoffs(RationaleElementType.COOCCURRENCE));
 
-		Iterator tradeI = tradeoffNames.iterator();
+		Iterator<String> tradeI = tradeoffNames.iterator();
 		while (tradeI.hasNext()) {
 			Tradeoff ourTrade = new Tradeoff();
 			ourTrade.fromDatabase((String) tradeI.next());
@@ -2782,7 +2783,7 @@ public final class RationaleDB implements Serializable {
 	 * @param newStatus - the status element
 	 */
 	public void addStatus(Vector<RationaleStatus> newStatus) {
-		Iterator statI = newStatus.iterator();
+		Iterator<RationaleStatus> statI = newStatus.iterator();
 		while (statI.hasNext()) {
 			RationaleStatus stat = (RationaleStatus) statI.next();
 			if (stat.getParent() <= 0) {
@@ -2801,7 +2802,7 @@ public final class RationaleDB implements Serializable {
 	 */
 	public void removeStatus(Vector<RationaleStatus> oldStatus) {
 		String updateStr = "";
-		Iterator statI = oldStatus.iterator();
+		Iterator<RationaleStatus> statI = oldStatus.iterator();
 		while (statI.hasNext()) {
 			RationaleStatus stat = (RationaleStatus) statI.next();
 			Statement stmt = null;
@@ -3032,7 +3033,7 @@ public final class RationaleDB implements Serializable {
 		try {
 			stmt = conn.createStatement();
 			deleteCmd = "DELETE FROM "
-				+ RationaleDBUtil.escapeTableName(this.getTableName(ele.getElementType()))
+				+ RationaleDBUtil.escapeTableName(RationaleDB.getTableName(ele.getElementType()))
 				+ " where id = "
 				+ new Integer(id).toString();
 			//		 System.out.println(deleteCmd);
@@ -3603,7 +3604,7 @@ public final class RationaleDB implements Serializable {
 //	private void addXMLRequirements(Document ratDoc)
 	private void addXMLRequirements()
 	{
-		Enumeration reqs = requirements.elements();
+		Enumeration<Requirement> reqs = requirements.elements();
 		while (reqs.hasMoreElements())
 		{
 			Requirement req = (Requirement) reqs.nextElement();
@@ -3616,7 +3617,7 @@ public final class RationaleDB implements Serializable {
 	private void addXMLDecisions()
 	{
 
-		Enumeration decs = decisions.elements();
+		Enumeration<Decision> decs = decisions.elements();
 		while (decs.hasMoreElements())
 		{
 			Decision dec = (Decision) decs.nextElement();
