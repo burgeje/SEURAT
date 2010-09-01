@@ -611,7 +611,7 @@ public final class RationaleDB implements Serializable {
 	 * @param parentType - type of the parent element
 	 * @return a vector of the children elements
 	 */
-	public Vector getRequirements(String parentName,
+	public Vector<TreeParent> getRequirements(String parentName,
 			RationaleElementType parentType) {
 		return getTreeElements(parentName, "requirements", parentType);
 	}
@@ -623,7 +623,7 @@ public final class RationaleDB implements Serializable {
 	 * @param parentType - type of the parent element
 	 * @return a vector of the children elements
 	 */
-	public Vector getContingencies(String parentName,
+	public Vector<TreeParent> getContingencies(String parentName,
 			RationaleElementType parentType) {
 		return getTreeElements(parentName, "contingencies", parentType);
 	}
@@ -634,7 +634,7 @@ public final class RationaleDB implements Serializable {
 	 * @param parentType - type of the parent element
 	 * @return a vector of the children elements
 	 */
-	public Vector getDesigners(String parentName,
+	public Vector<TreeParent> getDesigners(String parentName,
 			RationaleElementType parentType) {
 		return getTreeElements(parentName, "designerprofiles", parentType);
 	}
@@ -776,7 +776,7 @@ public final class RationaleDB implements Serializable {
 	 * @param parentType - the parent type
 	 * @return the list of decisions
 	 */
-	public Vector getDecisions(String parentName,
+	public Vector<TreeParent> getDecisions(String parentName,
 			RationaleElementType parentType) {
 		//		return getElements(parentName, "decisions", parentType);
 		return getTreeElements(parentName, "decisions", parentType);
@@ -788,7 +788,7 @@ public final class RationaleDB implements Serializable {
 	 * @param parentType - the parent type
 	 * @return the list of questions
 	 */
-	public Vector getQuestions(String parentName,
+	public Vector<TreeParent> getQuestions(String parentName,
 			RationaleElementType parentType) {
 		//   	return getElements(parentName, "questions", parentType);
 		return getTreeElements(parentName, "questions", parentType);
@@ -825,10 +825,10 @@ public final class RationaleDB implements Serializable {
 			}
 
 			if (altV.size() > 0) {
-				Iterator altI = altV.iterator();
+				Iterator<Integer> altI = altV.iterator();
 				while (altI.hasNext()) {
 					Alternative relAlt = new Alternative();
-					relAlt.fromDatabase(((Integer) altI.next()).intValue());
+					relAlt.fromDatabase((altI.next()).intValue());
 					dependent.add(relAlt);
 				}
 			}
