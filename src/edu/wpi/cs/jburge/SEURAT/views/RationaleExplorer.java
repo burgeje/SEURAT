@@ -9,9 +9,7 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.*;
-import java.util.zip.ZipException;
 
-import javax.swing.JOptionPane;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -31,7 +29,6 @@ import org.eclipse.jface.viewers.*;
 import org.eclipse.jface.window.Window;
 import org.eclipse.jface.action.*;
 import org.eclipse.jface.dialogs.InputDialog;
-import org.eclipse.jface.dialogs.PopupDialog;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.util.IPropertyChangeListener;
 import org.eclipse.jface.util.PropertyChangeEvent;
@@ -65,12 +62,10 @@ import edu.wpi.cs.jburge.SEURAT.tasks.RationaleTaskList;
 
 import org.eclipse.core.resources.IFile;
 import edu.wpi.cs.jburge.SEURAT.SEURATResourcePropertiesManager;
-import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.core.resources.IWorkspaceRunnable;
 import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.CoreException;
-import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jface.action.Action;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -78,7 +73,6 @@ import org.w3c.dom.Node;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
-import com.sun.org.apache.xml.internal.dtm.ref.DTMDefaultBaseIterators.ChildrenIterator;
 
 import edu.wpi.cs.jburge.SEURAT.rationaleData.Argument;
 import SEURAT.editors.*;
@@ -97,8 +91,12 @@ import edu.wpi.cs.jburge.SEURAT.decorators.*;
   * <p>
   */
 
+
+
 public class RationaleExplorer extends ViewPart implements ISelectionListener, IRationaleUpdateEventListener,
 	IPropertyChangeListener{
+	
+
 	
 	/**
 	 * The view into the tree of rationale
@@ -291,7 +289,7 @@ public class RationaleExplorer extends ViewPart implements ISelectionListener, I
 	class NameSorter extends ViewerSorter {
 	}
 	
-	
+
 	
 	/**
 	 * The constructor.
@@ -2095,8 +2093,10 @@ public class RationaleExplorer extends ViewPart implements ISelectionListener, I
 			else{
 				SelectItem selectItem = new SelectItem(ourDisplay, RationaleElementType.fromString("Alternative"));
 				//DEBUG: Is this where the infinite loop is? (YQ)
+				if (selectItem == null) {
+					System.out.println("NULL selectItem at line 2098");
+					}
 				if (selectItem.getNewItem() == null){
-					JOptionPane.showMessageDialog(null, "Detected a NULL item on RationalExplorer.java line 2099", "NULL ITEM ERROR", JOptionPane.ERROR_MESSAGE);
 					System.out.println("NULL Pointer at line 2099 in RationaleExplorer.java Expect Crashes");
 				}
 				alternativeName=selectItem.getNewItem().getName();
@@ -2275,6 +2275,13 @@ public class RationaleExplorer extends ViewPart implements ISelectionListener, I
 //					***						System.out.println("added our property");  
 					// Refresh the label decorations... Change it to DemoDecoratorWithImageCaching if image caching should be used
 //					((TreeParent) obj).setStatus(RationaleErrorLevel.ERROR);
+					//Is this the inf loop? (YQ)
+					if (obj == null){
+						System.out.println("CRITICAL ERROR: Obj is null at RationaleExplorer.java, line 2280");
+					}
+					if (viewer == null){
+						System.out.println("Viewer is null at RationaleExplorer.java line 2283");
+					}
 					viewer.update((TreeParent) obj, null);
 					SEURATLightWeightDecorator.getRatDecorator().refresh();
 //					***						System.out.println("refresh");
