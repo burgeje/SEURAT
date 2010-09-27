@@ -67,6 +67,14 @@
             category="edu.wpi.cs.jburge.SEURAT"
             class="edu.wpi.cs.jburge.SEURAT.views.RationaleTaskView"
             id="edu.wpi.cs.jburge.SEURAT.views.RationaleTaskView">
+      </view>
+      <view
+            category="edu.wpi.cs.jburge.SEURAT"
+            class="edu.wpi.cs.jburge.SEURAT.views.PatternLibrary"
+            icon="icons/Rat.gif"
+            id="edu.wpi.cs.jburge.SEURAT.patternlibrary"
+            name="Pattern Library"
+            restorable="true">
       </view>   
    </extension>
     

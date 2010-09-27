@@ -97,6 +97,18 @@ public final class RationaleElementFactory {
 		{
 			return new CandidateRationale(RationaleElementType.NONE);
 		}
+		else if (type == RationaleElementType.PATTERN)
+		{
+			return new Pattern();
+		}
+		else if (type == RationaleElementType.PATTERNDECISION)
+		{
+			return new PatternDecision();
+		}
+		else if (type == RationaleElementType.ALTERNATIVEPATTERN)
+		{
+			return new AlternativePattern();
+		}
 		else
 		{
 			System.out.println("Couldn't create item!!!");

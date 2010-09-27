@@ -5,6 +5,7 @@ import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IPersistableElement;
 
 import edu.wpi.cs.jburge.SEURAT.rationaleData.*;
+import edu.wpi.cs.jburge.SEURAT.views.PatternLibrary;
 import edu.wpi.cs.jburge.SEURAT.views.TreeParent;
 import edu.wpi.cs.jburge.SEURAT.views.RationaleExplorer;
 
@@ -14,7 +15,11 @@ import edu.wpi.cs.jburge.SEURAT.views.RationaleExplorer;
  * TreeParent representation of the element.  Also provides several other functions.
  * The various editors contain inner classes that extend this base class.
  */
-public abstract class RationaleEditorInput implements IEditorInput {		
+public abstract class RationaleEditorInput implements IEditorInput {	
+	/**
+	 * The pattern library which opened this editor
+	 */	
+	private PatternLibrary patternLib;
 	/**
 	 * The rationale explorer which opened this editor
 	 */
@@ -54,6 +59,20 @@ public abstract class RationaleEditorInput implements IEditorInput {
 			boolean pNew) 
 	{
 		explorer = pExplorer;
+		parentTree = pTree;
+		parentElement = pParent;
+		targetElement = pTarget;
+		creating = pNew;
+	}
+	
+	public RationaleEditorInput(
+			PatternLibrary patternLib,
+			TreeParent pTree,
+			RationaleElement pParent, 
+			RationaleElement pTarget, 
+			boolean pNew) 
+	{
+		this.patternLib = patternLib;
 		parentTree = pTree;
 		parentElement = pParent;
 		targetElement = pTarget;
@@ -101,6 +120,9 @@ public abstract class RationaleEditorInput implements IEditorInput {
 		}
 		if( adapter == RationaleElement.class ) {
 			return parentElement;
+		}
+		if( adapter == PatternLibrary.class){
+			return patternLib;
 		}
 		
 		return null;

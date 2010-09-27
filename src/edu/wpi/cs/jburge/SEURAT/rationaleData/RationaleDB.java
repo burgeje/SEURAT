@@ -2,6 +2,7 @@ package edu.wpi.cs.jburge.SEURAT.rationaleData;
 
 import java.util.*;
 import java.io.*; //needed to be serializable
+
 import javax.xml.transform.*;
 import org.w3c.dom.*;
 import javax.xml.transform.stream.StreamResult;
@@ -113,7 +114,8 @@ public final class RationaleDB implements Serializable {
 	 */
 	private static String ontFile = SEURATPlugin.getDefault().getStateLocation()
 		.addTrailingSeparator().toOSString() + "argument-ontology.xml";
-		
+	private static String patternFile = SEURATPlugin.getDefault().getStateLocation()
+	.addTrailingSeparator().toOSString() + "patterns.xml";
 	/**
 	 * The default database name
 	 */
@@ -388,6 +390,93 @@ public final class RationaleDB implements Serializable {
 		}
 		
 		l_stmt.close();	
+		
+		// Now import the pattern library
+		boolean importPatternSuccess = false;
+		if (new File(patternFile).exists()){
+			// have not been implemented
+			importPatternSuccess = RationaleDBUtil.importPatterns(patternFile);
+		}
+		if (!importPatternSuccess){		
+			
+			if( store.getString(PreferenceConstants.P_DATABASETYPE).equals(
+					PreferenceConstants.DatabaseType.DERBY
+			)){
+				PreparedStatement ps = conn.prepareStatement("INSERT INTO patterns (name, type, description,problem, context, solution, implementation,example,url) values (?,?,?,?,?,?,?,?,?)");
+				importPatterns(ps);
+				ps.close();
+			}else if(store.getString(PreferenceConstants.P_DATABASETYPE).equals(
+					PreferenceConstants.DatabaseType.MYSQL
+			)){
+
+
+				String[] l_patternQueries = RationaleDBCreate.getPatternQueries();
+				for (String l_patternQuery: l_patternQueries){
+					try {
+						l_stmt.execute(l_patternQuery);
+					} catch (SQLException e) {
+						int i = 0;
+						i++;
+						throw e;
+					}				
+				}
+			}
+			
+			String[] l_patternDecisionQueries = RationaleDBCreate.getPatternDecisionQueries();
+			for (String l_patternDecisionQuery: l_patternDecisionQueries){
+				try {
+					l_stmt.execute(l_patternDecisionQuery);
+				} catch (SQLException e) {
+					int i = 0;
+					i++;
+					throw e;
+				}				
+			}
+			
+			String[] l_patternOntEntryQueries = RationaleDBCreate.getPatternOntEntryQueries();
+			for (String l_patternOntEntryQuery: l_patternOntEntryQueries){
+				try {
+					l_stmt.execute(l_patternOntEntryQuery);
+				} catch (SQLException e) {
+					int i = 0;
+					i++;
+					throw e;
+				}				
+			}
+			
+			String[] l_patternDecisionRelationshipQueries = RationaleDBCreate.getPatternDecisionRelationShipQueries();
+			for (String l_patternDecisionRelationshipQuery: l_patternDecisionRelationshipQueries){
+				try {
+					l_stmt.execute(l_patternDecisionRelationshipQuery);
+				} catch (SQLException e) {
+					int i = 0;
+					i++;
+					throw e;
+				}				
+			}
+			
+			String[] l_patternProblemCategoriesQueries = RationaleDBCreate.getPatternProblemCategoriesQueries();
+			for (String l_patternProblemCategoryQuery: l_patternProblemCategoriesQueries){
+				try {
+					l_stmt.execute(l_patternProblemCategoryQuery);
+				} catch (SQLException e) {
+					int i = 0;
+					i++;
+					throw e;
+				}				
+			}
+			
+			String[] l_patternProblemCategoryQueries = RationaleDBCreate.getPatternProblemCategoryQueries();
+			for (String l_pattern_problemCategoryQuery: l_patternProblemCategoryQueries){
+				try {
+					l_stmt.execute(l_pattern_problemCategoryQuery);
+				} catch (SQLException e) {
+					int i = 0;
+					i++;
+					throw e;
+				}				
+			}
+		}
 
 	}
 
@@ -408,6 +497,10 @@ public final class RationaleDB implements Serializable {
 	 */
 	private static PreparedStatement m_ontEntryFromDB = null;
 	
+	private static PreparedStatement m_patternFromDB = null;
+	
+	private static PreparedStatement m_altPatternFromDB = null;
+	
 	/**
 	 * Accessor Method For The Ontology Entries FromDatabase Pseudo
 	 * Constructor. This is how the Ontology Entry Class Retrieves
@@ -420,6 +513,14 @@ public final class RationaleDB implements Serializable {
 	 */
 	public PreparedStatement getStatement_OntologyEntryFromDB() {
 		return m_ontEntryFromDB;
+	}
+	
+	public PreparedStatement getStatement_PatternFromDB() {
+		return m_patternFromDB;
+	}
+	
+	public PreparedStatement getStatement_AltPatternFromDB() {
+		return m_altPatternFromDB;
 	}
 	
 	/**
@@ -447,6 +548,29 @@ public final class RationaleDB implements Serializable {
 					+ " from " + RationaleDBUtil.escapeTableName("OntEntries")
 					+ " where name = ?");
 			m_ontEntryFromDB.setEscapeProcessing(true);
+		} catch( SQLException eError ) {
+			//int doNothing;
+			//doNothing = 0;
+		}
+		
+		//for pattern library
+		try {
+			if( m_patternFromDB != null )
+				m_patternFromDB.close();
+			
+			m_patternFromDB = conn.prepareStatement("SELECT * "
+					+ " from " + RationaleDBUtil.escapeTableName("patterns")
+					+ " where name = ?");
+			m_patternFromDB.setEscapeProcessing(true);
+			
+			if( m_altPatternFromDB != null )
+				m_altPatternFromDB.close();
+			
+			m_altPatternFromDB = conn.prepareStatement("SELECT * "
+					+ " from " + RationaleDBUtil.escapeTableName("alternativepatterns")
+					+ " where name = ?");
+			m_altPatternFromDB.setEscapeProcessing(true);
+			
 		} catch( SQLException eError ) {
 			//int doNothing;
 			//doNothing = 0;
@@ -768,6 +892,40 @@ public final class RationaleDB implements Serializable {
 		}
 		return reqst;
 	}
+	
+	/**
+	 * Return a vector of all non-functional requirements
+	 * @return
+	 * @author wang2
+	 */
+	public Vector<Requirement> getNFRs(){
+		Vector<Requirement> nfrs = new Vector<Requirement>();
+		Statement stmt = null;
+		ResultSet rs = null;
+		String findQuery = "";
+		try {
+			stmt = conn.createStatement();
+			findQuery = "SELECT name from "
+				+ RationaleDBUtil.escapeTableName("requirements") + " "
+				+ "where type = 'NFR'";
+			//System.out.println(findQuery);
+			rs = stmt.executeQuery(findQuery);
+			while (rs.next()) {
+				String name = RationaleDBUtil.decode(rs.getString("name"));
+				//System.out.println(name);
+				Requirement req = new Requirement();
+				req.fromDatabase(name);
+				nfrs.add(req);
+			}
+			//System.out.println(nfrs.size());
+		} catch (SQLException ex) {
+			reportError(ex, "Error in getNFRs", findQuery);
+		} finally {
+			releaseResources(stmt, rs);
+		}
+		
+		return nfrs;
+	}
 
 	/**
 	 * Get all the decisions that correspond to a particular parent and
@@ -835,6 +993,55 @@ public final class RationaleDB implements Serializable {
 
 		} catch (SQLException ex) {
 			reportError(ex, "Error in getDependentAlternatives", findQuery);
+		} finally {
+			releaseResources(stmt, rs);
+
+		}
+		return dependent;
+	}
+	
+	/**
+	 * Return a list of alternatives that are dependent on the given pattern alternative.
+	 * @param alt
+	 * @param atype
+	 * @return
+	 */
+	public Vector<Alternative> getDependentAlternatives(AlternativePattern alt, ArgType atype) {
+		Vector<Alternative> dependent = new Vector<Alternative>();
+		Statement stmt = null;
+		ResultSet rs = null;
+		String findQuery = "";
+		try {
+			Vector<Integer> altV = new Vector<Integer>();
+			stmt = conn.createStatement();
+			findQuery = "SELECT parent, ptype from " 
+				+ RationaleDBUtil.escapeTableName("arguments") 
+				+ " where alternative = "
+				+ new Integer(alt.getID()).toString()
+				+ " and (type = '"
+				+ atype.toString() + "')";
+			//***			System.out.println(findQuery);
+			rs = stmt.executeQuery(findQuery);
+			while (rs.next()) {
+				if ((RationaleElementType) RationaleElementType.fromString(rs
+						.getString("ptype")) == RationaleElementType.ALTERNATIVE) {
+					int altID = rs.getInt("parent");
+					altV.add(new Integer(altID));
+
+				}
+			}
+
+			if (altV.size() > 0) {
+				Iterator altI = altV.iterator();
+				while (altI.hasNext()) {
+					Alternative relAlt = new Alternative();
+					relAlt.fromDatabase(((Integer) altI.next()).intValue());
+					dependent.add(relAlt);
+				}
+			}
+
+		} catch (SQLException ex) {
+			reportError(ex, "Error in getDependentAlternatives2", findQuery);
 		} finally {
 			releaseResources(stmt, rs);
 
@@ -1139,7 +1346,13 @@ public final class RationaleDB implements Serializable {
 			return ("contingencies");
 		} else if (element == RationaleElementType.DESIGNER) {
 			return ("designerprofiles");
-		} else {
+		} else if (element == RationaleElementType.PATTERN) {
+			return ("patterns");
+		}else if (element == RationaleElementType.ALTERNATIVEPATTERN) {
+			return ("alternativepatterns");
+		}else if (element == RationaleElementType.PATTERNDECISION) {
+			return ("patterndecisions");
+		}else {
 			//   		System.out.println("Need to add new type " + parent.toString() );
 
 			return null;
@@ -1177,6 +1390,8 @@ public final class RationaleDB implements Serializable {
 			return RationaleElementType.CONTINGENCY; //or contingency?
 		} else if (elementType.compareTo("designerprofiles") == 0) {
 			return RationaleElementType.DESIGNER;
+		} else if (elementType.compareTo("patterns") == 0) {
+			return RationaleElementType.PATTERN;
 		}
 		/*		else if (elementType.compareTo("requirements" == 0))
 		 {
@@ -1230,6 +1445,17 @@ public final class RationaleDB implements Serializable {
 				RationaleElementType.ALTERNATIVE);
 		return claims;
 	}
+	
+	/**
+	 * Return the name of the alternative pattern mapping to the given parent
+	 * @param parentName
+	 * @return the alternative pattern
+	 */
+	public String getAlternativePattern(String parentName) {
+		String alternativePattern = getElement(parentName, "arguments", "alternativepattern",
+				RationaleElementType.ALTERNATIVEPATTERN);
+		return alternativePattern;
+	}
 	/**
 	 * Return the name of the ontology entry mapping to the parent tradeoff
 	 * @param tradeName - the parents name
@@ -1251,6 +1477,8 @@ public final class RationaleDB implements Serializable {
 				RationaleElementType.ONTENTRY);
 		return onts;
 	}
+	
+	
 
 	/**
 	 * Given the name of the parent, the table type of the parent, the name
@@ -1424,6 +1652,125 @@ public final class RationaleDB implements Serializable {
 
 		}
 		return onts;
+	}
+	
+	/**
+	 * Return a vector containing all parents created from the database entry.
+	 * @return a vector of patterns created.
+	 */
+	public Vector<Pattern> getPatterns(){
+		Vector<Pattern> patterns = new Vector<Pattern>();
+		String findQuery = "";
+		Statement stmt = null;
+		ResultSet rs = null;
+		try {
+			stmt = conn.createStatement();
+			findQuery = "SELECT name FROM patterns";
+			rs = stmt.executeQuery(findQuery);
+			while (rs.next()) {
+				Pattern newPattern = new Pattern();
+				newPattern.fromDatabase(rs.getString("name"));
+				patterns.add(newPattern);
+			}
+		} catch (SQLException ex) {
+			reportError(ex, "error in getPatterns", findQuery);
+		} finally {
+			releaseResources(stmt, rs);
+		}	
+		return patterns;		
+	}
+	
+	/**
+	 * Create a vector of new OntEntries that are associated with the given pattern(name).
+	 * @param parentName
+	 * @param isPositive
+	 * @return
+	 */
+	public Vector<OntEntry> getPatternOntologies(String parentName, boolean isPositive){
+
+		Pattern patternSelected = new Pattern();
+		patternSelected.fromDatabase(parentName);
+		
+		Vector<OntEntry> onts = new Vector<OntEntry>();
+		
+		if(isPositive){
+			onts = patternSelected.getPosiOnts();
+		}else{
+			onts = patternSelected.getNegaOnts();
+		}
+		return onts;
+	}
+	
+	/**
+	 * Create a vector of new Candidate Patterns that are associated with the given pattern(name)
+	 * @param parentName
+	 * @return
+	 */
+	public Vector<Pattern> getCandidatePatterns(String parentName){
+		Vector<Pattern> candidatePatterns = new Vector<Pattern>();
+		Statement stmt = null;
+		ResultSet rs = null;
+		String findQuery = "";
+
+		try {
+			PatternDecision parentDecision = new PatternDecision();
+			parentDecision.fromDatabase(parentName);
+			findQuery = "SELECT patternID FROM pattern_decision WHERE decisionID = "
+				+ parentDecision.getID()
+				+ " and parentType = 'Decision'";
+			stmt = conn.createStatement();
+			rs = stmt.executeQuery(findQuery);
+			while(rs.next()){
+				Pattern candidate = new Pattern();
+				candidate.fromDatabase(rs.getInt("patternID"));
+				candidatePatterns.add(candidate);
+			}
+		} catch (SQLException ex) {
+			reportError(ex, "error in getOntology", findQuery);
+		} finally {
+			releaseResources(stmt, rs);
+		}
+
+		return candidatePatterns;		
+	}
+	
+	/**
+	 * Create a vector of decisions for a given pattern(name) and its grandparent(name).
+	 * @param parentName
+	 * @param grandParentName
+	 * @return
+	 */
+	public Vector<PatternDecision> getPatternDecisions(String parentName, String grandParentName){
+		
+		Vector<PatternDecision> children = new Vector<PatternDecision>();
+		Statement stmt = null;
+		ResultSet rs = null;
+		String findQuery = "";
+		try {
+				findQuery = "SELECT id from patterns where name = '" + parentName + "'";
+				stmt = conn.createStatement();
+				rs = stmt.executeQuery(findQuery);
+				int patternID = -1;
+				if(rs.next()){
+					patternID = rs.getInt("id");
+				}		
+				findQuery = "SELECT * FROM patterndecisions where parent = " + patternID;
+				rs = stmt.executeQuery(findQuery);
+
+				while(rs.next()){
+					PatternDecision patternDecision = new PatternDecision();
+					patternDecision.fromDatabase(RationaleDBUtil.decode(rs.getString("name")));
+					
+					children.addElement(patternDecision);
+				}
+			}catch (SQLException ex) {
+				reportError(ex, "error in getOntology", findQuery);
+				} finally {
+					releaseResources(stmt, rs);
+				}
+			
+
+		return children;
 	}
 
 	/**
@@ -1959,6 +2306,112 @@ public final class RationaleDB implements Serializable {
 		}
 		return ourElements;
 
+	}
+	
+	/**
+	 * List all patterns associated with one category
+	 * @param category
+	 * @return An array list of patterns
+	 */
+	public ArrayList<Pattern> getPatternByCategory(String category){
+		ArrayList<Pattern> matchedPatterns = new ArrayList<Pattern>();
+		
+		try {
+			String query = "";
+			Statement stmt = null;
+			ResultSet rs = null;
+			stmt = conn.createStatement();
+			query = "SELECT id FROM patternproblemcategories WHERE problemcategory = '" + category + "'";
+			rs = stmt.executeQuery(query);
+			
+			if(rs.next()){
+				
+				query = "SELECT patternID FROM pattern_problemcategory WHERE problemcategoryID = " + rs.getInt("id");
+				rs = stmt.executeQuery(query);
+				
+				while(rs.next()){
+					Pattern pattern = new Pattern();
+					pattern.fromDatabase(new Integer(rs.getInt("patternID")));
+					matchedPatterns.add(pattern);
+				}
+			}			
+			
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}		
+		return matchedPatterns;
+	}
+	
+	/**
+	 * Given a pattern type, return all patterns matches the type.
+	 * The type is "archiecture", "idiom", or "design" 
+	 * @param patternType
+	 * @return A vector of TreeParent, having element type pattern
+	 */
+	private Vector<TreeParent> getPatterns(String patternType){
+		Vector<TreeParent> patternList = new Vector<TreeParent>();
+		String query = "";
+		Statement stmt = null;
+		ResultSet rs = null;
+		Pattern pattern = new Pattern();
+		
+		try {
+			stmt = conn.createStatement();
+			query = "SELECT name FROM patterns WHERE type = '"
+				+ patternType + "'";
+			rs = stmt.executeQuery(query);
+//			while(rs.next()){
+//				pattern.fromDatabase((rs.getString("name")));
+//				System.out.println(pattern.getName());
+//				patternList.add(pattern);
+//			}q1]
+			
+			while (rs.next()) {
+				TreeParent element = new TreeParent(RationaleDBUtil.decode(rs
+						.getString("name")), RationaleElementType.PATTERN);
+				patternList.addElement(element);
+			}
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}		
+		return patternList;
+	}
+	
+	/**
+	 * Given a pattern type, return all patterns matches the type
+	 * @param type
+	 * @return A vector of Patterns
+	 */
+	public ArrayList<Pattern> getPatternsByType(String type){
+		ArrayList<Pattern> patterns = new ArrayList<Pattern>();
+		String query = "";
+		Statement stmt = null;
+		ResultSet rs = null;		
+		
+		try {
+			stmt = conn.createStatement();
+			query = "SELECT name FROM patterns WHERE type = '"
+				+ type + "'";
+			rs = stmt.executeQuery(query);
+			while(rs.next()){
+				Pattern pattern = new Pattern();
+				pattern.fromDatabase((rs.getString("name")));
+				System.out.println(pattern.getName());
+				patterns.add(pattern);
+			}
+			
+//			while (rs.next()) {
+//				TreeParent element = new TreeParent(RationaleDBUtil.decode(rs
+//						.getString("name")), RationaleElementType.PATTERN);
+//				patternList.addElement(element);
+//			}
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}		
+		return patterns;
 	}
 	
 	/**
@@ -2776,6 +3229,38 @@ public final class RationaleDB implements Serializable {
 		}
 		return statusList;
 	}
+	
+	/**
+	 * Get patterns of type architecture
+	 * @param parentName
+	 * @param parentType
+	 * @return
+	 */
+	public Vector getArchitecturePatterns(String parentName,
+			RationaleElementType parentType) {
+		
+		
+		return getPatterns("architecture");
+	}
+	
+	/**
+	 * Get patterns of type design
+	 * @param parentName
+	 * @param parentType
+	 * @return
+	 */
+	public Vector getDesignPatterns(String parentName,
+			RationaleElementType parentType) {
+		return getPatterns("design");
+	}
+	
+	/**
+	 * Get patterns of type idiom
+	 * @return
+	 */
+	public Vector getIdioms() {
+		return getPatterns("idiom");
+	}
 
 	/**
 	 * Add a new status elements to the database. This is done because
@@ -2925,6 +3410,80 @@ public final class RationaleDB implements Serializable {
 
 		} catch (SQLException ex) {
 			reportError(ex, "Error in removeAssociation", removeAssoc);
+		} finally {
+			releaseResources(stmt, null);
+		}
+	}
+	
+
+	/**
+	 * Delete the candidate pattern associated with a pattern decision in Pattern Library
+	 * @param String - the name of the pattern, String - the name of the parent decision
+	 */
+	public void removeCandidatePattern(String patternName, String decisionName){
+		Statement stmt = null;
+		String removeCanPattern = "";
+		try {
+			stmt = conn.createStatement();
+			Pattern p = new Pattern();
+			p.fromDatabase(patternName);
+			PatternDecision pd = new PatternDecision();
+			pd.fromDatabase(decisionName);
+			removeCanPattern = "Delete from pattern_decision where parentType = 'Decision' and patternID = " + p.getID() + " and decisionID = " + pd.getID();
+			stmt.execute(removeCanPattern);
+		} catch (SQLException e) {
+			reportError(e, "Error in removeCandidatePattern", removeCanPattern);
+		} finally {
+			releaseResources(stmt, null);
+		}
+		
+	}
+	
+	/**
+	 * Remove pattern ontology entry
+	 * @param ontName
+	 * @param patternName
+	 * @param direction
+	 */
+	public void removePatternOnt(String ontName, String patternName, String direction){
+		Statement stmt = null;
+		String removePOnt = "";
+		try {
+			stmt = conn.createStatement();
+			Pattern p = new Pattern();
+			p.fromDatabase(patternName);
+			OntEntry oe = new OntEntry();
+			oe.fromDatabase(ontName);
+			removePOnt = "Delete from pattern_ontentries where ontID = " + oe.getID() + " and patternID = " + p.getID() + " and direction = '" + direction + "'";
+			stmt.execute(removePOnt);
+		} catch (SQLException e) {
+			reportError(e, "Error in removePatternOnt", removePOnt);
+		} finally {
+			releaseResources(stmt, null);
+		}
+	}
+
+	/**
+	 * Save candidate patterns 
+	 * @param decisionName
+	 * @param patternNames
+	 */
+	public void saveCandidatePatterns(String decisionName, Vector<String> patternNames){
+		String insertCanPattern = "";
+		Statement stmt = null;
+		try {
+			stmt = conn.createStatement();
+			PatternDecision pd = new PatternDecision();
+			pd.fromDatabase(decisionName);
+			for(int k=0; k<patternNames.size(); k++){
+				Pattern p = new Pattern();
+				p.fromDatabase(patternNames.get(k));				
+				insertCanPattern = "INSERT INTO pattern_decision (patternID, decisionID, parentType) VALUES (" + p.getID() + "," + pd.getID() + ", 'Decision')";
+				//System.out.println(insertCanPattern);
+				stmt.execute(insertCanPattern);
+			}
+		} catch (SQLException e) {
+			reportError(e, "Error in saveCandidatePatterns", insertCanPattern);
 		} finally {
 			releaseResources(stmt, null);
 		}
@@ -3625,6 +4184,464 @@ public final class RationaleDB implements Serializable {
 			//dec.toDatabase(0, RationaleElementType.NONE);
 		}
 		System.out.println("done adding decisions");
+	}
+	
+
+	private void importPatterns(PreparedStatement ps){
+		try{
+			ps.setString(1, "Three-layer");
+			ps.setString(2, "architecture");
+			ps.setBytes(3, (new String("The system is organized into three primary layers: Presentation, Domain, and Data Source.")).getBytes());
+			ps.setBytes(4, (new String("In a system in which abstract domains must be implemented in terms of more concrete (less abstract) domains, we need a simple organizational pattern. Additionally, in many systems we need portability of the application to other platforms, or we want to provide an abstract platform or execution environment for which applications may be easily adapted.")).getBytes());
+			ps.setBytes(5, (new String("Development of a large business application, where many users share common data and operations on them. In addition, there might be legacy systems which have to be integrated in the new application.")).getBytes());
+			ps.setBytes(6, (new String("'Base your layered architecture on three layers: Presentation, Domain, and Data Source.  Presentation layer is about how to handle the interaction between the user and the software. This can be as simple as a command-line or text-based menu system, but these days it’ more likely to be a rich-client graphics UI or an HTML-based browser UI. Data source layer is about communicating with other systems that carry out tasks on behalf of the application. These can be transaction monitors, other applications, messaging systems, and so forth. Domain logic, also referred to as business logic. This is the work that this application needs to do for the domain you’e working with. It involves calculations based on inputs and stored data, validation of any data that comes in from the presentation, and figuring out exactly what data source logic to dispatch, depending on commands received from the presentation.")).getBytes());
+			ps.setBytes(7, (new String("")).getBytes());
+			ps.setBytes(8, (new String("The three-layer architecture offers significant advantages even for relatively small applications. For instance, the single-user PC application First Account from the Norwegiancompany Economica encapsulates most of the accounting and invoicing functionality in adynamic link library (DLL), which in turn works against a local, flat-file database. This separationenabled the developers with knowledge of accounting and object-oriented design to dedicatethemselves to the central functionality, and user interface designers with little or no knowledge ofprogramming to fully control their part of the application.")).getBytes());
+			ps.setString(9, "http://msdn.microsoft.com/en-us/library/ms978689.aspx");
+			ps.executeUpdate();
+			
+			ps.setString(1, "Layers");
+			ps.setString(2, "architecture");
+			ps.setBytes(3, (new String("The Layers architectural pattern helps to structure applications that can be decomposed into groups of subtasks in which each group of subtasks is at a particular level of abstraction.")).getBytes());
+			ps.setBytes(4, (new String("In a system in which abstract domains must be implemented in terms of more concrete (less abstract) domains, we need a simple organizational pattern. Additionally, in many systems we need portability of the application to other platforms, or we want to provide an abstract platform or execution environment for which applications may be easily adapted.")).getBytes());
+			ps.setBytes(5, (new String("You are designing a Layered Application. You want to expose some of the core functionality of your application as services that other applications can consume, and you want your application to consume services exposed by other applications.")).getBytes());
+			ps.setBytes(6, (new String("")).getBytes());
+			ps.setBytes(7, (new String("")).getBytes());
+			ps.setBytes(8, (new String("")).getBytes());
+			ps.setString(9, "http://vico.org/pages/PatronsDisseny/Pattern%20Layers/");
+			ps.executeUpdate();
+			
+			ps.setString(1, "Pipes and Filters");
+			ps.setString(2, "architecture");
+			ps.setBytes(3, (new String("The Pipes and Filters architectural pattern provides a structure for systems that process a stream of data. Each processing step is encapsulated in a filter component. Data is passed through pipes between adjacent filters. Recombining filters allows you to build families of related systems.")).getBytes());
+			ps.setBytes(4, (new String("")).getBytes());
+			ps.setBytes(5, (new String("")).getBytes());
+			ps.setBytes(6, (new String("")).getBytes());
+			ps.setBytes(7, (new String("")).getBytes());
+			ps.setBytes(8, (new String("")).getBytes());
+			ps.setString(9, "http://msdn.microsoft.com/en-us/library/ms978599.aspx");
+			ps.executeUpdate();
+			
+			ps.setString(1, "Blackboard");
+			ps.setString(2, "architecture");
+			ps.setBytes(3, (new String("The Blackboard architectural pattern is useful for problems for which no deterministic solution strategies are known. In Blackboard several specialized subsystem assemble their knowledge to build a possibly partial or approximate solution.")).getBytes());
+			ps.setBytes(4, (new String("")).getBytes());
+			ps.setBytes(5, (new String("")).getBytes());
+			ps.setBytes(6, (new String("")).getBytes());
+			ps.setBytes(7, (new String("")).getBytes());
+			ps.setBytes(8, (new String("")).getBytes());
+			ps.setString(9, "http://www.vico.org/pages/PatronsDisseny/Pattern%20Blackboard/");
+			ps.executeUpdate();
+			
+			ps.setString(1, "Model-View-Controller");
+			ps.setString(2, "architecture");
+			ps.setBytes(3, (new String("The MVC architectural pattern divides an interactive application into three components. The model contains the core functionality and data. Views display information to the user. Controllers handle user input. Views and Controllers together comprise the user interface. A change-propagation mechanism ensures consistency between the user interface and the model.")).getBytes());
+			ps.setBytes(4, (new String("")).getBytes());
+			ps.setBytes(5, (new String("")).getBytes());
+			ps.setBytes(6, (new String("")).getBytes());
+			ps.setBytes(7, (new String("")).getBytes());
+			ps.setBytes(8, (new String("")).getBytes());
+			ps.setString(9, "http://msdn.microsoft.com/en-us/library/ms978748.aspx");
+			ps.executeUpdate();
+			
+			ps.setString(1, "Broker");
+			ps.setString(2, "architecture");
+			ps.setBytes(3, (new String("The Broker architectural pattern can be used to structure distributed software systems with decoupled components that interact by remote service invocations. A broker component is responsible for coordinating communication, such as forwarding requests, as well as for transmitting results and exceptions.")).getBytes());
+			ps.setBytes(4, (new String("")).getBytes());
+			ps.setBytes(5, (new String("")).getBytes());
+			ps.setBytes(6, (new String("")).getBytes());
+			ps.setBytes(7, (new String("")).getBytes());
+			ps.setBytes(8, (new String("")).getBytes());
+			ps.setString(9, "http://msdn.microsoft.com/en-us/library/ms978706.aspx");
+			ps.executeUpdate();
+			
+			ps.setString(1, "Presentation-Abstraction-Control");
+			ps.setString(2, "architecture");
+			ps.setBytes(3, (new String("The Presentation-Abstraction-Control architectural pattern (PAC) defines a structure for interactive software systems in the form of a hierarchy of cooperating agents. Every agent is responsible for a specific aspect of the applications functionality and consists of three components: presentation, abstraction, and control. This subdivision separates the human-computer interaction aspects of the agent from its functional core and its communication with other agents.")).getBytes());
+			ps.setBytes(4, (new String("")).getBytes());
+			ps.setBytes(5, (new String("")).getBytes());
+			ps.setBytes(6, (new String("")).getBytes());
+			ps.setBytes(7, (new String("")).getBytes());
+			ps.setBytes(8, (new String("")).getBytes());
+			ps.setString(9, "http://vico.org/pages/PatronsDisseny/Pattern%20Presentation%20Abstra/");
+			ps.executeUpdate();
+			
+			ps.setString(1, "Microkernel");
+			ps.setString(2, "architecture");
+			ps.setBytes(3, (new String("The Microkernel architectural pattern applies to software systems that must be able to adapt to changing system requirements. It separates a minimal functional core from extended functionality and customer-specific parts. The microkernel also serves as a socket for plugging in these extensions and coordinating their collaboration.")).getBytes());
+			ps.setBytes(4, (new String("")).getBytes());
+			ps.setBytes(5, (new String("")).getBytes());
+			ps.setBytes(6, (new String("")).getBytes());
+			ps.setBytes(7, (new String("")).getBytes());
+			ps.setBytes(8, (new String("")).getBytes());
+			ps.setString(9, "http://www.vico.org/pages/PatronsDisseny/Pattern%20MicroKernel/");
+			ps.executeUpdate();
+			
+			ps.setString(1, "Reflection");
+			ps.setString(2, "architecture");
+			ps.setBytes(3, (new String("The Reflection architectural pattern provides a mechanism for changing structure and behavior of software systems dynamically. It supports the modification of fundamental aspects, such as type structures and function call mechanisms. In this pattern, an application is split into two parts. A meta level provides information about selected system properties and makes the software self-aware. A base level includes the application logic. Its implementation builds on the meta level. Changes to information kept in the meta level affect subsequent base-level behavior.")).getBytes());
+			ps.setBytes(4, (new String("")).getBytes());
+			ps.setBytes(5, (new String("")).getBytes());
+			ps.setBytes(6, (new String("'")).getBytes());
+			ps.setBytes(7, (new String("")).getBytes());
+			ps.setBytes(8, (new String("")).getBytes());
+			ps.setString(9, "http://vico.org/pages/PatronsDisseny/Pattern%20Reflection/");
+			ps.executeUpdate();
+			
+			ps.setString(1, "Whole-Part");
+			ps.setString(2, "design");
+			ps.setBytes(3, (new String("The Whole-Part design pattern helps with the aggregation of components that together form a semantic unit. An aggregate component, the Whole, encapsulates its constituent components, the Parts, organizes their collaboration, and provides a common interface to its functionality. Direct access to the Parts is not possible.")).getBytes());
+			ps.setBytes(4, (new String("")).getBytes());
+			ps.setBytes(5, (new String("")).getBytes());
+			ps.setBytes(6, (new String("'")).getBytes());
+			ps.setBytes(7, (new String("")).getBytes());
+			ps.setBytes(8, (new String("")).getBytes());
+			ps.setString(9, "http://www.vico.org/pages/PatronsDisseny/Pattern%20Whole%20Part/index.html");
+			ps.executeUpdate();
+			
+			ps.setString(1, "Master-Slave");
+			ps.setString(2, "design");
+			ps.setBytes(3, (new String("The Master-Slave design pattern supports fault tolerance, parallel computation and computational accuracy. A master component distributes work to identical slave components and computes a final result from the results these slaves return.")).getBytes());
+			ps.setBytes(4, (new String("")).getBytes());
+			ps.setBytes(5, (new String("")).getBytes());
+			ps.setBytes(6, (new String("'")).getBytes());
+			ps.setBytes(7, (new String("")).getBytes());
+			ps.setBytes(8, (new String("")).getBytes());
+			ps.setString(9, "http://www.vico.org/pages/PatronsDisseny/Pattern%20Master%20Slave/");
+			ps.executeUpdate();
+			
+			ps.setString(1, "Proxy");
+			ps.setString(2, "design");
+			ps.setBytes(3, (new String("Provide a surrogate or placeholder for another object to control access to it.")).getBytes());
+			ps.setBytes(4, (new String("")).getBytes());
+			ps.setBytes(5, (new String("")).getBytes());
+			ps.setBytes(6, (new String("'")).getBytes());
+			ps.setBytes(7, (new String("")).getBytes());
+			ps.setBytes(8, (new String("")).getBytes());
+			ps.setString(9, "http://www.vico.org/pages/PatronsDisseny/Pattern%20Broker/");
+			ps.executeUpdate();
+			
+			ps.setString(1, "Command Processor");
+			ps.setString(2, "design");
+			ps.setBytes(3, (new String("The Command Processor design pattern separates the request for a service from its execution. A command processor component manages requests as separate objects, schedules their execution, and provides additional services such as the storing of request objects for later undo.")).getBytes());
+			ps.setBytes(4, (new String("")).getBytes());
+			ps.setBytes(5, (new String("")).getBytes());
+			ps.setBytes(6, (new String("'")).getBytes());
+			ps.setBytes(7, (new String("")).getBytes());
+			ps.setBytes(8, (new String("")).getBytes());
+			ps.setString(9, "http://www.vico.org/pages/PatronsDisseny/Pattern%20Command%20Processor/index.html");
+			ps.executeUpdate();
+			
+			ps.setString(1, "View Handler");
+			ps.setString(2, "design");
+			ps.setBytes(3, (new String("The View Handler design pattern helps to manage all views that a software system provides. A view handler component allows clients to open, manipulate and dispose of views. It also coordinates dependencies between view and organizes their update.")).getBytes());
+			ps.setBytes(4, (new String("")).getBytes());
+			ps.setBytes(5, (new String("")).getBytes());
+			ps.setBytes(6, (new String("'")).getBytes());
+			ps.setBytes(7, (new String("")).getBytes());
+			ps.setBytes(8, (new String("")).getBytes());
+			ps.setString(9, "http://vico.org/pages/PatronsDisseny/Pattern%20View%20Handler/");
+			ps.executeUpdate();
+			
+			ps.setString(1, "Forward-Receiver");
+			ps.setString(2, "design");
+			ps.setBytes(3, (new String("The Forwarder-Receiver design pattern provides transparent interprocess communication for software systems with a peer-to-peer interaction model. It introduces forwarders and receivers to decouple peers from the underlying communication mechanisms.")).getBytes());
+			ps.setBytes(4, (new String("")).getBytes());
+			ps.setBytes(5, (new String("")).getBytes());
+			ps.setBytes(6, (new String("'")).getBytes());
+			ps.setBytes(7, (new String("")).getBytes());
+			ps.setBytes(8, (new String("")).getBytes());
+			ps.setString(9, "http://vico.org/pages/PatronsDisseny/Pattern%20Forward-Receiver/");
+			ps.executeUpdate();
+			
+			ps.setString(1, "Client-Dispatcher-Server");
+			ps.setString(2, "design");
+			ps.setBytes(3, (new String("The Client-Dispatcher-Server design pattern introduces an intermediate layer between clients and servers, the dispatcher component. It provides location transparency by means of a name service, and hides the details of the establishment of the communication connection between clients and servers.")).getBytes());
+			ps.setBytes(4, (new String("")).getBytes());
+			ps.setBytes(5, (new String("")).getBytes());
+			ps.setBytes(6, (new String("'")).getBytes());
+			ps.setBytes(7, (new String("")).getBytes());
+			ps.setBytes(8, (new String("")).getBytes());
+			ps.setString(9, "http://vico.org/pages/PatronsDisseny/Pattern%20ClientDispatcherServer/");
+			ps.executeUpdate();
+			
+			ps.setString(1, "Publisher-Subscriber");
+			ps.setString(2, "design");
+			ps.setBytes(3, (new String("The Publisher-Subscriber design pattern helps to keep the state of cooperating components synchronized. To achieve this it enables one-way propagation of changes: one publisher notifies any number of subscribers about changes to its state.")).getBytes());
+			ps.setBytes(4, (new String("")).getBytes());
+			ps.setBytes(5, (new String("")).getBytes());
+			ps.setBytes(6, (new String("'")).getBytes());
+			ps.setBytes(7, (new String("")).getBytes());
+			ps.setBytes(8, (new String("")).getBytes());
+			ps.setString(9, "http://vico.org/pages/PatronsDisseny/Pattern%20Publisher%20Subscriber/");
+			ps.executeUpdate();
+			
+			ps.setString(1, "Strategy");
+			ps.setString(2, "design");
+			ps.setBytes(3, (new String("Define a family of algorithms, encapsulate each one, and make them interchangeable. Strategy lets the algorithm vary independently from clients that use it.")).getBytes());
+			ps.setBytes(4, (new String("")).getBytes());
+			ps.setBytes(5, (new String("")).getBytes());
+			ps.setBytes(6, (new String("'")).getBytes());
+			ps.setBytes(7, (new String("")).getBytes());
+			ps.setBytes(8, (new String("")).getBytes());
+			ps.setString(9, "http://vico.org/pages/PatronsDisseny/Pattern%20Strategy/");
+			ps.executeUpdate();
+			
+			ps.setString(1, "Factory");
+			ps.setString(2, "design");
+			ps.setBytes(3, (new String("Define an interface for creating an object, but let subclasses decide which class to instantiate. Factory Method lets a class defer instantiation to subclasses.")).getBytes());
+			ps.setBytes(4, (new String("")).getBytes());
+			ps.setBytes(5, (new String("")).getBytes());
+			ps.setBytes(6, (new String("'")).getBytes());
+			ps.setBytes(7, (new String("")).getBytes());
+			ps.setBytes(8, (new String("")).getBytes());
+			ps.setString(9, "http://vico.org/pages/PatronsDisseny/Pattern%20Factory%20Method/");
+			ps.executeUpdate();
+			
+			ps.setString(1, "Decorator");
+			ps.setString(2, "design");
+			ps.setBytes(3, (new String("Attach additional responsibilities to an object dynamically. Decorators provide a flexible alternative to subclassing for extending functionality.")).getBytes());
+			ps.setBytes(4, (new String("")).getBytes());
+			ps.setBytes(5, (new String("")).getBytes());
+			ps.setBytes(6, (new String("'")).getBytes());
+			ps.setBytes(7, (new String("")).getBytes());
+			ps.setBytes(8, (new String("")).getBytes());
+			ps.setString(9, "http://vico.org/pages/PatronsDisseny/Pattern%20Decorator/");
+			ps.executeUpdate();
+
+			ps.setString(1, "Composite");
+			ps.setString(2, "design");
+			ps.setBytes(3, (new String("Compose objects into tree structures to represent part-whole hierarchies. Composite lets clients treat individual objects and compositions of objects uniformly.")).getBytes());
+			ps.setBytes(4, (new String("")).getBytes());
+			ps.setBytes(5, (new String("")).getBytes());
+			ps.setBytes(6, (new String("'")).getBytes());
+			ps.setBytes(7, (new String("")).getBytes());
+			ps.setBytes(8, (new String("")).getBytes());
+			ps.setString(9, "http://vico.org/pages/PatronsDisseny/Pattern%20Composite/");
+			ps.executeUpdate();
+			
+			ps.setString(1, "Template Method");
+			ps.setString(2, "design");
+			ps.setBytes(3, (new String("Define the skeleton of an algorithm in an operation, deferring some steps to subclasses. Template Method lets subclasses redefine certain steps of an algorithm without changing the algorithms structure.")).getBytes());
+			ps.setBytes(4, (new String("")).getBytes());
+			ps.setBytes(5, (new String("")).getBytes());
+			ps.setBytes(6, (new String("'")).getBytes());
+			ps.setBytes(7, (new String("")).getBytes());
+			ps.setBytes(8, (new String("")).getBytes());
+			ps.setString(9, "http://vico.org/pages/PatronsDisseny/Pattern%20Template%20Method/");
+			ps.executeUpdate();
+			
+			ps.setString(1, "Command");
+			ps.setString(2, "design");
+			ps.setBytes(3, (new String("Encapsulate a request as an object, thereby letting you parameterize clients with different requests, queue or log requests, and support undoable operations.")).getBytes());
+			ps.setBytes(4, (new String("")).getBytes());
+			ps.setBytes(5, (new String("")).getBytes());
+			ps.setBytes(6, (new String("'")).getBytes());
+			ps.setBytes(7, (new String("")).getBytes());
+			ps.setBytes(8, (new String("")).getBytes());
+			ps.setString(9, "http://vico.org/pages/PatronsDisseny/Pattern%20Command/");
+			ps.executeUpdate();
+			
+			ps.setString(1, "Chain of Responsibility");
+			ps.setString(2, "design");
+			ps.setBytes(3, (new String("Avoid coupling the sender of a request to its receiver by giving more than one object a chance to handle the request. Chain the receiving objects and pass the request along the chain until an object handles it.")).getBytes());
+			ps.setBytes(4, (new String("")).getBytes());
+			ps.setBytes(5, (new String("")).getBytes());
+			ps.setBytes(6, (new String("'")).getBytes());
+			ps.setBytes(7, (new String("")).getBytes());
+			ps.setBytes(8, (new String("")).getBytes());
+			ps.setString(9, "http://vico.org/pages/PatronsDisseny/Pattern%20Chain%20of%20Responsability/");
+			ps.executeUpdate();
+			
+			ps.setString(1, "Facade");
+			ps.setString(2, "design");
+			ps.setBytes(3, (new String("Provide a unified interface to a set of interfaces in a subsystem. Fa?ade defines a higher-level interface that makes the subsystem easier to user.")).getBytes());
+			ps.setBytes(4, (new String("")).getBytes());
+			ps.setBytes(5, (new String("")).getBytes());
+			ps.setBytes(6, (new String("'")).getBytes());
+			ps.setBytes(7, (new String("")).getBytes());
+			ps.setBytes(8, (new String("")).getBytes());
+			ps.setString(9, "http://vico.org/pages/PatronsDisseny/Pattern%20Facade/");
+			ps.executeUpdate();
+			
+			ps.setString(1, "Transaction Script");
+			ps.setString(2, "design");
+			ps.setBytes(3, (new String("Organizes business logic by procedures where each procedure handles a single request from the presentation.")).getBytes());
+			ps.setBytes(4, (new String("")).getBytes());
+			ps.setBytes(5, (new String("")).getBytes());
+			ps.setBytes(6, (new String("'")).getBytes());
+			ps.setBytes(7, (new String("")).getBytes());
+			ps.setBytes(8, (new String("")).getBytes());
+			ps.setString(9, "EAA Book Online");
+			ps.executeUpdate();
+			
+			ps.setString(1, "Domain Model");
+			ps.setString(2, "design");
+			ps.setBytes(3, (new String("An object model of the domain that incorporates both behavior and data.")).getBytes());
+			ps.setBytes(4, (new String("")).getBytes());
+			ps.setBytes(5, (new String("")).getBytes());
+			ps.setBytes(6, (new String("'")).getBytes());
+			ps.setBytes(7, (new String("")).getBytes());
+			ps.setBytes(8, (new String("")).getBytes());
+			ps.setString(9, "EAA Book Online");
+			ps.executeUpdate();
+			
+			ps.setString(1, "Table Module");
+			ps.setString(2, "design");
+			ps.setBytes(3, (new String("A single instance that handles the business logic for all rows in a database table or view.")).getBytes());
+			ps.setBytes(4, (new String("")).getBytes());
+			ps.setBytes(5, (new String("")).getBytes());
+			ps.setBytes(6, (new String("'")).getBytes());
+			ps.setBytes(7, (new String("")).getBytes());
+			ps.setBytes(8, (new String("")).getBytes());
+			ps.setString(9, "EAA Book Online");
+			ps.executeUpdate();
+			
+			ps.setString(1, "Gateway");
+			ps.setString(2, "design");
+			ps.setBytes(3, (new String("An object that encapsulates access to an external system or resource.")).getBytes());
+			ps.setBytes(4, (new String("")).getBytes());
+			ps.setBytes(5, (new String("")).getBytes());
+			ps.setBytes(6, (new String("'")).getBytes());
+			ps.setBytes(7, (new String("")).getBytes());
+			ps.setBytes(8, (new String("")).getBytes());
+			ps.setString(9, "EAA Book Online");
+			ps.executeUpdate();
+			
+			ps.setString(1, "Row Data Gateway");
+			ps.setString(2, "design");
+			ps.setBytes(3, (new String("An object that acts as a Gateway to a single record in a data source. There is one instance per row.")).getBytes());
+			ps.setBytes(4, (new String("")).getBytes());
+			ps.setBytes(5, (new String("")).getBytes());
+			ps.setBytes(6, (new String("'")).getBytes());
+			ps.setBytes(7, (new String("")).getBytes());
+			ps.setBytes(8, (new String("")).getBytes());
+			ps.setString(9, "EAA Book Online");
+			ps.executeUpdate();
+			
+			ps.setString(1, "Active Record");
+			ps.setString(2, "design");
+			ps.setBytes(3, (new String("An object that wraps a row in a database table or view, encapsulates the database access, and adds domain logic on that data.")).getBytes());
+			ps.setBytes(4, (new String("")).getBytes());
+			ps.setBytes(5, (new String("")).getBytes());
+			ps.setBytes(6, (new String("")).getBytes());
+			ps.setBytes(7, (new String("The essence of an Active Record is a Domain Model in which the classes match very closely the record structure of an underlying database. Each Active Record is responsible for saving and loading to the database and also for any domain logic that acts on the data. This may be all the domain logic in the application, or you may find that some domain logic is held in Transaction Scripts with common and data-oriented code in the Active Record.")).getBytes());
+			ps.setBytes(8, (new String("")).getBytes());
+			ps.setString(9, "EAA Book Online");
+			ps.executeUpdate();
+			
+			ps.setString(1, "Table Data Gateway");
+			ps.setString(2, "design");
+			ps.setBytes(3, (new String("An object that acts as a Gateway to a database table. One instance handles all the rows in the table.")).getBytes());
+			ps.setBytes(4, (new String("")).getBytes());
+			ps.setBytes(5, (new String("")).getBytes());
+			ps.setBytes(6, (new String("")).getBytes());
+			ps.setBytes(7, (new String("A Row Data Gateway acts as an object that exactly mimics a single record, such as one database row. In it each column in the database becomes one field. The Row Data Gateway will usually do any type conversion from the data source types to the in-memory types, but this conversion is pretty simple. This pattern holds the data about a row so that a client can then access the Row")).getBytes());
+			ps.setBytes(8, (new String("")).getBytes());
+			ps.setString(9, "EAA Book Online");
+			ps.executeUpdate();
+			
+			ps.setString(1, "Application Controller");
+			ps.setString(2, "design");
+			ps.setBytes(3, (new String("A centralized point for handling screen navigation and the flow of an application.")).getBytes());
+			ps.setBytes(4, (new String("")).getBytes());
+			ps.setBytes(5, (new String("")).getBytes());
+			ps.setBytes(6, (new String("'")).getBytes());
+			ps.setBytes(7, (new String("")).getBytes());
+			ps.setBytes(8, (new String("")).getBytes());
+			ps.setString(9, "EAA Book Online");
+			ps.executeUpdate();
+			
+			ps.setString(1, "Transform View");
+			ps.setString(2, "design");
+			ps.setBytes(3, (new String("A view that processes domain data element by element and transforms it into HTML.")).getBytes());
+			ps.setBytes(4, (new String("")).getBytes());
+			ps.setBytes(5, (new String("")).getBytes());
+			ps.setBytes(6, (new String("'")).getBytes());
+			ps.setBytes(7, (new String("")).getBytes());
+			ps.setBytes(8, (new String("")).getBytes());
+			ps.setString(9, "EAA Book Online");
+			ps.executeUpdate();
+			
+			ps.setString(1, "Template View");
+			ps.setString(2, "design");
+			ps.setBytes(3, (new String("Renders information into HTML by embedding markers in an HTML page.")).getBytes());
+			ps.setBytes(4, (new String("")).getBytes());
+			ps.setBytes(5, (new String("")).getBytes());
+			ps.setBytes(6, (new String("'")).getBytes());
+			ps.setBytes(7, (new String("")).getBytes());
+			ps.setBytes(8, (new String("")).getBytes());
+			ps.setString(9, "EAA Book Online");
+			ps.executeUpdate();
+			
+			ps.setString(1, "Two Step View");
+			ps.setString(2, "design");
+			ps.setBytes(3, (new String("Turns domain data into HTML in two steps: first by forming some kind of logical page, then rendering the logical page into HTML.")).getBytes());
+			ps.setBytes(4, (new String("")).getBytes());
+			ps.setBytes(5, (new String("")).getBytes());
+			ps.setBytes(6, (new String("'")).getBytes());
+			ps.setBytes(7, (new String("")).getBytes());
+			ps.setBytes(8, (new String("")).getBytes());
+			ps.setString(9, "EAA Book Online");
+			ps.executeUpdate();
+			
+			ps.setString(1, "Bridge");
+			ps.setString(2, "design");
+			ps.setBytes(3, (new String("Decouple an abstraction from its implementation so that the two can vary independently.")).getBytes());
+			ps.setBytes(4, (new String("")).getBytes());
+			ps.setBytes(5, (new String("")).getBytes());
+			ps.setBytes(6, (new String("'")).getBytes());
+			ps.setBytes(7, (new String("")).getBytes());
+			ps.setBytes(8, (new String("")).getBytes());
+			ps.setString(9, "http://vico.org/pages/PatronsDisseny/Pattern%20Bridge/");
+			ps.executeUpdate();
+			
+			ps.setString(1, "Data Mappter");
+			ps.setString(2, "design");
+			ps.setBytes(3, (new String("A layer of Mappers that moves data between objects and a database while keeping them independent of each other and the mapper itself.")).getBytes());
+			ps.setBytes(4, (new String("")).getBytes());
+			ps.setBytes(5, (new String("Objects and relational databases have different mechanisms for structuring data. Many parts of an object, such as collections and inheritance, aren’t present in relational databases. When you build an object model with a lot of business logic it’s valuable to use these mechanisms to better organize the data and the behavior that goes with it.  Doing so leads to variant schemas; that is, the object schema and the relational schema don’t match up.")).getBytes());
+			ps.setBytes(6, (new String("The Data Mapper is a layer of software that separates the in-memory objects from the database. Its responsibility is to transfer data between the two and also to isolate them from each other. With Data Mapper the in-memory objects needn’t know even that there’s a database present; they need no SQL interface code, and certainly no knowledge of the database schema. (The database schema is always ignorant of the objects that use it.) Since it’s a form of Mapper, Data Mapper itself is even unknown to the domain layer.")).getBytes());
+			ps.setBytes(7, (new String("")).getBytes());
+			ps.setBytes(8, (new String("")).getBytes());
+			ps.setString(9, "http://vico.org/pages/PatronsDisseny/Pattern%20Bridge/");
+			ps.executeUpdate();
+			
+			ps.setString(1, "Counted Pointer");
+			ps.setString(2, "idiom");
+			ps.setBytes(3, (new String("This idiom makes memory management of dynamically-allocated shared objects in C++ easier. It introduces a reference counter to a body class that is updated by handle objects. Clients access body class objects only through handles via the overloaded operator ->()..")).getBytes());
+			ps.setBytes(4, (new String("")).getBytes());
+			ps.setBytes(5, (new String("")).getBytes());
+			ps.setBytes(6, (new String("'")).getBytes());
+			ps.setBytes(7, (new String("")).getBytes());
+			ps.setBytes(8, (new String("")).getBytes());
+			ps.setString(9, "Book Reference");
+			ps.executeUpdate();
+			
+			ps.setString(1, "Singleton");
+			ps.setString(2, "idiom");
+			ps.setBytes(3, (new String("Ensure a class only has one instance, and provide a global point of access to it.")).getBytes());
+			ps.setBytes(4, (new String("")).getBytes());
+			ps.setBytes(5, (new String("")).getBytes());
+			ps.setBytes(6, (new String("'")).getBytes());
+			ps.setBytes(7, (new String("")).getBytes());
+			ps.setBytes(8, (new String("")).getBytes());
+			ps.setString(9, "http://vico.org/pages/PatronsDisseny/Pattern%20Singleton/");
+			ps.executeUpdate();
+			
+			ps.setString(1, "Indented Control Flow");
+			ps.setString(2, "idiom");
+			ps.setBytes(3, (new String("")).getBytes());
+			ps.setBytes(4, (new String("")).getBytes());
+			ps.setBytes(5, (new String("")).getBytes());
+			ps.setBytes(6, (new String("'")).getBytes());
+			ps.setBytes(7, (new String("")).getBytes());
+			ps.setBytes(8, (new String("")).getBytes());
+			ps.setString(9, "Book Reference");
+			ps.executeUpdate();
+		}catch(Exception ex){
+			ex.printStackTrace();
+		}
 	}
 
 	/**

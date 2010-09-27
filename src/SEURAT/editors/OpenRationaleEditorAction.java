@@ -7,10 +7,8 @@ import org.eclipse.ui.PlatformUI;
 
 import edu.wpi.cs.jburge.SEURAT.rationaleData.RationaleElement;
 import edu.wpi.cs.jburge.SEURAT.rationaleData.RationaleElementType;
-import edu.wpi.cs.jburge.SEURAT.views.RationaleExplorer;
-import edu.wpi.cs.jburge.SEURAT.views.TreeObject;
-import edu.wpi.cs.jburge.SEURAT.views.TreeParent;
 import edu.wpi.cs.jburge.SEURAT.views.*;
+
 import java.lang.reflect.*;
 
 import java.util.*;
@@ -22,6 +20,11 @@ import java.util.*;
  * to simplify the interface significantly.
  */
 public class OpenRationaleEditorAction extends Action {
+	/**
+	 * Pattern library object to be edited, analogous to RationaleExplorer.
+	 */
+	PatternLibrary patternLib;
+	
 	/**
 	 * The class object that is going to be used to 
 	 * instantiate a new editor window.
@@ -65,6 +68,14 @@ public class OpenRationaleEditorAction extends Action {
 		targetTreeParent = null;
 	}
 	
+	public OpenRationaleEditorAction(Class pClass, PatternLibrary pOwner, boolean pNew)
+	{
+		editorClass = pClass;
+		patternLib = pOwner;
+		isNew = pNew;
+		reqType = null;
+	}
+	
 	/**
 	 * Construct A Rationale Editor Action
 	 * 
@@ -90,6 +101,14 @@ public class OpenRationaleEditorAction extends Action {
 		isNew = false;
 		reqType = null;
 		targetTreeParent = pParent;
+	}
+	
+	public OpenRationaleEditorAction(Class pClass, PatternLibrary pOwner, boolean pNew, RationaleElementType rType)
+	{
+		editorClass = pClass;
+		patternLib = pOwner;
+		isNew = pNew;		
+		reqType = rType;  
 	}
 	
 	/**

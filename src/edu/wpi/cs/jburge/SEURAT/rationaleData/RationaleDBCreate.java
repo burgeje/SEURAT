@@ -1069,7 +1069,13 @@ return beginTable("candidates")
 			CREATE_TRADEOFFS(),
 			CREATE_CANDIDATES(),
 			CREATE_SOURCES(),
-			CREATE_XFEATUREMAPPING()
+			CREATE_XFEATUREMAPPING(),
+			CREATE_PATTERNS(),
+			CREATE_PATTERN_DECISION(),
+			CREATE_PATTERNDECISIONS(),
+			CREATE_PATTERN_ONTENTRIES(),
+			CREATE_PATTERNPROBLEMCATEGORIES(),
+			CREATE_PATTERN_PROBLEMCATEGORY_RELATIONSHIP()
 		};
 	};
 	
@@ -1119,4 +1125,531 @@ return beginTable("candidates")
 		}
 		return l_retval;
 	}
+	
+	/**
+	 * Returns the pattern insert statement
+	 * @author wangw2
+	 * @param pString name,type,description,problem,context,solution,implementation
+	 * @return sql command for inserting the pattern
+	 */
+	private static String patternInsert(String pString){
+		return "INSERT INTO patterns (name, type, description,problem, context, solution, implementation,example,url) values (" + pString + ")";
+	}
+	
+	/**
+	 * Returns the pattern decision insert statement
+	 * @param pdString name,description,type,status,phase,subdecreq,ptype,parent
+	 * @author wangw2
+	 * @return sql command for inserting the pattern decisions.
+	 */
+	private static String patternDecisionInsert(String pdString){
+		return "INSERT INTO patterndecisions (name, description, type, status, phase, subdecreq, ptype, parent) values (" + pdString + ")";
+	}
+	
+	/**
+	 * Returns the pattern Onthology entry insert statement
+	 * @param poString patternID, ontID, direction (IS/NOT)
+	 * @author wangw2
+	 * @return sql command for inserting the onthology insert statement.
+	 */
+	private static String patternOntEntryInsert(String poString){
+		return "INSERT INTO pattern_ontentries (patternID, ontID, direction) values (" + poString + ")";
+	}
+	
+	/**
+	 * Returns the pattern decision relationship statement
+	 * @param poString patternID, decisionID, parentType
+	 * @return
+	 */
+	private static String patternDecisionRelationshipInsert(String poString){
+		return "INSERT INTO pattern_decision (patternID, decisionID, parentType) values (" + poString + ")";
+	}
+	
+	/**
+	 * Returns the pattern Problem Category insert statement
+	 * @param problemcategory, patterntype
+	 * @author wangw2
+	 * @return
+	 */
+	private static String patternProblemCategoriesInsert(String poString){
+		return "INSERT INTO patternproblemcategories (problemcategory, patterntype) values (" + poString + ")";
+	}
+	
+	/**
+	 * Returns the pattern_problemCategory relationship insert statement
+	 * @param patternID, problemcategoryID
+	 * @return
+	 */
+	private static String pattern_problemCategoryInsert(String poString){
+		return "INSERT INTO pattern_problemcategory (patternID, problemcategoryID) values (" + poString + ")";
+	}
+	
+	/**
+	 * Statements to insert pattern entries in the database
+	 */
+	private static String INSERT_PATTERNS[] =
+	{
+		patternInsert("'Three-layer', 'architecture'," + "'The system is organized into three primary layers: Presentation, Domain, and Data Source.'" +
+				",'In a system in which abstract domains must be implemented in terms of more concrete (less abstract) domains, we need a simple organizational pattern. Additionally, in many systems we need portability of the application to other platforms, or we want to provide an abstract platform or execution environment for which applications may be easily adapted.'" +
+				",'Development of a large business application, where many users share common data and operations on them. In addition, there might be legacy systems which have to be integrated in the new application.'" +
+				",'Base your layered architecture on three layers: Presentation, Domain, and Data Source.  Presentation layer is about how to handle the interaction between the user and the software. This can be as simple as a command-line or text-based menu system, but these days it’s more likely to be a rich-client graphics UI or an HTML-based browser UI. Data source layer is about communicating with other systems that carry out tasks on behalf of the application. These can be transaction monitors, other applications, messaging systems, and so forth. Domain logic, also referred to as business logic. This is the work that this application needs to do for the domain you’re working with. It involves calculations based on inputs and stored data, validation of any data that comes in from the presentation, and figuring out exactly what data source logic to dispatch, depending on commands received from the presentation.'" +
+				",' '" +
+				",'The three-layer architecture offers significant advantages even for relatively small applications. For instance, the single-user PC application First Account from the Norwegiancompany Economica encapsulates most of the accounting and invoicing functionality in adynamic link library (DLL), which in turn works against a local, flat-file database. This separationenabled the developers with knowledge of accounting and object-oriented design to dedicatethemselves to the central functionality, and user interface designers with little or no knowledge ofprogramming to fully control their part of the application.'" +
+				",'http://msdn.microsoft.com/en-us/library/ms978689.aspx'"),
+		patternInsert("'Layers', 'architecture','The Layers architectural pattern helps to structure applications that can be decomposed into groups of subtasks in which each group of subtasks is at a particular level of abstraction.'" +
+				",'','','','','','http://vico.org/pages/PatronsDisseny/Pattern%20Layers/'"),
+		patternInsert("'Pipes and Filters', 'architecture','The Pipes and Filters architectural pattern provides a structure for systems that process a stream of data. Each processing step is encapsulated in a filter component. Data is passed through pipes between adjacent filters. Recombining filters allows you to build families of related systems.'" +
+				",'','','','','','http://msdn.microsoft.com/en-us/library/ms978599.aspx'"),
+		patternInsert("'Blackboard', 'architecture','The Blackboard architectural pattern is useful for problems for which no deterministic solution strategies are known. In Blackboard several specialized subsystem assemble their knowledge to build a possibly partial or approximate solution.'" +
+				",'','','','','','http://www.vico.org/pages/PatronsDisseny/Pattern%20Blackboard/'"),
+		patternInsert("'Model-View-Controller', 'architecture','The MVC architectural pattern divides an interactive application into three components. The model contains the core functionality and data. Views display information to the user. Controllers handle user input. Views and Controllers together comprise the user interface. A change-propagation mechanism ensures consistency between the user interface and the model.'" +
+				",'','','','','','http://msdn.microsoft.com/en-us/library/ms978748.aspx'"),
+		patternInsert("'Broker', 'architecture','The Broker architectural pattern can be used to structure distributed software systems with decoupled components that interact by remote service invocations. A broker component is responsible for coordinating communication, such as forwarding requests, as well as for transmitting results and exceptions.'" +
+				",'','','','','','http://msdn.microsoft.com/en-us/library/ms978706.aspx'"),
+		patternInsert("'Presentation-Abstraction-Control', 'architecture','The Presentation-Abstraction-Control architectural pattern (PAC) defines a structure for interactive software systems in the form of a hierarchy of cooperating agents. Every agent is responsible for a specific aspect of the applications functionality and consists of three components: presentation, abstraction, and control. This subdivision separates the human-computer interaction aspects of the agent from its functional core and its communication with other agents.'" +
+				",'','','','','','http://vico.org/pages/PatronsDisseny/Pattern%20Presentation%20Abstra/'"),
+		patternInsert("'Microkernel', 'architecture','The Microkernel architectural pattern applies to software systems that must be able to adapt to changing system requirements. It separates a minimal functional core from extended functionality and customer-specific parts. '" +
+				",'','','','','','http://www.vico.org/pages/PatronsDisseny/Pattern%20MicroKernel/'"),
+		patternInsert("'Reflection', 'architecture','The Reflection architectural pattern provides a mechanism for changing structure and behavior of software systems dynamically. It supports the modification of fundamental aspects, such as type structures and function call mechanisms. In this pattern, an application is split into two parts. A meta level provides information about selected system properties and makes the software self-aware. A base level includes the application logic. Its implementation builds on the meta level. Changes to information kept in the meta level affect subsequent base-level behavior.'" +
+				",'','','','','','http://vico.org/pages/PatronsDisseny/Pattern%20Reflection/'"),
+		patternInsert("'Whole-Part', 'design','The Whole-Part design pattern helps with the aggregation of components that together form a semantic unit. An aggregate component, the Whole, encapsulates its constituent components, the Parts, organizes their collaboration, and provides a common interface to its functionality. Direct access to the Parts is not possible.'" +
+				",'','','','','','http://www.vico.org/pages/PatronsDisseny/Pattern%20Whole%20Part/index.html'"),
+		patternInsert("'Master-Slave', 'design','The Master-Slave design pattern supports fault tolerance, parallel computation and computational accuracy. A master component distributes work to identical slave components and computes a final result from the results these slaves return.'" +
+				",'','','','','','http://www.vico.org/pages/PatronsDisseny/Pattern%20Master%20Slave/'"),
+		patternInsert("'Proxy', 'design','Provide a surrogate or placeholder for another object to control access to it.'" +
+				",'','','','','','http://www.vico.org/pages/PatronsDisseny/Pattern%20Broker/'"),
+		patternInsert("'Command Processor', 'design','The Command Processor design pattern separates the request for a service from its execution. A command processor component manages requests as separate objects, schedules their execution, and provides additional services such as the storing of request objects for later undo.'" +
+				",'','','','','','http://www.vico.org/pages/PatronsDisseny/Pattern%20Command%20Processor/index.html'"),
+		patternInsert("'View Handler', 'design','The View Handler design pattern helps to manage all views that a software system provides. A view handler component allows clients to open, manipulate and dispose of views. It also coordinates dependencies between view and organizes their update.'" +
+				",'','','','','','http://vico.org/pages/PatronsDisseny/Pattern%20View%20Handler/'"),
+		patternInsert("'Forward-Receiver', 'design','The Forwarder-Receiver design pattern provides transparent interprocess communication for software systems with a peer-to-peer interaction model. It introduces forwarders and receivers to decouple peers from the underlying communication mechanisms.'" +
+				",'','','','','','http://vico.org/pages/PatronsDisseny/Pattern%20Forward-Receiver/'"),
+		patternInsert("'Client-Dispatcher-Server', 'design','The Client-Dispatcher-Server design pattern introduces an intermediate layer between clients and servers, the dispatcher component. It provides location transparency by means of a name service, and hides the details of the establishment of the communication connection between clients and servers.'" +
+				",'','','','','','http://vico.org/pages/PatronsDisseny/Pattern%20ClientDispatcherServer/'"),
+		patternInsert("'Publisher-Subscriber', 'design','The Publisher-Subscriber design pattern helps to keep the state of cooperating components synchronized. To achieve this it enables one-way propagation of changes: one publisher notifies any number of subscribers about changes to its state.'" +
+				",'','','','','','http://vico.org/pages/PatronsDisseny/Pattern%20Publisher%20Subscriber/'"),
+		patternInsert("'Strategy', 'design','Define a family of algorithms, encapsulate each one, and make them interchangeable. Strategy lets the algorithm vary independently from clients that use it.'" +
+				",'','','','','','http://vico.org/pages/PatronsDisseny/Pattern%20Strategy/'"),
+		patternInsert("'Factory', 'design','Define an interface for creating an object, but let subclasses decide which class to instantiate. Factory Method lets a class defer instantiation to subclasses.'" +
+				",'','','','','','http://vico.org/pages/PatronsDisseny/Pattern%20Factory%20Method/'"),
+		patternInsert("'Decorator', 'design','Attach additional responsibilities to an object dynamically. Decorators provide a flexible alternative to subclassing for extending functionality.'" +
+				",'','','','','','http://vico.org/pages/PatronsDisseny/Pattern%20Decorator/'"),
+		patternInsert("'Composite', 'design','Compose objects into tree structures to represent part-whole hierarchies. Composite lets clients treat individual objects and compositions of objects uniformly.'" +
+				",'','','','','','http://vico.org/pages/PatronsDisseny/Pattern%20Composite/'"),
+		patternInsert("'Template Method', 'design','Define the skeleton of an algorithm in an operation, deferring some steps to subclasses. Template Method lets subclasses redefine certain steps of an algorithm without changing the algorithms structure.'" +
+				",'','','','','','http://vico.org/pages/PatronsDisseny/Pattern%20Template%20Method/'"),
+		patternInsert("'Command', 'design','Encapsulate a request as an object, thereby letting you parameterize clients with different requests, queue or log requests, and support undoable operations.'" +
+				",'','','','','','http://vico.org/pages/PatronsDisseny/Pattern%20Command/'"),
+		patternInsert("'Chain of Responsibility', 'design','Avoid coupling the sender of a request to its receiver by giving more than one object a chance to handle the request. Chain the receiving objects and pass the request along the chain until an object handles it.'" +
+				",'','','','','','http://vico.org/pages/PatronsDisseny/Pattern%20Chain%20of%20Responsability/'"),
+		patternInsert("'Facade', 'design','Provide a unified interface to a set of interfaces in a subsystem. Façade defines a higher-level interface that makes the subsystem easier to user.'" +
+				",'','','','','','http://vico.org/pages/PatronsDisseny/Pattern%20Facade/'"),
+		patternInsert("'Transaction Script', 'design','Organizes business logic by procedures where each procedure handles a single request from the presentation.'" +
+				",'How to organize business logic.','Layers organization',' A Transaction Script is essentially a procedure that takes the input from the presentation, processes it with validations and calculations, stores data in the database, and invokes any operations from other systems. It then replies with more data to the presentation, perhaps doing more calculation to help organize and format the reply. The fundamental organization is of a single procedure for each action that a user might want to do. Hence, we can think of this pattern as being a script for an action, or business transaction. It doesn’t have to be a single inline procedure of code. Pieces get separated into subroutines, and these subroutines can be shared between different Transaction Scripts','','','EAA Book Online'"),
+		patternInsert("'Domain Model', 'design','An object model of the domain that incorporates both behavior and data.','','','Using object-oriented way to handle the business logic. Each object takes a part of the logic that’s relevant to it.','','','EAA Book Online'"),
+		patternInsert("'Table Module', 'design','A single instance that handles the business logic for all rows in a database table or view.','','','','','','EAA Book Online'"),
+		patternInsert("'Gateway', 'design','An object that encapsulates access to an external system or resource.','','','','','',''"),
+		patternInsert("'Row Data Gateway', 'design','An object that acts as a Gateway to a single record in a data source. There is one instance per row.','','','','','','EAA Book Online'"),
+		patternInsert("'Active Record', 'design','An object that wraps a row in a database table or view, encapsulates the database access, and adds domain logic on that data.'" +
+				",'','','','The essence of an Active Record is a Domain Model in which the classes match very closely the record structure of an underlying database. Each Active Record is responsible for saving and loading to the database and also for any domain logic that acts on the data. This may be all the domain logic in the application, or you may find that some domain logic is held in Transaction Scripts with common and data-oriented code in the Active Record.','','EAA Book Online'"),
+		patternInsert("'Table Data Gateway', 'design','An object that acts as a Gateway to a database table. One instance handles all the rows in the table.A Row Data Gateway gives you objects that look exactly like the record in your record structure but can be accessed with the regular mechanisms of your programming language. All details of data source access are hidden behind this interface.'" +
+				",'','','','A Row Data Gateway acts as an object that exactly mimics a single record, such as one database row. In it each column in the database becomes one field. The Row Data Gateway will usually do any type conversion from the data source types to the in-memory types, but this conversion is pretty simple. This pattern holds the data about a row so that a client can then access the Row','','EAA Book Online'"), 		patternInsert("'Application Controller', 'design','A centralized point for handling screen navigation and the flow of an application.','','','','','','EAA Book Online'"),
+		patternInsert("'Transform View', 'design','A view that processes domain data element by element and transforms it into HTML.','','','','','','EAA Book Online'"),
+		patternInsert("'Template View', 'design','Renders information into HTML by embedding markers in an HTML page.','','','','','','EAA Book Online'"),
+		patternInsert("'Two Step View', 'design','Turns domain data into HTML in two steps: first by forming some kind of logical page, then rendering the logical page into HTML.','','','','','','EAA Book Online'"),
+		patternInsert("'Bridge', 'design','Decouple an abstraction from its implementation so that the two can vary independently.','','','','','','http://vico.org/pages/PatronsDisseny/Pattern%20Bridge/'"),
+		patternInsert("'Data Mappter', 'design','A layer of Mappers that moves data between objects and a database while keeping them independent of each other and the mapper itself.'" +
+				",'','Objects and relational databases have different mechanisms for structuring data. Many parts of an object, such as collections and inheritance, aren’t present in relational databases. When you build an object model with a lot of business logic it’s valuable to use these mechanisms to better organize the data and the behavior that goes with it.  Doing so leads to variant schemas; that is, the object schema and the relational schema don’t match up. ','The Data Mapper is a layer of software that separates the in-memory objects from the database. Its responsibility is to transfer data between the two and also to isolate them from each other. With Data Mapper the in-memory objects needn’t know even that there’s a database present; they need no SQL interface code, and certainly no knowledge of the database schema. (The database schema is always ignorant of the objects that use it.) Since it’s a form of Mapper, Data Mapper itself is even unknown to the domain layer. ','','','http://vico.org/pages/PatronsDisseny/Pattern%20Bridge/'"),
+		patternInsert("'Counted Pointer', 'idiom','This idiom makes memory management of dynamically-allocated shared objects in C++ easier. It introduces a reference counter to a body class that is updated by handle objects. ','','','','','','Book Reference'"),
+		patternInsert("'Singleton', 'idiom','Ensure a class only has one instance, and provide a global point of access to it.','','','','','','http://vico.org/pages/PatronsDisseny/Pattern%20Singleton/'"),
+		patternInsert("'Indented Control Flow', 'idiom','','','','','','','Book Reference'")
+		
+	};
+	
+	/**
+	 * Statements to insert pattern decisions for each pattern.
+	 */
+	private static String INSERT_PATTERN_DECISIONS[] =
+	{	
+		//do not change the order of the following decisions. It's related to the sub candidate patterns
+		//three-lay subs
+		patternDecisionInsert("'What is the structure of Business Logic Layer', '','SingleChoice','Unresolved','Architecture','No','pattern',1"),
+		patternDecisionInsert("'What is the structure of Data Source Layer', '','SingleChoice','Unresolved','Architecture','No','pattern',1"),
+		patternDecisionInsert("'What is the structure of Presentation Layer', '','SingleChoice','Unresolved','Architecture','No','pattern',1"),
+		
+		//layers subs
+		patternDecisionInsert("'What is the number of abstraction levels/layers?', '','SingleChoice','Unresolved','Architecture','No','pattern',2"),
+		patternDecisionInsert("'What are the names of the layers and their tasks?(Create sub decisions for each layer))', '','SingleChoice','Unresolved','Architecture','No','pattern',2"),
+		patternDecisionInsert("'What are the interfaces for each layer? (Create sub decisions)', '','SingleChoice','Unresolved','Architecture','No','pattern',2"),
+		patternDecisionInsert("'How do the layers structure together?', '','SingleChoice','Unresolved','Architecture','No','pattern',2"),
+		patternDecisionInsert("'How do the layers commnucate to each other?', '','SingleChoice','Unresolved','Architecture','No','pattern',2"),
+		patternDecisionInsert("'What is the error-handling strategy?', '','SingleChoice','Unresolved','Architecture','No','pattern',2"),
+		
+		//Pipes and Filters
+		patternDecisionInsert("'What is the sequence of processing tasks?', '','SingleChoice','Unresolved','Architecture','No','pattern',3"),
+		patternDecisionInsert("'What are the data formats to be passed along each pipe?', '','SingleChoice','Unresolved','Architecture','No','pattern',3"),
+		patternDecisionInsert("'How to implement the filters? (create sub decisions for each filter)', '','SingleChoice','Unresolved','Architecture','No','pattern',3"),
+		patternDecisionInsert("'How to implement each pipe connection?(create sub decisions for each connection)', '','SingleChoice','Unresolved','Architecture','No','pattern',3"),
+		patternDecisionInsert("'What are the data formats to be passed along each pipe?', '','SingleChoice','Unresolved','Architecture','No','pattern',3"),
+		patternDecisionInsert("'What is the error-handling strategy?', '','SingleChoice','Unresolved','Architecture','No','pattern',3"),		
+		
+		//MVC 16
+		patternDecisionInsert("'How to seperate human-computer interaction from core functionality?', '','SingleChoice','Unresolved','Architecture','No','pattern',5"),
+		patternDecisionInsert("'How to implement change-propagation mechanism?', 'Follow Publisher-Subscriber patter','SingleChoice','Unresolved','Architecture','No','pattern',5"),
+		patternDecisionInsert("'How to design and implement the views?', '','SingleChoice','Unresolved','Architecture','No','pattern',5"),
+		patternDecisionInsert("'How to design and implement the controllers?', '','SingleChoice','Unresolved','Architecture','No','pattern',5"),
+		patternDecisionInsert("'How to implement the view-controller relationship?', '','SingleChoice','Unresolved','Architecture','No','pattern',5"),
+		patternDecisionInsert("'How to implement the set-up of MVC?', '','SingleChoice','Unresolved','Architecture','No','pattern',5"),
+		patternDecisionInsert("'How to create view dynamically', '','SingleChoice','Unresolved','Architecture','No','pattern',5"),
+		patternDecisionInsert("'Pluggable controllers', '','SingleChoice','Unresolved','Architecture','No','pattern',5"),
+		patternDecisionInsert("'What is the infrastructure for hierarchical views and controllers?', '','SingleChoice','Unresolved','Architecture','No','pattern',5"),
+		
+		//Presentation-Abstraction-Control
+		patternDecisionInsert("'What is the model of the application?', '','SingleChoice','Unresolved','Architecture','No','pattern',7"),
+		patternDecisionInsert("'What is the general strategy for organizing the PAC hierarchy?', '','SingleChoice','Unresolved','Architecture','No','pattern',7"),
+		patternDecisionInsert("'What is the top-level PAC agent?', '','SingleChoice','Unresolved','Architecture','No','pattern',7"),
+		patternDecisionInsert("'What is the bottom-level PAC agents?', '','SingleChoice','Unresolved','Architecture','No','pattern',7"),
+		patternDecisionInsert("'What is the bottom-level PAC agents for system services?', '','SingleChoice','Unresolved','Architecture','No','pattern',7"),
+		patternDecisionInsert("'What is the intermediate-level PAC agents to compose lower-level PAC agents?', '','SingleChoice','Unresolved','Architecture','No','pattern',7"),
+		patternDecisionInsert("'What is the intermediate-level PAC agents to coordinate lower-level PAC agents?', '','SingleChoice','Unresolved','Architecture','No','pattern',7"),
+		patternDecisionInsert("'How to seperate core functionality from human-computer interaction?', '','SingleChoice','Unresolved','Architecture','No','pattern',7"),
+		
+		
+	};
+	
+	/**
+	 * Statements to insert pattern_ontentries relationship.
+	 */
+	private static String INSERT_PATTERN_ONTENTRIES[] =
+	{
+		//Three-Layer
+		patternOntEntryInsert("1, 95, 'IS'"),//increase scalability
+		patternOntEntryInsert("1, 102, 'IS'"),//reusability
+		patternOntEntryInsert("1, 82, 'IS'"),//Increases Flexibility
+		patternOntEntryInsert("1, 64, 'IS'"),//extensibility
+		patternOntEntryInsert("1, 65, 'IS'"),		
+		patternOntEntryInsert("1, 89, 'IS'"),//portability	
+		patternOntEntryInsert("1, 85, 'IS'"),
+		//patternOntEntryInsert("1, 75, 'IS'"),
+		patternOntEntryInsert("1, 238, 'IS'"),
+		patternOntEntryInsert("1, 278, 'IS'"),
+		patternOntEntryInsert("1, 279, 'NOT'"),
+		
+		//Layers
+		patternOntEntryInsert("2, 102, 'IS'"),//reusability
+		patternOntEntryInsert("2, 82, 'IS'"),//Increases Flexibility
+		patternOntEntryInsert("2, 64, 'IS'"), //extensibility
+		patternOntEntryInsert("2, 65, 'IS'"),
+		patternOntEntryInsert("2, 238, 'IS'"),
+		patternOntEntryInsert("2, 89, 'IS'"), //portability	
+		patternOntEntryInsert("2, 278, 'IS'"), //configurabiliity
+		patternOntEntryInsert("2, 279, 'NOT'"), //performance criteria
+		
+		
+		//Pipes and Filters
+		patternOntEntryInsert("3, 82, 'IS'"),
+		patternOntEntryInsert("3, 102, 'IS'"),
+		patternOntEntryInsert("3, 64, 'IS'"),
+		patternOntEntryInsert("3, 85, 'IS'"),
+		patternOntEntryInsert("3, 21, 'IS'"),
+		patternOntEntryInsert("3, 249, 'NOT'"),
+		patternOntEntryInsert("3, 40, 'NOT'"),
+		
+		//Blackboard
+		patternOntEntryInsert("4, 81, 'IS'"),
+		patternOntEntryInsert("4, 85, 'IS'"),
+		patternOntEntryInsert("4, 102, 'IS'"),
+		patternOntEntryInsert("4, 138, 'IS'"),
+		patternOntEntryInsert("4, 130, 'IS'"),
+		patternOntEntryInsert("4, 228, 'NOT'"),
+		patternOntEntryInsert("4, 3, 'NOT'"),
+		patternOntEntryInsert("4, 279, 'NOT'"),
+		
+		//MVC
+		patternOntEntryInsert("5, 85, 'IS'"), //adaptability
+		patternOntEntryInsert("5, 64, 'IS'"), //extensibility		
+		patternOntEntryInsert("5, 82, 'NOT'"), //Increases Flexibility
+		
+		//Broker
+		patternOntEntryInsert("6, 89, 'IS'"), //portability
+		patternOntEntryInsert("6, 81, 'IS'"), //modifiability
+		patternOntEntryInsert("6, 64, 'IS'"), //extendibility
+		patternOntEntryInsert("6, 103, 'IS'"), //interoperability
+		patternOntEntryInsert("6, 102, 'IS'"), //reusability
+		patternOntEntryInsert("6, 229, 'IS'"), //increases testability
+		patternOntEntryInsert("6, 248, 'NOT'"), //performance criteria
+		patternOntEntryInsert("6, 138, 'NOT'"), //fault tolerance
+		
+		//Presentation-Abstraction-Control
+		patternOntEntryInsert("7, 94, 'IS'"), //scalability
+		patternOntEntryInsert("7, 81, 'IS'"), //modifiability
+		patternOntEntryInsert("7, 64, 'IS'"), //extendibility
+		patternOntEntryInsert("7, 257, 'IS'"), //{provides | supports} multi-threading
+		patternOntEntryInsert("7, 238, 'NOT'"), //maintainability criteria
+		patternOntEntryInsert("7, 248, 'NOT'"), //performance criteria
+		
+		//Microkernel
+		patternOntEntryInsert("8, 89, 'IS'"), //portability
+		patternOntEntryInsert("8, 82, 'IS'"), //Increases Flexibility
+		patternOntEntryInsert("8, 64, 'IS'"), //extendibility
+		patternOntEntryInsert("8, 94, 'IS'"), //scalability
+		patternOntEntryInsert("8, 154, 'IS'"), //reliability
+		patternOntEntryInsert("8, 248, 'NOT'"), //performance criteri
+		patternOntEntryInsert("8, 3, 'NOT'"), //development cost
+		
+		//Reflection
+		patternOntEntryInsert("9, 81, 'IS'"), //modifiability
+		patternOntEntryInsert("9, 64, 'IS'"), ////extendibility
+		patternOntEntryInsert("9, 248, 'NOT'"), //performance criteria
+		patternOntEntryInsert("9, 246, 'NOT'"), //supportability
+		
+		//Design Patterns
+		//Whole-Part
+		patternOntEntryInsert("10, 81, 'IS'"), //modifiability
+		patternOntEntryInsert("10, 102, 'IS'"), //reusability
+		patternOntEntryInsert("10, 248, 'NOT'"), //performance criteria
+		
+		//Master-Slave
+		patternOntEntryInsert("11, 248, 'IS'"), //performance criteria
+		patternOntEntryInsert("11, 64, 'IS'"), //extendibility
+		patternOntEntryInsert("11, 3, 'NOT'"), //development cost
+		patternOntEntryInsert("11, 89, 'NOT'"), //portability
+		
+		//Proxy
+		patternOntEntryInsert("12, 279, 'IS'"), //efficiency
+		patternOntEntryInsert("12, 281, 'IS'"), 
+		patternOntEntryInsert("12, 249, 'NOT'"), //throughput
+		
+		//Command Processor
+		patternOntEntryInsert("13, 82, 'IS'"), //increase flexibility
+		patternOntEntryInsert("13, 215, 'IS'"), //verificability
+		patternOntEntryInsert("13, 279, 'NOT'"), //efficiency
+		
+		//View handler
+		patternOntEntryInsert("14, 64, 'IS'"), //extensibility
+		patternOntEntryInsert("14, 81, 'IS'"), //modifiability
+		patternOntEntryInsert("14, 279, 'NOT'"), //efficiency
+		
+		//Forwarder-Receiver
+		patternOntEntryInsert("15, 279, 'IS'"), //efficiency
+		patternOntEntryInsert("15, 278, 'NOT'"), //configuration
+		
+		//Client-Dispatcher-Server
+		patternOntEntryInsert("16, 278, 'IS'"), //configuration
+		patternOntEntryInsert("16, 89, 'IS'"), //Portability
+		patternOntEntryInsert("16, 85, 'IS'"), //Adaptability
+		patternOntEntryInsert("16, 138, 'IS'"), //fault tolerance
+		patternOntEntryInsert("16, 279, 'NOT'"), //efficiency
+		patternOntEntryInsert("16, 81, 'NOT'"), //modifiability
+		
+		//Transaction Script
+		patternOntEntryInsert("26, 3, 'IS'"), //development cost
+		patternOntEntryInsert("26, 244, 'IS'"), //readability
+		patternOntEntryInsert("26, 81, 'NOT'"), //modifiability
+		
+		//Domain Model
+		patternOntEntryInsert("27, 85, 'IS'"), //adaptability
+		patternOntEntryInsert("27, 82, 'IS'"), //increase flexibility
+		
+		//Table Module
+		
+	};
+	
+	/**
+	 * Statements to insert pattern_decision relationships
+	 */
+	private static String INSERT_PATTERN_DECISION_RELATIONSHIPS[] =
+	{
+		patternDecisionRelationshipInsert("26, 1, 'Decision'"),
+		patternDecisionRelationshipInsert("27, 1, 'Decision'"),
+		patternDecisionRelationshipInsert("28, 1, 'Decision'"),
+		//patternDecisionRelationshipInsert("29, 2, 'Decision'"),
+		patternDecisionRelationshipInsert("30, 2, 'Decision'"),
+		patternDecisionRelationshipInsert("31, 2, 'Decision'"),
+		patternDecisionRelationshipInsert("32, 2, 'Decision'"),
+		patternDecisionRelationshipInsert("37, 2, 'Decision'"),
+		patternDecisionRelationshipInsert("33, 3, 'Decision'"),
+		patternDecisionRelationshipInsert("34, 3, 'Decision'"),
+		patternDecisionRelationshipInsert("35, 3, 'Decision'"),
+		patternDecisionRelationshipInsert("36, 3, 'Decision'"),
+		
+		patternDecisionRelationshipInsert("25, 6, 'Decision'"),
+		patternDecisionRelationshipInsert("18, 7, 'Decision'"),
+		patternDecisionRelationshipInsert("37, 7, 'Decision'"),
+		
+		patternDecisionRelationshipInsert("17, 17, 'Decision'"),
+		patternDecisionRelationshipInsert("19, 20, 'Decision'"),
+		patternDecisionRelationshipInsert("14, 22, 'Decision'"),
+		patternDecisionRelationshipInsert("21, 24, 'Decision'"),
+		patternDecisionRelationshipInsert("24, 24, 'Decision'"),
+	};
+	
+	/**
+	 * Statements to insert problem categories entity
+	 */
+	private static String INSERT_PATTERNPROBLEMCATEGORIES[] =
+	{		
+		patternProblemCategoriesInsert("'From_Mud_To_Structure', 'Architecture'"),
+		patternProblemCategoriesInsert("'Distributed_Systems', 'Architecture'"),
+		patternProblemCategoriesInsert("'Interactive_Systems', 'Architecture'"),
+		patternProblemCategoriesInsert("'Adaptable_Systems', 'Architecture'"),
+		patternProblemCategoriesInsert("'Structural_Decomposition', 'Design'"),
+		patternProblemCategoriesInsert("'Organization_Of_Work', 'Design'"),
+		patternProblemCategoriesInsert("'Access_Control', 'Design'"),
+		patternProblemCategoriesInsert("'Management', 'Design'"),
+		patternProblemCategoriesInsert("'Communication', 'Design'"),
+		patternProblemCategoriesInsert("'Other_Architecture_Problem', 'Architecture'"),
+		patternProblemCategoriesInsert("'Other_Design_Problem', 'Design'")
+	};
+	
+	/**
+	 * Statements to insert pattern and problem category relationships
+	 */
+	private static String INSERT_PATTERN_PROBLEMCATEGORY_RELATIONSHIPS[] =
+	{		
+		pattern_problemCategoryInsert("1, 1"),
+		pattern_problemCategoryInsert("2, 1"),
+		pattern_problemCategoryInsert("3, 1"),
+		pattern_problemCategoryInsert("4, 1"),
+		pattern_problemCategoryInsert("6, 2"),
+		pattern_problemCategoryInsert("5, 3"),
+		pattern_problemCategoryInsert("7, 3"),
+		pattern_problemCategoryInsert("8, 4"),
+		pattern_problemCategoryInsert("9, 4"),
+		pattern_problemCategoryInsert("10, 5"),
+		pattern_problemCategoryInsert("11, 6"),
+		pattern_problemCategoryInsert("12, 7"),
+		pattern_problemCategoryInsert("13, 8"),
+		pattern_problemCategoryInsert("14, 8"),
+		pattern_problemCategoryInsert("15, 9"),
+		pattern_problemCategoryInsert("16, 9"),
+		pattern_problemCategoryInsert("17, 9"),
+		pattern_problemCategoryInsert("18, 11"),
+		pattern_problemCategoryInsert("19, 11"),
+		pattern_problemCategoryInsert("20, 11"),
+		pattern_problemCategoryInsert("21, 11"),
+		pattern_problemCategoryInsert("22, 11"),
+		pattern_problemCategoryInsert("23, 11"),
+		pattern_problemCategoryInsert("24, 11"),
+		pattern_problemCategoryInsert("25, 11"),
+		pattern_problemCategoryInsert("26, 11"),
+		pattern_problemCategoryInsert("27, 11"),
+		pattern_problemCategoryInsert("28, 11"),
+		pattern_problemCategoryInsert("29, 11"),
+		pattern_problemCategoryInsert("30, 11"),
+		pattern_problemCategoryInsert("31, 11"),
+		pattern_problemCategoryInsert("32, 11"),
+		pattern_problemCategoryInsert("33, 11"),
+		pattern_problemCategoryInsert("34, 11"),
+		pattern_problemCategoryInsert("35, 11"),
+		pattern_problemCategoryInsert("36, 11")
+	};
+	
+
+	public static final String CREATE_PATTERNS(){
+		return beginTable("patterns")
+		+ tablePart("id INTEGER NOT NULL " + autoIncrement()) //pay attention to the space after "NULL"
+		+ tablePart("name varchar(255) default NULL")
+		//+ tablePart("type ENUM('architecture','design','idiom') default 'design'")
+		+ tablePart("type varchar(255) default NULL")
+		+ tablePart("description blob default NULL")
+		+ tablePart("problem blob default NULL")
+		+ tablePart("context blob default NULL")
+		+ tablePart("solution blob default NULL")
+		+ tablePart("implementation blob default NULL")
+		+ tablePart("example blob default NULL")
+		+ tablePart("url varchar(255) default NULL")
+		+ endTable("PRIMARY KEY (id)");
+	}
+	
+	/**
+	 * Returns the decisions table statement.
+	 * @return String containing the statement
+	 */
+	public static final String CREATE_PATTERNDECISIONS() {
+		return beginTable("patterndecisions")
+		+ tablePart("id INTEGER NOT NULL " + autoIncrement())
+		+ tablePart("name varchar(255) default NULL")
+		+ tablePart("description varchar(255) default NULL")
+		+ tablePart("type varchar(255) default NULL")
+		+ tablePart("status varchar(255) default NULL")
+		+ tablePart("phase varchar(255) default NULL")
+		+ tablePart("subdecreq varchar(255) default NULL")
+		+ tablePart("ptype varchar(255) default NULL")
+		+ tablePart("parent INTEGER  default NULL")
+		+ tablePart("subsys INTEGER  default NULL")
+		+ tablePart("designer INTEGER  default NULL")
+		+ tablePart("parentpattern int")
+		+ endTable("PRIMARY KEY  (id)");
+	}
+	
+	/**
+	 * Returns the pattern_decision table statement.
+	 * @return String containing the statement
+	 */
+	public static final String CREATE_PATTERN_DECISION() {
+		return beginTable("pattern_decision")
+		+ tablePart("patternID INTEGER default NULL")
+		+ tablePart("decisionID INTEGER default NULL")
+		+ endTable("parentType varchar(255) default NULL");
+	}
+	
+	/**
+	 * Returns the pattern problem categories table statement
+	 * @return
+	 */
+	public static final String CREATE_PATTERNPROBLEMCATEGORIES() {
+		return beginTable("patternproblemcategories")
+		+ tablePart("id INTEGER NOT NULL " + autoIncrement())
+		+ tablePart("problemcategory varchar(50) default NULL")
+		+ tablePart("patterntype varchar(20) default NULL")
+		+ endTable("PRIMARY KEY  (id)");
+	}
+	
+	/**
+	 * Return the pattern and problem category relationship table statement
+	 * @return
+	 */
+	public static final String CREATE_PATTERN_PROBLEMCATEGORY_RELATIONSHIP() {
+		return beginTable("pattern_problemcategory")
+		+ tablePart("id INTEGER NOT NULL " + autoIncrement())
+		+ tablePart("patternID INTEGER default NULL")
+		+ tablePart("problemcategoryID INTEGER default NULL")
+		+ endTable("PRIMARY KEY  (id)");
+	}
+	
+	/**
+	 * Returns the pattern_ontentries table statement.
+	 * @return String containing the statement
+	 */
+	public static final String CREATE_PATTERN_ONTENTRIES() {
+		return beginTable("pattern_ontentries")
+		+ tablePart("patternID INTEGER default NULL")
+		+ tablePart("ontID INTEGER default NULL")
+		+ endTable("direction varchar(50) default NULL");
+	}
+	public static String[] getPatternQueries(){
+		return INSERT_PATTERNS;
+	}
+	
+	public static String[] getPatternDecisionQueries(){
+		return INSERT_PATTERN_DECISIONS;
+	}
+	
+	public static String[] getPatternOntEntryQueries(){
+		return INSERT_PATTERN_ONTENTRIES;
+	}
+	
+	public static String[] getPatternDecisionRelationShipQueries(){
+		return INSERT_PATTERN_DECISION_RELATIONSHIPS;
+	}
+	
+	public static String[] getPatternProblemCategoriesQueries(){
+		return INSERT_PATTERNPROBLEMCATEGORIES;
+	}
+	
+	public static String[] getPatternProblemCategoryQueries(){
+		return INSERT_PATTERN_PROBLEMCATEGORY_RELATIONSHIPS;
+	}
+	
 }

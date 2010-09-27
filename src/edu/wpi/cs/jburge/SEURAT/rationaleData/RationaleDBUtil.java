@@ -4,6 +4,10 @@ import java.io.File;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.io.FileWriter;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -22,6 +26,7 @@ import org.eclipse.jface.preference.IPreferenceStore;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
 import edu.wpi.cs.jburge.SEURAT.SEURATPlugin;
@@ -342,5 +347,109 @@ public class RationaleDBUtil
 			System.err.println (pce.toString());
 		}
 		return false;
+	}
+	
+	/**
+	 * This method imports patterns from an XML file provided by the argument
+	 * @param patternsFile
+	 * @return
+	 */
+	public static boolean importPatterns(String patternsFile){
+		boolean importSuccess = false;
+		DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+		Document patternsDoc;
+		
+		try {
+			DocumentBuilder builder = factory.newDocumentBuilder();
+			patternsDoc = builder.parse(new File(patternsFile));
+			Element patternTop = patternsDoc.getDocumentElement();
+			
+			Node nextNode = patternTop.getFirstChild();
+			Element patternNext = null;
+			
+			// Loop to handle class cast exceptions (sometimes the first
+			// child will be text or something other than an element)
+			while (nextNode != null) {
+				try {
+					patternNext = (Element) nextNode;
+					break; // got the element
+				} catch (ClassCastException cce) {
+					//System.out.println("cce");
+				}
+				nextNode = nextNode.getNextSibling();
+			}
+			
+			if (patternNext == null) {
+				System.out.println("patterns not found in " + patternsFile);
+			} else {
+				String nextName;
+				nextName = patternNext.getNodeName();
+				
+				//here we check the type, then process
+				if (nextName.compareTo("DR:patternLibrary") == 0)
+				{
+					//need to get the root pattern entry
+					NodeList patternElements = patternNext.getChildNodes();
+					for(int i=0;i<patternElements.getLength();i++){
+						//there's a pattern matcher above
+						edu.wpi.cs.jburge.SEURAT.rationaleData.Pattern pattern = new edu.wpi.cs.jburge.SEURAT.rationaleData.Pattern();
+						pattern.fromXML((Element)patternElements.item(i));
+						pattern.toDatabase(0);
+					}
+					
+					//import the 
+					
+					
+					importSuccess = true;
+				}
+				else {
+					System.out.println("something other than patterns specified in " + patternsFile);
+				}
+			}
+		} catch (SAXException sce) {
+			System.err.println( sce.toString());
+		} catch (IOException ioe) {
+			System.err.println (ioe.toString());
+		} catch (ParserConfigurationException pce) {
+			System.err.println (pce.toString());
+		}
+		return importSuccess;
+	}
+	
+	/**
+	 * Checks to see if an entry where name = given "name" is in the table "type".
+	 * @param name
+	 * @param type
+	 * @return true if there is such entry, false otherwise.
+	 */
+	public static boolean isExist(String name, String type)
+	{
+		RationaleDB db = RationaleDB.getHandle();
+		Connection conn = db.getConnection();
+		Statement stmt = null; 
+		ResultSet rs = null;
+		String query = "";
+		boolean flag = true;
+		
+		try{
+			stmt = conn.createStatement();
+			query = "SELECT name FROM " + RationaleDBUtil.escapeTableName(type) + " WHERE name = '"
+			+ RationaleDBUtil.escape(name) + "'";
+			rs = stmt.executeQuery(query);
+			if(rs.next())
+			{				
+				flag = true;
+			}
+			else
+			{
+				flag = false;
+			}
+		}catch(SQLException ex){
+			RationaleDB.reportError(ex,"Error in GeneratingCandidatePatternsDisplay", "");
+		}finally{
+			RationaleDB.releaseResources(stmt, rs);			
+		}
+		
+		return flag;
 	}
 }

@@ -183,6 +183,24 @@ public final class RationaleElementType implements Serializable {
 	 */
 	public static final RationaleElementType NONE = new
 	RationaleElementType("None");
+	
+	/**
+	 * This is the actual pattern in the pattern library.
+	 */
+	public static final RationaleElementType PATTERN = new 
+	RationaleElementType("Pattern");
+	
+	/**
+	 * This is the decisions inside a pattern. (those created by default)
+	 */
+	public static final RationaleElementType PATTERNDECISION = new 
+	RationaleElementType("PatternDecision");
+	
+	/**
+	 * This is the alternative s inside a pattern.
+	 */
+	public static final RationaleElementType ALTERNATIVEPATTERN = new 
+	RationaleElementType("AlternativePattern");
 }
 
 

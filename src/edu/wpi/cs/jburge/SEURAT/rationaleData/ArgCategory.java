@@ -92,6 +92,14 @@ public final class ArgCategory implements Serializable {
 	 */
 	public static final ArgCategory ALTERNATIVE = new 
 	ArgCategory("Alternative");
+	
+	/**
+	 * Apparently, alternatives in pattern have another category. Because it's using
+	 * another table perhaps?
+	 */
+	public static final ArgCategory ALTERNATIVEPATTERN = new 
+	ArgCategory("AlternativePattern");
+	
 	/**
 	 * If an argument has been imported, it initially will not have a type. This
 	 * will be reported as an error by SEURAT but we still need to assign it to something

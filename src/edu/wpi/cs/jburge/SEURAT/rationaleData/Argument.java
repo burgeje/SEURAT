@@ -103,6 +103,8 @@ public class Argument extends RationaleElement implements Serializable
 	 * All the arguments relating to this argument
 	 */
 	Vector<Argument> arguments;
+	
+	AlternativePattern alternativePattern;
 
 	private RationaleElementUpdateEventGenerator<Argument> m_eventGenerator = 
 		new RationaleElementUpdateEventGenerator<Argument>(this);
@@ -285,6 +287,7 @@ public class Argument extends RationaleElement implements Serializable
 		assumption = null;
 		alternative = null;
 		claim = null;
+		alternativePattern = null;
 	}
 
 	public Requirement getRequirement()
@@ -305,6 +308,7 @@ public class Argument extends RationaleElement implements Serializable
 		requirement = null;
 		alternative = null;
 		claim = null;
+		alternativePattern = null;
 	}
 
 	public Assumption getAssumption()
@@ -326,11 +330,28 @@ public class Argument extends RationaleElement implements Serializable
 		requirement = null;
 		assumption = null;
 		claim = null;
+		alternativePattern = null;
 	}
 
 	public Alternative getAlternative()
 	{
 		return alternative;
+	}
+	
+	public AlternativePattern getAlternativePattern() {
+		return alternativePattern;
+	}
+	/**
+	 * Associate an alternative (for a pattern) into our argument.
+	 * @param alternativePattern
+	 */
+	public void setAlternativePattern(AlternativePattern alternativePattern) {
+		this.alternativePattern = alternativePattern;
+		category = ArgCategory.ALTERNATIVEPATTERN;
+		requirement = null;
+		assumption = null;
+		claim = null;
+		alternative = null;
 	}
 
 	/**
@@ -518,6 +539,33 @@ public class Argument extends RationaleElement implements Serializable
 
 				}
 
+			} 
+		}
+		else if (category == ArgCategory.ALTERNATIVEPATTERN)
+		{			
+			if (alternativePattern.getStatus()== AlternativeStatus.ADOPTED)
+			{
+				if (this.type == ArgType.OPPOSES)
+				{
+					impVal = 1.0; //want a strong argument against
+				}
+				else
+				{
+					impVal = 0.0; //no effect
+				}
+			}
+			else
+			{
+				if (this.type == ArgType.PRESUPPOSES)
+				{
+					impVal = -1.0; //this will treat it as an argument against
+				}
+				else
+				{
+					impVal = 0.0; //no effect
+					
+				}
+				
 			} 
 		}
 //		else if (claim != null)
@@ -780,6 +828,28 @@ public class Argument extends RationaleElement implements Serializable
 //				System.out.println(setReq);
 				stmt.execute(setReq);
 
+			}
+			else if (category == ArgCategory.ALTERNATIVEPATTERN)
+			{
+				//get the ID for our alternative (presumably it exists)
+				String findAlt = "SELECT id from Alternativepatterns where name = '" +
+				RationaleDBUtil.escape(alternativePattern.getName()) + "'";
+				rs = stmt.executeQuery(findAlt); 
+//				***			 System.out.println(findAlt);
+				int altid = 0;
+				if (rs.next())
+				{
+					altid = rs.getInt("id");
+					rs.close();
+				}
+				String setReq = "UPDATE Arguments A " +
+				"SET A.alternativepattern = " + new Integer(altid).toString() +
+				", A.argtype = '" + ArgCategory.ALTERNATIVEPATTERN.toString() +
+				"' WHERE A.id = " + new Integer(ourid).toString() +
+				" ";   
+//				System.out.println(setReq);
+				stmt.execute(setReq);
+				
 			}
 			else if (category == ArgCategory.CLAIM)
 //				else if (claim != null)
@@ -1152,6 +1222,7 @@ public class Argument extends RationaleElement implements Serializable
 		claim = null;
 		requirement = null;
 		assumption = null;
+		alternativePattern = null;
 
 		try {
 			stmt = conn.createStatement();
@@ -1219,6 +1290,10 @@ public class Argument extends RationaleElement implements Serializable
 				else if (category == ArgCategory.REQUIREMENT)
 				{
 					reqid = rs.getInt("requirement");
+				}
+				else if (category == ArgCategory.ALTERNATIVEPATTERN)
+				{
+					reqid = rs.getInt("alternativepattern");
 				}
 				//need to read in the rest - recursive routines?
 				//Now, we need to get the lists of arguments for and against
@@ -1317,6 +1392,20 @@ public class Argument extends RationaleElement implements Serializable
 						alternative.fromDatabase(altName);
 					}					
 				}
+				
+				else if (category == ArgCategory.ALTERNATIVEPATTERN)
+				{
+					String altPatternName;
+					String findQuery2 = "SELECT name from ALTERNATIVEPATTERNS where " +
+					"id = " + new Integer(altid).toString();
+					rs = stmt.executeQuery(findQuery2);
+					if (rs.next())				
+					{
+						altPatternName = RationaleDBUtil.decode(rs.getString("name"));
+						alternativePattern = new AlternativePattern();
+						alternativePattern.fromDatabase(altPatternName);
+					}					
+				}
 
 				else if (category == ArgCategory.ASSUMPTION)
 				{
@@ -1364,6 +1453,14 @@ public class Argument extends RationaleElement implements Serializable
 			//will be a problem... we probably shouldn't allow the pre-supposed-by
 			//argument at all!
 			//ditto for opposes...
+		}
+		else if (alternativePattern != null)
+		{
+			int argCount = db.countArgReferences(alternativePattern);
+			if (argCount == 1)
+			{
+				db.deleteRationaleElement(alternativePattern);
+			}
 		}
 		else if (claim != null)
 		{
@@ -1431,6 +1528,10 @@ public class Argument extends RationaleElement implements Serializable
 			else if (parg.getCategory() == ArgCategory.ALTERNATIVE)
 			{
 				this.setAlternative(parg.getAlternative());				
+			}
+			else if (parg.getCategory() == ArgCategory.ALTERNATIVEPATTERN)
+			{
+				this.setAlternativePattern(parg.getAlternativePattern());				
 			}
 			else if (parg.getCategory() == ArgCategory.ASSUMPTION)
 			{
