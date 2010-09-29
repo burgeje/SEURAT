@@ -671,6 +671,25 @@ public class RationaleDBCreate
 		+ tablePart("parent INTEGER  default NULL")
 		+ tablePart("designType INTEGER  default NULL")
 		+ tablePart("designer INTEGER  default NULL")
+		+ tablePart("patternid INTEGER default -1")
+		+ endTable("PRIMARY KEY  (id)");
+	}
+	
+	/**
+	 * Returns the alternativepatterns table statement.
+	 * @return String containing the statement
+	 */
+	public static String CREATE_ALTERNATIVEPATTERNS() {
+		return beginTable("alternativepatterns")
+		+ tablePart("id INTEGER NOT NULL " + autoIncrement())
+		+ tablePart("name varchar(255) default NULL")
+		+ tablePart("status varchar(255) default 'At_Issue'")
+		+ tablePart("evaluation float default NULL")
+		+ tablePart("ptype varchar(255) default NULL")
+		+ tablePart("parent INTEGER  default NULL")
+		+ tablePart("designType INTEGER  default NULL")
+		+ tablePart("designer INTEGER  default NULL")
+		+ tablePart("isExactMatch varchar(10) default 'true'")
 		+ endTable("PRIMARY KEY  (id)");
 	}
 
@@ -835,6 +854,7 @@ public class RationaleDBCreate
 		+ tablePart("parent INTEGER  default NULL")
 		+ tablePart("subsys INTEGER  default NULL")
 		+ tablePart("designer INTEGER  default NULL")
+		+ tablePart("patternid INTEGER default -1")
 		+ endTable("PRIMARY KEY  (id)");
 	}
 
@@ -1046,6 +1066,7 @@ return beginTable("candidates")
 		return new String[] {
 			CREATE_ALTCONSTREL(),
 			CREATE_ALTERNATIVES(),
+			CREATE_ALTERNATIVEPATTERNS(),
 			CREATE_AREAEXP(),
 			CREATE_ARGUMENTS(),
 			CREATE_ASSOCIATIONS(),
@@ -1648,6 +1669,10 @@ return beginTable("candidates")
 		return INSERT_PATTERNPROBLEMCATEGORIES;
 	}
 	
+	/**
+	 * This one gets the insert statement for relationship between pattern and category
+	 * @return
+	 */
 	public static String[] getPatternProblemCategoryQueries(){
 		return INSERT_PATTERN_PROBLEMCATEGORY_RELATIONSHIPS;
 	}

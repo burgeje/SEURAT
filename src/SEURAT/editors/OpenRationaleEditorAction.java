@@ -134,9 +134,38 @@ public class OpenRationaleEditorAction extends Action {
 	 */
 	public void run() {
 
-		try {			
+		try {		
+
 			// Get Selected Node In The Rationale Explorer
 			TreeParent tree;
+			
+			if(patternLib != null){
+				tree = (TreeParent)((IStructuredSelection)patternLib.getViewer().getSelection()).getFirstElement();
+				RationaleElement rElement;
+				if (reqType == null) 
+					rElement = patternLib.getElement(tree, isNew);
+				else 
+					rElement = patternLib.getElement(new TreeObject("unused", reqType), true);
+				RationaleElement rParent = patternLib.getElement(tree, false);
+
+				Class parameterTypes[] = {
+						PatternLibrary.class,
+						TreeParent.class,
+						RationaleElement.class,
+						RationaleElement.class,
+						Boolean.TYPE
+				};
+				Object parameters[] = { patternLib, tree, rParent, rElement, isNew };
+
+				Method getInput = editorClass.getMethod("createInput", parameterTypes);
+				RationaleEditorInput data = (RationaleEditorInput)getInput.invoke(null, parameters);
+
+				// Get The Workbench Information
+				IWorkbenchPage l_page = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage();
+				String l_className = editorClass.getName();
+				l_page.openEditor(data, l_className);
+				return;
+			}
 		/*	if( pTarget != null )
 			{
 				explorer.

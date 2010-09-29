@@ -389,7 +389,6 @@ public final class RationaleDB implements Serializable {
 			}
 		}
 		
-		l_stmt.close();	
 		
 		// Now import the pattern library
 		boolean importPatternSuccess = false;
@@ -406,8 +405,8 @@ public final class RationaleDB implements Serializable {
 				importPatterns(ps);
 				ps.close();
 			}else if(store.getString(PreferenceConstants.P_DATABASETYPE).equals(
-					PreferenceConstants.DatabaseType.MYSQL
-			)){
+					PreferenceConstants.DatabaseType.MYSQL))
+			{
 
 
 				String[] l_patternQueries = RationaleDBCreate.getPatternQueries();
@@ -425,10 +424,12 @@ public final class RationaleDB implements Serializable {
 			String[] l_patternDecisionQueries = RationaleDBCreate.getPatternDecisionQueries();
 			for (String l_patternDecisionQuery: l_patternDecisionQueries){
 				try {
+					System.out.println("Creating Pattern Decisions");
 					l_stmt.execute(l_patternDecisionQuery);
 				} catch (SQLException e) {
 					int i = 0;
 					i++;
+					System.err.println("Pattern decision creation has failed.");
 					throw e;
 				}				
 			}
@@ -477,6 +478,7 @@ public final class RationaleDB implements Serializable {
 				}				
 			}
 		}
+		l_stmt.close();	
 
 	}
 
