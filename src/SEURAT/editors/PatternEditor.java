@@ -14,10 +14,13 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.List;
 import org.eclipse.swt.widgets.Text;
 
+import SEURAT.events.RationaleUpdateEvent;
+
 import edu.wpi.cs.jburge.SEURAT.editors.DisplayUtilities;
 import edu.wpi.cs.jburge.SEURAT.rationaleData.Argument;
 import edu.wpi.cs.jburge.SEURAT.rationaleData.Pattern;
 import edu.wpi.cs.jburge.SEURAT.rationaleData.PatternElementType;
+import edu.wpi.cs.jburge.SEURAT.rationaleData.Question;
 import edu.wpi.cs.jburge.SEURAT.rationaleData.RationaleDB;
 import edu.wpi.cs.jburge.SEURAT.rationaleData.RationaleElement;
 import edu.wpi.cs.jburge.SEURAT.rationaleData.ReqStatus;
@@ -27,19 +30,20 @@ import edu.wpi.cs.jburge.SEURAT.views.PatternLibrary;
 import edu.wpi.cs.jburge.SEURAT.views.RationaleExplorer;
 import edu.wpi.cs.jburge.SEURAT.views.TreeParent;
 
+/**
+ * This is the workbench editor of Patterns.
+ * @author yechen
+ *
+ */
 public class PatternEditor extends RationaleEditorBase {
 
-	private Text nameField;
+	private Text nameField, urlField;
 	
-	private Text summaryArea;
+	private Text summaryArea, problemArea, contextArea, solutionArea, implementationArea, exampleArea;
 	
-	private Text problemArea;
+	private List positiveList, negativeList; //The list of positive and negative quality attributes of the pattern
 	
-	private Text contextArea;
-	
-	private Text solutionArea;
-	
-	private Text implementationArea;
+	private Button submitButton, cancelButton;
 	
 	private Combo typeBox;	
 	
@@ -52,256 +56,170 @@ public class PatternEditor extends RationaleEditorBase {
 	
 	@Override
 	public Class editorType() {
-		// TODO Auto-generated method stub
-		return null;
+		return Pattern.class;
 	}
 
 	@Override
 	public RationaleElement getRationaleElement() {
 		// TODO Auto-generated method stub
-		return null;
+		return getPattern();
 	}
-
-	@Override
-	public boolean saveData() {
-		// TODO Auto-generated method stub
-		return false;
+	
+	/**
+	 * Respond to changes made to a question.
+	 * 
+	 * @param pElement The question which has changed
+	 * @param pEvent A description of the changes made to the question
+	 */
+	public void onUpdate(Question pElement, RationaleUpdateEvent pEvent)
+	{
+		try
+		{
+			if( pEvent.getElement().equals(getPattern()) )
+			{
+				if( pEvent.getDestroyed() )
+				{
+					closeEditor();
+				}
+				else
+				if( pEvent.getModified() )
+				{
+					refreshForm(pEvent);
+				}
+			}			
+		}
+		catch( Exception eError )
+		{
+			System.out.println("Exception in PatternEditor: onUpdate");
+		}
 	}
-
+	
+	private Pattern getPattern(){
+		return (Pattern) getEditorData().getAdapter(Pattern.class);
+	}
 
 	public void setupForm(Composite parent) {
+		Pattern ourPattern = getPattern();
+		ChangeListener modifiedListener = getNeedsSaveListener();
+		//Get pattern, and change listener first to provide more efficiency.
 		GridLayout gridLayout = new GridLayout();
-		gridLayout.numColumns = 5;
-		gridLayout.marginHeight = 5;
-		gridLayout.makeColumnsEqualWidth = true;
+		gridLayout.numColumns=1;
+		gridLayout.marginHeight=5;
+		gridLayout.makeColumnsEqualWidth=true;
 		parent.setLayout(gridLayout);
 		
 		if (isCreating())
 		{
 			getPattern().setType(PatternElementType.ARCHITECTURE);
 		}
-		/* - do we need to update our status first? probably not...
-		 else
-		 {
-		 RequirementInferences inf = new RequirementInferences();
-		 Vector newStat = inf.updateRequirement(getRequirement());
-		 } */
 		
 		new Label(parent, SWT.NONE).setText("Name:");
 		
 		nameField =  new Text(parent, SWT.SINGLE | SWT.BORDER);
-		nameField.setText(getPattern().getName());
+		nameField.setText(ourPattern.getName());
+		nameField.addModifyListener(modifiedListener);
 		GridData gridData = new GridData(GridData.HORIZONTAL_ALIGN_FILL | GridData.VERTICAL_ALIGN_BEGINNING);
 		DisplayUtilities.setTextDimensions(nameField, gridData, 50);
 		gridData.horizontalSpan = 5;
 		gridData.grabExcessHorizontalSpace = true;
 		gridData.horizontalAlignment = GridData.FILL;
-		
-		nameField.addModifyListener(getNeedsSaveListener());
 		nameField.setLayoutData(gridData);
 		
-		new Label(parent, SWT.NONE).setText("Summary:");
+		new Label(parent, SWT.NONE).setText("Type:");
+		typeBox = new Combo(parent, SWT.NONE);
+		Enumeration typeEnum = PatternElementType.elements();
+		int typeIndex = 0;
+		PatternElementType patternType;
+		while (typeEnum.hasMoreElements()){
+			patternType = (PatternElementType) typeEnum.nextElement();
+			typeBox.add(patternType.toString());
+			if(patternType.toString().compareTo(ourPattern.getType().toString()) == 0){
+				typeBox.select(typeIndex);
+			}
+			typeIndex++;
+		}
+		typeBox.addModifyListener(modifiedListener);
 		
-		summaryArea = new Text(parent, SWT.MULTI | SWT.WRAP | SWT.BORDER | SWT.V_SCROLL);
-		summaryArea.setText(getPattern().getDescription());
-		summaryArea.addModifyListener(getNeedsSaveListener());
-		gridData = new GridData(GridData.HORIZONTAL_ALIGN_FILL);
-		DisplayUtilities.setTextDimensions(summaryArea, gridData, 50, 5);
+		new Label(parent, SWT.NONE).setText("Online Resource URL:");	
+		urlField = new Text(parent, SWT.SINGLE|SWT.BORDER);
+		urlField.setText(ourPattern.getUrl());
+		urlField.addModifyListener(modifiedListener);
+		gridData = new GridData(GridData.HORIZONTAL_ALIGN_FILL | GridData.VERTICAL_ALIGN_BEGINNING);
+		DisplayUtilities.setTextDimensions(urlField, gridData, 50);
 		gridData.horizontalSpan = 5;
-		gridData.heightHint = summaryArea.getLineHeight() * 3;
 		gridData.grabExcessHorizontalSpace = true;
 		gridData.horizontalAlignment = GridData.FILL;
-		summaryArea.setLayoutData(gridData);
 		
-		new Label(parent, SWT.NONE).setText("Context:");
 		
+		new Label(parent, SWT.NONE).setText("Description:");
 		summaryArea = new Text(parent, SWT.MULTI | SWT.WRAP | SWT.BORDER | SWT.V_SCROLL);
-		summaryArea.setText(getPattern().getDescription());
-		summaryArea.addModifyListener(getNeedsSaveListener());
-		gridData = new GridData(GridData.HORIZONTAL_ALIGN_FILL);
+		summaryArea.setText(ourPattern.getDescription());
+		summaryArea.addModifyListener(modifiedListener);
+		gridData = createTextAreaGridData(summaryArea);
 		DisplayUtilities.setTextDimensions(summaryArea, gridData, 50, 5);
-		gridData.horizontalSpan = 5;
-		gridData.heightHint = summaryArea.getLineHeight() * 3;
-		gridData.grabExcessHorizontalSpace = true;
-		gridData.horizontalAlignment = GridData.FILL;
 		summaryArea.setLayoutData(gridData);
 		
-//		new Label(parent, SWT.NONE).setText("Type:");
-//		
-//		
-//		typeBox = new Combo(parent, SWT.NONE);
-//		typeBox.addModifyListener(getNeedsSaveListener());
-//		Enumeration typeEnum = ReqType.elements();
-////		System.out.println("got enum");
-//		int i = 0;
-//		ReqType rtype;
-//		while (typeEnum.hasMoreElements())
-//		{
-//			rtype = (ReqType) typeEnum.nextElement();
-////			System.out.println("got next element");
-//			typeBox.add( rtype.toString());
-//			if (rtype.toString().compareTo(getPattern().getType().toString()) == 0)
-//			{
-////				System.out.println(getRequirement().getType().toString());
-//				typeBox.select(i);
-////				System.out.println(i);
-//			}
-//			i++;
-//		}
-//		gridData = new GridData(GridData.HORIZONTAL_ALIGN_FILL);
-//		gridData.grabExcessHorizontalSpace = true;
-//		gridData.horizontalAlignment = GridData.FILL;
-//		typeBox.setLayoutData(gridData);
-//		
-//		new Label(parent, SWT.NONE).setText("Status:");
-//		statusBox = new Combo(parent, SWT.NONE);
-//		statusBox.addModifyListener(getNeedsSaveListener());
-//		Enumeration statEnum = ReqStatus.elements();
-//		int j=0;
-//		ReqStatus stype;
-//		while (statEnum.hasMoreElements())
-//		{
-//			stype = (ReqStatus) statEnum.nextElement();
-//			statusBox.add( stype.toString() );
-//			if (stype.toString().compareTo(getRequirement().getStatus().toString()) == 0)
-//			{
-////				System.out.println(getRequirement().getStatus().toString());
-//				statusBox.select(j);
-////				System.out.println(j);
-//			}
-//			j++;
-//		}
-//		
-//		new Label(parent, SWT.NONE).setText("Artifact:");
-//		
-//		artifactField = new Text(parent, SWT.SINGLE | SWT.BORDER | SWT.V_SCROLL | SWT.H_SCROLL);
-//		artifactField.addModifyListener(getNeedsSaveListener());
-//		if (getRequirement().getArtifact() != null)
-//		{
-//			artifactField.setText(getRequirement().getArtifact());
-//		}
-//		else
-//		{
-//			artifactField.setText("");
-//		}
-//		gridData = new GridData(GridData.HORIZONTAL_ALIGN_FILL);
-//		gridData.horizontalSpan = 1;
-//		gridData.grabExcessHorizontalSpace = true;
-//		gridData.horizontalAlignment = GridData.FILL;
-//		artifactField.setLayoutData(gridData);
-//		
-//		
-//		new Label(parent, SWT.NONE).setText("Arguments For");
-//		new Label(parent, SWT.NONE).setText(" ");
-//		new Label(parent, SWT.NONE).setText(" ");
-//		
-//		
-//		new Label(parent, SWT.NONE).setText("Arguments Against");
-//		new Label(parent, SWT.NONE).setText(" ");
-//		new Label(parent, SWT.NONE).setText(" ");
-//		
-//		forModel = new List(parent, SWT.SINGLE | SWT.V_SCROLL);
-//		
-//		gridData = new GridData(GridData.HORIZONTAL_ALIGN_FILL);
-//		gridData.horizontalSpan = 3;
-//		gridData.grabExcessHorizontalSpace = true;
-//		gridData.grabExcessVerticalSpace = true;
-//		gridData.horizontalAlignment = GridData.FILL;
-//		gridData.verticalAlignment = GridData.FILL;
-//		int listHeight = forModel.getItemHeight() * 4;
-//		Rectangle trim = forModel.computeTrim(0, 0, 0, listHeight);
-//		gridData.heightHint = trim.height;
-//		Vector listV = getRequirement().getArgumentsFor();
-//		Enumeration listE = listV.elements();
-//		while (listE.hasMoreElements())
-//		{
-//			Argument arg = new Argument();
-//			arg.fromDatabase((String)listE.nextElement());
-//			
-//			forModel.add( arg.getName() );
-//			
-//			// Register Event Notification
-//			try
-//			{
-//				RationaleDB.getHandle().Notifier().Subscribe(arg, this, "onForArgumentUpdate");
-//			}
-//			catch( Exception e )
-//			{
-//				System.out.println("Requirement Editor: For Argument Update Notification Not Available!");
-//			}
-//		}    
-//		// add a list of arguments against to the right side
-//		forModel.setLayoutData(gridData);
-//		
-//		
-//		againstModel = new List(parent, SWT.SINGLE | SWT.V_SCROLL);
-//		gridData = new GridData(GridData.HORIZONTAL_ALIGN_FILL);
-//		gridData.horizontalSpan = 3;
-//		listHeight = againstModel.getItemHeight() * 4;
-//		Rectangle rtrim = againstModel.computeTrim(0, 0, 0, listHeight);
-//		gridData.heightHint = rtrim.height;
-//		gridData.grabExcessHorizontalSpace = true;
-//		gridData.grabExcessVerticalSpace = true;
-//		gridData.horizontalAlignment = GridData.FILL;
-//		gridData.verticalAlignment = GridData.FILL;
-//		
-//		listV = getRequirement().getArgumentsAgainst();
-//		listE = listV.elements();
-//		while (listE.hasMoreElements())
-//		{
-//			Argument arg = new Argument();
-//			arg.fromDatabase((String)listE.nextElement());
-//			
-//			againstModel.add( arg.getName() );
-//			// Register Event Notification
-//			try
-//			{
-//				RationaleDB.getHandle().Notifier().Subscribe(arg, this, "onAgainstArgumentUpdate");
-//			}
-//			catch( Exception e )
-//			{
-//				System.out.println("Requirement Editor: Against Argument Update Notification Not Available!");
-//			}
-//		}    
-//		againstModel.setLayoutData(gridData);
-//		
-//		enableButton = new Button(parent, SWT.CHECK);
-//		enableButton.setText("Enabled");
-//		enableButton.addSelectionListener(getSelNeedsSaveListener());
-//		enableButton.setSelection(getRequirement().getEnabled());
-//		
-//		gridData = new GridData();
-//		gridData.horizontalSpan = 2;
-//		gridData.grabExcessHorizontalSpace = true;
-//		gridData.horizontalAlignment = GridData.FILL;
-//		enableButton.setLayoutData(gridData);
-//		new Label(parent, SWT.NONE).setText(" ");
-//		new Label(parent, SWT.NONE).setText(" ");
-//		new Label(parent, SWT.NONE).setText(" ");
-//		new Label(parent, SWT.NONE).setText(" ");
-//		
-//		new Label(parent, SWT.NONE).setText(" ");
-//		new Label(parent, SWT.NONE).setText(" ");
-//		new Label(parent, SWT.NONE).setText(" ");
-//		new Label(parent, SWT.NONE).setText(" ");	
-//
-//		// Register Event Notification For Changes To This Element
-//		try
-//		{
-//			RationaleDB.getHandle().Notifier().Subscribe(getRequirement(), this, "onUpdate");
-//		}
-//		catch( Exception e )
-//		{
-//			System.out.println("Requirement Editor: Updated Not Available!");
-//		}
+		new Label(parent, SWT.NONE).setText("Problem: ");
+		problemArea = new Text(parent, SWT.MULTI | SWT.WRAP | SWT.BORDER | SWT.V_SCROLL);
+		problemArea.setText(ourPattern.getProblem());
+		problemArea.addModifyListener(modifiedListener);
+		gridData = createTextAreaGridData(problemArea);
+		DisplayUtilities.setTextDimensions(problemArea, gridData, 50, 5);
+		problemArea.setLayoutData(gridData);
+		
+		//TODO Keep going!
+		new Label(parent, SWT.NONE).setText("Context");
+		contextArea = new Text(parent, SWT.MULTI | SWT.WRAP | SWT.BORDER | SWT.V_SCROLL);
+		contextArea.setText(ourPattern.getContext());
+		contextArea.addModifyListener(modifiedListener);
+		gridData = createTextAreaGridData(contextArea);
+		DisplayUtilities.setTextDimensions(contextArea, gridData, 50, 5);
+		contextArea.setLayoutData(gridData);
+		
+		new Label(parent, SWT.NONE).setText("Solution");
+		solutionArea = new Text(parent, SWT.MULTI | SWT.WRAP | SWT.BORDER | SWT.V_SCROLL);
+		solutionArea.setText(ourPattern.getSolution());
+		solutionArea.addModifyListener(modifiedListener);
+		gridData = createTextAreaGridData(solutionArea);
+		DisplayUtilities.setTextDimensions(solutionArea, gridData, 50, 5);
+		solutionArea.setLayoutData(gridData);
+		
+		new Label(parent, SWT.NONE).setText("Implementation");
+		implementationArea = new Text(parent, SWT.MULTI | SWT.WRAP | SWT.BORDER | SWT.V_SCROLL);
+		implementationArea.setText(ourPattern.getImplementation());
+		implementationArea.addModifyListener(modifiedListener);
+		gridData = createTextAreaGridData(implementationArea);
+		DisplayUtilities.setTextDimensions(implementationArea, gridData, 50, 5);
+		implementationArea.setLayoutData(gridData);
+		
+		new Label(parent, SWT.NONE).setText("Example");
+		exampleArea = new Text(parent, SWT.MULTI | SWT.WRAP | SWT.BORDER | SWT.V_SCROLL);
+		exampleArea.setText(ourPattern.getExample());
+		exampleArea.addModifyListener(modifiedListener);
+		gridData = createTextAreaGridData(exampleArea);
+		DisplayUtilities.setTextDimensions(exampleArea, gridData, 50, 5);
+		exampleArea.setLayoutData(gridData);
+		
+		new Label(parent, SWT.NONE).setText("Affected Attributes");
 		
 		updateFormCache();
 
 	}
 	
-	public Pattern getPattern() {
-		return (Pattern)getEditorData().getAdapter(Pattern.class);
+
+	/**
+	 * This creates a default setup of GridData that is used 
+	 * @return GridData to be used for create text area.
+	 */
+	private GridData createTextAreaGridData(Text textArea){
+		GridData result = new GridData(GridData.HORIZONTAL_ALIGN_FILL);
+		result.horizontalSpan = 5;
+		result.grabExcessHorizontalSpace = true;
+		result.heightHint = textArea.getLineHeight() * 3;
+		result.horizontalAlignment = GridData.FILL;
+		return result;
 	}
+	
 
 	
 	public static class Input extends RationaleEditorInput {
@@ -338,6 +256,13 @@ public class PatternEditor extends RationaleEditorBase {
 		public boolean targetType(Class type) {
 			return type == Pattern.class;
 		}
+	}
+
+
+	@Override
+	public boolean saveData() {
+		// TODO Auto-generated method stub
+		return false;
 	}
 
 }

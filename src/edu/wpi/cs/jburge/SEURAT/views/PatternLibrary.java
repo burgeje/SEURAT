@@ -329,8 +329,8 @@ IPropertyChangeListener {
 						
 						Pattern patternSelected = new Pattern();
 						patternSelected.fromDatabase(((TreeObject)obj).getName());
-						
-						boolean canceled = patternSelected.display(ourDisplay);						
+						showPatternEditor.run();
+						//boolean canceled = patternSelected.display(ourDisplay);						
 					}else if(ourElement.getType() == RationaleElementType.PATTERNDECISION){
 						showPatternDecisionEditor.run();
 					}else {

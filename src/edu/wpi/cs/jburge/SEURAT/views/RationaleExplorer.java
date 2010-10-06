@@ -271,7 +271,10 @@ public class RationaleExplorer extends ViewPart implements ISelectionListener, I
 	private Action showTradeoffEditor;
 	private Action addQuestionEditor;
 	private Action showQuestionEditor;
-	private Action editPattern;
+	//private Action editPattern;
+	//editPattern seems to be deprecated with the workbench editor implementation.
+	//Disabling this now and see whether we can still run eclipse.
+	//If so, clean up these stuff later.
 	private Action newArchitectureProject;
 	
 	/**
@@ -593,7 +596,7 @@ public class RationaleExplorer extends ViewPart implements ISelectionListener, I
 			}
 			else if (ourElement.getType() == RationaleElementType.ALTERNATIVEPATTERN )
 			{
-				manager.add(editPattern);
+				//manager.add(editPattern);
 				manager.add(deleteElement);
 				manager.add(addArgumentEditor);
 			}
@@ -662,8 +665,8 @@ public class RationaleExplorer extends ViewPart implements ISelectionListener, I
 		showQuestionEditor = new OpenRationaleEditorAction(QuestionEditor.class, this, false);
 		
 		//Views that open as editors
-		
-		editPattern = new Action() {
+		//editPattern = new OpenRationaleEditorAction(PatternEditor.class, this, false);
+		/*editPattern = new Action() {
 			public void run() {
 
 				ISelection selection = viewer.getSelection();
@@ -673,19 +676,13 @@ public class RationaleExplorer extends ViewPart implements ISelectionListener, I
 				patternSelected.fromDatabase(((TreeObject)obj).getName());
 				
 				boolean canceled = patternSelected.display(ourDisplay);
-//				
-//				if(!canceled){
-//					
-//					
-//				}
-				//EditPattern ep = new EditPattern(ourDisplay, patternSelected, true);
-				
+
 				
 			}			
 		}; //end of the edit element action definition
 		editPattern.setText("Edit");
 		editPattern.setToolTipText("Edit Pattern");
-		
+		*/
 		//
 		//associate action - used to associate rationale with a java element
 		//
@@ -1072,7 +1069,8 @@ public class RationaleExplorer extends ViewPart implements ISelectionListener, I
 						showTradeoffEditor.run();
 					} else if (ourElement.getType() == RationaleElementType.COOCCURRENCE) {
 						showTradeoffEditor.run();
-					} else {
+					}
+					else {
 						try {
 							RationaleElement rElement = getElement((TreeParent) obj, false);
 							editElement((TreeParent) obj, rElement, ourDisplay);

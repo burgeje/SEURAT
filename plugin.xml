@@ -303,7 +303,7 @@ isGoToNextNavigationTargetKey="ismyAppRecordGoToNextNavigationTarget"
           </editor>
           <editor
                 class="SEURAT.editors.PatternDecisionEditor"
-                default="false"
+                default="true"
                 extensions="seurat_editors_paterndecisioneditor"
                 icon="/icons/Dec.gif"
                 id="SEURAT.editors.PatternDecisionEditor"
