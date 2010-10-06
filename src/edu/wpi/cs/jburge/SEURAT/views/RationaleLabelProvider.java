@@ -205,7 +205,57 @@ public class RationaleLabelProvider extends LabelProvider {
 			descriptor = SEURATPlugin.getImageDescriptor("Rat2.gif");
 		} else if (element.getType() == RationaleElementType.TRADEOFF) {
 			descriptor = SEURATPlugin.getImageDescriptor("Trade.gif");
-		} else {
+		} 	else if (element.getType() == RationaleElementType.PATTERN)
+		{
+			Pattern myPattern = new Pattern();
+			myPattern.fromDatabase(element.getName());
+			if(myPattern.getType().toString().compareToIgnoreCase("ARCHITECTURE")==0){
+				descriptor = SEURATPlugin.getImageDescriptor("patternArchi.GIF");
+			}else if(myPattern.getType().toString().compareToIgnoreCase("DESIGN")==0){
+				descriptor = SEURATPlugin.getImageDescriptor("patternDesign.GIF");
+			}else if(myPattern.getType().toString().compareToIgnoreCase("IDIOM")==0){
+				descriptor = SEURATPlugin.getImageDescriptor("patternIdiom.GIF");
+			}else{
+				descriptor = SEURATPlugin.getImageDescriptor("patternLib.GIF");
+			}
+		}
+		else if (element.getType() == RationaleElementType.ALTERNATIVEPATTERN)
+		{
+			AlternativePattern myAltPattern = new AlternativePattern();
+			myAltPattern.fromDatabase(element.getName());
+			if(myAltPattern.getPatternInLibrary().getType().toString().compareToIgnoreCase("ARCHITECTURE")==0){
+				if (element.getStatus() == RationaleErrorLevel.ERROR)
+				{
+					if (element.getActive())
+						descriptor = SEURATPlugin.getImageDescriptor("patternArchi_sel_error.gif");
+					else	
+						descriptor = SEURATPlugin.getImageDescriptor("newAlt_error.gif");
+				}	 
+				else if  (element.getStatus() == RationaleErrorLevel.WARNING)
+				{
+					if (element.getActive())
+						descriptor = SEURATPlugin.getImageDescriptor("patternArchi_sel_warning.gif");
+					else	
+						descriptor = SEURATPlugin.getImageDescriptor("patternArchi_warning.gif");
+				}
+				else
+				{
+					if (element.getActive())
+						descriptor = SEURATPlugin.getImageDescriptor("patternArchi_sel.gif");
+					else	
+						descriptor = SEURATPlugin.getImageDescriptor("patternArchi.gif");
+					
+				}				
+				//descriptor = SEURATPlugin.getImageDescriptor("patternArchi.GIF");
+			}else if(myAltPattern.getPatternInLibrary().getType().toString().compareToIgnoreCase("DESIGN")==0){
+				descriptor = SEURATPlugin.getImageDescriptor("patternDesign.GIF");
+			}else if(myAltPattern.getPatternInLibrary().getType().toString().compareToIgnoreCase("IDIOM")==0){
+				descriptor = SEURATPlugin.getImageDescriptor("patternIdiom.GIF");
+			}else{
+				descriptor = SEURATPlugin.getImageDescriptor("patternLib.GIF");
+			}
+		}
+		else {
 			// System.out.println("element.getType().toString()" + " not
 			// matched");
 			descriptor = SEURATPlugin.getImageDescriptor("RatType.gif");

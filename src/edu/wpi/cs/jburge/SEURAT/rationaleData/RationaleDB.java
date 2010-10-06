@@ -398,28 +398,11 @@ public final class RationaleDB implements Serializable {
 		}
 		if (!importPatternSuccess){		
 			
-			if( store.getString(PreferenceConstants.P_DATABASETYPE).equals(
-					PreferenceConstants.DatabaseType.DERBY
-			)){
-				PreparedStatement ps = conn.prepareStatement("INSERT INTO patterns (name, type, description,problem, context, solution, implementation,example,url) values (?,?,?,?,?,?,?,?,?)");
-				importPatterns(ps);
-				ps.close();
-			}else if(store.getString(PreferenceConstants.P_DATABASETYPE).equals(
-					PreferenceConstants.DatabaseType.MYSQL))
-			{
-
-
-				String[] l_patternQueries = RationaleDBCreate.getPatternQueries();
-				for (String l_patternQuery: l_patternQueries){
-					try {
-						l_stmt.execute(l_patternQuery);
-					} catch (SQLException e) {
-						int i = 0;
-						i++;
-						throw e;
-					}				
-				}
-			}
+			
+			PreparedStatement ps = conn.prepareStatement("INSERT INTO patterns (name, type, description,problem, context, solution, implementation,example,url) values (?,?,?,?,?,?,?,?,?)");
+			importPatterns(ps);
+			ps.close();
+			
 			
 			String[] l_patternDecisionQueries = RationaleDBCreate.getPatternDecisionQueries();
 			for (String l_patternDecisionQuery: l_patternDecisionQueries){
