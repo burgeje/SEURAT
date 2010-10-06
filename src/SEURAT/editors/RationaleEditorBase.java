@@ -22,6 +22,7 @@ import SEURAT.events.RationaleUpdateEvent;
 import edu.wpi.cs.jburge.SEURAT.rationaleData.RationaleDB;
 import edu.wpi.cs.jburge.SEURAT.rationaleData.RationaleElement;
 import edu.wpi.cs.jburge.SEURAT.views.RationaleExplorer;
+import edu.wpi.cs.jburge.SEURAT.views.PatternLibrary;
 import edu.wpi.cs.jburge.SEURAT.views.TreeParent;
 
 /**
@@ -185,10 +186,19 @@ public abstract class RationaleEditorBase extends EditorPart
 		//////////////////////////////////////////////
 		// ---> Get Necessarry Data From Logical File
 		RationaleExplorer explorer;
-		explorer = (RationaleExplorer)getEditorInput().getAdapter(RationaleExplorer.class);
-	
+		PatternLibrary pattern;
 		TreeParent parentTree;
 		parentTree = (TreeParent)getEditorInput().getAdapter(TreeParent.class);
+		
+		explorer = (RationaleExplorer)getEditorInput().getAdapter(RationaleExplorer.class);
+		if (explorer == null){
+			pattern = (PatternLibrary)getEditorInput().getAdapter(PatternLibrary.class);
+			parentTree = pattern.editUpdate(parentTree, getRationaleElement());
+			((RationaleEditorInput) getEditorInput()).setTreeParent(parentTree);
+			return;
+		}
+	
+		
 		// <--- Get Necessarry Data From Logical File
 		//////////////////////////////////////////////
 		

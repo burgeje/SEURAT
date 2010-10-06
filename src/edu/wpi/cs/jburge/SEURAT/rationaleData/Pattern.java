@@ -1,6 +1,7 @@
 package edu.wpi.cs.jburge.SEURAT.rationaleData;
 
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -214,6 +215,7 @@ public class Pattern extends RationaleElement {
 		} catch (SQLException ex) {
 			// handle any errors 
 			RationaleDB.reportError(ex,"Error in Pattern.fromDatabase(1)", findQuery);
+			ex.printStackTrace();
 		}
 		finally { 
 			RationaleDB.releaseResources(stmt, rs);
@@ -339,6 +341,7 @@ public class Pattern extends RationaleElement {
 			}			
 		} catch (SQLException ex) {
 			RationaleDB.reportError(ex, "Pattern.fromDatabase(String)", "Pattern:FromDatabase");
+			ex.printStackTrace();
 		}
 		finally { 
 			RationaleDB.releaseResources(null,rs);
@@ -366,52 +369,26 @@ public class Pattern extends RationaleElement {
 		ResultSet rs = null; 
 		
 		try {
-			stmt = conn.createStatement(); 
+			
 			
 			if (inDatabase())
 			{
+				//Take special care when inserting blobs! (re-implemented) (YQ)
+				PreparedStatement ps = conn.prepareStatement("UPDATE patterns SET description = ?, problem = ?, context = ?, solution = ?, example = ?, implementation = ?, type = ?, url = ? WHERE name = ?");
 				
-				//now, update it with the new information
-				String updatePattern = "UPDATE patterns " +
-//				"SET name = '" +
-//				RationaleDBUtil.escape(this.name) + "', " +
-				"SET description = '" +
-				RationaleDBUtil.escape(this.description) + "', " +
-				"problem = '" +
-				RationaleDBUtil.escape(this.problem) + "', " +
-				"context = '" +
-				RationaleDBUtil.escape(this.context) + "', " +
-				"solution = '" +
-				RationaleDBUtil.escape(this.solution) + "', " +
-				"example = '" +
-				RationaleDBUtil.escape(this.example) + "', " +
-				"implementation = '" +
-				RationaleDBUtil.escape(this.implementation) + "', " +
-				"type = '" +
-				RationaleDBUtil.escape(this.type.toString()) + "', " +
-				"url = '" +
-				RationaleDBUtil.escape(this.url) + "' " +
-				" WHERE " +
-				"name = '" + this.name + "' " ;
+				ps.setBytes(1, description.getBytes());
+				ps.setBytes(2, problem.getBytes());
+				ps.setBytes(3, context.getBytes());
+				ps.setBytes(4, solution.getBytes());
+				ps.setBytes(5, example.getBytes());
+				ps.setBytes(6, implementation.getBytes());
+				ps.setString(7,type.toString());
+				ps.setString(8, url);
+				ps.setString(9, name);
+				ps.executeUpdate();
+				ps.close();
 				
-//				if (posiOnts != null){
-//					String subS = "";					
-//					Enumeration posiPatterns = posiOnts.elements();
-//					while (posiPatterns.hasMoreElements())
-//					{
-//						subS = subS + posiPatterns.nextElement().toString() + "^";
-//					}
-//					//System.out.println(subS);
-//					String updatePosiOnt = "UPDATE patterns " +
-//					"SET posi_ont = '" + subS + "' " +
-//					" WHERE " +
-//					"name = '" + this.name + "' " ;
-//					stmt.execute(updatePosiOnt);
-////					RationaleDBUtil.escape(this.posiOnt.getName())
-//				}
-				
-				stmt.execute(updatePattern);
-				
+				stmt = conn.createStatement(); 
 				//saving associated ontentries
 				//delete associated ones
 				String deleteonts = "DELETE FROM pattern_ontentries where patternID = " + this.id;
@@ -434,8 +411,9 @@ public class Pattern extends RationaleElement {
 			}else{
 				//new pattern
 				//TODO only for creating new patterns under pattern library, so don't care about ontology entries and sub-decisions???
+				//TODO I doubt this code works. Have to re-implement this if we want to insert patterns (YQ)
 				String insertP;				
-				
+				stmt = conn.createStatement(); 
 				insertP = "INSERT INTO patterns "+
 				"(name, type, description, problem, context, solution, implementation, example, url) " +
 				"VALUES ('" +
@@ -459,6 +437,7 @@ public class Pattern extends RationaleElement {
 				
 		} catch (SQLException ex) {
 			RationaleDB.reportError(ex, "Pattern.toDatabase(int)", "SQL Error");
+			ex.printStackTrace();
 		}		
 		finally { 
 			RationaleDB.releaseResources(stmt, rs);

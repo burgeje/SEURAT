@@ -619,6 +619,18 @@ IPropertyChangeListener {
 	}
 	
 	/**
+	 * Update method for editing an existing element.  This has the same function as the
+	 * editElement method, but is designed to be called by the new editors instead (there is
+	 * no display passed from the new editors).
+	 * 
+	 * @param p - the selected tree element being edited
+	 * @param e - the pattern element being edited
+	 */
+	public TreeParent editUpdate(TreeParent p, RationaleElement e) {
+		return updateTreeElement(p, e);
+	}
+	
+	/**
 	 * updateTreeElement - updates our tree element after it has been edited. 
 	 * This includes any name changes, any status changes, and adding any new rationale
 	 * tasks to the task list. Yes, this method probably does too much... The database is updated
