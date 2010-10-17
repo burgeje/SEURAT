@@ -62,14 +62,14 @@ public final class PatternElementType {
 	public PatternElementType next()  { return this.next; }
 	
 	public static final PatternElementType PATTERN = new 
-	PatternElementType("pattern");
+	PatternElementType("Pattern");
 	
 	public static final PatternElementType ARCHITECTURE = new 
-	PatternElementType("architecture");
+	PatternElementType("Architecture");
 	
 	public static final PatternElementType DESIGN = new 
-	PatternElementType("design");
+	PatternElementType("Design");
 	
 	public static final PatternElementType IDIOM = new 
-	PatternElementType("idiom");
+	PatternElementType("Idiom");
 }

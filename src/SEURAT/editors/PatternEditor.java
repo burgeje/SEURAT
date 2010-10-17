@@ -1,15 +1,10 @@
 package SEURAT.editors;
 
-import java.util.Enumeration;
-import java.util.Vector;
+import java.util.*;
 
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
-import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
@@ -40,9 +35,11 @@ import edu.wpi.cs.jburge.SEURAT.views.TreeParent;
  *
  */
 public class PatternEditor extends RationaleEditorBase {
-	
+
 	private class DataCache{
 		String name, url, description, problem, context, solution, implementation, example;
+		String type;
+		int problemcategory;
 	}
 
 	private Text nameField, urlField;
@@ -51,8 +48,14 @@ public class PatternEditor extends RationaleEditorBase {
 
 	private List positiveList, negativeList; //The list of positive and negative quality attributes of the pattern
 
-	private Combo typeBox;
-	
+	private Combo typeBox, problemCatBox;
+
+	private String patternType; //the type of the pattern (archi, design, idiom)
+
+	private Pattern ourPattern; //the pattern we're editing
+
+	private HashMap<String, Integer> problemMap; //This is a hashmap between the category id and category name, to increase effiency of saving.
+
 
 
 	/**
@@ -73,7 +76,7 @@ public class PatternEditor extends RationaleEditorBase {
 
 	@Override
 	public RationaleElement getRationaleElement() {
-		return getPattern();
+		return ourPattern;
 	}
 
 	/**
@@ -85,7 +88,7 @@ public class PatternEditor extends RationaleEditorBase {
 	 */
 	public void onUpdate(Pattern pElement, RationaleUpdateEvent pEvent)
 	{
-		Pattern ourPattern = getPattern();
+		if (ourPattern == null) return;
 		try
 		{
 			if( pEvent.getElement().equals(ourPattern) )
@@ -111,10 +114,10 @@ public class PatternEditor extends RationaleEditorBase {
 	 * Used to get the pattern object being modified
 	 * @return The pattern object we are modifying.
 	 */
-	private Pattern getPattern(){
+	private Pattern getPatternFromExplorer(){
 		return (Pattern) getEditorData().getAdapter(Pattern.class);
 	}
-	
+
 	@Override
 	protected void updateFormCache() {
 		if (nameField != null){
@@ -141,8 +144,13 @@ public class PatternEditor extends RationaleEditorBase {
 		if (exampleArea != null){
 			dataCache.example = exampleArea.getText();
 		}
+		if (ourPattern != null){
+			dataCache.problemcategory = ourPattern.getProblemCategory();
+			if (ourPattern.getType() != null)
+				dataCache.type = ourPattern.getType().toString();
+		}
 	}
-	
+
 	/**
 	 * Update the fields of the editor with the most current version
 	 * of that data. If data in the editor has been changed by the
@@ -156,77 +164,98 @@ public class PatternEditor extends RationaleEditorBase {
 		boolean l_dirty = isDirty();
 		Enumeration iterator;
 		int index;
-		Pattern ourPattern = getPattern();
+		Pattern ourPattern = getPatternFromExplorer();
+		//Probable race condition? Possible that we don't even have this in database...
+		if (ourPattern == null) return;
+		ourPattern.fromDatabase(ourPattern.getID());
+
+		//Otherwise, we have a newer pattern from database... update the object reference.
+		this.ourPattern = ourPattern;
+
+		if (ourPattern.getType() != null){
+			if (ourPattern.getType().toString().equals(dataCache.type)){
+				dataCache.type = ourPattern.getType().toString();
+			}
+			else
+				l_dirty = true;
+		}
 		
-		ourPattern.fromDatabase(getPattern().getID());
-		
+		if (ourPattern.getProblemCategory() == dataCache.problemcategory){
+			fillCategories();
+			dataCache.problemcategory = ourPattern.getProblemCategory();
+		}
+		else
+			l_dirty = true;
+
 		if (nameField.getText().equals(dataCache.name)){
 			nameField.setText(ourPattern.getName());
 			dataCache.name = nameField.getText();
 		}
 		else
 			l_dirty = true;
-		
+
 		if (urlField.getText().equals(dataCache.url)){
 			urlField.setText(ourPattern.getUrl());
 			dataCache.url = urlField.getText();
 		}
 		else
 			l_dirty = true;
-		
+
 		if (summaryArea.getText().equals(dataCache.description)){
 			summaryArea.setText(ourPattern.getDescription());
 			dataCache.description = summaryArea.getText();
 		}
 		else
 			l_dirty = true;
-		
+
 		if (problemArea.getText().equals(dataCache.problem)){
 			problemArea.setText(ourPattern.getProblem());
 			dataCache.problem = problemArea.getText();
 		}
 		else
 			l_dirty = true;
-		
+
 		if (contextArea.getText().equals(dataCache.context)){
 			contextArea.setText(ourPattern.getContext());
 			dataCache.context = contextArea.getText();
 		}
 		else
 			l_dirty = true;
-		
+
 		if (solutionArea.getText().equals(dataCache.solution)){
 			solutionArea.setText(ourPattern.getSolution());
 			dataCache.solution = solutionArea.getText();
 		}
 		else
 			l_dirty = true;
-		
+
 		if (implementationArea.getText().equals(dataCache.implementation)){
 			implementationArea.setText(ourPattern.getImplementation());
 			dataCache.implementation = implementationArea.getText();
 		}
 		else
 			l_dirty = true;
-		
+
 		if (exampleArea.getText().equals(dataCache.example)){
 			exampleArea.setText(ourPattern.getExample());
 			dataCache.example = exampleArea.getText();
 		}
 		else
 			l_dirty = true;
-		
+
 		setDirty(l_dirty);
 	}
-	
 
-	
+
+
 
 	/**
 	 * The GUI.
 	 */
 	public void setupForm(Composite parent) {
-		Pattern ourPattern = getPattern();
+		if (!isCreating())
+			ourPattern = getPatternFromExplorer();
+		else ourPattern = new Pattern();
 		ChangeListener modifiedListener = getNeedsSaveListener();
 		//Get pattern, and change listener first to provide more efficiency.
 		GridLayout gridLayout = new GridLayout();
@@ -237,7 +266,19 @@ public class PatternEditor extends RationaleEditorBase {
 
 		if (isCreating())
 		{
-			getPattern().setType(PatternElementType.ARCHITECTURE);
+			String parentType = this.getTreeParent().getName();
+			if (parentType.equals("Architectural Patterns")){
+				patternType = PatternElementType.ARCHITECTURE.toString();
+			}
+			else if (parentType.equals("Design Patterns")){
+				patternType = PatternElementType.DESIGN.toString();
+			}
+			else if (parentType.equals("Idioms")){
+				patternType = PatternElementType.IDIOM.toString();
+			}
+		}
+		else {
+			patternType = ourPattern.getType().toString();
 		}
 
 		new Label(parent, SWT.NONE).setText("Name:");
@@ -252,10 +293,17 @@ public class PatternEditor extends RationaleEditorBase {
 		gridData.horizontalAlignment = GridData.FILL;
 		nameField.setLayoutData(gridData);
 
+		/*		
 		new Label(parent, SWT.NONE).setText("Type:");
 		typeBox = new Combo(parent, SWT.NONE);
 		fillTypes();
 		typeBox.addModifyListener(modifiedListener);
+		 */
+
+		new Label(parent, SWT.NONE).setText("Category: ");
+		problemCatBox = new Combo(parent, SWT.NONE);
+		fillCategories();
+		problemCatBox.addModifyListener(modifiedListener);
 
 
 		new Label(parent, SWT.NONE).setText("Online Resource URL:");	
@@ -286,7 +334,6 @@ public class PatternEditor extends RationaleEditorBase {
 		DisplayUtilities.setTextDimensions(problemArea, gridData, 50, 5);
 		problemArea.setLayoutData(gridData);
 
-		//TODO Keep going!
 		new Label(parent, SWT.NONE).setText("Context");
 		contextArea = new Text(parent, SWT.MULTI | SWT.WRAP | SWT.BORDER | SWT.V_SCROLL);
 		contextArea.setText(ourPattern.getContext());
@@ -377,14 +424,34 @@ public class PatternEditor extends RationaleEditorBase {
 		negativeList.setLayoutData(gridData);
 
 		updateFormCache();
-
 	}
-	
+
+	/**
+	 * This will fill up the problemCatBox with all problem categories.
+	 * It will also select the one that's being used.
+	 */
+	private void fillCategories(){
+		if (problemCatBox == null) return;
+		problemCatBox.removeAll();
+		RationaleDB db = RationaleDB.getHandle();
+
+		int ourCategory = ourPattern.getProblemCategory();
+		problemMap = db.getCategories(patternType.toString());
+
+		Iterator<String> categories = problemMap.keySet().iterator();
+		while (categories.hasNext()){
+			String currentCategory = categories.next();
+			problemCatBox.add(currentCategory);
+			if (problemMap.get(currentCategory) == ourCategory)
+				problemCatBox.select(problemCatBox.indexOf(currentCategory));
+		}
+	}
+
 	/**
 	 * This will fill up typebox with the most recent type amounts
+	 * @deprecated This should no longer be useful. Another feature will be implemented soon.
 	 */
 	private void fillTypes(){
-		Pattern ourPattern = getPattern();
 		if (typeBox==null) return;
 		typeBox.removeAll();
 		Enumeration typeEnum = PatternElementType.elements();
@@ -464,28 +531,24 @@ public class PatternEditor extends RationaleEditorBase {
 	 */
 	public boolean saveData() {
 		//TODO
-		Pattern ourPattern = getPattern();
 		ConsistencyChecker checker = new ConsistencyChecker(ourPattern.getID(), nameField.getText(), "patterns");
 		if (!nameField.getText().trim().equals("") &&
 				(ourPattern.getName() == nameField.getText() || checker.check(false))){
 			//Valid pattern name
-			if (isCreating()){
-				//Unimplemented as the current refactor iteration does not have capability of adding a new pattern.
-			}
-			else{
-				//Pattern name consistent with DB... Update record.
-				ourPattern.setName(nameField.getText());
-				ourPattern.setType(PatternElementType.fromString(typeBox.getItem(typeBox.getSelectionIndex())));
-				ourPattern.setUrl(urlField.getText());
-				ourPattern.setDescription(summaryArea.getText());
-				ourPattern.setProblem(problemArea.getText());
-				ourPattern.setContext(contextArea.getText());
-				ourPattern.setSolution(solutionArea.getText());
-				ourPattern.setImplementation(implementationArea.getText());
-				ourPattern.setExample(exampleArea.getText());
-				ourPattern.toDatabase(ourPattern.getID());
-				return true;
-			}
+			//Pattern name consistent with DB... Update record.
+			ourPattern.setName(nameField.getText());
+			ourPattern.setType(PatternElementType.fromString(patternType));
+			//ourPattern.setType(PatternElementType.fromString(typeBox.getItem(typeBox.getSelectionIndex())));
+			ourPattern.setUrl(urlField.getText());
+			ourPattern.setDescription(summaryArea.getText());
+			ourPattern.setProblem(problemArea.getText());
+			ourPattern.setContext(contextArea.getText());
+			ourPattern.setSolution(solutionArea.getText());
+			ourPattern.setImplementation(implementationArea.getText());
+			ourPattern.setExample(exampleArea.getText());
+			ourPattern.setProblemCategory(problemMap.get(problemCatBox.getItem(problemCatBox.getSelectionIndex())));
+			ourPattern.toDatabase(ourPattern.getID());
+			return true;
 		}
 		else{
 			//Invalid pattern name

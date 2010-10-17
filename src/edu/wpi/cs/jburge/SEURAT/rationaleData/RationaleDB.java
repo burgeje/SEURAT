@@ -108,12 +108,12 @@ public final class RationaleDB implements Serializable {
 	 * argument ontology import functionality.)
 	 */
 	private OntEntry argumentOntology;
-	
+
 	/**
 	 * The location of the XML argument ontology
 	 */
 	private static String ontFile = SEURATPlugin.getDefault().getStateLocation()
-		.addTrailingSeparator().toOSString() + "argument-ontology.xml";
+	.addTrailingSeparator().toOSString() + "argument-ontology.xml";
 	private static String patternFile = SEURATPlugin.getDefault().getStateLocation()
 	.addTrailingSeparator().toOSString() + "patterns.xml";
 	/**
@@ -130,18 +130,18 @@ public final class RationaleDB implements Serializable {
 	 * The connection to our database
 	 */
 	private static Connection conn;
-	
+
 	private PublishSubscribeManager<RationaleElement,Object,RationaleUpdateEvent>
-		updateNotifier = new 
-			PublishSubscribeManager<RationaleElement,Object,RationaleUpdateEvent>(
-				new RationaleUpdateEvent(), false
-			);
+	updateNotifier = new 
+	PublishSubscribeManager<RationaleElement,Object,RationaleUpdateEvent>(
+			new RationaleUpdateEvent(), false
+	);
 
 	public PublishSubscribeManager<RationaleElement,Object,RationaleUpdateEvent>
-		Notifier()
-		{
-			return updateNotifier;
-		}
+	Notifier()
+	{
+		return updateNotifier;
+	}
 	/**
 	 * Rationale DB Constructor. This MUST remain PRIVATE in order for this
 	 * class to stay a d. This class sets up the JDBC database
@@ -163,8 +163,8 @@ public final class RationaleDB implements Serializable {
 		saveLast = RationaleElement.getLastID();
 
 		if( store.getString(PreferenceConstants.P_DATABASETYPE).equals(
-							PreferenceConstants.DatabaseType.DERBY
-			))
+				PreferenceConstants.DatabaseType.DERBY
+		))
 		{
 			derbyConnect();
 		}
@@ -174,9 +174,9 @@ public final class RationaleDB implements Serializable {
 		{
 			sqlConnect();
 		}
-		
+
 		migrate();
-		
+
 		prepareStatements();
 	};
 
@@ -210,7 +210,7 @@ public final class RationaleDB implements Serializable {
 			int i = 0;
 			i++;
 		}
-		
+
 		String passwordSpec;
 		String password = store.getString(PreferenceConstants.P_DATABASEPASSWORD);
 		if (password.length() == 0)
@@ -222,9 +222,9 @@ public final class RationaleDB implements Serializable {
 			passwordSpec = "&password=" + password;
 			// passwordSpec = " ?password=" + password;
 		}
-		
+
 		String connStr = "jdbc:mysql://";
-		
+
 		// Set up connection string based on server location, address, and port preferences
 		if (store.getString(PreferenceConstants.P_MYSQLLOCATION).equals(PreferenceConstants.
 				MySQLLocationType.LOCAL)) {
@@ -233,7 +233,7 @@ public final class RationaleDB implements Serializable {
 		else {
 			String address = store.getString(PreferenceConstants.P_MYSQLADDRESS);
 			String port = store.getString(PreferenceConstants.P_MYSQLPORT);
-			
+
 			if (port.length() == 0) {
 				connStr += address+"/";
 			}
@@ -242,13 +242,13 @@ public final class RationaleDB implements Serializable {
 			}
 		}
 		connStr += dbName
-			+ "?user="
-			+ store
-			.getString(PreferenceConstants.P_DATABASEUSER)
-			+ passwordSpec;
-		
+		+ "?user="
+		+ store
+		.getString(PreferenceConstants.P_DATABASEUSER)
+		+ passwordSpec;
+
 		try {
-			
+
 			System.out.println(connStr);
 			conn = DriverManager.getConnection(connStr);
 		} catch (SQLException ex) {
@@ -288,7 +288,7 @@ public final class RationaleDB implements Serializable {
 			mbox.setMessage("Error getting preferences");
 			mbox.open();
 		}
-		
+
 		final String l_ConnectString = "jdbc:derby:";
 		Properties props = new Properties();
 		props.put("user", "seurat_dummy");
@@ -323,10 +323,10 @@ public final class RationaleDB implements Serializable {
 			try
 			{
 				props.put("create", "true");
-	    		// If the database can't be opened, it needs to be created.
-	    		conn = DriverManager.getConnection(l_ConnectString, props);
+				// If the database can't be opened, it needs to be created.
+				conn = DriverManager.getConnection(l_ConnectString, props);
 
-	    		createTables();
+				createTables();
 			}
 			catch( SQLException eInner )
 			{
@@ -352,7 +352,7 @@ public final class RationaleDB implements Serializable {
 		String []l_queries = RationaleDBCreate.getQueries();
 
 		Statement l_stmt = conn.createStatement();
-		
+
 		for( String l_query : l_queries )
 		{
 			try
@@ -366,7 +366,7 @@ public final class RationaleDB implements Serializable {
 				throw eError;
 			}
 		}
-		
+
 		// Now import the argument ontology, if the file exists
 		boolean importSuccess = false;
 		if (new File(ontFile).exists()){
@@ -388,8 +388,8 @@ public final class RationaleDB implements Serializable {
 				}
 			}
 		}
-		
-		
+
+
 		// Now import the pattern library
 		boolean importPatternSuccess = false;
 		if (new File(patternFile).exists()){
@@ -397,13 +397,13 @@ public final class RationaleDB implements Serializable {
 			importPatternSuccess = RationaleDBUtil.importPatterns(patternFile);
 		}
 		if (!importPatternSuccess){		
-			
-			
+
+
 			PreparedStatement ps = conn.prepareStatement("INSERT INTO patterns (name, type, description,problem, context, solution, implementation,example,url) values (?,?,?,?,?,?,?,?,?)");
 			importPatterns(ps);
 			ps.close();
-			
-			
+
+
 			String[] l_patternDecisionQueries = RationaleDBCreate.getPatternDecisionQueries();
 			for (String l_patternDecisionQuery: l_patternDecisionQueries){
 				try {
@@ -416,7 +416,7 @@ public final class RationaleDB implements Serializable {
 					throw e;
 				}				
 			}
-			
+
 			String[] l_patternOntEntryQueries = RationaleDBCreate.getPatternOntEntryQueries();
 			for (String l_patternOntEntryQuery: l_patternOntEntryQueries){
 				try {
@@ -427,7 +427,7 @@ public final class RationaleDB implements Serializable {
 					throw e;
 				}				
 			}
-			
+
 			String[] l_patternDecisionRelationshipQueries = RationaleDBCreate.getPatternDecisionRelationShipQueries();
 			for (String l_patternDecisionRelationshipQuery: l_patternDecisionRelationshipQueries){
 				try {
@@ -438,7 +438,7 @@ public final class RationaleDB implements Serializable {
 					throw e;
 				}				
 			}
-			
+
 			String[] l_patternProblemCategoriesQueries = RationaleDBCreate.getPatternProblemCategoriesQueries();
 			for (String l_patternProblemCategoryQuery: l_patternProblemCategoriesQueries){
 				try {
@@ -449,7 +449,7 @@ public final class RationaleDB implements Serializable {
 					throw e;
 				}				
 			}
-			
+
 			String[] l_patternProblemCategoryQueries = RationaleDBCreate.getPatternProblemCategoryQueries();
 			for (String l_pattern_problemCategoryQuery: l_patternProblemCategoryQueries){
 				try {
@@ -473,7 +473,7 @@ public final class RationaleDB implements Serializable {
 	 * @see SelectOntEntry
 	 */
 	private static PreparedStatement m_ontEntriesQuery = null;
-	
+
 	/**
 	 * Prepared Statement For The Ontology Entry's
 	 * FromDatabase pseudo constructor.
@@ -481,11 +481,11 @@ public final class RationaleDB implements Serializable {
 	 * @see OntEntry#fromDatabase(String)
 	 */
 	private static PreparedStatement m_ontEntryFromDB = null;
-	
+
 	private static PreparedStatement m_patternFromDB = null;
-	
+
 	private static PreparedStatement m_altPatternFromDB = null;
-	
+
 	/**
 	 * Accessor Method For The Ontology Entries FromDatabase Pseudo
 	 * Constructor. This is how the Ontology Entry Class Retrieves
@@ -499,15 +499,15 @@ public final class RationaleDB implements Serializable {
 	public PreparedStatement getStatement_OntologyEntryFromDB() {
 		return m_ontEntryFromDB;
 	}
-	
+
 	public PreparedStatement getStatement_PatternFromDB() {
 		return m_patternFromDB;
 	}
-	
+
 	public PreparedStatement getStatement_AltPatternFromDB() {
 		return m_altPatternFromDB;
 	}
-	
+
 	/**
 	 * Generate prepared statements for use in database queries. The
 	 * Prepared Statements Make accessing The Database Much Faster. 
@@ -516,10 +516,10 @@ public final class RationaleDB implements Serializable {
 		try {
 			if( m_ontEntriesQuery != null )
 				m_ontEntriesQuery.close();
-			
+
 			m_ontEntriesQuery = conn.prepareStatement("SELECT childName from " 
-				+ RationaleDBUtil.escapeTableName("ONT_HIERARCHY") + " "
-				+ " where parentName = ?");
+					+ RationaleDBUtil.escapeTableName("ONT_HIERARCHY") + " "
+					+ " where parentName = ?");
 			m_ontEntriesQuery.setEscapeProcessing(true);
 		} catch( SQLException eError ) {
 			//int doNothing;
@@ -528,7 +528,7 @@ public final class RationaleDB implements Serializable {
 		try {
 			if( m_ontEntryFromDB != null )
 				m_ontEntryFromDB.close();
-			
+
 			m_ontEntryFromDB = conn.prepareStatement("SELECT id, importance, description "
 					+ " from " + RationaleDBUtil.escapeTableName("OntEntries")
 					+ " where name = ?");
@@ -537,31 +537,31 @@ public final class RationaleDB implements Serializable {
 			//int doNothing;
 			//doNothing = 0;
 		}
-		
+
 		//for pattern library
 		try {
 			if( m_patternFromDB != null )
 				m_patternFromDB.close();
-			
+
 			m_patternFromDB = conn.prepareStatement("SELECT * "
 					+ " from " + RationaleDBUtil.escapeTableName("patterns")
 					+ " where name = ?");
 			m_patternFromDB.setEscapeProcessing(true);
-			
+
 			if( m_altPatternFromDB != null )
 				m_altPatternFromDB.close();
-			
+
 			m_altPatternFromDB = conn.prepareStatement("SELECT * "
 					+ " from " + RationaleDBUtil.escapeTableName("alternativepatterns")
 					+ " where name = ?");
 			m_altPatternFromDB.setEscapeProcessing(true);
-			
+
 		} catch( SQLException eError ) {
 			//int doNothing;
 			//doNothing = 0;
 		}
 	}
-	
+
 	/**
 	 * This Code Seamlessly Updates A Database With New Data. It will
 	 * check the existing database schema and determine whether the
@@ -574,17 +574,17 @@ public final class RationaleDB implements Serializable {
 	 */
 	private void migrate() {
 		Statement l_stmt = null;
-		
+
 		try {
 			l_stmt = conn.createStatement();
-			
+
 			l_stmt.executeQuery("SELECT * FROM " + RationaleDBUtil.escapeTableName("ONT_HIERARCHY"));
 		}
 		catch( Exception eError ) {
 			Statement l_create = null;
 			try {
 				l_create = conn.createStatement();
-				
+
 				l_create.execute(RationaleDBCreate.CREATEVIEW_ONTRELATIONSHIP_HIERARCHY());
 			}
 			catch( Exception eInner ) 
@@ -594,7 +594,7 @@ public final class RationaleDB implements Serializable {
 			}
 			finally {
 				try {
-				l_create.close();
+					l_create.close();
 				}
 				catch( Exception eInner ) {
 				}
@@ -607,7 +607,7 @@ public final class RationaleDB implements Serializable {
 			catch( Exception eInner ) {
 			}
 		}
-		
+
 	}
 
 	/**
@@ -618,7 +618,7 @@ public final class RationaleDB implements Serializable {
 	{
 		RationaleElement.setLastID(saveLast);
 	}
-	
+
 	/**
 	 * Get the connection to the database so we can query it.
 	 * @return the database connection
@@ -666,19 +666,19 @@ public final class RationaleDB implements Serializable {
 	public static void createNewDB(String newDBName)
 	{
 		IPreferenceStore store = SEURATPlugin.getDefault().getPreferenceStore();
-		
+
 		//set our preferences to give the new database name
 		if( store.getString(PreferenceConstants.P_DATABASETYPE).equals
-			(PreferenceConstants.DatabaseType.DERBY) )
+				(PreferenceConstants.DatabaseType.DERBY) )
 		{
 			store.setValue(PreferenceConstants.P_DERBYNAME, newDBName);
 		}
 		else
-		if( store.getString(PreferenceConstants.P_DATABASETYPE).equals
-				(PreferenceConstants.DatabaseType.MYSQL) )
-		{
-			store.setValue(PreferenceConstants.P_DATABASE, newDBName);
-		}
+			if( store.getString(PreferenceConstants.P_DATABASETYPE).equals
+					(PreferenceConstants.DatabaseType.MYSQL) )
+			{
+				store.setValue(PreferenceConstants.P_DATABASE, newDBName);
+			}
 	}
 
 	/**
@@ -777,7 +777,7 @@ public final class RationaleDB implements Serializable {
 		}
 		return assocs;
 	}
-	
+
 	/**
 	 * Get all the associations from the database that are at a given resource.
 	 * @return a vector of associations
@@ -840,7 +840,7 @@ public final class RationaleDB implements Serializable {
 		}
 		return reqst;
 	}
-	
+
 	/**
 	 * Get all the requirements from the database that are either enabled
 	 * or disabled, depending on what we are looking for
@@ -877,7 +877,7 @@ public final class RationaleDB implements Serializable {
 		}
 		return reqst;
 	}
-	
+
 	/**
 	 * Return a vector of all non-functional requirements
 	 * @return
@@ -908,7 +908,7 @@ public final class RationaleDB implements Serializable {
 		} finally {
 			releaseResources(stmt, rs);
 		}
-		
+
 		return nfrs;
 	}
 
@@ -984,7 +984,7 @@ public final class RationaleDB implements Serializable {
 		}
 		return dependent;
 	}
-	
+
 	/**
 	 * Return a list of alternatives that are dependent on the given pattern alternative.
 	 * @param alt
@@ -1033,7 +1033,7 @@ public final class RationaleDB implements Serializable {
 		}
 		return dependent;
 	}
-	
+
 	/**
 	 * Get all  arguments that argue about a specific requirement
 	 * @param reqID - the requirement ID
@@ -1055,8 +1055,8 @@ public final class RationaleDB implements Serializable {
 			//***			System.out.println(findQuery);
 			rs = stmt.executeQuery(findQuery);
 			while (rs.next()) {
-					int altID = rs.getInt("id");
-					argV.add(new Integer(altID));
+				int altID = rs.getInt("id");
+				argV.add(new Integer(altID));
 			}
 
 			if (argV.size() > 0) {
@@ -1098,8 +1098,8 @@ public final class RationaleDB implements Serializable {
 			//***			System.out.println(findQuery);
 			rs = stmt.executeQuery(findQuery);
 			while (rs.next()) {
-					int altID = rs.getInt("id");
-					argV.add(new Integer(altID));
+				int altID = rs.getInt("id");
+				argV.add(new Integer(altID));
 			}
 
 			if (argV.size() > 0) {
@@ -1430,7 +1430,7 @@ public final class RationaleDB implements Serializable {
 				RationaleElementType.ALTERNATIVE);
 		return claims;
 	}
-	
+
 	/**
 	 * Return the name of the alternative pattern mapping to the given parent
 	 * @param parentName
@@ -1462,8 +1462,8 @@ public final class RationaleDB implements Serializable {
 				RationaleElementType.ONTENTRY);
 		return onts;
 	}
-	
-	
+
+
 
 	/**
 	 * Given the name of the parent, the table type of the parent, the name
@@ -1559,7 +1559,7 @@ public final class RationaleDB implements Serializable {
 			findQuery = "SELECT name FROM " 
 				+ RationaleDBUtil.escapeTableName("OntEntries") + " " 
 				+ " WHERE id = "
-			+ new Integer(pid).toString();
+				+ new Integer(pid).toString();
 			//			System.out.println(findQuery);
 			rs = stmt.executeQuery(findQuery);
 
@@ -1638,7 +1638,7 @@ public final class RationaleDB implements Serializable {
 		}
 		return onts;
 	}
-	
+
 	/**
 	 * Return a vector containing all parents created from the database entry.
 	 * @return a vector of patterns created.
@@ -1664,7 +1664,7 @@ public final class RationaleDB implements Serializable {
 		}	
 		return patterns;		
 	}
-	
+
 	/**
 	 * Create a vector of new OntEntries that are associated with the given pattern(name).
 	 * @param parentName
@@ -1675,9 +1675,9 @@ public final class RationaleDB implements Serializable {
 
 		Pattern patternSelected = new Pattern();
 		patternSelected.fromDatabase(parentName);
-		
+
 		Vector<OntEntry> onts = new Vector<OntEntry>();
-		
+
 		if(isPositive){
 			onts = patternSelected.getPosiOnts();
 		}else{
@@ -1685,7 +1685,7 @@ public final class RationaleDB implements Serializable {
 		}
 		return onts;
 	}
-	
+
 	/**
 	 * Create a vector of new Candidate Patterns that are associated with the given pattern(name)
 	 * @param parentName
@@ -1718,7 +1718,7 @@ public final class RationaleDB implements Serializable {
 
 		return candidatePatterns;		
 	}
-	
+
 	/**
 	 * Create a vector of decisions for a given pattern(name) and its grandparent(name).
 	 * @param parentName
@@ -1726,34 +1726,34 @@ public final class RationaleDB implements Serializable {
 	 * @return
 	 */
 	public Vector<PatternDecision> getPatternDecisions(String parentName, String grandParentName){
-		
+
 		Vector<PatternDecision> children = new Vector<PatternDecision>();
 		Statement stmt = null;
 		ResultSet rs = null;
 		String findQuery = "";
 		try {
-				findQuery = "SELECT id from patterns where name = '" + parentName + "'";
-				stmt = conn.createStatement();
-				rs = stmt.executeQuery(findQuery);
-				int patternID = -1;
-				if(rs.next()){
-					patternID = rs.getInt("id");
-				}		
-				findQuery = "SELECT * FROM patterndecisions where parent = " + patternID;
-				rs = stmt.executeQuery(findQuery);
+			findQuery = "SELECT id from patterns where name = '" + parentName + "'";
+			stmt = conn.createStatement();
+			rs = stmt.executeQuery(findQuery);
+			int patternID = -1;
+			if(rs.next()){
+				patternID = rs.getInt("id");
+			}		
+			findQuery = "SELECT * FROM patterndecisions where parent = " + patternID;
+			rs = stmt.executeQuery(findQuery);
 
-				while(rs.next()){
-					PatternDecision patternDecision = new PatternDecision();
-					patternDecision.fromDatabase(RationaleDBUtil.decode(rs.getString("name")));
-					
-					children.addElement(patternDecision);
-				}
-			}catch (SQLException ex) {
-				reportError(ex, "error in getOntology", findQuery);
-				} finally {
-					releaseResources(stmt, rs);
-				}
-			
+			while(rs.next()){
+				PatternDecision patternDecision = new PatternDecision();
+				patternDecision.fromDatabase(RationaleDBUtil.decode(rs.getString("name")));
+
+				children.addElement(patternDecision);
+			}
+		}catch (SQLException ex) {
+			reportError(ex, "error in getOntology", findQuery);
+		} finally {
+			releaseResources(stmt, rs);
+		}
+
 
 		return children;
 	}
@@ -1801,7 +1801,7 @@ public final class RationaleDB implements Serializable {
 
 				while (rs.next()) {
 					children.addElement(new Integer(rs.getInt("child"))
-							.toString());
+					.toString());
 				}
 				rs.close();
 			} else if (ptype == RationaleElementType.ALTCONSTREL) {
@@ -1830,7 +1830,7 @@ public final class RationaleDB implements Serializable {
 
 				while (rs.next()) {
 					children.addElement(new Integer(rs.getInt("constr"))
-							.toString());
+					.toString());
 				}
 				rs.close();
 			} else if (ptype == RationaleElementType.DECISION) {
@@ -1859,7 +1859,7 @@ public final class RationaleDB implements Serializable {
 
 				while (rs.next()) {
 					children.addElement(new Integer(rs.getInt("constr"))
-							.toString());
+					.toString());
 				}
 				rs.close();
 			}
@@ -1903,9 +1903,9 @@ public final class RationaleDB implements Serializable {
 			int pid = 0;
 			//first, get the ID of our element
 			findQuery = "SELECT id " + " FROM " 
-				+ RationaleDBUtil.escapeTableName("Alternatives") + " "
-				+ " WHERE name = '"
-				+ RationaleDBUtil.escape(parentName) + "'";
+			+ RationaleDBUtil.escapeTableName("Alternatives") + " "
+			+ " WHERE name = '"
+			+ RationaleDBUtil.escape(parentName) + "'";
 
 			rs = stmt.executeQuery(findQuery);
 			if (rs.next()) {
@@ -2012,9 +2012,9 @@ public final class RationaleDB implements Serializable {
 			rs = m_ontEntriesQuery.executeQuery();
 
 			while (rs.next()) {			
-					OntEntry entry = new OntEntry();
-					entry.fromDatabase(rs.getString("childName"));
-					onts.addElement(entry);
+				OntEntry entry = new OntEntry();
+				entry.fromDatabase(rs.getString("childName"));
+				onts.addElement(entry);
 			}
 			rs.close();
 		} catch (SQLException ex) {
@@ -2024,7 +2024,7 @@ public final class RationaleDB implements Serializable {
 		}
 		return onts;
 	}
-	
+
 	/**
 	 * Return a list of child element entries given the parent for treeview display
 	 * @param parentName - the name of the parent
@@ -2032,7 +2032,7 @@ public final class RationaleDB implements Serializable {
 	 * @return a list of child elements - the actual elements, not just names
 	 */
 	public Vector<String> getElements_TreeView(String parentName, RationaleElementType type,boolean firstTime) {
-		
+
 		Vector<String> elements = new Vector<String>();
 		ResultSet rs = null;
 		try {
@@ -2062,13 +2062,13 @@ public final class RationaleDB implements Serializable {
 				else if (type==RationaleElementType.ARGUMENT)
 					selectStr="Select * from (SELECT a.id as childID,a.name as childName,a.parent as parentID,b.name as parentName FROM (arguments as a) left join (arguments as b) on (a.parent=b.id)) as t where t.parentName="+"'"+parentName+"'";
 			}
-//			System.out.println(selectStr);
+			//			System.out.println(selectStr);
 			stmt = conn.createStatement();
 			rs = stmt.executeQuery(selectStr);
 			while (rs.next()) {			
-					String name = "";
-					name = rs.getString("childName");
-					elements.addElement(name);
+				String name = "";
+				name = rs.getString("childName");
+				elements.addElement(name);
 			}
 			rs.close();
 		} catch (SQLException ex) {
@@ -2078,7 +2078,7 @@ public final class RationaleDB implements Serializable {
 		}
 		return elements;
 	}
-	
+
 
 	/**
 	 * Given a parent constraint, return a list of sub-constraints
@@ -2180,8 +2180,8 @@ public final class RationaleDB implements Serializable {
 			}
 
 			findQuery = "SELECT child FROM " 
-			+ RationaleDBUtil.escapeTableName("DesignComponentRelationships") + " "
-			+ " WHERE parent = " + new Integer(pid).toString();
+				+ RationaleDBUtil.escapeTableName("DesignComponentRelationships") + " "
+				+ " WHERE parent = " + new Integer(pid).toString();
 
 			rs = stmt.executeQuery(findQuery);
 
@@ -2292,7 +2292,7 @@ public final class RationaleDB implements Serializable {
 		return ourElements;
 
 	}
-	
+
 	/**
 	 * List all patterns associated with one category
 	 * @param category
@@ -2300,7 +2300,7 @@ public final class RationaleDB implements Serializable {
 	 */
 	public ArrayList<Pattern> getPatternByCategory(String category){
 		ArrayList<Pattern> matchedPatterns = new ArrayList<Pattern>();
-		
+
 		try {
 			String query = "";
 			Statement stmt = null;
@@ -2308,26 +2308,80 @@ public final class RationaleDB implements Serializable {
 			stmt = conn.createStatement();
 			query = "SELECT id FROM patternproblemcategories WHERE problemcategory = '" + category + "'";
 			rs = stmt.executeQuery(query);
-			
+
 			if(rs.next()){
-				
+
 				query = "SELECT patternID FROM pattern_problemcategory WHERE problemcategoryID = " + rs.getInt("id");
 				rs = stmt.executeQuery(query);
-				
+
 				while(rs.next()){
 					Pattern pattern = new Pattern();
 					pattern.fromDatabase(new Integer(rs.getInt("patternID")));
 					matchedPatterns.add(pattern);
 				}
 			}			
-			
+
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}		
 		return matchedPatterns;
 	}
+
+	/**
+	 * Returns the id of the problem category given a pattern ID
+	 * @param patternID
+	 * @return -1 if it is not associated, otherwise it returns the ID of the problem category.
+	 */
+	public int getCategoryByPattern(int patternID){
+		int toReturn = -1;
+		Statement stmt = null;
+		ResultSet rs = null;
+		try{
+			stmt = conn.createStatement();
+			String query = "SELECT problemcategoryID from pattern_problemcategory WHERE patternID = " + patternID + "";
+			rs = stmt.executeQuery(query);
+			if (rs.next()){
+				toReturn = rs.getInt("problemcategoryID");
+			}
+		}catch (SQLException e){
+			e.printStackTrace();
+		}
+		finally{
+			releaseResources(stmt, rs);
+		}
+		return toReturn;
+	}
 	
+	/**
+	 * Given a pattern type, return a map from name to id of problem categories.
+	 * @param patternType
+	 * @return a has map between category id and category name.
+	 */
+	public HashMap<String, Integer> getCategories(String patternType){
+		
+		//Wang uses upper case for archiecture name, so we should 'convert' it first...
+		/*char upperCaseBeginning = patternType.toUpperCase().charAt(0);
+		String correctedType = upperCaseBeginning + patternType.substring(1);
+		patternType = correctedType;*/
+		//This should be fixed...
+		
+		HashMap<String, Integer> map = new HashMap<String, Integer>();
+		Statement stmt = null;
+		ResultSet rs = null;
+		try{
+			stmt = conn.createStatement();
+			String query = "SELECT id, problemcategory FROM patternproblemcategories  WHERE patterntype = '" + patternType + "'";
+			rs = stmt.executeQuery(query);
+			while (rs.next()){
+				Integer id = rs.getInt("id");
+				String problemcategory = rs.getString("problemcategory");
+				map.put(problemcategory, id);
+			}
+		} catch (SQLException e) {e.printStackTrace();};
+		return map;
+	}
+
 	/**
 	 * Given a pattern type, return all patterns matches the type.
 	 * The type is "archiecture", "idiom", or "design" 
@@ -2340,18 +2394,18 @@ public final class RationaleDB implements Serializable {
 		Statement stmt = null;
 		ResultSet rs = null;
 		Pattern pattern = new Pattern();
-		
+
 		try {
 			stmt = conn.createStatement();
 			query = "SELECT name FROM patterns WHERE type = '"
 				+ patternType + "'";
 			rs = stmt.executeQuery(query);
-//			while(rs.next()){
-//				pattern.fromDatabase((rs.getString("name")));
-//				System.out.println(pattern.getName());
-//				patternList.add(pattern);
-//			}q1]
-			
+			//			while(rs.next()){
+			//				pattern.fromDatabase((rs.getString("name")));
+			//				System.out.println(pattern.getName());
+			//				patternList.add(pattern);
+			//			}q1]
+
 			while (rs.next()) {
 				TreeParent element = new TreeParent(RationaleDBUtil.decode(rs
 						.getString("name")), RationaleElementType.PATTERN);
@@ -2363,7 +2417,7 @@ public final class RationaleDB implements Serializable {
 		}		
 		return patternList;
 	}
-	
+
 	/**
 	 * Given a pattern type, return all patterns matches the type
 	 * @param type
@@ -2374,7 +2428,7 @@ public final class RationaleDB implements Serializable {
 		String query = "";
 		Statement stmt = null;
 		ResultSet rs = null;		
-		
+
 		try {
 			stmt = conn.createStatement();
 			query = "SELECT name FROM patterns WHERE type = '"
@@ -2386,19 +2440,19 @@ public final class RationaleDB implements Serializable {
 				System.out.println(pattern.getName());
 				patterns.add(pattern);
 			}
-			
-//			while (rs.next()) {
-//				TreeParent element = new TreeParent(RationaleDBUtil.decode(rs
-//						.getString("name")), RationaleElementType.PATTERN);
-//				patternList.addElement(element);
-//			}
+
+			//			while (rs.next()) {
+			//				TreeParent element = new TreeParent(RationaleDBUtil.decode(rs
+			//						.getString("name")), RationaleElementType.PATTERN);
+			//				patternList.addElement(element);
+			//			}
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}		
 		return patterns;
 	}
-	
+
 	/**
 	 * Get a list of names of all elements in the database that have a
 	 * particular rationale element type and where the name contains a search string
@@ -2449,11 +2503,11 @@ public final class RationaleDB implements Serializable {
 	 * @return - the list of names
 	 */
 	public static boolean elementExists(String name, RationaleElementType type) {
-		
+
 		boolean exists;
 		exists = false;
 		//int id = -1;
-		
+
 		//Vector<String> ourElements = new Vector<String>();
 		String tableName = RationaleDB.getTableName(type);
 		String findQuery = "";
@@ -2516,12 +2570,12 @@ public final class RationaleDB implements Serializable {
 			}
 			System.out.println(findQuery);
 			rs = stmt.executeQuery(findQuery);
-			
+
 			while (rs.next()) {
 				ourElements
 				.addElement(RationaleDBUtil.decode(rs.getString("name")));
 			}
-			
+
 		} catch (SQLException ex) {
 			reportError(ex, "Error in getNameList", findQuery);
 		} finally {
@@ -2529,7 +2583,7 @@ public final class RationaleDB implements Serializable {
 		}
 		return ourElements;
 	}
-	
+
 	/**
 	 * Get a list of all "potential new parents" for a particular type of rationale element
 	 * @param type - the type of element whose new parent we are looking for
@@ -2546,7 +2600,7 @@ public final class RationaleDB implements Serializable {
 			{
 				findQuery = "SELECT name FROM decisions";
 			}
-/*			else if (type == RationaleElementType.ARGUMENT)
+			/*			else if (type == RationaleElementType.ARGUMENT)
 			{
 				findQuery = "(SELECT name FROM requirements) union (select name FROM alternatives)";	
 			} */
@@ -2568,12 +2622,12 @@ public final class RationaleDB implements Serializable {
 			}
 			System.out.println(findQuery);
 			rs = stmt.executeQuery(findQuery);
-			
+
 			while (rs.next()) {
 				ourElements
 				.addElement(RationaleDBUtil.decode(rs.getString("name")));
 			}
-			
+
 		} catch (SQLException ex) {
 			reportError(ex, "Error in getNameList", findQuery);
 		} finally {
@@ -2581,7 +2635,7 @@ public final class RationaleDB implements Serializable {
 		}
 		return ourElements;	
 	}
-	
+
 	/**
 	 * Get a list of all "potential new parents" for Argument type of rationale element
 	 * @param type - the type of element whose new parent we are looking for
@@ -2595,7 +2649,7 @@ public final class RationaleDB implements Serializable {
 		ResultSet rs = null;
 		try {
 			stmt = conn.createStatement();
-			
+
 			if (type == RationaleElementType.ARGUMENT && ptype== RationaleElementType.REQUIREMENT)
 			{
 				findQuery = "SELECT name FROM requirements";	
@@ -2614,12 +2668,12 @@ public final class RationaleDB implements Serializable {
 			}
 			System.out.println(findQuery);
 			rs = stmt.executeQuery(findQuery);
-			
+
 			while (rs.next()) {
 				ourElements
 				.addElement(RationaleDBUtil.decode(rs.getString("name")));
 			}
-			
+
 		} catch (SQLException ex) {
 			reportError(ex, "Error in getNameList", findQuery);
 		} finally {
@@ -2627,8 +2681,8 @@ public final class RationaleDB implements Serializable {
 		}
 		return ourElements;
 	}
-	
-	
+
+
 	/**
 	 * Returns a list of TreeParent items (to put in the tree from the RationaleExplorer)
 	 * from the database given the parent name, the element type, and the parent type.
@@ -2676,12 +2730,12 @@ public final class RationaleDB implements Serializable {
 						+ " WHERE parent = " + new Integer(pid).toString()
 						+ " ORDER BY name ASC";
 				} else {
-				*/
-					findQuery = "SELECT name FROM " 
-						+ RationaleDBUtil.escapeTableName(elementType) + " "
-						+ " WHERE parent = " + new Integer(pid).toString()
-						+ " AND ptype = '" + parentType.toString()
-						+ "' ORDER BY name ASC";
+				 */
+				findQuery = "SELECT name FROM " 
+					+ RationaleDBUtil.escapeTableName(elementType) + " "
+					+ " WHERE parent = " + new Integer(pid).toString()
+					+ " AND ptype = '" + parentType.toString()
+					+ "' ORDER BY name ASC";
 				//}
 
 			}
@@ -2733,7 +2787,7 @@ public final class RationaleDB implements Serializable {
 	 * @return a list of tree elements
 	 */
 	public Vector<CandidateTreeParent> getCandidateTreeElements(RationaleElementType etype) {
-		
+
 		Vector<CandidateTreeParent> treeElementList = new Vector<CandidateTreeParent>();
 		String findQuery = "";
 		Statement stmt = null;
@@ -2750,7 +2804,7 @@ public final class RationaleDB implements Serializable {
 				treeElementList.add(treeE);
 			}
 
-			
+
 		} catch (SQLException ex) {
 			if (ex.getErrorCode() == 1146) {
 				reportError(ex, "getTreeElements - could not find table",
@@ -2763,7 +2817,7 @@ public final class RationaleDB implements Serializable {
 		}
 		return treeElementList;
 	}
-	
+
 
 	/**
 	 * Given an alternative, find all the related constraints.
@@ -2928,7 +2982,7 @@ public final class RationaleDB implements Serializable {
 	     return worst;
 
 	     }
-	     */
+	 */
 
 
 	/**
@@ -3104,9 +3158,9 @@ public final class RationaleDB implements Serializable {
 			findQuery = "SELECT status  FROM " 
 				+ RationaleDBUtil.escapeTableName("status")
 				+ " WHERE parent = "
-			+ new Integer(parent).toString() + " and ptype = '" + ptype
-			+ "'" + " and description = '"
-			+ RationaleDBUtil.escape(descrip) + "'";
+				+ new Integer(parent).toString() + " and ptype = '" + ptype
+				+ "'" + " and description = '"
+				+ RationaleDBUtil.escape(descrip) + "'";
 			System.out.println(findQuery);
 			rs = stmt.executeQuery(findQuery);
 
@@ -3214,7 +3268,7 @@ public final class RationaleDB implements Serializable {
 		}
 		return statusList;
 	}
-	
+
 	/**
 	 * Get patterns of type architecture
 	 * @param parentName
@@ -3223,11 +3277,11 @@ public final class RationaleDB implements Serializable {
 	 */
 	public Vector getArchitecturePatterns(String parentName,
 			RationaleElementType parentType) {
-		
-		
-		return getPatterns("architecture");
+
+
+		return getPatterns("Architecture");
 	}
-	
+
 	/**
 	 * Get patterns of type design
 	 * @param parentName
@@ -3236,15 +3290,15 @@ public final class RationaleDB implements Serializable {
 	 */
 	public Vector getDesignPatterns(String parentName,
 			RationaleElementType parentType) {
-		return getPatterns("design");
+		return getPatterns("Design");
 	}
-	
+
 	/**
 	 * Get patterns of type idiom
 	 * @return
 	 */
 	public Vector getIdioms() {
-		return getPatterns("idiom");
+		return getPatterns("Idiom");
 	}
 
 	/**
@@ -3399,7 +3453,7 @@ public final class RationaleDB implements Serializable {
 			releaseResources(stmt, null);
 		}
 	}
-	
+
 
 	/**
 	 * Delete the candidate pattern associated with a pattern decision in Pattern Library
@@ -3421,9 +3475,9 @@ public final class RationaleDB implements Serializable {
 		} finally {
 			releaseResources(stmt, null);
 		}
-		
+
 	}
-	
+
 	/**
 	 * Remove pattern ontology entry
 	 * @param ontName
@@ -3592,38 +3646,38 @@ public final class RationaleDB implements Serializable {
 		}
 
 	}
-	
+
 	/** 
-	* Remove a rationale candidate from the database. This can't use the generic
-	* deleteRationaleElement because the type doesn't signify the table name. 
+	 * Remove a rationale candidate from the database. This can't use the generic
+	 * deleteRationaleElement because the type doesn't signify the table name. 
 	 * @param ele - the rationale element to remove.
 	 */
 	public void deleteCandidateRationaleElement(CandidateRationale ele) {
 
 		int id = ele.getID();
-		
+
 		//now, delete ourself from the database
 		Connection conn = getConnection();
 		String deleteCmd = "";
 		Statement stmt = null;
-		
+
 		//		System.out.println("Deleting rationale from the database");
-		
+
 		try {
 			stmt = conn.createStatement();
 			deleteCmd = "DELETE FROM Candidates where id = "
 				+ new Integer(id).toString();
 			//		 System.out.println(deleteCmd);
 			stmt.execute(deleteCmd);
-			
+
 		} catch (SQLException ex) {
 			reportError(ex, "Error in deleteRationaleElement", deleteCmd);
 		}
-		
+
 		finally {
 			releaseResources(stmt, null);
 		}
-		
+
 	}
 
 	/**
@@ -3662,7 +3716,7 @@ public final class RationaleDB implements Serializable {
 			findCmd = "Select id FROM "
 				+ RationaleDBUtil.escapeTableName("arguments") + " "
 				+ " where " + argField + " = "
-			+ new Integer(id).toString();
+				+ new Integer(id).toString();
 			//***			 System.out.println(findCmd);
 			rs = stmt.executeQuery(findCmd);
 
@@ -3697,7 +3751,7 @@ public final class RationaleDB implements Serializable {
 			findQuery = "SELECT *  FROM " 
 				+ RationaleDBUtil.escapeTableName("claims") + " "
 				+ " WHERE importance <> '"
-			+ Importance.DEFAULT.toString() + "'";
+				+ Importance.DEFAULT.toString() + "'";
 			//***		System.out.println(findQuery);
 			rs = stmt.executeQuery(findQuery);
 
@@ -3854,7 +3908,7 @@ public final class RationaleDB implements Serializable {
 	public static String getDbName() {
 		return dbName;
 	}
-	
+
 	/**
 	 * Gets the name of the default ontology file
 	 * @return the filename
@@ -3930,11 +3984,11 @@ public final class RationaleDB implements Serializable {
 		{
 			String nextName;
 			nextName = ratNext.getNodeName();
-//			System.out.println(nextName);
+			//			System.out.println(nextName);
 			//here we check the type, then process
 			if (nextName.compareTo("DR:argOntology") == 0)
 			{
-//				System.out.println("found the ontology");
+				//				System.out.println("found the ontology");
 				//need to get the root ontology entry
 				Element topOnt = (Element) ratNext.getFirstChild();
 				//process argument ontology
@@ -3945,7 +3999,7 @@ public final class RationaleDB implements Serializable {
 			else if (nextName.compareTo("DR:requirement") == 0)
 			{
 				Requirement nextReq = new Requirement();
-//				s.addRequirement(nextReq);
+				//				s.addRequirement(nextReq);
 				nextReq.fromXML(ratNext);
 				s.addRequirement(nextReq);
 			}
@@ -3974,7 +4028,7 @@ public final class RationaleDB implements Serializable {
 		}
 
 	}
-	
+
 	/**
 	 * Exports the argument ontology to XML by calling the appropriate
 	 * utility function and passing it the name of the file we are exporting to.
@@ -4145,7 +4199,7 @@ public final class RationaleDB implements Serializable {
 	 * are read from the file and stored into vectors. Then, this method is called
 	 * to put the elements actually INTO the database.
 	 */
-//	private void addXMLRequirements(Document ratDoc)
+	//	private void addXMLRequirements(Document ratDoc)
 	private void addXMLRequirements()
 	{
 		Enumeration<Requirement> reqs = requirements.elements();
@@ -4170,12 +4224,12 @@ public final class RationaleDB implements Serializable {
 		}
 		System.out.println("done adding decisions");
 	}
-	
+
 
 	private void importPatterns(PreparedStatement ps){
 		try{
 			ps.setString(1, "Three-layer");
-			ps.setString(2, "architecture");
+			ps.setString(2, "Architecture");
 			ps.setBytes(3, (new String("The system is organized into three primary layers: Presentation, Domain, and Data Source.")).getBytes());
 			ps.setBytes(4, (new String("In a system in which abstract domains must be implemented in terms of more concrete (less abstract) domains, we need a simple organizational pattern. Additionally, in many systems we need portability of the application to other platforms, or we want to provide an abstract platform or execution environment for which applications may be easily adapted.")).getBytes());
 			ps.setBytes(5, (new String("Development of a large business application, where many users share common data and operations on them. In addition, there might be legacy systems which have to be integrated in the new application.")).getBytes());
@@ -4184,9 +4238,9 @@ public final class RationaleDB implements Serializable {
 			ps.setBytes(8, (new String("The three-layer architecture offers significant advantages even for relatively small applications. For instance, the single-user PC application First Account from the Norwegiancompany Economica encapsulates most of the accounting and invoicing functionality in adynamic link library (DLL), which in turn works against a local, flat-file database. This separationenabled the developers with knowledge of accounting and object-oriented design to dedicatethemselves to the central functionality, and user interface designers with little or no knowledge ofprogramming to fully control their part of the application.")).getBytes());
 			ps.setString(9, "http://msdn.microsoft.com/en-us/library/ms978689.aspx");
 			ps.executeUpdate();
-			
+
 			ps.setString(1, "Layers");
-			ps.setString(2, "architecture");
+			ps.setString(2, "Architecture");
 			ps.setBytes(3, (new String("The Layers architectural pattern helps to structure applications that can be decomposed into groups of subtasks in which each group of subtasks is at a particular level of abstraction.")).getBytes());
 			ps.setBytes(4, (new String("In a system in which abstract domains must be implemented in terms of more concrete (less abstract) domains, we need a simple organizational pattern. Additionally, in many systems we need portability of the application to other platforms, or we want to provide an abstract platform or execution environment for which applications may be easily adapted.")).getBytes());
 			ps.setBytes(5, (new String("You are designing a Layered Application. You want to expose some of the core functionality of your application as services that other applications can consume, and you want your application to consume services exposed by other applications.")).getBytes());
@@ -4195,9 +4249,9 @@ public final class RationaleDB implements Serializable {
 			ps.setBytes(8, (new String("")).getBytes());
 			ps.setString(9, "http://vico.org/pages/PatronsDisseny/Pattern%20Layers/");
 			ps.executeUpdate();
-			
+
 			ps.setString(1, "Pipes and Filters");
-			ps.setString(2, "architecture");
+			ps.setString(2, "Architecture");
 			ps.setBytes(3, (new String("The Pipes and Filters architectural pattern provides a structure for systems that process a stream of data. Each processing step is encapsulated in a filter component. Data is passed through pipes between adjacent filters. Recombining filters allows you to build families of related systems.")).getBytes());
 			ps.setBytes(4, (new String("")).getBytes());
 			ps.setBytes(5, (new String("")).getBytes());
@@ -4206,9 +4260,9 @@ public final class RationaleDB implements Serializable {
 			ps.setBytes(8, (new String("")).getBytes());
 			ps.setString(9, "http://msdn.microsoft.com/en-us/library/ms978599.aspx");
 			ps.executeUpdate();
-			
+
 			ps.setString(1, "Blackboard");
-			ps.setString(2, "architecture");
+			ps.setString(2, "Architecture");
 			ps.setBytes(3, (new String("The Blackboard architectural pattern is useful for problems for which no deterministic solution strategies are known. In Blackboard several specialized subsystem assemble their knowledge to build a possibly partial or approximate solution.")).getBytes());
 			ps.setBytes(4, (new String("")).getBytes());
 			ps.setBytes(5, (new String("")).getBytes());
@@ -4217,9 +4271,9 @@ public final class RationaleDB implements Serializable {
 			ps.setBytes(8, (new String("")).getBytes());
 			ps.setString(9, "http://www.vico.org/pages/PatronsDisseny/Pattern%20Blackboard/");
 			ps.executeUpdate();
-			
+
 			ps.setString(1, "Model-View-Controller");
-			ps.setString(2, "architecture");
+			ps.setString(2, "Architecture");
 			ps.setBytes(3, (new String("The MVC architectural pattern divides an interactive application into three components. The model contains the core functionality and data. Views display information to the user. Controllers handle user input. Views and Controllers together comprise the user interface. A change-propagation mechanism ensures consistency between the user interface and the model.")).getBytes());
 			ps.setBytes(4, (new String("")).getBytes());
 			ps.setBytes(5, (new String("")).getBytes());
@@ -4228,9 +4282,9 @@ public final class RationaleDB implements Serializable {
 			ps.setBytes(8, (new String("")).getBytes());
 			ps.setString(9, "http://msdn.microsoft.com/en-us/library/ms978748.aspx");
 			ps.executeUpdate();
-			
+
 			ps.setString(1, "Broker");
-			ps.setString(2, "architecture");
+			ps.setString(2, "Architecture");
 			ps.setBytes(3, (new String("The Broker architectural pattern can be used to structure distributed software systems with decoupled components that interact by remote service invocations. A broker component is responsible for coordinating communication, such as forwarding requests, as well as for transmitting results and exceptions.")).getBytes());
 			ps.setBytes(4, (new String("")).getBytes());
 			ps.setBytes(5, (new String("")).getBytes());
@@ -4239,9 +4293,9 @@ public final class RationaleDB implements Serializable {
 			ps.setBytes(8, (new String("")).getBytes());
 			ps.setString(9, "http://msdn.microsoft.com/en-us/library/ms978706.aspx");
 			ps.executeUpdate();
-			
+
 			ps.setString(1, "Presentation-Abstraction-Control");
-			ps.setString(2, "architecture");
+			ps.setString(2, "Architecture");
 			ps.setBytes(3, (new String("The Presentation-Abstraction-Control architectural pattern (PAC) defines a structure for interactive software systems in the form of a hierarchy of cooperating agents. Every agent is responsible for a specific aspect of the applications functionality and consists of three components: presentation, abstraction, and control. This subdivision separates the human-computer interaction aspects of the agent from its functional core and its communication with other agents.")).getBytes());
 			ps.setBytes(4, (new String("")).getBytes());
 			ps.setBytes(5, (new String("")).getBytes());
@@ -4250,9 +4304,9 @@ public final class RationaleDB implements Serializable {
 			ps.setBytes(8, (new String("")).getBytes());
 			ps.setString(9, "http://vico.org/pages/PatronsDisseny/Pattern%20Presentation%20Abstra/");
 			ps.executeUpdate();
-			
+
 			ps.setString(1, "Microkernel");
-			ps.setString(2, "architecture");
+			ps.setString(2, "Architecture");
 			ps.setBytes(3, (new String("The Microkernel architectural pattern applies to software systems that must be able to adapt to changing system requirements. It separates a minimal functional core from extended functionality and customer-specific parts. The microkernel also serves as a socket for plugging in these extensions and coordinating their collaboration.")).getBytes());
 			ps.setBytes(4, (new String("")).getBytes());
 			ps.setBytes(5, (new String("")).getBytes());
@@ -4261,9 +4315,9 @@ public final class RationaleDB implements Serializable {
 			ps.setBytes(8, (new String("")).getBytes());
 			ps.setString(9, "http://www.vico.org/pages/PatronsDisseny/Pattern%20MicroKernel/");
 			ps.executeUpdate();
-			
+
 			ps.setString(1, "Reflection");
-			ps.setString(2, "architecture");
+			ps.setString(2, "Architecture");
 			ps.setBytes(3, (new String("The Reflection architectural pattern provides a mechanism for changing structure and behavior of software systems dynamically. It supports the modification of fundamental aspects, such as type structures and function call mechanisms. In this pattern, an application is split into two parts. A meta level provides information about selected system properties and makes the software self-aware. A base level includes the application logic. Its implementation builds on the meta level. Changes to information kept in the meta level affect subsequent base-level behavior.")).getBytes());
 			ps.setBytes(4, (new String("")).getBytes());
 			ps.setBytes(5, (new String("")).getBytes());
@@ -4272,9 +4326,9 @@ public final class RationaleDB implements Serializable {
 			ps.setBytes(8, (new String("")).getBytes());
 			ps.setString(9, "http://vico.org/pages/PatronsDisseny/Pattern%20Reflection/");
 			ps.executeUpdate();
-			
+
 			ps.setString(1, "Whole-Part");
-			ps.setString(2, "design");
+			ps.setString(2, "Design");
 			ps.setBytes(3, (new String("The Whole-Part design pattern helps with the aggregation of components that together form a semantic unit. An aggregate component, the Whole, encapsulates its constituent components, the Parts, organizes their collaboration, and provides a common interface to its functionality. Direct access to the Parts is not possible.")).getBytes());
 			ps.setBytes(4, (new String("")).getBytes());
 			ps.setBytes(5, (new String("")).getBytes());
@@ -4283,9 +4337,9 @@ public final class RationaleDB implements Serializable {
 			ps.setBytes(8, (new String("")).getBytes());
 			ps.setString(9, "http://www.vico.org/pages/PatronsDisseny/Pattern%20Whole%20Part/index.html");
 			ps.executeUpdate();
-			
+
 			ps.setString(1, "Master-Slave");
-			ps.setString(2, "design");
+			ps.setString(2, "Design");
 			ps.setBytes(3, (new String("The Master-Slave design pattern supports fault tolerance, parallel computation and computational accuracy. A master component distributes work to identical slave components and computes a final result from the results these slaves return.")).getBytes());
 			ps.setBytes(4, (new String("")).getBytes());
 			ps.setBytes(5, (new String("")).getBytes());
@@ -4294,9 +4348,9 @@ public final class RationaleDB implements Serializable {
 			ps.setBytes(8, (new String("")).getBytes());
 			ps.setString(9, "http://www.vico.org/pages/PatronsDisseny/Pattern%20Master%20Slave/");
 			ps.executeUpdate();
-			
+
 			ps.setString(1, "Proxy");
-			ps.setString(2, "design");
+			ps.setString(2, "Design");
 			ps.setBytes(3, (new String("Provide a surrogate or placeholder for another object to control access to it.")).getBytes());
 			ps.setBytes(4, (new String("")).getBytes());
 			ps.setBytes(5, (new String("")).getBytes());
@@ -4305,9 +4359,9 @@ public final class RationaleDB implements Serializable {
 			ps.setBytes(8, (new String("")).getBytes());
 			ps.setString(9, "http://www.vico.org/pages/PatronsDisseny/Pattern%20Broker/");
 			ps.executeUpdate();
-			
+
 			ps.setString(1, "Command Processor");
-			ps.setString(2, "design");
+			ps.setString(2, "Design");
 			ps.setBytes(3, (new String("The Command Processor design pattern separates the request for a service from its execution. A command processor component manages requests as separate objects, schedules their execution, and provides additional services such as the storing of request objects for later undo.")).getBytes());
 			ps.setBytes(4, (new String("")).getBytes());
 			ps.setBytes(5, (new String("")).getBytes());
@@ -4316,9 +4370,9 @@ public final class RationaleDB implements Serializable {
 			ps.setBytes(8, (new String("")).getBytes());
 			ps.setString(9, "http://www.vico.org/pages/PatronsDisseny/Pattern%20Command%20Processor/index.html");
 			ps.executeUpdate();
-			
+
 			ps.setString(1, "View Handler");
-			ps.setString(2, "design");
+			ps.setString(2, "Design");
 			ps.setBytes(3, (new String("The View Handler design pattern helps to manage all views that a software system provides. A view handler component allows clients to open, manipulate and dispose of views. It also coordinates dependencies between view and organizes their update.")).getBytes());
 			ps.setBytes(4, (new String("")).getBytes());
 			ps.setBytes(5, (new String("")).getBytes());
@@ -4327,9 +4381,9 @@ public final class RationaleDB implements Serializable {
 			ps.setBytes(8, (new String("")).getBytes());
 			ps.setString(9, "http://vico.org/pages/PatronsDisseny/Pattern%20View%20Handler/");
 			ps.executeUpdate();
-			
+
 			ps.setString(1, "Forward-Receiver");
-			ps.setString(2, "design");
+			ps.setString(2, "Design");
 			ps.setBytes(3, (new String("The Forwarder-Receiver design pattern provides transparent interprocess communication for software systems with a peer-to-peer interaction model. It introduces forwarders and receivers to decouple peers from the underlying communication mechanisms.")).getBytes());
 			ps.setBytes(4, (new String("")).getBytes());
 			ps.setBytes(5, (new String("")).getBytes());
@@ -4338,9 +4392,9 @@ public final class RationaleDB implements Serializable {
 			ps.setBytes(8, (new String("")).getBytes());
 			ps.setString(9, "http://vico.org/pages/PatronsDisseny/Pattern%20Forward-Receiver/");
 			ps.executeUpdate();
-			
+
 			ps.setString(1, "Client-Dispatcher-Server");
-			ps.setString(2, "design");
+			ps.setString(2, "Design");
 			ps.setBytes(3, (new String("The Client-Dispatcher-Server design pattern introduces an intermediate layer between clients and servers, the dispatcher component. It provides location transparency by means of a name service, and hides the details of the establishment of the communication connection between clients and servers.")).getBytes());
 			ps.setBytes(4, (new String("")).getBytes());
 			ps.setBytes(5, (new String("")).getBytes());
@@ -4349,9 +4403,9 @@ public final class RationaleDB implements Serializable {
 			ps.setBytes(8, (new String("")).getBytes());
 			ps.setString(9, "http://vico.org/pages/PatronsDisseny/Pattern%20ClientDispatcherServer/");
 			ps.executeUpdate();
-			
+
 			ps.setString(1, "Publisher-Subscriber");
-			ps.setString(2, "design");
+			ps.setString(2, "Design");
 			ps.setBytes(3, (new String("The Publisher-Subscriber design pattern helps to keep the state of cooperating components synchronized. To achieve this it enables one-way propagation of changes: one publisher notifies any number of subscribers about changes to its state.")).getBytes());
 			ps.setBytes(4, (new String("")).getBytes());
 			ps.setBytes(5, (new String("")).getBytes());
@@ -4360,9 +4414,9 @@ public final class RationaleDB implements Serializable {
 			ps.setBytes(8, (new String("")).getBytes());
 			ps.setString(9, "http://vico.org/pages/PatronsDisseny/Pattern%20Publisher%20Subscriber/");
 			ps.executeUpdate();
-			
+
 			ps.setString(1, "Strategy");
-			ps.setString(2, "design");
+			ps.setString(2, "Design");
 			ps.setBytes(3, (new String("Define a family of algorithms, encapsulate each one, and make them interchangeable. Strategy lets the algorithm vary independently from clients that use it.")).getBytes());
 			ps.setBytes(4, (new String("")).getBytes());
 			ps.setBytes(5, (new String("")).getBytes());
@@ -4371,9 +4425,9 @@ public final class RationaleDB implements Serializable {
 			ps.setBytes(8, (new String("")).getBytes());
 			ps.setString(9, "http://vico.org/pages/PatronsDisseny/Pattern%20Strategy/");
 			ps.executeUpdate();
-			
+
 			ps.setString(1, "Factory");
-			ps.setString(2, "design");
+			ps.setString(2, "Design");
 			ps.setBytes(3, (new String("Define an interface for creating an object, but let subclasses decide which class to instantiate. Factory Method lets a class defer instantiation to subclasses.")).getBytes());
 			ps.setBytes(4, (new String("")).getBytes());
 			ps.setBytes(5, (new String("")).getBytes());
@@ -4382,9 +4436,9 @@ public final class RationaleDB implements Serializable {
 			ps.setBytes(8, (new String("")).getBytes());
 			ps.setString(9, "http://vico.org/pages/PatronsDisseny/Pattern%20Factory%20Method/");
 			ps.executeUpdate();
-			
+
 			ps.setString(1, "Decorator");
-			ps.setString(2, "design");
+			ps.setString(2, "Design");
 			ps.setBytes(3, (new String("Attach additional responsibilities to an object dynamically. Decorators provide a flexible alternative to subclassing for extending functionality.")).getBytes());
 			ps.setBytes(4, (new String("")).getBytes());
 			ps.setBytes(5, (new String("")).getBytes());
@@ -4395,7 +4449,7 @@ public final class RationaleDB implements Serializable {
 			ps.executeUpdate();
 
 			ps.setString(1, "Composite");
-			ps.setString(2, "design");
+			ps.setString(2, "Design");
 			ps.setBytes(3, (new String("Compose objects into tree structures to represent part-whole hierarchies. Composite lets clients treat individual objects and compositions of objects uniformly.")).getBytes());
 			ps.setBytes(4, (new String("")).getBytes());
 			ps.setBytes(5, (new String("")).getBytes());
@@ -4404,9 +4458,9 @@ public final class RationaleDB implements Serializable {
 			ps.setBytes(8, (new String("")).getBytes());
 			ps.setString(9, "http://vico.org/pages/PatronsDisseny/Pattern%20Composite/");
 			ps.executeUpdate();
-			
+
 			ps.setString(1, "Template Method");
-			ps.setString(2, "design");
+			ps.setString(2, "Design");
 			ps.setBytes(3, (new String("Define the skeleton of an algorithm in an operation, deferring some steps to subclasses. Template Method lets subclasses redefine certain steps of an algorithm without changing the algorithms structure.")).getBytes());
 			ps.setBytes(4, (new String("")).getBytes());
 			ps.setBytes(5, (new String("")).getBytes());
@@ -4415,9 +4469,9 @@ public final class RationaleDB implements Serializable {
 			ps.setBytes(8, (new String("")).getBytes());
 			ps.setString(9, "http://vico.org/pages/PatronsDisseny/Pattern%20Template%20Method/");
 			ps.executeUpdate();
-			
+
 			ps.setString(1, "Command");
-			ps.setString(2, "design");
+			ps.setString(2, "Design");
 			ps.setBytes(3, (new String("Encapsulate a request as an object, thereby letting you parameterize clients with different requests, queue or log requests, and support undoable operations.")).getBytes());
 			ps.setBytes(4, (new String("")).getBytes());
 			ps.setBytes(5, (new String("")).getBytes());
@@ -4426,9 +4480,9 @@ public final class RationaleDB implements Serializable {
 			ps.setBytes(8, (new String("")).getBytes());
 			ps.setString(9, "http://vico.org/pages/PatronsDisseny/Pattern%20Command/");
 			ps.executeUpdate();
-			
+
 			ps.setString(1, "Chain of Responsibility");
-			ps.setString(2, "design");
+			ps.setString(2, "Design");
 			ps.setBytes(3, (new String("Avoid coupling the sender of a request to its receiver by giving more than one object a chance to handle the request. Chain the receiving objects and pass the request along the chain until an object handles it.")).getBytes());
 			ps.setBytes(4, (new String("")).getBytes());
 			ps.setBytes(5, (new String("")).getBytes());
@@ -4437,9 +4491,9 @@ public final class RationaleDB implements Serializable {
 			ps.setBytes(8, (new String("")).getBytes());
 			ps.setString(9, "http://vico.org/pages/PatronsDisseny/Pattern%20Chain%20of%20Responsability/");
 			ps.executeUpdate();
-			
+
 			ps.setString(1, "Facade");
-			ps.setString(2, "design");
+			ps.setString(2, "Design");
 			ps.setBytes(3, (new String("Provide a unified interface to a set of interfaces in a subsystem. Fa?ade defines a higher-level interface that makes the subsystem easier to user.")).getBytes());
 			ps.setBytes(4, (new String("")).getBytes());
 			ps.setBytes(5, (new String("")).getBytes());
@@ -4448,9 +4502,9 @@ public final class RationaleDB implements Serializable {
 			ps.setBytes(8, (new String("")).getBytes());
 			ps.setString(9, "http://vico.org/pages/PatronsDisseny/Pattern%20Facade/");
 			ps.executeUpdate();
-			
+
 			ps.setString(1, "Transaction Script");
-			ps.setString(2, "design");
+			ps.setString(2, "Design");
 			ps.setBytes(3, (new String("Organizes business logic by procedures where each procedure handles a single request from the presentation.")).getBytes());
 			ps.setBytes(4, (new String("")).getBytes());
 			ps.setBytes(5, (new String("")).getBytes());
@@ -4459,9 +4513,9 @@ public final class RationaleDB implements Serializable {
 			ps.setBytes(8, (new String("")).getBytes());
 			ps.setString(9, "EAA Book Online");
 			ps.executeUpdate();
-			
+
 			ps.setString(1, "Domain Model");
-			ps.setString(2, "design");
+			ps.setString(2, "Design");
 			ps.setBytes(3, (new String("An object model of the domain that incorporates both behavior and data.")).getBytes());
 			ps.setBytes(4, (new String("")).getBytes());
 			ps.setBytes(5, (new String("")).getBytes());
@@ -4470,9 +4524,9 @@ public final class RationaleDB implements Serializable {
 			ps.setBytes(8, (new String("")).getBytes());
 			ps.setString(9, "EAA Book Online");
 			ps.executeUpdate();
-			
+
 			ps.setString(1, "Table Module");
-			ps.setString(2, "design");
+			ps.setString(2, "Design");
 			ps.setBytes(3, (new String("A single instance that handles the business logic for all rows in a database table or view.")).getBytes());
 			ps.setBytes(4, (new String("")).getBytes());
 			ps.setBytes(5, (new String("")).getBytes());
@@ -4481,9 +4535,9 @@ public final class RationaleDB implements Serializable {
 			ps.setBytes(8, (new String("")).getBytes());
 			ps.setString(9, "EAA Book Online");
 			ps.executeUpdate();
-			
+
 			ps.setString(1, "Gateway");
-			ps.setString(2, "design");
+			ps.setString(2, "Design");
 			ps.setBytes(3, (new String("An object that encapsulates access to an external system or resource.")).getBytes());
 			ps.setBytes(4, (new String("")).getBytes());
 			ps.setBytes(5, (new String("")).getBytes());
@@ -4492,9 +4546,9 @@ public final class RationaleDB implements Serializable {
 			ps.setBytes(8, (new String("")).getBytes());
 			ps.setString(9, "EAA Book Online");
 			ps.executeUpdate();
-			
+
 			ps.setString(1, "Row Data Gateway");
-			ps.setString(2, "design");
+			ps.setString(2, "Design");
 			ps.setBytes(3, (new String("An object that acts as a Gateway to a single record in a data source. There is one instance per row.")).getBytes());
 			ps.setBytes(4, (new String("")).getBytes());
 			ps.setBytes(5, (new String("")).getBytes());
@@ -4503,9 +4557,9 @@ public final class RationaleDB implements Serializable {
 			ps.setBytes(8, (new String("")).getBytes());
 			ps.setString(9, "EAA Book Online");
 			ps.executeUpdate();
-			
+
 			ps.setString(1, "Active Record");
-			ps.setString(2, "design");
+			ps.setString(2, "Design");
 			ps.setBytes(3, (new String("An object that wraps a row in a database table or view, encapsulates the database access, and adds domain logic on that data.")).getBytes());
 			ps.setBytes(4, (new String("")).getBytes());
 			ps.setBytes(5, (new String("")).getBytes());
@@ -4514,9 +4568,9 @@ public final class RationaleDB implements Serializable {
 			ps.setBytes(8, (new String("")).getBytes());
 			ps.setString(9, "EAA Book Online");
 			ps.executeUpdate();
-			
+
 			ps.setString(1, "Table Data Gateway");
-			ps.setString(2, "design");
+			ps.setString(2, "Design");
 			ps.setBytes(3, (new String("An object that acts as a Gateway to a database table. One instance handles all the rows in the table.")).getBytes());
 			ps.setBytes(4, (new String("")).getBytes());
 			ps.setBytes(5, (new String("")).getBytes());
@@ -4525,9 +4579,9 @@ public final class RationaleDB implements Serializable {
 			ps.setBytes(8, (new String("")).getBytes());
 			ps.setString(9, "EAA Book Online");
 			ps.executeUpdate();
-			
+
 			ps.setString(1, "Application Controller");
-			ps.setString(2, "design");
+			ps.setString(2, "Design");
 			ps.setBytes(3, (new String("A centralized point for handling screen navigation and the flow of an application.")).getBytes());
 			ps.setBytes(4, (new String("")).getBytes());
 			ps.setBytes(5, (new String("")).getBytes());
@@ -4536,9 +4590,9 @@ public final class RationaleDB implements Serializable {
 			ps.setBytes(8, (new String("")).getBytes());
 			ps.setString(9, "EAA Book Online");
 			ps.executeUpdate();
-			
+
 			ps.setString(1, "Transform View");
-			ps.setString(2, "design");
+			ps.setString(2, "Design");
 			ps.setBytes(3, (new String("A view that processes domain data element by element and transforms it into HTML.")).getBytes());
 			ps.setBytes(4, (new String("")).getBytes());
 			ps.setBytes(5, (new String("")).getBytes());
@@ -4547,9 +4601,9 @@ public final class RationaleDB implements Serializable {
 			ps.setBytes(8, (new String("")).getBytes());
 			ps.setString(9, "EAA Book Online");
 			ps.executeUpdate();
-			
+
 			ps.setString(1, "Template View");
-			ps.setString(2, "design");
+			ps.setString(2, "Design");
 			ps.setBytes(3, (new String("Renders information into HTML by embedding markers in an HTML page.")).getBytes());
 			ps.setBytes(4, (new String("")).getBytes());
 			ps.setBytes(5, (new String("")).getBytes());
@@ -4558,9 +4612,9 @@ public final class RationaleDB implements Serializable {
 			ps.setBytes(8, (new String("")).getBytes());
 			ps.setString(9, "EAA Book Online");
 			ps.executeUpdate();
-			
+
 			ps.setString(1, "Two Step View");
-			ps.setString(2, "design");
+			ps.setString(2, "Design");
 			ps.setBytes(3, (new String("Turns domain data into HTML in two steps: first by forming some kind of logical page, then rendering the logical page into HTML.")).getBytes());
 			ps.setBytes(4, (new String("")).getBytes());
 			ps.setBytes(5, (new String("")).getBytes());
@@ -4569,9 +4623,9 @@ public final class RationaleDB implements Serializable {
 			ps.setBytes(8, (new String("")).getBytes());
 			ps.setString(9, "EAA Book Online");
 			ps.executeUpdate();
-			
+
 			ps.setString(1, "Bridge");
-			ps.setString(2, "design");
+			ps.setString(2, "Design");
 			ps.setBytes(3, (new String("Decouple an abstraction from its implementation so that the two can vary independently.")).getBytes());
 			ps.setBytes(4, (new String("")).getBytes());
 			ps.setBytes(5, (new String("")).getBytes());
@@ -4580,9 +4634,9 @@ public final class RationaleDB implements Serializable {
 			ps.setBytes(8, (new String("")).getBytes());
 			ps.setString(9, "http://vico.org/pages/PatronsDisseny/Pattern%20Bridge/");
 			ps.executeUpdate();
-			
+
 			ps.setString(1, "Data Mappter");
-			ps.setString(2, "design");
+			ps.setString(2, "Design");
 			ps.setBytes(3, (new String("A layer of Mappers that moves data between objects and a database while keeping them independent of each other and the mapper itself.")).getBytes());
 			ps.setBytes(4, (new String("")).getBytes());
 			ps.setBytes(5, (new String("Objects and relational databases have different mechanisms for structuring data. Many parts of an object, such as collections and inheritance, aren’t present in relational databases. When you build an object model with a lot of business logic it’s valuable to use these mechanisms to better organize the data and the behavior that goes with it.  Doing so leads to variant schemas; that is, the object schema and the relational schema don’t match up.")).getBytes());
@@ -4591,9 +4645,9 @@ public final class RationaleDB implements Serializable {
 			ps.setBytes(8, (new String("")).getBytes());
 			ps.setString(9, "http://vico.org/pages/PatronsDisseny/Pattern%20Bridge/");
 			ps.executeUpdate();
-			
+
 			ps.setString(1, "Counted Pointer");
-			ps.setString(2, "idiom");
+			ps.setString(2, "Idiom");
 			ps.setBytes(3, (new String("This idiom makes memory management of dynamically-allocated shared objects in C++ easier. It introduces a reference counter to a body class that is updated by handle objects. Clients access body class objects only through handles via the overloaded operator ->()..")).getBytes());
 			ps.setBytes(4, (new String("")).getBytes());
 			ps.setBytes(5, (new String("")).getBytes());
@@ -4602,9 +4656,9 @@ public final class RationaleDB implements Serializable {
 			ps.setBytes(8, (new String("")).getBytes());
 			ps.setString(9, "Book Reference");
 			ps.executeUpdate();
-			
+
 			ps.setString(1, "Singleton");
-			ps.setString(2, "idiom");
+			ps.setString(2, "Idiom");
 			ps.setBytes(3, (new String("Ensure a class only has one instance, and provide a global point of access to it.")).getBytes());
 			ps.setBytes(4, (new String("")).getBytes());
 			ps.setBytes(5, (new String("")).getBytes());
@@ -4613,9 +4667,9 @@ public final class RationaleDB implements Serializable {
 			ps.setBytes(8, (new String("")).getBytes());
 			ps.setString(9, "http://vico.org/pages/PatronsDisseny/Pattern%20Singleton/");
 			ps.executeUpdate();
-			
+
 			ps.setString(1, "Indented Control Flow");
-			ps.setString(2, "idiom");
+			ps.setString(2, "Idiom");
 			ps.setBytes(3, (new String("")).getBytes());
 			ps.setBytes(4, (new String("")).getBytes());
 			ps.setBytes(5, (new String("")).getBytes());
@@ -4646,10 +4700,10 @@ public final class RationaleDB implements Serializable {
 			//***			System.out.println(findQuery);
 			rs = stmt.executeQuery(findQuery);
 			while (rs.next()) {
-					int mapID = rs.getInt("id");
-					XFeatureMapping xNode = new XFeatureMapping();
-					xNode.fromDatabase(mapID);
-					xfeaturenodes.add(xNode);
+				int mapID = rs.getInt("id");
+				XFeatureMapping xNode = new XFeatureMapping();
+				xNode.fromDatabase(mapID);
+				xfeaturenodes.add(xNode);
 			}
 
 		} catch (SQLException ex) {
@@ -4677,10 +4731,10 @@ public final class RationaleDB implements Serializable {
 			//***			System.out.println(findQuery);
 			rs = stmt.executeQuery(findQuery);
 			while (rs.next()) {
-					int mapID = rs.getInt("id");
-					XFeatureMapping relArg = new XFeatureMapping();
-					relArg.fromDatabase(mapID);
-					dependent.add(relArg);
+				int mapID = rs.getInt("id");
+				XFeatureMapping relArg = new XFeatureMapping();
+				relArg.fromDatabase(mapID);
+				dependent.add(relArg);
 			}
 
 		} catch (SQLException ex) {
@@ -4709,10 +4763,10 @@ public final class RationaleDB implements Serializable {
 			//***			System.out.println(findQuery);
 			rs = stmt.executeQuery(findQuery);
 			while (rs.next()) {
-					int mapID = rs.getInt("id");
-					XFeatureMapping relArg = new XFeatureMapping();
-					relArg.fromDatabase(mapID);
-					dependent.add(relArg);
+				int mapID = rs.getInt("id");
+				XFeatureMapping relArg = new XFeatureMapping();
+				relArg.fromDatabase(mapID);
+				dependent.add(relArg);
 			}
 
 		} catch (SQLException ex) {

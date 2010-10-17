@@ -22,6 +22,8 @@ public class Pattern extends RationaleElement {
 	
 	PatternElementType type;
 	
+	private int problemcategory;
+	
 	String problem;
 	
 	String context;
@@ -108,7 +110,15 @@ public class Pattern extends RationaleElement {
 	
 	public String getExample(){
 		return example;
-	}	
+	}
+	
+	public int getProblemCategory(){
+		return problemcategory;
+	}
+	
+	public void setProblemCategory(int newCategory){
+		problemcategory = newCategory;
+	}
 	
 //	public void setPosiOnt(OntEntry ont){
 //		if (posiOnt != null)
@@ -244,6 +254,8 @@ public class Pattern extends RationaleElement {
 			{	
 				this.id = rs.getInt("id");
 				
+				problemcategory = db.getCategoryByPattern(id);
+				
 				this.name = name;				
 				
 				try {
@@ -326,18 +338,7 @@ public class Pattern extends RationaleElement {
 					PatternDecision decision = new PatternDecision();
 					decision.fromDatabase(rs.getInt("id"));
 					addSubDecision(decision);
-				}
-//				if (rs.getString("posi_ont") != null){
-//					String subPos = RationaleDBUtil.decode(rs.getString("posi_ont"));
-//					while (subPos.compareTo("") != 0){
-//						this.posiOnt = new OntEntry();
-//						String sub = subPos.substring(0, subPos.indexOf("^"));
-//						posiOnt.fromDatabase(subPos.substring(0, subPos.indexOf("^")));
-//						posiOnts.add(posiOnt);
-//						subPos = subPos.substring(subPos.indexOf("^")+1);
-//						//System.out.println(subPos);
-//					}
-//				}								
+				}		
 			}			
 		} catch (SQLException ex) {
 			RationaleDB.reportError(ex, "Pattern.fromDatabase(String)", "Pattern:FromDatabase");
@@ -346,6 +347,7 @@ public class Pattern extends RationaleElement {
 		finally { 
 			RationaleDB.releaseResources(null,rs);
 		}		
+		
 	}
 	
 	public boolean display(Display disp){
@@ -369,7 +371,6 @@ public class Pattern extends RationaleElement {
 		ResultSet rs = null; 
 		
 		try {
-			
 			
 			if (inDatabase())
 			{
@@ -407,31 +408,50 @@ public class Pattern extends RationaleElement {
 					stmt.execute(updateNegaOnts);
 				}
 				
+				//Now, update pattern_problemcategory
+				//Delete all pre-existing entry in the relationship then insert a new row
+				//containing the new category.
+				stmt = conn.createStatement();
+				String deleteExisting = "DELETE from pattern_problemcategory where patternID = " + id + "";
+				stmt.execute(deleteExisting);
+				
 				l_updateEvent = m_eventGenerator.MakeUpdated();
 			}else{
 				//new pattern
 				//TODO only for creating new patterns under pattern library, so don't care about ontology entries and sub-decisions???
-				//TODO I doubt this code works. Have to re-implement this if we want to insert patterns (YQ)
-				String insertP;				
-				stmt = conn.createStatement(); 
-				insertP = "INSERT INTO patterns "+
-				"(name, type, description, problem, context, solution, implementation, example, url) " +
-				"VALUES ('" +
-				RationaleDBUtil.escape(this.name) + "', '" +
-				this.type.toString() + "', '" +
-				RationaleDBUtil.escape(this.description) + "', '" +
-				RationaleDBUtil.escape(this.problem) + "', '" +
-				RationaleDBUtil.escape(this.context) + "', '" +
-				RationaleDBUtil.escape(this.solution) + "', '" +
-				RationaleDBUtil.escape(this.implementation) + "', '" +
-				RationaleDBUtil.escape(this.example) + "', '" +
-				RationaleDBUtil.escape(this.url) + "')";
-				System.out.println(insertP);
-				stmt.execute(insertP);
+				//TODO I doubt this code works. Have to re-implement this if we want to insert patterns (YQ)	
+				PreparedStatement ps = conn.prepareStatement("INSERT INTO patterns " +
+						"(name, type, description, problem, context, solution, implementation, example, url) " +
+						"VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+				ps.setString(1, name);
+				ps.setString(2, type.toString());
+				ps.setBytes(3, description.getBytes());
+				ps.setBytes(4, problem.getBytes());
+				ps.setBytes(5, context.getBytes());
+				ps.setBytes(6, solution.getBytes());
+				ps.setBytes(7, implementation.getBytes());
+				ps.setBytes(8, example.getBytes());
+				ps.setString(9, url);
+				ps.executeUpdate();
+				ps.close();
 				System.out.println("insert new pattern done!");
 				
+				//Now, update pattern_problemcategory
+				//First, get the id of the pattern, then use the id of the pattern to insert a new relationship between pattern and the associated pattern problem category.
+				stmt = conn.createStatement();
+				String getID = "select id from patterns where name = '" + name + "' and type = '" + type.toString() + "'";
+				rs = stmt.executeQuery(getID);
+				if (rs.next()){
+					id = rs.getInt("id");
+				}
+				else {
+					System.err.println("Warning: id of the pattern does not exist!");
+				}
 				l_updateEvent = m_eventGenerator.MakeCreated();
 			}
+			//Finally, it's time to add the pattern_problemcategory relationship
+			String addNewPCRelation = RationaleDBCreate.pattern_problemCategoryInsert("" + id + ", " + problemcategory + "");
+			stmt.execute(addNewPCRelation);
 			
 			m_eventGenerator.Broadcast(l_updateEvent);
 				

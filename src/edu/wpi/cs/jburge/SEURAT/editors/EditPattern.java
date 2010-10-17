@@ -31,6 +31,11 @@ import edu.wpi.cs.jburge.SEURAT.views.RationaleUpdateEvent;
 import edu.wpi.cs.jburge.SEURAT.views.TreeParent;
 import edu.wpi.cs.jburge.SEURAT.views.UpdateType;
 
+/**
+ * WARNING: This class is depreciated. We are using workbench editor instead.
+ * @author wang2
+ *
+ */
 public class EditPattern extends NewRationaleElementGUI implements Serializable{
 
 	/**

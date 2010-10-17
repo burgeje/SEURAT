@@ -141,12 +141,13 @@ public class OpenRationaleEditorAction extends Action {
 			
 			if(patternLib != null){
 				tree = (TreeParent)((IStructuredSelection)patternLib.getViewer().getSelection()).getFirstElement();
-				RationaleElement rElement;
+				RationaleElement rElement, rParent;
 				if (reqType == null) 
 					rElement = patternLib.getElement(tree, isNew);
 				else 
 					rElement = patternLib.getElement(new TreeObject("unused", reqType), true);
-				RationaleElement rParent = patternLib.getElement(tree, false);
+				
+				rParent = patternLib.getElement(tree, isNew);
 
 				Class parameterTypes[] = {
 						PatternLibrary.class,

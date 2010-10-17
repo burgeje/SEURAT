@@ -370,6 +370,10 @@ IPropertyChangeListener {
 		editElement.setText("Edit");
 		editElement.setToolTipText("Edit Pattern");
 		
+		addPatternEditor = new OpenRationaleEditorAction(PatternEditor.class, this, true, RationaleElementType.PATTERN);
+		addPatternEditor.setText("Add pattern");
+		addPatternEditor.setToolTipText("Add a new pattern");
+		
 		//delete element in P.L.
 		deleteElement = new Action() {
 			public void run() {
@@ -571,7 +575,14 @@ IPropertyChangeListener {
 					//manager.add(new Separator());
 					//manager.add(search);
 				}
-			} else if(ourElement.getName().compareTo("Decisions") == 0){
+			} else if (ourElement.getType() == RationaleElementType.RATIONALE){
+				if (ourElement.getName().equals("Architectural Patterns") || 
+						ourElement.getName().equals("Design Patterns") || 
+						ourElement.getName().equals("Idioms")){
+					manager.add(addPatternEditor);
+				}
+			}
+			else if(ourElement.getName().compareTo("Decisions") == 0){
 				//manager.add(addDecision);
 			}						
 		}
@@ -628,6 +639,68 @@ IPropertyChangeListener {
 	 */
 	public TreeParent editUpdate(TreeParent p, RationaleElement e) {
 		return updateTreeElement(p, e);
+	}
+	
+	/**
+	 * Update method for creating a new element using the new editors.  The function
+	 * is similar to the createNewElement method except that this is called from the
+	 * rationale editor itself, creating some minor differences.  This method
+	 * and the editUpdate method, and their "old editor" counterparts, should
+	 * probably be refactored.
+	 * 
+	 * @param p - the parent tree element
+	 * @param e - the new (child) rationale element
+	 * @return the TreeParent object representing the new element - This is done so that
+	 * the rationale editor class that calls this method can get the correct reference to
+	 * the new element and update itself accordingly- otherwise it will be editing the parent!
+	 */
+	public TreeParent createUpdate(TreeParent p, RationaleElement e) {
+		RationaleDB db = RationaleDB.getHandle();		
+
+		// Add The Element TO The Tree
+		TreeParent newEle = addElement(p, e);
+		
+		// Update Status Of Element
+		Vector<RationaleStatus> status = null;
+		
+		status = e.updateStatus();
+		
+		// Update Rationale Task List And Database With New Status
+		RationaleTaskList tlist = RationaleTaskList.getHandle();
+		Vector<RationaleStatus> oldStatus = null;
+		UpdateManager manager = UpdateManager.getHandle();
+		
+		oldStatus = manager.getInitialStatus();
+		
+		if( status != null ) {
+			updateStatus(oldStatus, status);
+			db.addStatus(status);
+			tlist.addTasks(status);			
+		}
+		if( oldStatus.size() > 0 ) {
+			db.removeStatus(oldStatus);
+			tlist.removeTasks(oldStatus);
+		}
+		
+		// Refresh Affected Branch Of Tree
+		refreshBranch(p);
+		
+		// Update Anything In Tree Affected By Insertion
+		Vector<TreeObject> treeUpdates = manager.makeUpdates();
+		Iterator<TreeObject> treeIterator = treeUpdates.iterator();
+		while( treeIterator.hasNext() )
+		{
+			getViewer().update((TreeParent)treeIterator.next(), null);
+		}
+		//TODO What is this for?
+		/*
+		RationaleTreeMap map = RationaleTreeMap.getHandle();		
+		Vector treeObjs = map.getKeys(map.makeKey(e.getName(), e.getElementType()));
+		//if there's more than one we don't care, just get the first
+		viewer.reveal(treeObjs.elementAt(0));
+		viewer.expandToLevel(treeObjs.elementAt(0), 4);
+		*/
+		return newEle;
 	}
 	
 	/**
@@ -768,16 +841,11 @@ IPropertyChangeListener {
 			//will need a special claim provider
 			return ( (RationaleViewContentProvider) viewer.getContentProvider()).addClaim(parent, (Claim) element);
 		}
-		/*
-		 else if (element instanceof AltConstRel)
-		 {
-		 return ( (RationaleViewContentProvider) viewer.getContentProvider()).addAltConstRel(parent, (AltConstRel) element);
-		 
-		 } */
-		else
+		else if (element instanceof Pattern)
 		{
-			return ( (RationaleViewContentProvider) viewer.getContentProvider()).addNewElement(parent, element);
+			return ( (PatternLibContentProvider) viewer.getContentProvider()).addPattern(parent, (Pattern) element);
 		}
+		else return null;
 	}
 	
 	public void updateName(String oldName, String newName, RationaleElementType type)

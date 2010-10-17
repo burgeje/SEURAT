@@ -20,6 +20,7 @@ import edu.wpi.cs.jburge.SEURAT.rationaleData.OntEntry;
 import edu.wpi.cs.jburge.SEURAT.rationaleData.Pattern;
 import edu.wpi.cs.jburge.SEURAT.rationaleData.PatternDecision;
 import edu.wpi.cs.jburge.SEURAT.rationaleData.RationaleDB;
+import edu.wpi.cs.jburge.SEURAT.rationaleData.RationaleElement;
 import edu.wpi.cs.jburge.SEURAT.rationaleData.RationaleElementType;
 import edu.wpi.cs.jburge.SEURAT.rationaleData.Requirement;
 
@@ -59,6 +60,29 @@ ITreeContentProvider{
 		addIdioms(idiomtop, null, null);
 
 		return invisibleRoot;
+	}
+	
+	/**
+	 * Given parent and element to be created, add a new element to the tree's content.
+	 * @param parent
+	 * @param element
+	 * @return
+	 */
+	public TreeParent addPattern(TreeParent parent, Pattern pattern) {
+		TreeParent child = new TreeParent(pattern.getName(), RationaleElementType.PATTERN);
+		parent.addChild(child);
+		
+		TreeParent ontTop = new TreeParent("Affected Quality Attributes", RationaleElementType.RATIONALE);
+		child.addChild(ontTop);
+		TreeParent posiTop = new TreeParent("Positive", RationaleElementType.RATIONALE);
+		TreeParent negaTop = new TreeParent("Negative", RationaleElementType.RATIONALE);
+		ontTop.addChild(posiTop);
+		ontTop.addChild(negaTop);
+
+		TreeParent decTop = new TreeParent("Decisions", RationaleElementType.RATIONALE);
+		child.addChild(decTop);
+		
+		return child;
 	}
 	
 	/**
@@ -306,5 +330,7 @@ ITreeContentProvider{
 			return ((TreeParent)parent).hasChildren();
 		return false;
 	}
+
+
 	
 }

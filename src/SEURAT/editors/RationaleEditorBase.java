@@ -165,9 +165,18 @@ public abstract class RationaleEditorBase extends EditorPart
 		//////////////////////////////////////////////
 		// ---> Get Necessarry Data From Logical File
 		RationaleExplorer explorer;
+		PatternLibrary pattern;
+		RationaleElement parentElement;
 		explorer = (RationaleExplorer)getEditorInput().getAdapter(RationaleExplorer.class);
 		
-		RationaleElement parentElement;
+		if (explorer == null){
+			pattern = (PatternLibrary)getEditorInput().getAdapter(PatternLibrary.class);
+			//parentElement = (RationaleElement)getEditorInput().getAdapter(RationaleElement.class);
+			TreeParent parentTree = getTreeParent();
+			TreeParent newEle = pattern.createUpdate(parentTree, getRationaleElement());
+			return newEle;
+		}
+		
 		parentElement = (RationaleElement)getEditorInput().getAdapter(RationaleElement.class);
 		
 		TreeParent parentTree;
