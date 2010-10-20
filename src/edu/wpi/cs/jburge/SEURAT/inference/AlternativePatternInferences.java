@@ -13,11 +13,11 @@ import edu.wpi.cs.jburge.SEURAT.rationaleData.*;
 
 public class AlternativePatternInferences {
 	
-	public Hashtable exactMatching(ArrayList<Pattern> toBeMatchedPatterns){
+	public Hashtable<String, Double> exactMatching(ArrayList<Pattern> toBeMatchedPatterns){
 		RationaleDB db = RationaleDB.getHandle();
 		Vector<Requirement> ourRequirements = db.getNFRs();
 		
-		Hashtable pattern_values = new Hashtable(); 
+		Hashtable<String, Double> pattern_values = new Hashtable<String, Double>(); 
 		//Vector<Pattern> allPatterns = db.getPatterns();
 		//Enumeration ap = toBeMatchedPatterns.elements();
 		System.out.println("====================================");
@@ -90,13 +90,13 @@ public class AlternativePatternInferences {
 	}
 	
 	
-	public Hashtable contributionMatching(ArrayList<Pattern> toBeMatchedPatterns){
+	public Hashtable<String, Double> contributionMatching(ArrayList<Pattern> toBeMatchedPatterns){
 		RationaleDB db = RationaleDB.getHandle();
 		Vector<Requirement> ourRequirements = db.getNFRs();
 		
 		Vector<Pattern> candidatePattern = new Vector<Pattern>();
 		
-		Hashtable pattern_values = new Hashtable(); 
+		Hashtable<String, Double> pattern_values = new Hashtable<String, Double>(); 
 		System.out.println("====================================");
 		System.out.println("Contribution Matching Results");
 		System.out.println("------------------------------------");

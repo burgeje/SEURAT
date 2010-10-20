@@ -922,14 +922,16 @@ public class RationaleExplorer extends ViewPart implements ISelectionListener, I
 		generateRatReportFromHere.setToolTipText("Generates a rationale report from this node down.");
 
 		//Generate candidate patterns
-		//TODO
+		//TODO Still have not yet finished!
 		generateCandidatePatterns = new Action(){
 			public void run() {
 				Object selection = viewer.getSelection();
-				GenerateCandidatePatternsDisplay gcpDisplay = 
-					new GenerateCandidatePatternsDisplay(viewer.getControl().getShell().getDisplay(), selection);
+				//GenerateCandidatePatternsDisplay gcpDisplay = new GenerateCandidatePatternsDisplay(viewer.getControl().getShell().getDisplay(), selection);
 				//refreshBranch((TreeParent)selection);
-				ArrayList<Alternative> newAlternatives = gcpDisplay.getNewlyAddedAlternative();
+				//ArrayList<Alternative> newAlternatives = gcpDisplay.getNewlyAddedAlternative();
+				//TODO Have not finished this yet!
+				GenerateCandidatePatternsComposite gcpWizard = new GenerateCandidatePatternsComposite(viewer.getControl().getShell().getDisplay(), selection);
+				ArrayList<Alternative> newAlternatives = gcpWizard.getNewlyAddedAlternative();
 				if(newAlternatives != null && newAlternatives.size() != 0){
 					IStructuredSelection isel = (IStructuredSelection) selection;
 				    TreeParent tp = (TreeParent)isel.getFirstElement();

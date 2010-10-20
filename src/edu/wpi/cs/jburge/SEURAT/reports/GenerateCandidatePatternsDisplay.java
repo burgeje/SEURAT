@@ -602,53 +602,9 @@ public class GenerateCandidatePatternsDisplay {
 			}
 		});		
 		
-//		exact = new Button(shell, SWT.PUSH);
-//		exact.setText("Exact Matching Patterns");
-//		GridData gridData2 = new GridData(GridData.HORIZONTAL_ALIGN_FILL | GridData.VERTICAL_ALIGN_BEGINNING);
-//		exact.setLayoutData(gridData2);
-//		exact.addSelectionListener(new SelectionAdapter(){
-//			
-//			public void widgetSelected(SelectionEvent event){
-//				displayCandidates(candidates_Exact);
-//				shell.close();
-//				shell.dispose();
-//				
-//			}
-//			
-//			
-//		});
-//		
-//		contribution = new Button(shell, SWT.PUSH);
-//		contribution.setText("Contribution Matching Patterns");
-//		gridData2 = new GridData(GridData.HORIZONTAL_ALIGN_FILL | GridData.VERTICAL_ALIGN_BEGINNING);
-//		contribution.setLayoutData(gridData2);
-//		contribution.addSelectionListener(new SelectionAdapter(){
-//			
-//			public void widgetSelected(SelectionEvent event){
-//	
-//				displayCandidates(candidates_Contribution);
-//				shell.close();
-//				shell.dispose();
-//				
-//			}
-//			
-//			
-//		});
-//		
 		
 		shell.pack();
 		shell.open();
-//		CandidatePatternInferences cpi_Contribution = new CandidatePatternInferences();
-//		Vector<Pattern> candidates = new Vector<Pattern>();
-//		candidates = cpi_Contribution.contributionMatching(nfrs);
-		
-//		Enumeration cans = candidates.elements();
-//		while(cans.hasMoreElements()){
-//			Pattern ourPattern = (Pattern)cans.nextElement();
-//			System.out.println(ourPattern.getName());
-//			
-//		}
-		
 		
 		
 		System.out.println("Candidates Generation Done!");
@@ -673,7 +629,6 @@ public class GenerateCandidatePatternsDisplay {
 	private void saveSelectedPatterns(Vector<String> selected, String matchingMethod){
 
 		Decision decision = new Decision();
-		//String theDecision = ((TreeParent)sel).getName();
 		decision.fromDatabase(theDecision);
 		Enumeration patterns = selected.elements();
 		while(patterns.hasMoreElements()){
@@ -686,87 +641,12 @@ public class GenerateCandidatePatternsDisplay {
 			Alternative alter = new Alternative();
 			alter.setName(patternName);
 			alter.setPatternID(pattern.getID());
-			alter.generateFromPattern(decision, matchingMethod);		
+			//alter.generateFromPattern(decision, matchingMethod);		
 			
 			newlyAddedAlternative.add(alter);
-			
-//			AlternativePattern pattern = new AlternativePattern();
-//			pattern.setExactMatch(true);
-//			String patternName = patterns.nextElement().toString();
-//			pattern.setName(patternName);
-//			pattern.toDatabase(decision.getID(), RationaleElementType.DECISION);
-//			decision.addAlternativePattern(pattern);		
+				
 		}
 	}
-	
-//	public void displayCandidates(Vector<Pattern> cans, Display display){
-//		subDisplay = display;
-//		shell = new Shell(subDisplay, SWT.DIALOG_TRIM | SWT.PRIMARY_MODAL);
-//		shell.setText("Matching results");
-//		GridLayout gridLayout = new GridLayout();
-//		gridLayout.numColumns = 4;
-//		gridLayout.marginHeight = 5;
-//		gridLayout.makeColumnsEqualWidth = true;
-//		shell.setLayout(gridLayout);
-//		
-//		results = new List(shell, SWT.SINGLE | SWT.V_SCROLL);
-//
-//		GridData gridData = new GridData(GridData.HORIZONTAL_ALIGN_FILL);
-//		gridData.horizontalSpan = 4;
-//		gridData.grabExcessHorizontalSpace = true;
-//		gridData.grabExcessVerticalSpace = true;
-//		gridData.horizontalAlignment = GridData.FILL;
-//		gridData.verticalAlignment = GridData.FILL;
-//		int listHeight = results.getItemHeight() * 10;
-//		Rectangle trim = results.computeTrim(0, 0, 0, listHeight);
-//		gridData.heightHint = trim.height;
-//		
-//		if (cans != null){
-//			Enumeration candidates = cans.elements();
-//			while (candidates.hasMoreElements())
-//			{
-//				String name = ((Pattern)candidates.nextElement()).getName();
-//				results.add(name);
-//					
-//			}	
-//		}
-//		
-//		Button selectB = new Button(shell, SWT.PUSH);
-//		selectB.setText("Select");
-//		gridData = new GridData(GridData.HORIZONTAL_ALIGN_FILL | GridData.VERTICAL_ALIGN_BEGINNING);
-//		selectB.setLayoutData(gridData);
-//		selectB.addSelectionListener(new SelectionAdapter() {
-//			public void widgetSelected(SelectionEvent event) 
-//			{
-//				
-//				
-//			}
-//		});
-//		
-//		cancelButton = new Button(shell, SWT.PUSH); 
-//		cancelButton.setText("Cancel");
-//		gridData = new GridData(GridData.HORIZONTAL_ALIGN_FILL | GridData.VERTICAL_ALIGN_BEGINNING);
-//		cancelButton.setLayoutData(gridData);
-//		cancelButton.addSelectionListener(new SelectionAdapter() {			
-//			public void widgetSelected(SelectionEvent event) 
-//			{
-//				shell.close();
-//				shell.dispose();
-//				System.out.println("Cancel done.");
-//				while (!shell.isDisposed()) {
-//					if (!subDisplay.readAndDispatch()) subDisplay.sleep();
-//				}
-//			}
-//		});
-//		
-//		shell.pack();
-//		shell.open();
-//		
-//		while (!shell.isDisposed()) {
-//			if (!display.readAndDispatch()) display.sleep();
-//		}
-//		
-//	}
 	
 	
 }

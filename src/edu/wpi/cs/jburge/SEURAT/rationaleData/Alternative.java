@@ -1429,7 +1429,7 @@ public class Alternative extends RationaleElement implements Serializable {
 						alt.setPatternID(thePattern.getID());
 						Decision newCreatedDecision = new Decision();
 						newCreatedDecision.fromDatabase(theNewDecisionName);
-						alt.generateFromPattern(newCreatedDecision, "contribution");
+						alt.generateFromPattern(newCreatedDecision, 1);
 						
 //						String insertPattern = "INSERT INTO alternativepatterns (name, status, evaluation, ptype, parent) VALUES ('" + 
 //						(String)names.get(j) + "', 'At_Issue', 0, 'Decision', " + decisionID + ")";
@@ -1447,7 +1447,15 @@ public class Alternative extends RationaleElement implements Serializable {
 		return addedDecisions;
 	}
 	
-	public boolean generateFromPattern(Decision decision, String matchingMethod){
+	/**
+	 * This is the old generate from pattern helper from Wang's code.
+	 * It creates requirement and arguments from the pattern that are selected under the decision.
+	 * Minimal changes are done so far. Some changes have been made to provide support to my GUI.
+	 * @param decision
+	 * @param matchingMethod 0 = exact matching, 1 = contribution matching, 2 = not matching
+	 * @return
+	 */
+	public boolean generateFromPattern(Decision decision, int matchingMethod){
 		boolean isCompleted = false;
 		if(getPatternID() != -1){
 			Pattern pattern = new Pattern();
@@ -1465,17 +1473,20 @@ public class Alternative extends RationaleElement implements Serializable {
 				for(int i=0; i<pattern.getOntEntries().size(); i++){
 					OntEntry oe = pattern.getOntEntries().get(i);
 					//whether satisfied by this pattern
-					
-					if(matchingMethod.compareTo("nomatch") != 0){
+					//matchingMethod == 2 is the "not" matching method.
+					if(matchingMethod != 2){
 						boolean isMatched = false;
 						ArrayList<Requirement> matchedRequirements = new ArrayList<Requirement>();
 						for (int k=0; k<nfrs.size(); k++){
-							if(matchingMethod.compareTo("exact") == 0){
+							//matchingMethod == 0 is exact matching method
+							if(matchingMethod == 0){
 								if(nfrs.get(k).getOntology().getName().equals(oe.getName())){
 									isMatched = true;
 									matchedRequirements.add(nfrs.get(k));
 								}
-							}else if(matchingMethod.compareTo("contribution") == 0){
+							}
+							//matchingMethod == 1 is the contribution matching method
+							else if(matchingMethod == 1){
 								Vector ontList = db.getOntologyElements(oe.getName());
 								Enumeration ontChildren = ontList.elements();
 								while (ontChildren.hasMoreElements()){

@@ -2292,6 +2292,33 @@ public final class RationaleDB implements Serializable {
 		return ourElements;
 
 	}
+	
+	/**
+	 * This method provides better running time than getPatternByCategory.
+	 * Used for generate candidate patterns.
+	 * @param categoryID
+	 * @return
+	 */
+	public ArrayList<Pattern> getPatternByCategoryID(int categoryID){
+		ArrayList<Pattern> matchingPatterns = new ArrayList<Pattern>();
+		
+		try{
+			String query = "";
+			Statement stmt = null;
+			ResultSet rs = null;
+			stmt = conn.createStatement();
+			query = "select patternID from pattern_problemcategory where problemcategoryID = " + categoryID;
+			rs = stmt.executeQuery(query);
+			while (rs.next()){
+				Pattern pattern = new Pattern();
+				pattern.fromDatabase(new Integer(rs.getInt("patternID")));
+				matchingPatterns.add(pattern);
+			}
+		} catch (SQLException e){
+			e.printStackTrace();
+		}
+		return matchingPatterns;
+	}
 
 	/**
 	 * List all patterns associated with one category
