@@ -437,22 +437,6 @@ IPropertyChangeListener {
 		
 		addPosiOntEntry = new Action() {
 			public void run() {
-
-//				addPosiOntButton.addSelectionListener(new SelectionAdapter() {
-
-//					public void widgetSelected(SelectionEvent event) 
-//					{
-//						OntEntry newOnt = null;
-//						SelectOntEntry ar = new SelectOntEntry(ourDisplay, true);
-//						
-//						newOnt = ar.getSelOntEntry();
-//						if (newOnt != null)
-//						{
-//							ourPattern.addPosiOnt(newOnt);
-//						}
-//
-//					}
-//				});
 				
 				ISelection selection = viewer.getSelection();
 				Object obj = ((IStructuredSelection)selection).getFirstElement();
@@ -466,6 +450,8 @@ IPropertyChangeListener {
 				{
 					ourPattern.addPosiOnt(newOnt);
 					ourPattern.toDatabase(0);
+					//Put this to the tree...
+					( (PatternLibContentProvider) viewer.getContentProvider()).addOntology((TreeParent) obj, newOnt);
 					refreshBranch((TreeParent) obj);
 				}
 				//EditPattern ep = new EditPattern(ourDisplay, patternSelected, true);
@@ -490,6 +476,8 @@ IPropertyChangeListener {
 				{
 					ourPattern.addNegaOnt(newOnt);
 					ourPattern.toDatabase(0);
+					//Put this to the tree...
+					( (PatternLibContentProvider) viewer.getContentProvider()).addOntology((TreeParent) obj, newOnt);
 					refreshBranch((TreeParent) obj);
 				}				
 			}			
@@ -498,7 +486,7 @@ IPropertyChangeListener {
 		addNegaOntEntry.setToolTipText("Add new Ontology Entry affected negatively by this pattern");
 		
 		addPatternDecision = new OpenRationaleEditorAction(PatternDecisionEditor.class, this, true, RationaleElementType.PATTERNDECISION);
-		addPatternDecision.setText("Add subdecision");
+		addPatternDecision.setText("Add Decision");
 		showPatternDecisionEditor = new OpenRationaleEditorAction(PatternDecisionEditor.class, this, false);
 		
 		attachCandidatePatterns = new Action(){
@@ -845,6 +833,12 @@ IPropertyChangeListener {
 		{
 			return ( (PatternLibContentProvider) viewer.getContentProvider()).addPattern(parent, (Pattern) element);
 		}
+		else if (element instanceof PatternDecision){
+			return ( (PatternLibContentProvider) viewer.getContentProvider()).addDecision(parent, (PatternDecision) element);
+		}
+		//else if (element instanceof OntEntry){
+		//	return ( (PatternLibContentProvider) viewer.getContentProvider()).addOntology(parent, (OntEntry) element);
+		//}
 		else return null;
 	}
 	

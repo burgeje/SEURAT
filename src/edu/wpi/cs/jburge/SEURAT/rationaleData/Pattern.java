@@ -63,6 +63,10 @@ public class Pattern extends RationaleElement {
 		subDecisions = new Vector<PatternDecision>();
 	} 
 	
+	public RationaleElementType getElementType(){
+		return RationaleElementType.PATTERN;
+	}
+	
 	public void setType(PatternElementType newtype)
 	{
 		type = newtype;

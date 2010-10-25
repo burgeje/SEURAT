@@ -935,14 +935,13 @@ public class RationaleExplorer extends ViewPart implements ISelectionListener, I
 				if(newAlternatives != null && newAlternatives.size() != 0){
 					IStructuredSelection isel = (IStructuredSelection) selection;
 				    TreeParent tp = (TreeParent)isel.getFirstElement();
-				    Decision parentDecision = new Decision();
-				    parentDecision.fromDatabase(tp.getName());
-//					for(int k=0; k<newAlternatives.size(); k++){	
-//						//refreshBranch(createUpdate(tp, newAlternatives.get(k)));
-//						//createUpdate(tp, newAlternatives.get(k));
-//						createNewElement(parentDecision, newAlternatives.get(k), tp);
-//						refreshBranch(tp);
-//					}
+				    Decision parentDecision = (Decision) tp.getAdapter(Pattern.class);
+					for(int k=0; k<newAlternatives.size(); k++){	
+						//refreshBranch(createUpdate(tp, newAlternatives.get(k)));
+						//createUpdate(tp, newAlternatives.get(k));
+						createNewElement(parentDecision, newAlternatives.get(k), tp);
+						refreshBranch(tp);
+					}
 					rebuildTree(false);
 					viewer.expandToLevel(3);
 					RationaleTreeMap map = RationaleTreeMap.getHandle();

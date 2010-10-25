@@ -209,11 +209,11 @@ public class RationaleLabelProvider extends LabelProvider {
 		{
 			Pattern myPattern = new Pattern();
 			myPattern.fromDatabase(element.getName());
-			if(myPattern.getType().toString().compareToIgnoreCase("ARCHITECTURE")==0){
+			if(myPattern.getType().toString().compareToIgnoreCase(PatternElementType.ARCHITECTURE.toString())==0){
 				descriptor = SEURATPlugin.getImageDescriptor("patternArchi.GIF");
-			}else if(myPattern.getType().toString().compareToIgnoreCase("DESIGN")==0){
+			}else if(myPattern.getType().toString().compareToIgnoreCase(PatternElementType.DESIGN.toString())==0){
 				descriptor = SEURATPlugin.getImageDescriptor("patternDesign.GIF");
-			}else if(myPattern.getType().toString().compareToIgnoreCase("IDIOM")==0){
+			}else if(myPattern.getType().toString().compareToIgnoreCase(PatternElementType.IDIOM.toString())==0){
 				descriptor = SEURATPlugin.getImageDescriptor("patternIdiom.GIF");
 			}else{
 				descriptor = SEURATPlugin.getImageDescriptor("patternLib.GIF");
@@ -251,9 +251,13 @@ public class RationaleLabelProvider extends LabelProvider {
 				descriptor = SEURATPlugin.getImageDescriptor("patternDesign.GIF");
 			}else if(myAltPattern.getPatternInLibrary().getType().toString().compareToIgnoreCase("IDIOM")==0){
 				descriptor = SEURATPlugin.getImageDescriptor("patternIdiom.GIF");
-			}else{
+			}
+			else{
 				descriptor = SEURATPlugin.getImageDescriptor("patternLib.GIF");
 			}
+		}
+		else if (element.getType() == RationaleElementType.PATTERNDECISION){
+			descriptor = SEURATPlugin.getImageDescriptor("Dec.gif");
 		}
 		else {
 			// System.out.println("element.getType().toString()" + " not

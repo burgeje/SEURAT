@@ -162,9 +162,9 @@ public class PatternEditor extends RationaleEditorBase {
 	@Override
 	protected void onRefreshForm(RationaleUpdateEvent pEvent) {
 		boolean l_dirty = isDirty();
-		Enumeration iterator;
-		int index;
-		Pattern ourPattern = getPatternFromExplorer();
+		Pattern ourPattern = null;
+		if (!isCreating())
+			ourPattern = getPatternFromExplorer();
 		//Probable race condition? Possible that we don't even have this in database...
 		if (ourPattern == null) return;
 		ourPattern.fromDatabase(ourPattern.getID());
@@ -263,6 +263,7 @@ public class PatternEditor extends RationaleEditorBase {
 		gridLayout.marginHeight=5;
 		gridLayout.makeColumnsEqualWidth=true;
 		parent.setLayout(gridLayout);
+		
 
 		if (isCreating())
 		{
@@ -401,9 +402,9 @@ public class PatternEditor extends RationaleEditorBase {
 			{
 				positiveList.add(patterns.nextElement().toString());
 			}	
-		}else{
-			positiveList = null;
 		}
+		positiveList.setBounds(0, 0, 0, 40);
+		gridData.heightHint = 40 * 3;
 		positiveList.setLayoutData(gridData);
 
 		negativeList = new List(parent, SWT.SINGLE | SWT.V_SCROLL);
@@ -415,12 +416,13 @@ public class PatternEditor extends RationaleEditorBase {
 		gridData.verticalAlignment = GridData.FILL;
 		//Fill the list of negative attributes...
 		if (ourPattern.getNegaOnts() != null){
-			Enumeration patterns = ourPattern.getPosiOnts().elements();
+			Enumeration patterns = ourPattern.getNegaOnts().elements();
 			while (patterns.hasMoreElements()){
 				negativeList.add(patterns.nextElement().toString());
 			}
 		}
-		else negativeList = null;
+		negativeList.setBounds(0, 0, 0, 40);
+		gridData.heightHint = 40 * 3;
 		negativeList.setLayoutData(gridData);
 
 		updateFormCache();
@@ -530,9 +532,9 @@ public class PatternEditor extends RationaleEditorBase {
 	 * be invalid).
 	 */
 	public boolean saveData() {
-		//TODO
+		//TODO After saving, we should either fix it or close it.s
 		ConsistencyChecker checker = new ConsistencyChecker(ourPattern.getID(), nameField.getText(), "patterns");
-		if (!nameField.getText().trim().equals("") &&
+		if (problemCatBox.getSelectionIndex() != -1 && !nameField.getText().trim().equals("") &&
 				(ourPattern.getName() == nameField.getText() || checker.check(false))){
 			//Valid pattern name
 			//Pattern name consistent with DB... Update record.
@@ -548,12 +550,13 @@ public class PatternEditor extends RationaleEditorBase {
 			ourPattern.setExample(exampleArea.getText());
 			ourPattern.setProblemCategory(problemMap.get(problemCatBox.getItem(problemCatBox.getSelectionIndex())));
 			ourPattern.toDatabase(ourPattern.getID());
+			
 			return true;
 		}
 		else{
 			//Invalid pattern name
 			String l_message = "The pattern name you have specified is either already"
-				+ " in use or empty. Please make sure that you have specified"
+				+ " in use or empty, or the problem category is not specified. Please make sure that you have specified"
 				+ " a pattern name and the pattern name does not already exist"
 				+ " in the database.";
 			MessageBox mbox = new MessageBox(getSite().getShell(), SWT.ICON_ERROR);

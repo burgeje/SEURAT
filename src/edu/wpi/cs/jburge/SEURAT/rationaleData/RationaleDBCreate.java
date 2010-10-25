@@ -1293,46 +1293,46 @@ return beginTable("candidates")
 	{	
 		//do not change the order of the following decisions. It's related to the sub candidate patterns
 		//three-lay subs
-		patternDecisionInsert("'What is the structure of Business Logic Layer', '','SingleChoice','Unresolved','Architecture','No','pattern',1"),
-		patternDecisionInsert("'What is the structure of Data Source Layer', '','SingleChoice','Unresolved','Architecture','No','pattern',1"),
-		patternDecisionInsert("'What is the structure of Presentation Layer', '','SingleChoice','Unresolved','Architecture','No','pattern',1"),
+		patternDecisionInsert("'What is the structure of Business Logic Layer', '','SingleChoice','Unresolved','Architecture','No','Pattern',1"),
+		patternDecisionInsert("'What is the structure of Data Source Layer', '','SingleChoice','Unresolved','Architecture','No','Pattern',1"),
+		patternDecisionInsert("'What is the structure of Presentation Layer', '','SingleChoice','Unresolved','Architecture','No','Pattern',1"),
 		
 		//layers subs
-		patternDecisionInsert("'What is the number of abstraction levels/layers?', '','SingleChoice','Unresolved','Architecture','No','pattern',2"),
-		patternDecisionInsert("'What are the names of the layers and their tasks?(Create sub decisions for each layer))', '','SingleChoice','Unresolved','Architecture','No','pattern',2"),
-		patternDecisionInsert("'What are the interfaces for each layer? (Create sub decisions)', '','SingleChoice','Unresolved','Architecture','No','pattern',2"),
-		patternDecisionInsert("'How do the layers structure together?', '','SingleChoice','Unresolved','Architecture','No','pattern',2"),
-		patternDecisionInsert("'How do the layers commnucate to each other?', '','SingleChoice','Unresolved','Architecture','No','pattern',2"),
-		patternDecisionInsert("'What is the error-handling strategy?', '','SingleChoice','Unresolved','Architecture','No','pattern',2"),
+		patternDecisionInsert("'What is the number of abstraction levels/layers?', '','SingleChoice','Unresolved','Architecture','No','Pattern',2"),
+		patternDecisionInsert("'What are the names of the layers and their tasks?(Create sub decisions for each layer))', '','SingleChoice','Unresolved','Architecture','No','Pattern',2"),
+		patternDecisionInsert("'What are the interfaces for each layer? (Create sub decisions)', '','SingleChoice','Unresolved','Architecture','No','Pattern',2"),
+		patternDecisionInsert("'How do the layers structure together?', '','SingleChoice','Unresolved','Architecture','No','Pattern',2"),
+		patternDecisionInsert("'How do the layers commnucate to each other?', '','SingleChoice','Unresolved','Architecture','No','Pattern',2"),
+		patternDecisionInsert("'What is the error-handling strategy?', '','SingleChoice','Unresolved','Architecture','No','Pattern',2"),
 		
 		//Pipes and Filters
-		patternDecisionInsert("'What is the sequence of processing tasks?', '','SingleChoice','Unresolved','Architecture','No','pattern',3"),
-		patternDecisionInsert("'What are the data formats to be passed along each pipe?', '','SingleChoice','Unresolved','Architecture','No','pattern',3"),
-		patternDecisionInsert("'How to implement the filters? (create sub decisions for each filter)', '','SingleChoice','Unresolved','Architecture','No','pattern',3"),
-		patternDecisionInsert("'How to implement each pipe connection?(create sub decisions for each connection)', '','SingleChoice','Unresolved','Architecture','No','pattern',3"),
-		patternDecisionInsert("'What are the data formats to be passed along each pipe?', '','SingleChoice','Unresolved','Architecture','No','pattern',3"),
-		patternDecisionInsert("'What is the error-handling strategy?', '','SingleChoice','Unresolved','Architecture','No','pattern',3"),		
+		patternDecisionInsert("'What is the sequence of processing tasks?', '','SingleChoice','Unresolved','Architecture','No','Pattern',3"),
+		patternDecisionInsert("'What are the data formats to be passed along each pipe?', '','SingleChoice','Unresolved','Architecture','No','Pattern',3"),
+		patternDecisionInsert("'How to implement the filters? (create sub decisions for each filter)', '','SingleChoice','Unresolved','Architecture','No','Pattern',3"),
+		patternDecisionInsert("'How to implement each pipe connection?(create sub decisions for each connection)', '','SingleChoice','Unresolved','Architecture','No','Pattern',3"),
+		patternDecisionInsert("'What are the data formats to be passed along each pipe?', '','SingleChoice','Unresolved','Architecture','No','Pattern',3"),
+		patternDecisionInsert("'What is the error-handling strategy?', '','SingleChoice','Unresolved','Architecture','No','Pattern',3"),		
 		
 		//MVC 16
-		patternDecisionInsert("'How to seperate human-computer interaction from core functionality?', '','SingleChoice','Unresolved','Architecture','No','pattern',5"),
-		patternDecisionInsert("'How to implement change-propagation mechanism?', 'Follow Publisher-Subscriber patter','SingleChoice','Unresolved','Architecture','No','pattern',5"),
-		patternDecisionInsert("'How to design and implement the views?', '','SingleChoice','Unresolved','Architecture','No','pattern',5"),
-		patternDecisionInsert("'How to design and implement the controllers?', '','SingleChoice','Unresolved','Architecture','No','pattern',5"),
-		patternDecisionInsert("'How to implement the view-controller relationship?', '','SingleChoice','Unresolved','Architecture','No','pattern',5"),
-		patternDecisionInsert("'How to implement the set-up of MVC?', '','SingleChoice','Unresolved','Architecture','No','pattern',5"),
-		patternDecisionInsert("'How to create view dynamically', '','SingleChoice','Unresolved','Architecture','No','pattern',5"),
-		patternDecisionInsert("'Pluggable controllers', '','SingleChoice','Unresolved','Architecture','No','pattern',5"),
-		patternDecisionInsert("'What is the infrastructure for hierarchical views and controllers?', '','SingleChoice','Unresolved','Architecture','No','pattern',5"),
+		patternDecisionInsert("'How to seperate human-computer interaction from core functionality?', '','SingleChoice','Unresolved','Architecture','No','Pattern',5"),
+		patternDecisionInsert("'How to implement change-propagation mechanism?', 'Follow Publisher-Subscriber patter','SingleChoice','Unresolved','Architecture','No','Pattern',5"),
+		patternDecisionInsert("'How to design and implement the views?', '','SingleChoice','Unresolved','Architecture','No','Pattern',5"),
+		patternDecisionInsert("'How to design and implement the controllers?', '','SingleChoice','Unresolved','Architecture','No','Pattern',5"),
+		patternDecisionInsert("'How to implement the view-controller relationship?', '','SingleChoice','Unresolved','Architecture','No','Pattern',5"),
+		patternDecisionInsert("'How to implement the set-up of MVC?', '','SingleChoice','Unresolved','Architecture','No','Pattern',5"),
+		patternDecisionInsert("'How to create view dynamically', '','SingleChoice','Unresolved','Architecture','No','Pattern',5"),
+		patternDecisionInsert("'Pluggable controllers', '','SingleChoice','Unresolved','Architecture','No','Pattern',5"),
+		patternDecisionInsert("'What is the infrastructure for hierarchical views and controllers?', '','SingleChoice','Unresolved','Architecture','No','Pattern',5"),
 		
 		//Presentation-Abstraction-Control
-		patternDecisionInsert("'What is the model of the application?', '','SingleChoice','Unresolved','Architecture','No','pattern',7"),
-		patternDecisionInsert("'What is the general strategy for organizing the PAC hierarchy?', '','SingleChoice','Unresolved','Architecture','No','pattern',7"),
-		patternDecisionInsert("'What is the top-level PAC agent?', '','SingleChoice','Unresolved','Architecture','No','pattern',7"),
-		patternDecisionInsert("'What is the bottom-level PAC agents?', '','SingleChoice','Unresolved','Architecture','No','pattern',7"),
-		patternDecisionInsert("'What is the bottom-level PAC agents for system services?', '','SingleChoice','Unresolved','Architecture','No','pattern',7"),
-		patternDecisionInsert("'What is the intermediate-level PAC agents to compose lower-level PAC agents?', '','SingleChoice','Unresolved','Architecture','No','pattern',7"),
-		patternDecisionInsert("'What is the intermediate-level PAC agents to coordinate lower-level PAC agents?', '','SingleChoice','Unresolved','Architecture','No','pattern',7"),
-		patternDecisionInsert("'How to seperate core functionality from human-computer interaction?', '','SingleChoice','Unresolved','Architecture','No','pattern',7"),
+		patternDecisionInsert("'What is the model of the application?', '','SingleChoice','Unresolved','Architecture','No','Pattern',7"),
+		patternDecisionInsert("'What is the general strategy for organizing the PAC hierarchy?', '','SingleChoice','Unresolved','Architecture','No','Pattern',7"),
+		patternDecisionInsert("'What is the top-level PAC agent?', '','SingleChoice','Unresolved','Architecture','No','Pattern',7"),
+		patternDecisionInsert("'What is the bottom-level PAC agents?', '','SingleChoice','Unresolved','Architecture','No','Pattern',7"),
+		patternDecisionInsert("'What is the bottom-level PAC agents for system services?', '','SingleChoice','Unresolved','Architecture','No','Pattern',7"),
+		patternDecisionInsert("'What is the intermediate-level PAC agents to compose lower-level PAC agents?', '','SingleChoice','Unresolved','Architecture','No','Pattern',7"),
+		patternDecisionInsert("'What is the intermediate-level PAC agents to coordinate lower-level PAC agents?', '','SingleChoice','Unresolved','Architecture','No','Pattern',7"),
+		patternDecisionInsert("'How to seperate core functionality from human-computer interaction?', '','SingleChoice','Unresolved','Architecture','No','Pattern',7"),
 		
 		
 	};

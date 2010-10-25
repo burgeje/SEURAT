@@ -74,14 +74,106 @@ ITreeContentProvider{
 		
 		TreeParent ontTop = new TreeParent("Affected Quality Attributes", RationaleElementType.RATIONALE);
 		child.addChild(ontTop);
+		ontTop.setParent(child);
 		TreeParent posiTop = new TreeParent("Positive", RationaleElementType.RATIONALE);
 		TreeParent negaTop = new TreeParent("Negative", RationaleElementType.RATIONALE);
 		ontTop.addChild(posiTop);
 		ontTop.addChild(negaTop);
+		negaTop.setParent(ontTop);
+		posiTop.setParent(ontTop);
 
 		TreeParent decTop = new TreeParent("Decisions", RationaleElementType.RATIONALE);
+		decTop.setParent(child);
 		child.addChild(decTop);
 		
+		return child;
+	}
+	
+	/**
+	 * Given the pattern and the ontology entry, create a new tree node, and a path
+	 * linking the two of them.
+	 * @param parent The pattern parent of this onotlogy entry
+	 * @param entry The actual ontology entry to be added to the tree.
+	 * @return The tree node that was just added to the tree.
+	 */
+	public TreeParent addOntology(TreeParent parent, OntEntry entry){
+		Pattern pattern = new Pattern();
+		pattern.fromDatabase(parent.getName());
+		if (pattern.getID() < 0){
+			System.err.println("Invalid pattern parent while adding ontology entry");
+			return null;
+		}
+		//Determine whether this entry is positive or negative...
+		Vector<OntEntry> posEntry = pattern.getPosiOnts();
+		boolean isPositive = false;
+		for (int i = 0; i < posEntry.size(); i++){
+			if (posEntry.get(i).equals(entry)){
+				isPositive = true;
+			}
+		}
+		
+		TreeParent ontParent = null;
+		TreeObject patternChildren[] = parent.getChildren();
+		for (int i = 0; i < patternChildren.length; i++){
+			if (patternChildren[i].getName().equals("Affected Quality Attributes") && 
+					patternChildren[i].getType().equals(RationaleElementType.RATIONALE)){
+				ontParent = (TreeParent) patternChildren[i];
+				break;
+			}
+		}
+		
+		//Now, get the corresponding root depending on whether the entry is positive or negative.
+		TreeParent entryRoot = null;
+		TreeObject ontChildren[] = ontParent.getChildren();
+		for (int i = 0; i < ontChildren.length; i++){
+			if (ontChildren[i].getName().equals("Positive") && isPositive){
+				entryRoot = (TreeParent) ontChildren[i];
+				break;
+			}
+			
+			if (ontChildren[i].getName().equals("Negative") && !(isPositive) ){
+				entryRoot = (TreeParent) ontChildren[i];
+				break;
+			}
+		}
+		
+		if (entryRoot == null){
+			System.err.println("Entry root is null while adding ontentry");
+			return null;
+		}
+		
+		//Finally, we add the entry to entryRoot
+		TreeParent child = new TreeParent(entry.getName(), RationaleElementType.ONTENTRY);
+		child.setParent(entryRoot);
+		entryRoot.addChild(child);
+		
+		return child;
+ 	}
+	
+	/**
+	 * Given pattern and element to be created, add a new element to the tree's content
+	 * @param parent The pattern of this decision.
+	 * @param decision The decision to be added
+	 * @return The tree node of the newly created pattern decision.
+	 */
+	public TreeParent addDecision(TreeParent parent, PatternDecision decision){
+		TreeParent decisionParent = null;
+		for (int i = 0; i < parent.getChildren().length; i++){
+			if (parent.getChildren()[i].getName().equals("Decisions") && 
+					parent.getChildren()[i].getType().equals(RationaleElementType.RATIONALE)){
+				decisionParent = (TreeParent) parent.getChildren()[i];
+				break;
+			}
+		}
+		
+		if (decisionParent == null){
+			System.err.println("Decision Parent is not determined from Pattern");
+			return null;
+		}
+		
+		TreeParent child = new TreeParent(decision.getName(), RationaleElementType.PATTERNDECISION);
+		child.setParent(decisionParent);
+		decisionParent.addChild(child);
 		return child;
 	}
 	
@@ -102,22 +194,27 @@ ITreeContentProvider{
 			TreeParent child = (TreeParent) patterns.nextElement();
 			String childName = child.getName();
 			parent.addChild(child);
+			child.setParent(parent);
 			
 			//Pattern childPattern = (Pattern)patterns.nextElement();
 			//String OntName = patterns.nextElement().posiOnt.getName();
 			
 			TreeParent ontTop = new TreeParent("Affected Quality Attributes", RationaleElementType.RATIONALE);
 			child.addChild(ontTop);
+			ontTop.setParent(child);
 			TreeParent posiTop = new TreeParent("Positive", RationaleElementType.RATIONALE);
 			TreeParent negaTop = new TreeParent("Negative", RationaleElementType.RATIONALE);
 			ontTop.addChild(posiTop);
+			posiTop.setParent(ontTop);
 			ontTop.addChild(negaTop);
+			negaTop.setParent(ontTop);
 			
 			addOntEntries(posiTop, childName, true);
 			addOntEntries(negaTop, childName, false);
 			
 			TreeParent decTop = new TreeParent("Decisions", RationaleElementType.RATIONALE);
 			child.addChild(decTop);
+			decTop.setParent(child);
 			addSubDecisions(decTop, childName, parentName);
 		}	
 	}

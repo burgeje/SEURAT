@@ -22,18 +22,20 @@ public class PatternDecision extends RationaleElement{
 
 	//private static final long serialVersionUID = -4162618972367711832L;
 
-	DecisionType type;
-	Phase devPhase;
-	int parent;
-	RationaleElementType ptype;
-	boolean alts;
-	Designer designer;
-	Vector<Constraint> constraints;	
-	DecisionStatus status;
-	Vector<Alternative> alternatives;    //the decision will have alternatives *or* sub-decisions
-	Vector<PatternDecision> subDecisions;
-	Vector<Question> questions; 
-	Vector<Pattern> candidatePatterns;
+	private DecisionType type;
+	private Phase devPhase;
+	private int parent; //TODO This doesn't look good. What if there are subdec?
+	private RationaleElementType ptype;
+	private boolean alts;
+	private Designer designer;
+	private Vector<Constraint> constraints;	
+	private DecisionStatus status;
+	private Vector<Alternative> alternatives;    //the decision will have alternatives *or* sub-decisions
+	private Vector<PatternDecision> subDecisions;
+	private Vector<Question> questions; 
+	private Vector<Pattern> candidatePatterns;
+	private int parentPattern; //this is used only to set the parentPattern during creation of patterndecision.
+	//We don't need this attribute in the DB, we can clean it up later on.
 
 	private RationaleElementUpdateEventGenerator<PatternDecision> m_eventGenerator = 
 		new RationaleElementUpdateEventGenerator<PatternDecision>(this);
@@ -297,7 +299,29 @@ public class PatternDecision extends RationaleElement{
 
 				stmt.execute(updateQuery); 
 
-				l_updateEvent = m_eventGenerator.MakeCreated();				
+				/*
+				//Now, associate with pattern.
+				//Get id first
+				updateQuery = "SELECT id FROM patterndecisions where name='" +
+				RationaleDBUtil.escape(this.name) + "'";
+				rs = stmt.executeQuery(updateQuery); 
+
+				if (rs.next())
+				{
+					ourid = rs.getInt("id");
+					rs.close();
+					//We have found out our ID and the insert is a success.
+					//get association set up.
+					updateQuery = "INSERT into pattern_decision values (" + parent +
+					"ourid" + "DECISION)";
+				}
+				
+				//And now, we have patternID and patterndecisionID. We can insert into relationship entry
+				updateQuery = "INSERT INTO pattern_decision values (" + parentPattern + ", " +
+				ourid + ", " + "'Decision')";
+				stmt.execute(updateQuery);
+				*/
+				l_updateEvent = m_eventGenerator.MakeCreated();	
 			}
 			//in either case, we want to update any sub-requirements in case
 			//they are new!
@@ -903,5 +927,13 @@ public class PatternDecision extends RationaleElement{
 			found = true;
 		}
 		return found;
+	}
+	
+	public int getParentPattern(){
+		return parentPattern;
+	}
+	
+	public void setParentPattern(int parent){
+		parentPattern = parent;
 	}
 }

@@ -26,6 +26,7 @@ import edu.wpi.cs.jburge.SEURAT.editors.ReasonGUI;
 import edu.wpi.cs.jburge.SEURAT.rationaleData.Alternative;
 import edu.wpi.cs.jburge.SEURAT.rationaleData.AlternativeStatus;
 import edu.wpi.cs.jburge.SEURAT.rationaleData.Argument;
+import edu.wpi.cs.jburge.SEURAT.rationaleData.Pattern;
 import edu.wpi.cs.jburge.SEURAT.rationaleData.PatternDecision;
 import edu.wpi.cs.jburge.SEURAT.rationaleData.DecisionStatus;
 import edu.wpi.cs.jburge.SEURAT.rationaleData.DecisionType;
@@ -146,6 +147,8 @@ public class PatternDecisionEditor extends RationaleEditorBase {
 	 * values of editable fields.
 	 */
 	private DataCache dataCache = new DataCache();
+	
+	private Pattern ourPattern;
 	
 	/* (non-Javadoc)
 	 * @see SEURAT.editors.RationaleEditorBase#editorType()
@@ -493,7 +496,12 @@ public class PatternDecisionEditor extends RationaleEditorBase {
 	/* (non-Javadoc)
 	 * @see SEURAT.editors.RationaleEditorBase#setupForm(org.eclipse.swt.widgets.Composite)
 	 */
-	public void setupForm(Composite parent) {		
+	public void setupForm(Composite parent) {	
+		String patternName = this.getTreeParent().getName();
+		ourPattern = new Pattern();
+		ourPattern.fromDatabase(patternName);
+		//Finally, I GOT IT! Now we can use this to save to the relationship (YQ)
+		//TODO SaveData
 		GridLayout gridLayout = new GridLayout();
 		gridLayout.numColumns = 6;
 		gridLayout.marginHeight = 5;
@@ -704,7 +712,7 @@ public class PatternDecisionEditor extends RationaleEditorBase {
 	public boolean saveData() {
 		ConsistencyChecker checker = new ConsistencyChecker(getDecision().getID(), nameField.getText(), "PatternDecisions");
 		
-		if(!nameField.getText().trim().equals("") &&
+		if(phaseBox.getSelectionIndex() != -1 && !nameField.getText().trim().equals("") &&
 				(getDecision().getName() == nameField.getText() || checker.check())) {
 			if (isCreating()) {
 				getDecision().setParent(getParentElement());
@@ -717,7 +725,10 @@ public class PatternDecisionEditor extends RationaleEditorBase {
 					getDecision().setPhase(Phase.fromString(phaseBox.getItem(phaseBox.getSelectionIndex())));
 					getDecision().updateHistory(new History(getDecision().getStatus().toString(), "Initial Entry"));
 					getDecision().setAlts(!subDecButton.getSelection());
-					
+					getDecision().setParentPattern(ourPattern.getID());
+					getDecision().setParentID(ourPattern.getID());
+					// TODO Wang uses PARENT instead of relationship set pattern_decision to determine which pattern is it.
+					//This might not be a good way to implement it and we might need to change it some time.
 					if (designerBox.getItemCount() > 0) {
 						String designerName = designerBox
 						.getItem(designerBox.getSelectionIndex());
@@ -725,14 +736,8 @@ public class PatternDecisionEditor extends RationaleEditorBase {
 						ourDes.fromDatabase(designerName);
 						getDecision().setDesigner(ourDes);
 					}
+					getDecision().setID(getDecision().toDatabase(ourPattern.getID(), ourPattern.getElementType()));
 					
-					if(getEditorData().getAdapter(PatternLibrary.class) != null){
-						
-						
-						System.out.println("Works!!!");
-					}
-					//					comment before this made no sense...
-					getDecision().setID(getDecision().toDatabase(getDecision().getParent(), getDecision().getPtype()));
 					System.out.println("our ID = " + getDecision().getID());
 					return true;
 				} else {
@@ -770,8 +775,8 @@ public class PatternDecisionEditor extends RationaleEditorBase {
 		{
 			String l_message = "";
 			l_message += "The pattern decision name you have specified is either already"
-				+ " in use or empty. Please make sure that you have specified"
-				+ " a pattern decision name and the pattner decision name does not already exist"
+				+ " in use or empty. Or the development phase is empty. Please make sure that you have specified both"
+				+ " a pattern decision name and a development phase, and the pattner decision name does not already exist"
 				+ " in the database.";
 			MessageBox mbox = new MessageBox(getSite().getShell(), SWT.ICON_ERROR);
 			mbox.setMessage(l_message);

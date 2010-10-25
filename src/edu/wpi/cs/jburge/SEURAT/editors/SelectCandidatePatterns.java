@@ -16,6 +16,7 @@ import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
+import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.List;
@@ -39,6 +40,8 @@ public class SelectCandidatePatterns {
 	
 	private Button addButton;
 	
+	private Button removeButton;
+	
 	private Button doneButton;
 	
 	private Button cancelButton;
@@ -54,25 +57,29 @@ public class SelectCandidatePatterns {
 	private Decision parentDecision;
 
 	public SelectCandidatePatterns(Hashtable patterns_values, Display display){
-//		parentDecision = new Decision();
-//		parentDecision.fromDatabase(((Decision)selection).getName());
 		
 		canceled = false;
 		selections = new Vector<String>();
 		subDisplay = display;
 		shell = new Shell(subDisplay, SWT.DIALOG_TRIM | SWT.PRIMARY_MODAL);
-		shell.setText("Matching results and evaluation values");
+		shell.setText("Select Candidate Patterns");
 		GridLayout gridLayout = new GridLayout();
 		gridLayout.numColumns = 4;
 		gridLayout.marginHeight = 5;
 		gridLayout.makeColumnsEqualWidth = true;
 		shell.setLayout(gridLayout);
 		
+		new Label(shell, SWT.WRAP | SWT.LEFT).setText("Avaialble Patterns");
+		new Label(shell, SWT.NONE);
+		
+		new Label(shell, SWT.WRAP | SWT.LEFT).setText("Selected Patterns");
+		new Label(shell, SWT.NONE);
+		
 		GridData gridData = new GridData(GridData.HORIZONTAL_ALIGN_FILL);
 		
 		patterns = new Tree(shell, SWT.SINGLE | SWT.V_SCROLL | SWT.H_SCROLL);
 		TreeItem root = new TreeItem(patterns, SWT.NONE);
-		root.setText("Matching Results and their scores");
+		root.setText("Available Patterns (scores)");
 		
 		try {
 			ArrayList patternsList = new ArrayList(patterns_values.entrySet());
@@ -97,21 +104,23 @@ public class SelectCandidatePatterns {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}		
-		gridData.horizontalSpan = 4;
+		gridData.horizontalSpan = 2;
 		gridData.grabExcessHorizontalSpace = true;
 		gridData.grabExcessVerticalSpace = true;
 		gridData.horizontalAlignment = GridData.FILL;
 		gridData.verticalAlignment = GridData.FILL;
 		int listHeight = patterns.getItemHeight() * 10;
-		Rectangle trim = patterns.computeTrim(0, 0, 0, listHeight);
+		int listWidth = patterns.getItemCount() * 2 + 400;
+		Rectangle trim = patterns.computeTrim(0, 0, listWidth, listHeight);
 		gridData.heightHint = trim.height;
+		gridData.widthHint = trim.width;
 		patterns.setLayoutData(gridData);
 		
 		
 		results = new List(shell, SWT.SINGLE | SWT.V_SCROLL);
 
 		
-		gridData.horizontalSpan = 4;
+		gridData.horizontalSpan = 2;
 		gridData.grabExcessHorizontalSpace = true;
 		gridData.grabExcessVerticalSpace = true;
 		gridData.horizontalAlignment = GridData.FILL;
@@ -121,22 +130,8 @@ public class SelectCandidatePatterns {
 		gridData.heightHint = trim.height;
 		results.setLayoutData(gridData);
 		
-//		if (cans != null){
-//			Enumeration candidates = cans.elements();
-//			while (candidates.hasMoreElements())
-//			{
-//				Pattern result = new Pattern(); 
-//				result.fromDatabase(((Pattern)candidates.nextElement()).getName());
-//				String name = result.getName();
-//				results.add(name);
-//				results.add(" ----Description: " + result.getDescription());
-//				results.add(" ----Type: " + result.getType());
-//					
-//			}	
-//		}
-		
 		addButton = new Button(shell, SWT.PUSH);
-		addButton.setText("Add");
+		addButton.setText("=>");
 		gridData = new GridData(GridData.HORIZONTAL_ALIGN_FILL | GridData.VERTICAL_ALIGN_BEGINNING);
 		addButton.setLayoutData(gridData);
 		addButton.addSelectionListener(new SelectionAdapter() {
@@ -147,9 +142,18 @@ public class SelectCandidatePatterns {
 				selections.add(name);
 				results.add(name);
 				results.redraw();
-				//RationaleDB db = RationaleDB.getHandle();
-				//parentDecision.addPattern(name);
 				
+			}
+		});
+		
+		removeButton = new Button(shell, SWT.PUSH);
+		removeButton.setText("Empty Selected List");
+		gridData = new GridData(GridData.HORIZONTAL_ALIGN_FILL | GridData.VERTICAL_ALIGN_BEGINNING);
+		removeButton.setLayoutData(gridData);
+		removeButton.addSelectionListener(new SelectionAdapter(){
+			public void widgetSelected(SelectionEvent event){
+				results.removeAll();
+				results.redraw();
 			}
 		});
 		
@@ -207,27 +211,27 @@ public class SelectCandidatePatterns {
 		selections = new Vector<String>();
 		subDisplay = display;
 		shell = new Shell(subDisplay, SWT.DIALOG_TRIM | SWT.PRIMARY_MODAL);
-		shell.setText("Matching results and evaluation values");
-		GridLayout gridLayout = new GridLayout();
-		gridLayout.numColumns = 6;
-		gridLayout.marginHeight = 5;
-		gridLayout.makeColumnsEqualWidth = true;
-		shell.setLayout(gridLayout);
+		shell.setText("Select Candidate Patterns");
+		Composite comp = new Composite(shell, SWT.NONE);
+		comp.setLayout(new GridLayout(1, false));
+		
+		Composite listComp = new Composite(comp, SWT.NONE);
+		listComp.setLayout(new GridLayout(2, true));
 		
 		GridData gridData = new GridData(GridData.HORIZONTAL_ALIGN_FILL);
 		
-		patterns = new Tree(shell, SWT.SINGLE | SWT.V_SCROLL | SWT.H_SCROLL);
+		patterns = new Tree(listComp, SWT.SINGLE | SWT.V_SCROLL | SWT.H_SCROLL);
 		TreeItem root = new TreeItem(patterns, SWT.NONE);
 		root.setText("Matching results and evaluation values");		
 		
-		Enumeration ps = cans.elements();
+		Enumeration<Pattern> ps = cans.elements();
 		while(ps.hasMoreElements()){
 			Pattern pattern = (Pattern)ps.nextElement();
 			TreeItem item = new TreeItem(root, SWT.NONE);
 			item.setText(pattern.getName());			
 		}
 		
-		gridData.horizontalSpan = 6;
+		gridData.horizontalSpan = 1;
 		gridData.grabExcessHorizontalSpace = true;
 		gridData.grabExcessVerticalSpace = true;
 		gridData.horizontalAlignment = GridData.FILL;
@@ -238,10 +242,10 @@ public class SelectCandidatePatterns {
 		patterns.setLayoutData(gridData);
 		
 		
-		results = new List(shell, SWT.SINGLE | SWT.V_SCROLL);
+		results = new List(listComp, SWT.SINGLE | SWT.V_SCROLL);
 
 		
-		gridData.horizontalSpan = 6;
+		gridData.horizontalSpan = 1;
 		gridData.grabExcessHorizontalSpace = true;
 		gridData.grabExcessVerticalSpace = true;
 		gridData.horizontalAlignment = GridData.FILL;
@@ -251,21 +255,8 @@ public class SelectCandidatePatterns {
 		gridData.heightHint = trim.height;
 		results.setLayoutData(gridData);
 		
-//		if (cans != null){
-//			Enumeration candidates = cans.elements();
-//			while (candidates.hasMoreElements())
-//			{
-//				Pattern result = new Pattern(); 
-//				result.fromDatabase(((Pattern)candidates.nextElement()).getName());
-//				String name = result.getName();
-//				results.add(name);
-//				results.add(" ----Description: " + result.getDescription());
-//				results.add(" ----Type: " + result.getType());
-//					
-//			}	
-//		}
-		
-		addButton = new Button(shell, SWT.PUSH);
+		Composite buttonComp = new Composite(comp, SWT.NONE);
+		addButton = new Button(buttonComp, SWT.PUSH);
 		addButton.setText("Add");
 		gridData = new GridData(GridData.HORIZONTAL_ALIGN_FILL | GridData.VERTICAL_ALIGN_BEGINNING);
 		addButton.setLayoutData(gridData);
@@ -283,7 +274,7 @@ public class SelectCandidatePatterns {
 			}
 		});
 		
-		doneButton = new Button(shell, SWT.PUSH); 
+		doneButton = new Button(buttonComp, SWT.PUSH); 
 		doneButton.setText("Done");
 		gridData = new GridData(GridData.HORIZONTAL_ALIGN_FILL | GridData.VERTICAL_ALIGN_BEGINNING);
 		doneButton.setLayoutData(gridData);
@@ -302,7 +293,7 @@ public class SelectCandidatePatterns {
 			}
 		});
 		
-		cancelButton = new Button(shell, SWT.PUSH); 
+		cancelButton = new Button(buttonComp, SWT.PUSH); 
 		cancelButton.setText("Cancel");
 		gridData = new GridData(GridData.HORIZONTAL_ALIGN_FILL | GridData.VERTICAL_ALIGN_BEGINNING);
 		cancelButton.setLayoutData(gridData);
