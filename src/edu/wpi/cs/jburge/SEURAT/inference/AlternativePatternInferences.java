@@ -13,7 +13,7 @@ import edu.wpi.cs.jburge.SEURAT.rationaleData.*;
 
 public class AlternativePatternInferences {
 	
-	public Hashtable<String, Double> exactMatching(ArrayList<Pattern> toBeMatchedPatterns){
+	public Hashtable<Pattern, Double> exactMatching(ArrayList<Pattern> toBeMatchedPatterns){
 		RationaleDB db = RationaleDB.getHandle();
 		Vector<Requirement> ourRequirements = db.getNFRs();
 		
@@ -76,7 +76,7 @@ public class AlternativePatternInferences {
 		System.out.println("");
 		
 		//Vector<Pattern> candidatePattern = new Vector<Pattern>();
-		Hashtable patterns_scores = new Hashtable();
+		Hashtable<Pattern, Double> patterns_scores = new Hashtable<Pattern, Double>();
 		itr = myArrayList.iterator();
 		while(itr.hasNext()){
 			Map.Entry e=(Map.Entry)itr.next();
@@ -90,7 +90,7 @@ public class AlternativePatternInferences {
 	}
 	
 	
-	public Hashtable<String, Double> contributionMatching(ArrayList<Pattern> toBeMatchedPatterns){
+	public Hashtable<Pattern, Double> contributionMatching(ArrayList<Pattern> toBeMatchedPatterns){
 		RationaleDB db = RationaleDB.getHandle();
 		Vector<Requirement> ourRequirements = db.getNFRs();
 		

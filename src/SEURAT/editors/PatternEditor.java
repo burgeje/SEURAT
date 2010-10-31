@@ -535,6 +535,7 @@ public class PatternEditor extends RationaleEditorBase {
 		//TODO After saving, we should either fix it or close it.s
 		ConsistencyChecker checker = new ConsistencyChecker(ourPattern.getID(), nameField.getText(), "patterns");
 		if (problemCatBox.getSelectionIndex() != -1 && !nameField.getText().trim().equals("") &&
+				(nameField.getText().indexOf(',') == -1) && 
 				(ourPattern.getName() == nameField.getText() || checker.check(false))){
 			//Valid pattern name
 			//Pattern name consistent with DB... Update record.
@@ -556,7 +557,7 @@ public class PatternEditor extends RationaleEditorBase {
 		else{
 			//Invalid pattern name
 			String l_message = "The pattern name you have specified is either already"
-				+ " in use or empty, or the problem category is not specified. Please make sure that you have specified"
+				+ " in use, empty, or contains a comma (,), or the problem category is not specified. Please make sure that you have specified"
 				+ " a pattern name and the pattern name does not already exist"
 				+ " in the database.";
 			MessageBox mbox = new MessageBox(getSite().getShell(), SWT.ICON_ERROR);

@@ -357,14 +357,6 @@ IPropertyChangeListener {
 				}
 				//showPatternEditor.run();
 				
-//				
-//				if(!canceled){
-//					
-//					
-//				}
-				//EditPattern ep = new EditPattern(ourDisplay, patternSelected, true);
-				
-				
 			}			
 		}; //end of the edit element action definition
 		editElement.setText("Edit");
@@ -406,6 +398,11 @@ IPropertyChangeListener {
 					}else {
 						
 					}
+					
+					TreeParent parent = ourElement.getParent();
+					PatternLibContentProvider provider = (PatternLibContentProvider) viewer.getContentProvider();
+					provider.removeElement(ourElement);
+					refreshBranch(parent);
 				}
 			}			
 		}; //end of the edit element action definition
@@ -426,7 +423,15 @@ IPropertyChangeListener {
 						db.saveCandidatePatterns(ourElement.getName(), scp.getSelections());
 //						PatternDecision pd = new PatternDecision();
 //						pd.fromDatabase(ourElement.getName());
-						rebuildTree();
+						
+						//Now, update the tree...
+						PatternLibContentProvider provider = (PatternLibContentProvider) viewer.getContentProvider();
+						Iterator<String> toAdd = scp.getSelections().iterator();
+						while (toAdd.hasNext()){
+							provider.addElement(ourElement, toAdd.next(), RationaleElementType.PATTERN);
+						}
+						//rebuildTree();
+						refreshBranch(ourElement);
 					}
 
 				}				

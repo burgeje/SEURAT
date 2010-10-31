@@ -1,9 +1,11 @@
 package edu.wpi.cs.jburge.SEURAT.reports;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Iterator;
+import java.util.TreeMap;
 import java.util.Vector;
 
 import org.eclipse.swt.SWT;
@@ -181,7 +183,7 @@ public class GenerateCandidatePatternsComposite {
 			}
 			
 			//Create a hash table between pattern and their scores
-			Hashtable<String, Double> scoreTable =  null;
+			Hashtable<Pattern, Double> scoreTable =  null;
 			if (matchingMethod == 0)
 				scoreTable = new AlternativePatternInferences().exactMatching(matchingPatterns);
 			else if (matchingMethod == 1)

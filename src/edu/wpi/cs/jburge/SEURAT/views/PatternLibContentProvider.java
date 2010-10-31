@@ -1,11 +1,8 @@
-/**
- * This provides the content for the Pattern Library tree view.
- * @author wangw2
- *
- */
+
 package edu.wpi.cs.jburge.SEURAT.views;
 
 import java.util.Enumeration;
+
 import java.util.Iterator;
 import java.util.Vector;
 
@@ -24,6 +21,10 @@ import edu.wpi.cs.jburge.SEURAT.rationaleData.RationaleElement;
 import edu.wpi.cs.jburge.SEURAT.rationaleData.RationaleElementType;
 import edu.wpi.cs.jburge.SEURAT.rationaleData.Requirement;
 
+/**
+ * This provides the content for the Pattern Library tree view.
+ *
+ */
 public class PatternLibContentProvider implements IStructuredContentProvider, IDeltaListener,
 ITreeContentProvider{
 	
@@ -60,6 +61,29 @@ ITreeContentProvider{
 		addIdioms(idiomtop, null, null);
 
 		return invisibleRoot;
+	}
+	
+	/**
+	 * Given parent and childName and type, create the child and att it to parent.
+	 * Remember also to att parent to child.
+	 * @param parent
+	 * @param childName
+	 */
+	public void addElement(TreeParent parent, String childName, RationaleElementType type){
+		TreeParent child = new TreeParent(childName, type);
+		child.setParent(parent);
+		parent.addChild(child);
+	}
+	
+	/**
+	 * First, remove all children of the child, then remove the element from the tree (from the parent of the child).
+	 * @param child
+	 */
+	public void removeElement(TreeParent child){
+		TreeParent parent = child.getParent();
+		
+		child.removeChildren();
+		parent.removeChild(child, false);
 	}
 	
 	/**
