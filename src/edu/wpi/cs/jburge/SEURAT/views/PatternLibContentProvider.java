@@ -87,6 +87,36 @@ ITreeContentProvider{
 	}
 	
 	/**
+	 * In reverse DFS traversal order, remove all children of a pattern
+	 * Base Case 1: Node is null, return
+	 * Base Case 2: Node is a leaf, remove the node from the parent
+	 * Recursion: For each node not a leaf, recursively call this function, and
+	 * after all functions removes all descendants of this node, remove the node from its parent.
+	 * @param child
+	 */
+	public void removePattern(TreeParent node){
+		if (node == null) return;
+		TreeObject[] children = node.getChildren();
+		if (children.length == 0){
+			node.getParent().removeChild(node, false);
+			return;
+		}
+		
+		for (int i = 0; i < children.length; i++){
+			TreeObject child = children[i];
+			if (child instanceof TreeParent){
+				removePattern((TreeParent) child);
+			}
+			else{
+				node.removeChild(child, false);
+			}
+		}
+		
+		node.getParent().removeChild(node, false);
+	}
+	
+	
+	/**
 	 * Given parent and element to be created, add a new element to the tree's content.
 	 * @param parent
 	 * @param element

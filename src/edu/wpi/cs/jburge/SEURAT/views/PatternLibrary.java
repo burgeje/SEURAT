@@ -72,13 +72,13 @@ public class PatternLibrary extends ViewPart implements ISelectionListener, IRat
 IPropertyChangeListener {
 
 	private TreeViewer viewer;
-	
+
 	private DrillDownAdapter drillDownAdapter;
-	
+
 	private Display ourDisplay;
-	
+
 	private static PatternLibrary pl;
-	
+
 	private Action search;
 	private Action editElement;
 	private Action deleteElement;
@@ -90,12 +90,13 @@ IPropertyChangeListener {
 	private Action addCandidatePattern;
 	private Action showPatternDecisionEditor;
 	private Action attachCandidatePatterns;
-	
+	private Action deletePattern;
+
 	protected RationaleLabelProvider labelProvider;
-	
+
 	// create the viewer and initialize it
 	public void createPartControl(Composite parent) {
-		
+
 		viewer = new TreeViewer(parent, SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL);
 		drillDownAdapter = new DrillDownAdapter(viewer);
 		viewer.setContentProvider(new PatternLibContentProvider());
@@ -104,33 +105,33 @@ IPropertyChangeListener {
 		viewer.setInput(ResourcesPlugin.getWorkspace());
 		//get our display information so we can use it later
 		ourDisplay = viewer.getControl().getDisplay();
-		
-//		//initialize our update manager
+
+		//		//initialize our update manager
 		UpdateManager mgr = UpdateManager.getHandle();
 		mgr.setTree(viewer);
 		makeActions();
 		hookContextMenu();
 		hookDoubleClickAction();
 		//contributeToActionBars();
-		
+
 		PatternLibContentProvider pattern = new PatternLibContentProvider();
 		viewer.setInput(pattern.initialize());		
 
 		//add an action listener for the workbench window
 		getViewSite().getWorkbenchWindow().getSelectionService().addSelectionListener(this);
-		
+
 		//add an action listener for this so we can get events
 		SEURATPlugin plugin = SEURATPlugin.getDefault();
 		plugin.addUpdateListener(this);
 
 		// add this as a property change listener so we can be notified of preference changes
 		plugin.getPreferenceStore().addPropertyChangeListener(this);
-		
+
 		//get the initial selected value
 		selectionChanged(null, getViewSite().getWorkbenchWindow().getSelectionService().getSelection());
-		
+
 		pl = this;
-		
+
 	}
 
 	public void rebuildTree()
@@ -142,12 +143,12 @@ IPropertyChangeListener {
 		//this should re-fresh from the new database
 		viewer.setInput(((PatternLibContentProvider) viewer.getContentProvider()).initialize());
 	}
-	
+
 	public void setFocus() {
 		viewer.getControl().setFocus();
 
 	}
-	
+
 	public static PatternLibrary getHandle() {
 		if (pl == null)
 		{
@@ -155,9 +156,9 @@ IPropertyChangeListener {
 		}
 		return pl;
 	}
-	
+
 	public TreeViewer getViewer() { return viewer; }
-	
+
 	public RationaleElement getElement(TreeObject treeElement, boolean newElement)
 	{
 		RationaleElement ourElement = null;
@@ -239,7 +240,7 @@ IPropertyChangeListener {
 		{
 			if (name.compareTo("Tradeoffs") == 0)
 			{
-//				System.out.println("found our tradeoff");
+				//				System.out.println("found our tradeoff");
 				ourElement = new Tradeoff(true);
 			}
 			else if (name.compareTo("Co-occurrences") == 0)
@@ -269,7 +270,7 @@ IPropertyChangeListener {
 		}
 		return ourElement;
 	}
-	
+
 	//set up context menu
 	private void hookContextMenu() {
 		MenuManager menuMgr = new MenuManager("#PopupMenu");
@@ -283,7 +284,7 @@ IPropertyChangeListener {
 		viewer.getControl().setMenu(menu);
 		getSite().registerContextMenu(menuMgr, viewer);
 	}
-	
+
 	/**
 	 * hookDoubleClickAction is used to edit the rationale elements when you 
 	 * double-click them
@@ -292,8 +293,8 @@ IPropertyChangeListener {
 	private void hookDoubleClickAction() {
 		viewer.addDoubleClickListener(new IDoubleClickListener() {
 			public void doubleClick(DoubleClickEvent event) {
-//				doubleClickAction.run();
-				
+				//				doubleClickAction.run();
+
 				ISelection selection = viewer.getSelection();
 				Object obj = ((IStructuredSelection)selection).getFirstElement();
 				if (obj instanceof TreeParent)
@@ -308,12 +309,12 @@ IPropertyChangeListener {
 			}
 		});
 	}
-	
 
-	
+
+
 	// actions invoked by chosing menu items
 	private void makeActions() {
-		
+
 		showPatternEditor = new OpenRationaleEditorAction(PatternEditor.class, this, false);
 		// pattern editor
 		editElement = new Action() {
@@ -321,12 +322,12 @@ IPropertyChangeListener {
 
 				ISelection selection = viewer.getSelection();
 				Object obj = ((IStructuredSelection)selection).getFirstElement();
-				
+
 				if (obj instanceof TreeParent)
 				{
 					TreeParent ourElement = (TreeParent) obj;
 					if (ourElement.getType() == RationaleElementType.PATTERN) {
-						
+
 						Pattern patternSelected = new Pattern();
 						patternSelected.fromDatabase(((TreeObject)obj).getName());
 						showPatternEditor.run();
@@ -356,23 +357,23 @@ IPropertyChangeListener {
 					}
 				}
 				//showPatternEditor.run();
-				
+
 			}			
 		}; //end of the edit element action definition
 		editElement.setText("Edit");
 		editElement.setToolTipText("Edit Pattern");
-		
+
 		addPatternEditor = new OpenRationaleEditorAction(PatternEditor.class, this, true, RationaleElementType.PATTERN);
 		addPatternEditor.setText("Add pattern");
 		addPatternEditor.setToolTipText("Add a new pattern");
-		
+
 		//delete element in P.L.
 		deleteElement = new Action() {
 			public void run() {
 				RationaleDB db = RationaleDB.getHandle();
 				ISelection selection = viewer.getSelection();
 				Object obj = ((IStructuredSelection)selection).getFirstElement();
-				
+
 				if (obj instanceof TreeParent)
 				{
 					TreeParent ourElement = (TreeParent) obj;
@@ -396,9 +397,9 @@ IPropertyChangeListener {
 							db.removePatternOnt(ourElement.getName(), ourElement.getParent().getParent().getParent().getName(), "NOT");
 						}
 					}else {
-						
+
 					}
-					
+
 					TreeParent parent = ourElement.getParent();
 					PatternLibContentProvider provider = (PatternLibContentProvider) viewer.getContentProvider();
 					provider.removeElement(ourElement);
@@ -408,7 +409,29 @@ IPropertyChangeListener {
 		}; //end of the edit element action definition
 		deleteElement.setText("Delete");
 		deleteElement.setToolTipText("Delete the item");
-		
+
+		deletePattern = new Action(){
+			public void run(){
+				RationaleDB db = RationaleDB.getHandle();
+				ISelection selection = viewer.getSelection();
+				Object obj = ((IStructuredSelection)selection).getFirstElement();
+
+				if (obj instanceof TreeParent){
+					TreeParent ourElement = (TreeParent) obj;
+					if (ourElement.getType() == RationaleElementType.PATTERN){
+						db.removePattern(ourElement.getName());
+
+						TreeParent parent = ourElement.getParent();
+						PatternLibContentProvider provider = (PatternLibContentProvider) viewer.getContentProvider();
+						provider.removePattern(ourElement);
+						refreshBranch(parent);
+					}
+				}
+			}
+		};
+		deletePattern.setText("Delete Pattern and ALL elements in the pattern.");
+		deletePattern.setToolTipText("Deletes this pattern and all of its children");
+
 		addCandidatePattern = new Action() {
 			public void run() {
 				RationaleDB db = RationaleDB.getHandle();
@@ -421,9 +444,9 @@ IPropertyChangeListener {
 					SelectCandidatePatterns scp = new SelectCandidatePatterns(db.getPatterns(), ourDisplay);
 					if((scp.getSelections()!=null) && (scp.getSelections().size() > 0)){
 						db.saveCandidatePatterns(ourElement.getName(), scp.getSelections());
-//						PatternDecision pd = new PatternDecision();
-//						pd.fromDatabase(ourElement.getName());
-						
+						//						PatternDecision pd = new PatternDecision();
+						//						pd.fromDatabase(ourElement.getName());
+
 						//Now, update the tree...
 						PatternLibContentProvider provider = (PatternLibContentProvider) viewer.getContentProvider();
 						Iterator<String> toAdd = scp.getSelections().iterator();
@@ -439,17 +462,17 @@ IPropertyChangeListener {
 		}; //end of the edit element action definition
 		addCandidatePattern.setText("Add Candidate Pattern");
 		addCandidatePattern.setToolTipText("Add Candidate Pattern");
-		
+
 		addPosiOntEntry = new Action() {
 			public void run() {
-				
+
 				ISelection selection = viewer.getSelection();
 				Object obj = ((IStructuredSelection)selection).getFirstElement();
 				Pattern ourPattern = new Pattern();
 				ourPattern.fromDatabase(obj.toString());
 				OntEntry newOnt = null;
 				SelectOntEntry ar = new SelectOntEntry(ourDisplay, true);
-				
+
 				newOnt = ar.getSelOntEntry();
 				if (newOnt != null)
 				{
@@ -460,13 +483,13 @@ IPropertyChangeListener {
 					refreshBranch((TreeParent) obj);
 				}
 				//EditPattern ep = new EditPattern(ourDisplay, patternSelected, true);
-				
-				
+
+
 			}			
 		};
 		addPosiOntEntry.setText("Add Positive Ontology Entry");
 		addPosiOntEntry.setToolTipText("Add new Ontology Entry affected positively by this pattern");
-		
+
 		addNegaOntEntry = new Action() {
 			public void run() {
 				ISelection selection = viewer.getSelection();
@@ -475,7 +498,7 @@ IPropertyChangeListener {
 				ourPattern.fromDatabase(obj.toString());
 				OntEntry newOnt = null;
 				SelectOntEntry ar = new SelectOntEntry(ourDisplay, true);
-				
+
 				newOnt = ar.getSelOntEntry();
 				if (newOnt != null)
 				{
@@ -489,20 +512,20 @@ IPropertyChangeListener {
 		};
 		addNegaOntEntry.setText("Add Negative Ontology Entry");
 		addNegaOntEntry.setToolTipText("Add new Ontology Entry affected negatively by this pattern");
-		
+
 		addPatternDecision = new OpenRationaleEditorAction(PatternDecisionEditor.class, this, true, RationaleElementType.PATTERNDECISION);
 		addPatternDecision.setText("Add Decision");
 		showPatternDecisionEditor = new OpenRationaleEditorAction(PatternDecisionEditor.class, this, false);
-		
+
 		attachCandidatePatterns = new Action(){
 			public void run(){
 				ISelection selection = viewer.getSelection();
 				Object obj = ((IStructuredSelection)selection).getFirstElement();
 				Pattern toBeAttachedPattern = new Pattern();
 				toBeAttachedPattern.fromDatabase(obj.toString());
-				
+
 				Vector<Pattern> candidates = new Vector<Pattern>();
-				
+
 				PatternDecision pd = new PatternDecision();
 				pd.fromDatabase(((TreeParent)obj).getParent().getName());
 				Pattern parentPattern = new Pattern();
@@ -511,42 +534,42 @@ IPropertyChangeListener {
 				for(PatternDecision patternD: subdecisions){
 					candidates.addAll(patternD.getCandidatePatterns());
 				}			
-				
+
 				SelectPattern acp = new SelectPattern(candidates, ourDisplay);
-				
-				
+
+
 			}
 		};
 		attachCandidatePatterns.setText("Attach candidate pattern");
 		attachCandidatePatterns.setToolTipText("Attach candidate pattern");
-		
+
 		search = new Action() {
 			public void run() {
-				
-				
+
+
 			}
-			
+
 		};
 		search.setText("Search for Patterns");
 		search.setToolTipText("search for patterns for specific conditions");
-		
+
 	}
-	
-	
+
+
 	// for context menu setup
 	private void fillContextMenu (IMenuManager manager) {
 		ISelection selection = viewer.getSelection();
 		Object obj = ((IStructuredSelection)selection).getFirstElement();
-		
+
 		if (obj instanceof TreeParent)
 		{
 			TreeParent ourElement = (TreeParent) obj;
-			
+
 			if(ourElement.getType() == RationaleElementType.ONTENTRY){
 				manager.add(editElement);
 				manager.add(deleteElement);
 				//manager.add(addPosiOntEntry);
-				
+
 				//manager.add(new Separator());
 				//manager.add(search);
 			} else if(ourElement.getType() == RationaleElementType.PATTERNDECISION){
@@ -562,6 +585,7 @@ IPropertyChangeListener {
 					manager.add(attachCandidatePatterns);
 				}else{
 					manager.add(editElement);
+					manager.add(deletePattern);
 					manager.add(addPosiOntEntry);
 					manager.add(addNegaOntEntry);
 					manager.add(addPatternDecision);
@@ -583,22 +607,22 @@ IPropertyChangeListener {
 		//manager.add(generateRatReportFromHere);
 		manager.add(new Separator("Additions"));		
 	}
-	
+
 	private void contributeToActionBars() {
 		IActionBars bars = getViewSite().getActionBars();
 		fillLocalPullDown(bars.getMenuManager());
 		fillLocalToolBar(bars.getToolBarManager());
 	}
-	
+
 	private void fillLocalToolBar(IToolBarManager manager) {
 		drillDownAdapter.addNavigationActions(manager);
 	}
-	
+
 	private void fillLocalPullDown(IMenuManager manager) {
 		//manager.add(search);
 
 	}
-	
+
 	public void refreshBranch(TreeParent parent)
 	{
 		viewer.refresh(parent);
@@ -609,19 +633,19 @@ IPropertyChangeListener {
 		}
 		//System.out.println("Refresh done!");
 	}
-	
+
 	private void editElement (TreeParent obj, RationaleElement rElement, Display theDisplay)
 	{
-//		boolean canceled = rElement.display();
+		//		boolean canceled = rElement.display();
 		boolean canceled = rElement.display(viewer.getControl().getShell().getDisplay());
-//		System.out.println("canceled? = " + canceled);
+		//		System.out.println("canceled? = " + canceled);
 		if (!canceled)
 		{
 			updateTreeElement(obj, rElement);
 		}
-		
+
 	}
-	
+
 	/**
 	 * Update method for editing an existing element.  This has the same function as the
 	 * editElement method, but is designed to be called by the new editors instead (there is
@@ -633,7 +657,7 @@ IPropertyChangeListener {
 	public TreeParent editUpdate(TreeParent p, RationaleElement e) {
 		return updateTreeElement(p, e);
 	}
-	
+
 	/**
 	 * Update method for creating a new element using the new editors.  The function
 	 * is similar to the createNewElement method except that this is called from the
@@ -652,19 +676,19 @@ IPropertyChangeListener {
 
 		// Add The Element TO The Tree
 		TreeParent newEle = addElement(p, e);
-		
+
 		// Update Status Of Element
 		Vector<RationaleStatus> status = null;
-		
+
 		status = e.updateStatus();
-		
+
 		// Update Rationale Task List And Database With New Status
 		RationaleTaskList tlist = RationaleTaskList.getHandle();
 		Vector<RationaleStatus> oldStatus = null;
 		UpdateManager manager = UpdateManager.getHandle();
-		
+
 		oldStatus = manager.getInitialStatus();
-		
+
 		if( status != null ) {
 			updateStatus(oldStatus, status);
 			db.addStatus(status);
@@ -674,10 +698,10 @@ IPropertyChangeListener {
 			db.removeStatus(oldStatus);
 			tlist.removeTasks(oldStatus);
 		}
-		
+
 		// Refresh Affected Branch Of Tree
 		refreshBranch(p);
-		
+
 		// Update Anything In Tree Affected By Insertion
 		Vector<TreeObject> treeUpdates = manager.makeUpdates();
 		Iterator<TreeObject> treeIterator = treeUpdates.iterator();
@@ -692,10 +716,10 @@ IPropertyChangeListener {
 		//if there's more than one we don't care, just get the first
 		viewer.reveal(treeObjs.elementAt(0));
 		viewer.expandToLevel(treeObjs.elementAt(0), 4);
-		*/
+		 */
 		return newEle;
 	}
-	
+
 	/**
 	 * updateTreeElement - updates our tree element after it has been edited. 
 	 * This includes any name changes, any status changes, and adding any new rationale
@@ -710,7 +734,7 @@ IPropertyChangeListener {
 		//need to check to see if the name has changed
 		if (obj.getName().compareTo(rElement.getName()) != 0)
 		{
-//			System.out.println("name has changed");
+			//			System.out.println("name has changed");
 			//need to save the old and new names and make the changes
 			updateName(obj.getName(), rElement.getName(), rElement.getElementType());
 		}
@@ -725,13 +749,13 @@ IPropertyChangeListener {
 			System.out.println("updated status");
 			//Before updating the task list, compare the status lists!
 			updateStatus(curStatus, newStat);
-			
+
 		}
 		if (curStatus.size() > 0)
 		{
 			db.removeStatus(curStatus);
 			//update our task list as well
-//			System.out.println("removing a task");
+			//			System.out.println("removing a task");
 			tlist.removeTasks(curStatus);
 		}
 		//moved to after to see if this helps (???)
@@ -742,7 +766,7 @@ IPropertyChangeListener {
 			//update tasks too
 			tlist.addTasks(newStat);
 		}
-		
+
 		//before we update our tree, we need to make sure we 
 		//do any "structural" updates!
 		TreeParent newParent = refreshElement((TreeParent) obj, rElement);
@@ -750,7 +774,7 @@ IPropertyChangeListener {
 		Vector treeUpdates = manager.makeUpdates();
 		//update what is displayed in the tree
 		//how do I update if name changes?
-//		System.out.println(rElement.getName() + ": enabled = " + new Boolean(rElement.getEnabled()).toString());
+		//		System.out.println(rElement.getName() + ": enabled = " + new Boolean(rElement.getEnabled()).toString());
 		newParent.update(rElement.getName(), rElement.getEnabled());
 		//need to iterate through all the items
 		Iterator treeI = treeUpdates.iterator();
@@ -761,14 +785,14 @@ IPropertyChangeListener {
 		}
 		while (treeI.hasNext())
 		{
-			
-//			viewer.update((TreeParent) treeI.next(), null);
+
+			//			viewer.update((TreeParent) treeI.next(), null);
 			viewer.refresh((TreeParent) treeI.next());
 		}
-		
+
 		return newParent;
 	}
-	
+
 	/**
 	 * Refreshes the display of a tree element. This is called after an element is
 	 * edited (I believe adding an element has its own refresh). The only types that
@@ -791,7 +815,7 @@ IPropertyChangeListener {
 				(element.getElementType() == RationaleElementType.TRADEOFF))
 		{
 			RationaleViewContentProvider content = ( (RationaleViewContentProvider) viewer.getContentProvider());
-			
+
 			//for simplicity, we will assume that yes, the structure changed
 			//so, we remove the old element from the tree
 			content.removeElement(parent);
@@ -800,15 +824,15 @@ IPropertyChangeListener {
 			newParent = addElement(grandParent, element);	
 			refreshBranch(grandParent);		
 			return newParent;	
-			
+
 		}
 		else
 		{
 			return parent;
 		}
-		
+
 	}
-	
+
 	/**
 	 * Adding a new element to our rationale tree
 	 * @param parent - the parent element in the tree
@@ -817,15 +841,15 @@ IPropertyChangeListener {
 	 */
 	public TreeParent addElement(TreeParent parent, RationaleElement element)
 	{
-		
+
 		if (element instanceof Tradeoff)
 		{
-//			System.out.println("adding Tradeoff");
+			//			System.out.println("adding Tradeoff");
 			return ( (RationaleViewContentProvider) viewer.getContentProvider()).addTradeoff(parent, (Tradeoff) element);		
 		}
 		else if (element instanceof Argument)
 		{
-//			System.out.println("adding Argument");
+			//			System.out.println("adding Argument");
 			//will need a special argument provider
 			return ( (RationaleViewContentProvider) viewer.getContentProvider()).addArgument(parent, (Argument) element);
 		}
@@ -846,7 +870,7 @@ IPropertyChangeListener {
 		//}
 		else return null;
 	}
-	
+
 	public void updateName(String oldName, String newName, RationaleElementType type)
 	{
 		RationaleTreeMap map = RationaleTreeMap.getHandle();
@@ -863,9 +887,9 @@ IPropertyChangeListener {
 			map.removeItem(oldkey, leaf);
 			map.addItem(newkey, leaf);
 		}
-		
+
 	}
-	
+
 	/**
 	 * Sets up the new status of a Rationale Element after it (or one of its children) 
 	 * is edited. This is done by taking new status elements and adding them to the database
@@ -879,7 +903,7 @@ IPropertyChangeListener {
 		boolean different = true;
 		Vector<RationaleStatus> removeCur = new Vector<RationaleStatus>();
 		Vector<RationaleStatus> removeNew = new Vector<RationaleStatus>();
-		
+
 		Iterator curS = curStatus.iterator();
 		//for each item in curStatus
 		while (curS.hasNext())
@@ -899,10 +923,10 @@ IPropertyChangeListener {
 				}
 			}
 		}
-		
+
 		newStatus.removeAll(removeNew);
 		curStatus.removeAll(removeCur);
-		
+
 		//this will leave curStatus with a list of items that should
 		//be removed from the database and from the list
 		//this will leave newStatus with a list of items that should
@@ -912,25 +936,25 @@ IPropertyChangeListener {
 
 	public void selectionChanged(IWorkbenchPart part, ISelection selection) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 
 	public void associateAlternative(RationaleUpdateEvent e) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 
 	public void openDatabase(RationaleUpdateEvent e) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 
 	public void showRationaleNode(RationaleUpdateEvent e) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 
@@ -938,25 +962,25 @@ IPropertyChangeListener {
 		MessageBox mbox = new MessageBox(new Shell(), SWT.ICON_ERROR);
 		mbox.setMessage("Got the event for updateRationaleTree");
 		mbox.open();
-		
+
 	}
 
 
 	public void propertyChange(PropertyChangeEvent event) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
 	public void updateRationaleStatus(RationaleUpdateEvent e) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
 	public void addNewElement(RationaleUpdateEvent e) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 }

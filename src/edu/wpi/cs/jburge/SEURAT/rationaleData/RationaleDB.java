@@ -1640,6 +1640,57 @@ public final class RationaleDB implements Serializable {
 	}
 
 	/**
+	 * Delete a pattern from the database. Before deleting, must first delete all
+	 * references to this pattern.
+	 * @param patternName
+	 */
+	public void removePattern(String patternName){
+		Statement stmt = null;
+		ResultSet rs = null;
+		String query = "";
+		int patternID = -1;
+
+		//First, get the ID of the pattern.
+		query = "SELECT id from PATTERNS where name = '" + patternName + "'";
+		try{
+			stmt = conn.createStatement();
+			rs = stmt.executeQuery(query);
+			if (rs.next()){
+				patternID = rs.getInt(1);
+			}
+			if (patternID == -1){
+				System.err.println("Cannot find the ID of the pattern");
+				return;
+			}
+			
+			Vector<Integer> assocDecision = new Vector<Integer>(); //vector of all associated pattern-decisions
+			
+			query = "SELECT id from PATTERNDECISIONS where parent = " + patternID;
+			rs = stmt.executeQuery(query);
+			while (rs.next()){
+				assocDecision.add(rs.getInt(1));
+			}
+			
+			//Remove subpatterns first, then decisions, then ontologies.
+			Iterator<Integer> decIterator = assocDecision.iterator();
+			while (decIterator.hasNext()){
+				query = "DELETE FROM PATTERN_DECISION where decisionID = " + Integer.parseInt(decIterator.next().toString());
+				stmt.execute(query);
+			}
+			query = "DELETE FROM PATTERNDECISIONS where parent = " + patternID;
+			stmt.execute(query);
+			query = "DELETE FROM PATTERN_ONTENTRIES where patternID = " + patternID;
+			stmt.execute(query);
+			query = "DELETE FROM PATTERNS where id = " + patternID;
+			stmt.execute(query);
+			
+		} catch (SQLException e){
+			e.printStackTrace();
+		}
+
+	}
+
+	/**
 	 * Return a vector containing all parents created from the database entry.
 	 * @return a vector of patterns created.
 	 */
@@ -1718,6 +1769,7 @@ public final class RationaleDB implements Serializable {
 
 		return candidatePatterns;		
 	}
+
 
 	/**
 	 * Create a vector of decisions for a given pattern(name) and its grandparent(name).
@@ -2292,7 +2344,7 @@ public final class RationaleDB implements Serializable {
 		return ourElements;
 
 	}
-	
+
 	/**
 	 * This method provides better running time than getPatternByCategory.
 	 * Used for generate candidate patterns.
@@ -2301,7 +2353,7 @@ public final class RationaleDB implements Serializable {
 	 */
 	public ArrayList<Pattern> getPatternByCategoryID(int categoryID){
 		ArrayList<Pattern> matchingPatterns = new ArrayList<Pattern>();
-		
+
 		try{
 			String query = "";
 			Statement stmt = null;
@@ -2379,20 +2431,20 @@ public final class RationaleDB implements Serializable {
 		}
 		return toReturn;
 	}
-	
+
 	/**
 	 * Given a pattern type, return a map from name to id of problem categories.
 	 * @param patternType
 	 * @return a has map between category id and category name.
 	 */
 	public HashMap<String, Integer> getCategories(String patternType){
-		
+
 		//Wang uses upper case for archiecture name, so we should 'convert' it first...
 		/*char upperCaseBeginning = patternType.toUpperCase().charAt(0);
 		String correctedType = upperCaseBeginning + patternType.substring(1);
 		patternType = correctedType;*/
 		//This should be fixed...
-		
+
 		HashMap<String, Integer> map = new HashMap<String, Integer>();
 		Statement stmt = null;
 		ResultSet rs = null;
