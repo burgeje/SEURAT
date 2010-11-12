@@ -1343,133 +1343,134 @@ return beginTable("candidates")
 	private static String INSERT_PATTERN_ONTENTRIES[] =
 	{
 		//Three-Layer
-		patternOntEntryInsert("1, 95, 'IS'"),//increase scalability
-		patternOntEntryInsert("1, 102, 'IS'"),//reusability
-		patternOntEntryInsert("1, 82, 'IS'"),//Increases Flexibility
-		patternOntEntryInsert("1, 64, 'IS'"),//extensibility
-		patternOntEntryInsert("1, 65, 'IS'"),		
-		patternOntEntryInsert("1, 89, 'IS'"),//portability	
-		patternOntEntryInsert("1, 85, 'IS'"),
+		patternOntEntryInsert("1, 93, 'IS'"),//increase scalability
+		patternOntEntryInsert("1, 100, 'IS'"),//reusability
+		patternOntEntryInsert("1, 80, 'IS'"),//Increases Flexibility
+		patternOntEntryInsert("1, 62, 'IS'"),//extensibility
+		patternOntEntryInsert("1, 63, 'IS'"),		
+		patternOntEntryInsert("1, 87, 'IS'"),
 		//patternOntEntryInsert("1, 75, 'IS'"),
-		patternOntEntryInsert("1, 238, 'IS'"),
-		patternOntEntryInsert("1, 278, 'IS'"),
-		patternOntEntryInsert("1, 279, 'NOT'"),
+		patternOntEntryInsert("1, 83, 'IS'"),
+		patternOntEntryInsert("1, 235, 'IS'"),
+		patternOntEntryInsert("1, 274, 'IS'"),
+		patternOntEntryInsert("1, 275, 'NOT'"),
 		
 		//Layers
-		patternOntEntryInsert("2, 102, 'IS'"),//reusability
-		patternOntEntryInsert("2, 82, 'IS'"),//Increases Flexibility
-		patternOntEntryInsert("2, 64, 'IS'"), //extensibility
-		patternOntEntryInsert("2, 65, 'IS'"),
-		patternOntEntryInsert("2, 238, 'IS'"),
-		patternOntEntryInsert("2, 89, 'IS'"), //portability	
-		patternOntEntryInsert("2, 278, 'IS'"), //configurabiliity
-		patternOntEntryInsert("2, 279, 'NOT'"), //performance criteria
+		patternOntEntryInsert("2, 100, 'IS'"),//reusability
+		patternOntEntryInsert("2, 80, 'IS'"),//Increases Flexibility
+		patternOntEntryInsert("2, 62, 'IS'"), //extensibility
+		patternOntEntryInsert("2, 63, 'IS'"),
+		patternOntEntryInsert("2, 235, 'IS'"),
+		patternOntEntryInsert("2, 87, 'IS'"), //portability	
+		patternOntEntryInsert("2, 274, 'IS'"), //configurabiliity
+		patternOntEntryInsert("2, 275, 'NOT'"), //performance criteria
 		
 		
 		//Pipes and Filters
-		patternOntEntryInsert("3, 82, 'IS'"),
-		patternOntEntryInsert("3, 102, 'IS'"),
-		patternOntEntryInsert("3, 64, 'IS'"),
-		patternOntEntryInsert("3, 85, 'IS'"),
+		patternOntEntryInsert("3, 80, 'IS'"),
+		patternOntEntryInsert("3, 100, 'IS'"),
+		patternOntEntryInsert("3, 62, 'IS'"),
+		patternOntEntryInsert("3, 83, 'IS'"),
 		patternOntEntryInsert("3, 21, 'IS'"),
-		patternOntEntryInsert("3, 249, 'NOT'"),
-		patternOntEntryInsert("3, 40, 'NOT'"),
+		patternOntEntryInsert("3, 246, 'NOT'"),
+		patternOntEntryInsert("3, 38, 'NOT'"),
 		
 		//Blackboard
-		patternOntEntryInsert("4, 81, 'IS'"),
-		patternOntEntryInsert("4, 85, 'IS'"),
-		patternOntEntryInsert("4, 102, 'IS'"),
-		patternOntEntryInsert("4, 138, 'IS'"),
-		patternOntEntryInsert("4, 130, 'IS'"),
-		patternOntEntryInsert("4, 228, 'NOT'"),
+		patternOntEntryInsert("4, 79, 'IS'"),
+		patternOntEntryInsert("4, 83, 'IS'"),
+		patternOntEntryInsert("4, 100, 'IS'"),
+		patternOntEntryInsert("4, 136, 'IS'"),
+		patternOntEntryInsert("4, 128, 'IS'"),
+		patternOntEntryInsert("4, 226, 'NOT'"),
 		patternOntEntryInsert("4, 3, 'NOT'"),
-		patternOntEntryInsert("4, 279, 'NOT'"),
+		patternOntEntryInsert("4, 275, 'NOT'"),
 		
 		//MVC
-		patternOntEntryInsert("5, 85, 'IS'"), //adaptability
-		patternOntEntryInsert("5, 64, 'IS'"), //extensibility		
-		patternOntEntryInsert("5, 82, 'NOT'"), //Increases Flexibility
+		patternOntEntryInsert("5, 83, 'IS'"), //adaptability
+		patternOntEntryInsert("5, 62, 'IS'"), //extensibility		
+		patternOntEntryInsert("5, 80, 'NOT'"), //Increases Flexibility
 		
 		//Broker
-		patternOntEntryInsert("6, 89, 'IS'"), //portability
-		patternOntEntryInsert("6, 81, 'IS'"), //modifiability
-		patternOntEntryInsert("6, 64, 'IS'"), //extendibility
-		patternOntEntryInsert("6, 103, 'IS'"), //interoperability
-		patternOntEntryInsert("6, 102, 'IS'"), //reusability
-		patternOntEntryInsert("6, 229, 'IS'"), //increases testability
-		patternOntEntryInsert("6, 248, 'NOT'"), //performance criteria
-		patternOntEntryInsert("6, 138, 'NOT'"), //fault tolerance
+		patternOntEntryInsert("6, 87, 'IS'"), //portability
+		patternOntEntryInsert("6, 79, 'IS'"), //modifiability
+		patternOntEntryInsert("6, 62, 'IS'"), //extendibility
+		patternOntEntryInsert("6, 101, 'IS'"), //interoperability
+		patternOntEntryInsert("6, 100, 'IS'"), //reusability
+		//THIS ONE HAS BEEN MODIFIED SINCE CONFIGURABILITY IS NO LONGER ON DEFAULT ONTENTRY.
+		patternOntEntryInsert("6, 146, 'IS'"), //increases testability
+		patternOntEntryInsert("6, 245, 'NOT'"), //performance criteria
+		patternOntEntryInsert("6, 136, 'NOT'"), //fault tolerance
 		
 		//Presentation-Abstraction-Control
-		patternOntEntryInsert("7, 94, 'IS'"), //scalability
-		patternOntEntryInsert("7, 81, 'IS'"), //modifiability
-		patternOntEntryInsert("7, 64, 'IS'"), //extendibility
-		patternOntEntryInsert("7, 257, 'IS'"), //{provides | supports} multi-threading
-		patternOntEntryInsert("7, 238, 'NOT'"), //maintainability criteria
-		patternOntEntryInsert("7, 248, 'NOT'"), //performance criteria
+		patternOntEntryInsert("7, 92, 'IS'"), //scalability
+		patternOntEntryInsert("7, 79, 'IS'"), //modifiability
+		patternOntEntryInsert("7, 62, 'IS'"), //extendibility
+		patternOntEntryInsert("7, 253, 'IS'"), //{provides | supports} multi-threading
+		patternOntEntryInsert("7, 235, 'NOT'"), //maintainability criteria
+		patternOntEntryInsert("7, 245, 'NOT'"), //performance criteria
 		
 		//Microkernel
-		patternOntEntryInsert("8, 89, 'IS'"), //portability
-		patternOntEntryInsert("8, 82, 'IS'"), //Increases Flexibility
-		patternOntEntryInsert("8, 64, 'IS'"), //extendibility
-		patternOntEntryInsert("8, 94, 'IS'"), //scalability
-		patternOntEntryInsert("8, 154, 'IS'"), //reliability
-		patternOntEntryInsert("8, 248, 'NOT'"), //performance criteri
+		patternOntEntryInsert("8, 87, 'IS'"), //portability
+		patternOntEntryInsert("8, 80, 'IS'"), //Increases Flexibility
+		patternOntEntryInsert("8, 62, 'IS'"), //extendibility
+		patternOntEntryInsert("8, 92, 'IS'"), //scalability
+		patternOntEntryInsert("8, 152, 'IS'"), //reliability
+		patternOntEntryInsert("8, 245, 'NOT'"), //performance criteri
 		patternOntEntryInsert("8, 3, 'NOT'"), //development cost
 		
 		//Reflection
-		patternOntEntryInsert("9, 81, 'IS'"), //modifiability
-		patternOntEntryInsert("9, 64, 'IS'"), ////extendibility
-		patternOntEntryInsert("9, 248, 'NOT'"), //performance criteria
-		patternOntEntryInsert("9, 246, 'NOT'"), //supportability
+		patternOntEntryInsert("9, 79, 'IS'"), //modifiability
+		patternOntEntryInsert("9, 62, 'IS'"), ////extendibility
+		patternOntEntryInsert("9, 245, 'NOT'"), //performance criteria
+		patternOntEntryInsert("9, 243, 'NOT'"), //supportability
 		
 		//Design Patterns
 		//Whole-Part
-		patternOntEntryInsert("10, 81, 'IS'"), //modifiability
-		patternOntEntryInsert("10, 102, 'IS'"), //reusability
-		patternOntEntryInsert("10, 248, 'NOT'"), //performance criteria
+		patternOntEntryInsert("10, 79, 'IS'"), //modifiability
+		patternOntEntryInsert("10, 100, 'IS'"), //reusability
+		patternOntEntryInsert("10, 245, 'NOT'"), //performance criteria
 		
 		//Master-Slave
-		patternOntEntryInsert("11, 248, 'IS'"), //performance criteria
-		patternOntEntryInsert("11, 64, 'IS'"), //extendibility
+		patternOntEntryInsert("11, 245, 'IS'"), //performance criteria
+		patternOntEntryInsert("11, 62, 'IS'"), //extendibility
 		patternOntEntryInsert("11, 3, 'NOT'"), //development cost
-		patternOntEntryInsert("11, 89, 'NOT'"), //portability
+		patternOntEntryInsert("11, 87, 'NOT'"), //portability
 		
 		//Proxy
-		patternOntEntryInsert("12, 279, 'IS'"), //efficiency
-		patternOntEntryInsert("12, 281, 'IS'"), 
-		patternOntEntryInsert("12, 249, 'NOT'"), //throughput
+		patternOntEntryInsert("12, 275, 'IS'"), //efficiency
+		patternOntEntryInsert("12, 277, 'IS'"), 
+		patternOntEntryInsert("12, 246, 'NOT'"), //throughput
 		
 		//Command Processor
-		patternOntEntryInsert("13, 82, 'IS'"), //increase flexibility
-		patternOntEntryInsert("13, 215, 'IS'"), //verificability
-		patternOntEntryInsert("13, 279, 'NOT'"), //efficiency
+		patternOntEntryInsert("13, 80, 'IS'"), //increase flexibility
+		patternOntEntryInsert("13, 213, 'IS'"), //verificability
+		patternOntEntryInsert("13, 275, 'NOT'"), //efficiency
 		
 		//View handler
-		patternOntEntryInsert("14, 64, 'IS'"), //extensibility
-		patternOntEntryInsert("14, 81, 'IS'"), //modifiability
-		patternOntEntryInsert("14, 279, 'NOT'"), //efficiency
+		patternOntEntryInsert("14, 62, 'IS'"), //extensibility
+		patternOntEntryInsert("14, 79, 'IS'"), //modifiability
+		patternOntEntryInsert("14, 275, 'NOT'"), //efficiency
 		
 		//Forwarder-Receiver
-		patternOntEntryInsert("15, 279, 'IS'"), //efficiency
-		patternOntEntryInsert("15, 278, 'NOT'"), //configuration
+		patternOntEntryInsert("15, 275, 'IS'"), //efficiency
+		patternOntEntryInsert("15, 274, 'NOT'"), //configuration
 		
 		//Client-Dispatcher-Server
-		patternOntEntryInsert("16, 278, 'IS'"), //configuration
-		patternOntEntryInsert("16, 89, 'IS'"), //Portability
-		patternOntEntryInsert("16, 85, 'IS'"), //Adaptability
-		patternOntEntryInsert("16, 138, 'IS'"), //fault tolerance
-		patternOntEntryInsert("16, 279, 'NOT'"), //efficiency
-		patternOntEntryInsert("16, 81, 'NOT'"), //modifiability
+		patternOntEntryInsert("16, 274, 'IS'"), //configuration
+		patternOntEntryInsert("16, 87, 'IS'"), //Portability
+		patternOntEntryInsert("16, 83, 'IS'"), //Adaptability
+		patternOntEntryInsert("16, 136, 'IS'"), //fault tolerance
+		patternOntEntryInsert("16, 275, 'NOT'"), //efficiency
+		patternOntEntryInsert("16, 79, 'NOT'"), //modifiability
 		
 		//Transaction Script
 		patternOntEntryInsert("26, 3, 'IS'"), //development cost
-		patternOntEntryInsert("26, 244, 'IS'"), //readability
-		patternOntEntryInsert("26, 81, 'NOT'"), //modifiability
+		patternOntEntryInsert("26, 241, 'IS'"), //readability
+		patternOntEntryInsert("26, 79, 'NOT'"), //modifiability
 		
 		//Domain Model
-		patternOntEntryInsert("27, 85, 'IS'"), //adaptability
-		patternOntEntryInsert("27, 82, 'IS'"), //increase flexibility
+		patternOntEntryInsert("27, 83, 'IS'"), //adaptability
+		patternOntEntryInsert("27, 80, 'IS'"), //increase flexibility
 		
 		//Table Module
 		

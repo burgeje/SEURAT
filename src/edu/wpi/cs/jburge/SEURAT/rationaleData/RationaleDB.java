@@ -58,6 +58,11 @@ public final class RationaleDB implements Serializable {
 	 * Used when reading in from XML
 	 */
 	private static Hashtable idRefs;
+	private static Hashtable xmlRefs[];
+	private static final int NUM_XML_CLASSES = 3;
+	private static final int PATTERN_XML_INDEX = 0;
+	private static final int PATTERNDECISION_XML_INDEX = 1;
+	private static final int PATTERNPROBLEMCATEGORY_XML_INDEX = 2;
 	/**
 	 * Contains the last rationale ID. I'm not sure what this is used
 	 * for - I'd guess maybe the XML?
@@ -150,6 +155,12 @@ public final class RationaleDB implements Serializable {
 	 */
 	private RationaleDB(int x) {
 		idRefs = new Hashtable();
+		xmlRefs = new Hashtable[NUM_XML_CLASSES];
+		xmlRefs[PATTERN_XML_INDEX] = new Hashtable<String, Pattern>();
+		xmlRefs[PATTERNDECISION_XML_INDEX] = new Hashtable<String, PatternDecision>();
+		//This hashtable's second element is String[3], with String[1] as problemcategory
+		//and String[2] as type (Architecture, Design, Idiom), and String[0] as id in the database.
+		xmlRefs[PATTERNPROBLEMCATEGORY_XML_INDEX] = new Hashtable<String, String[]>();
 		requirements = new Vector<Requirement>();
 		arguments = new Vector<Argument>();
 		assumptions = new Vector<Assumption>();
@@ -1662,15 +1673,15 @@ public final class RationaleDB implements Serializable {
 				System.err.println("Cannot find the ID of the pattern");
 				return;
 			}
-			
+
 			Vector<Integer> assocDecision = new Vector<Integer>(); //vector of all associated pattern-decisions
-			
+
 			query = "SELECT id from PATTERNDECISIONS where parent = " + patternID;
 			rs = stmt.executeQuery(query);
 			while (rs.next()){
 				assocDecision.add(rs.getInt(1));
 			}
-			
+
 			//Remove subpatterns first, then decisions, then ontologies.
 			Iterator<Integer> decIterator = assocDecision.iterator();
 			while (decIterator.hasNext()){
@@ -1683,7 +1694,7 @@ public final class RationaleDB implements Serializable {
 			stmt.execute(query);
 			query = "DELETE FROM PATTERNS where id = " + patternID;
 			stmt.execute(query);
-			
+
 		} catch (SQLException e){
 			e.printStackTrace();
 		}
@@ -4120,6 +4131,17 @@ public final class RationaleDB implements Serializable {
 	}
 
 	/**
+	 * Exports the whole db to an XML file.
+	 * (Currently, we're only exporting pattern library and the ontology)
+	 * This is done by calling the utlity function in RationaleDBUtil.
+	 * @param path
+	 * @return true if it's successful. false otherwise.
+	 */
+	public boolean exportXML(String path){
+		return RationaleDBUtil.exportToXML(path);
+	}
+
+	/**
 	 * Add a requirement to our requirement vector
 	 * @param newReq - the requirement
 	 */
@@ -4212,6 +4234,36 @@ public final class RationaleDB implements Serializable {
 		return (String) idRefs.get(inti);
 	}
 
+	public String getRef(Pattern p){
+		Iterator keyIterator = xmlRefs[PATTERN_XML_INDEX].keySet().iterator();
+		while (keyIterator.hasNext()){
+			String current = (String) keyIterator.next();
+			if (p.equals(xmlRefs[PATTERN_XML_INDEX].get(current))) return current;
+		}
+		return null;
+	}
+
+	public String getRef(PatternDecision d){
+		Iterator keyIterator = xmlRefs[PATTERNDECISION_XML_INDEX].keySet().iterator();
+		while (keyIterator.hasNext()){
+			String current = (String) keyIterator.next();
+			if (d.equals(xmlRefs[PATTERNDECISION_XML_INDEX].get(current))) return current;
+		}
+		return null;
+	}
+
+	public String getRef(String id, String problem, String type){
+		Iterator keyIterator = xmlRefs[PATTERNPROBLEMCATEGORY_XML_INDEX].keySet().iterator();
+		while (keyIterator.hasNext()){
+			String current = (String) keyIterator.next();
+			String[] curValue = (String[]) xmlRefs[PATTERNPROBLEMCATEGORY_XML_INDEX].get(current);
+			if (id.equals(curValue[0])){
+				return current;
+			}
+		}
+		return null;
+	}
+
 	/**
 	 * this is the version of getRef that returns a rationale element
 	 * this is used when reading in rationale from the XML, in this
@@ -4242,6 +4294,27 @@ public final class RationaleDB implements Serializable {
 		return newRef;
 	}
 
+	public String addPatternRef(Pattern p){
+		Integer tempi = new Integer(p.getID());
+		String ref = "p" + tempi.toString();
+		xmlRefs[PATTERN_XML_INDEX].put(ref, p);
+		return ref;
+	}
+
+	public String addPatternDecisionRef(PatternDecision d){
+		Integer tempi = new Integer(d.getID());
+		String ref = "pd" + tempi.toString();
+		xmlRefs[PATTERNDECISION_XML_INDEX].put(ref, d);
+		return ref;
+	}
+
+	public String addPatternCategoryRef(String id, String category, String type){
+		String ref = "c" + id;
+		String[] value = {id, category, type};
+		xmlRefs[PATTERNPROBLEMCATEGORY_XML_INDEX].put(ref, value);
+		return ref;
+	}
+
 	/**
 	 * This is the version of addRef that puts a RationaleElement into the hash
 	 * table. This is used when reading in the XML
@@ -4250,6 +4323,64 @@ public final class RationaleDB implements Serializable {
 	{
 		//ref is already in the correct form, no change needed
 		idRefs.put(sr, re);
+	}
+
+	/**
+	 * This method returns all database info about problem category.
+	 * Used for XML export
+	 * String[0] represents the id of each problem category
+	 * String[1] represents the problem category names
+	 * String[2] represents the type of each problem category
+	 * @return Vector containing String[3]
+	 */
+	public Vector<String[]> getProblemCategoryData(){
+		Vector<String[]> toReturn = new Vector<String[]>();
+		try{
+			Statement stmt = conn.createStatement();
+			ResultSet rs = null;
+
+			String query = "SELECT *" +
+			"FROM PATTERNPROBLEMCATEGORIES";
+
+			rs = stmt.executeQuery(query);
+
+			while (rs.next()){
+				String[] content = new String[3];
+				content[0] = new Integer(rs.getInt(1)).toString();
+				content[1] = rs.getString(2);
+				content[2] = rs.getString(3);
+				toReturn.add(content);
+			}
+		} catch (SQLException e){
+			e.printStackTrace();
+		}
+		return toReturn;
+	}
+	
+	/**
+	 * This method returns all database info about patterns.
+	 * Used for XML export.
+	 * @return
+	 */
+	public Vector<Pattern> getPatternData(){
+		Vector<Pattern> toReturn = new Vector<Pattern>();
+		try{
+			Statement stmt = conn.createStatement();
+			ResultSet rs = null;
+			String query = "SELECT id FROM patterns";
+			rs = stmt.executeQuery(query);
+			
+			while (rs.next()){
+				Integer id = rs.getInt(1);
+				Pattern pattern = new Pattern();
+				pattern.fromDatabase(id);
+				toReturn.add(pattern);
+			}
+		} catch (SQLException e){
+			e.printStackTrace();
+		}
+		
+		return toReturn;
 	}
 
 	/* The following method does not appear to be used anywhere - why wouldn't

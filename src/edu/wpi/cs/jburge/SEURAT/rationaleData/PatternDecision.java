@@ -210,6 +210,42 @@ public class PatternDecision extends RationaleElement{
 
 		return 0;
 	}
+	
+	public Element toXML(Document ratDoc){
+		Element decisionE;
+		RationaleDB db = RationaleDB.getHandle();
+		
+		//Now, add pattern to doc
+		String entryID = db.getRef(this);
+		if (entryID == null){
+			entryID = db.addPatternDecisionRef(this);
+		}
+		
+		decisionE = ratDoc.createElement("DR:patternDecision");
+		decisionE.setAttribute("rid", entryID);
+		decisionE.setAttribute("name", name);
+		decisionE.setAttribute("type", type.toString());
+		decisionE.setAttribute("phase", devPhase.toString());
+		decisionE.setAttribute("status", status.toString());
+		//decisionE.setAttribute("artifact", artifact);
+		
+		Element descE = ratDoc.createElement("description");
+		Text descText = ratDoc.createTextNode(description);
+		descE.appendChild(descText);
+		decisionE.appendChild(descE);
+		
+		//Add child pattern references...
+		Iterator<Pattern> cpi = candidatePatterns.iterator();
+		while (cpi.hasNext()){
+			Pattern cur = cpi.next();
+			Element curE = ratDoc.createElement("refChildPattern");
+			Text curText = ratDoc.createTextNode("p" + new Integer(cur.getID()).toString());
+			curE.appendChild(curText);
+			decisionE.appendChild(curE);
+		}
+		
+		return decisionE;
+	}
 
 	/**
 	 * Save our decision to the database.

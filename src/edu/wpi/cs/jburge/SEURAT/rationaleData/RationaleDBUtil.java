@@ -8,6 +8,8 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Iterator;
+import java.util.Vector;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -162,6 +164,113 @@ public class RationaleDBUtil
 			if (val) return "1";
 			else return "0";
 		}
+	}
+	
+	/**
+	 * This method handles the exporting of a database to XML. Currently
+	 * the method only exports the pattern library and the ontology.
+	 * @param ontFile
+	 * @return
+	 */
+	public static boolean exportToXML(String xmlFile){
+		DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+		Document ratDoc = null;
+		RationaleDB db = RationaleDB.getHandle();
+		
+		try{
+			DocumentBuilder builder = factory.newDocumentBuilder();
+			
+			File xmlf = new File(xmlFile);
+			
+			//Right now, let's not worry about the case when the XML exists.
+			//If exists, then export fails for now...
+			if (xmlf.exists()){
+				return false;
+			}
+			ratDoc = builder.newDocument();
+			// set up the document
+			Element ratTop = ratDoc.createElement("DR:rationale");
+			ratTop.setAttribute("xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance");
+			ratTop.setAttribute("xmlns:xsd", "http://www.w3.org/2001/XMLSchema");
+			ratTop.setAttribute("xmlns:DR", "http://www.cs.wpi.edu/~jburge/DRXML/Rationale");
+			ratTop.setAttribute("xmlns", "http://www.cs.wpi.edu/~jburge/DRXML/Rationale");
+			ratTop.setAttribute("xsi:schemaLocation","http://www.cs.wpi.edu/~jburge/DRXML/Rationale http://www.cs.wpi.edu/~jburge/DRXML/Rationale.xsd");
+			Element ratNext = ratDoc.createElement("DR:argOntology");
+			//process argument ontology
+			OntEntry topE = new OntEntry();
+			topE.fromDatabase(1); // get root of ontology from database
+			System.out.println(topE.name + " " + topE.description);
+			Element newTopOnt = topE.toXML(ratDoc); // construct the new ontology xml
+			ratNext.appendChild(newTopOnt);
+			ratTop.appendChild(ratNext);
+			ratDoc.appendChild(ratTop);
+			System.out.println("child appended");
+			
+			//I should now get the pattern xml written...
+			Element patternLib = ratDoc.createElement("DR:patternLibrary");
+			
+			//First, I should export the problem category database to XML in sequence...
+			Iterator<String[]> problemcategories = db.getProblemCategoryData().iterator();
+			while (problemcategories.hasNext()){
+				String[] content = problemcategories.next();
+				Element curE = ratDoc.createElement("DR:patternCategory");
+				curE.setAttribute("rid", "c" + content[0]);
+				curE.setAttribute("name", content[1]);
+				curE.setAttribute("type", content[2]);
+				patternLib.appendChild(curE);
+			}
+			//Need to keep track of pattern decisions from each patterns.
+			Vector<PatternDecision> patternDecisions = new Vector<PatternDecision>();
+			//Next, I should export the patterns
+			Iterator<edu.wpi.cs.jburge.SEURAT.rationaleData.Pattern> patterns = db.getPatternData().iterator();
+			while (patterns.hasNext()){
+				edu.wpi.cs.jburge.SEURAT.rationaleData.Pattern cur = patterns.next();
+				Element curE = cur.toXML(ratDoc);
+				patternLib.appendChild(curE);
+				patternDecisions.addAll(cur.getSubDecisions());
+			}
+			
+			//Then, I need to export the pattern decisions
+			Iterator<PatternDecision> pdi = patternDecisions.iterator();
+			while (pdi.hasNext()){
+				PatternDecision cur = pdi.next();
+				Element curE = cur.toXML(ratDoc);
+				patternLib.appendChild(curE);
+			}
+			
+			//Finally, add patternLib to ratTop's child
+			ratTop.appendChild(patternLib);
+			
+		} catch (ParserConfigurationException e){
+			e.printStackTrace();
+			return false;
+		}
+		
+		try {
+			// set up a transformer
+			TransformerFactory transfac = TransformerFactory.newInstance();
+            Transformer trans = transfac.newTransformer();
+            trans.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "no");
+            trans.setOutputProperty(OutputKeys.INDENT, "no");
+            //create a string from the xml tree
+            StringWriter sw = new StringWriter();
+            StreamResult result = new StreamResult(sw);
+            DOMSource source = new DOMSource(ratDoc);
+            trans.transform(source, result);
+            String xmlString = sw.toString();
+            // write the file
+            FileWriter fw = new FileWriter(xmlFile);
+            fw.write(xmlString);
+            fw.close();
+            return true;
+		} catch (TransformerConfigurationException e) {
+			System.err.println( e.toString());
+		} catch (TransformerException tfe) {
+			System.err.println( tfe.toString());
+		} catch(IOException e){
+			System.err.println(e.toString());
+		}
+		return false;
 	}
 	
 	/**

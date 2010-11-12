@@ -6,9 +6,11 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Enumeration;
+import java.util.Iterator;
 import java.util.Vector;
 
 import org.eclipse.swt.widgets.Display;
+import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.Text;
@@ -198,6 +200,108 @@ public class Pattern extends RationaleElement {
 
 	public void setUrl(String url) {
 		this.url = url;
+	}
+	
+	public Element toXML(Document ratDoc){
+		Element patternE;
+		RationaleDB db = RationaleDB.getHandle();
+		
+		//Now, add pattern to doc
+		String entryID = db.getRef(this);
+		if (entryID == null){
+			entryID = db.addPatternRef(this);
+		}
+		
+		patternE = ratDoc.createElement("DR:pattern");
+		patternE.setAttribute("rid", entryID);
+		patternE.setAttribute("name", name);
+		
+		//Now, add child elements of this... (other than refs, which are handled in RationaleDBUtil)
+		
+		//Type
+		Element typeE = ratDoc.createElement("type");
+		Text typeText = ratDoc.createTextNode(type.toString());
+		typeE.appendChild(typeText);
+		patternE.appendChild(typeE);
+		
+		//description
+		Element descE = ratDoc.createElement("description");
+		Text descText = ratDoc.createTextNode(description);
+		descE.appendChild(descText);
+		patternE.appendChild(descE);
+		
+		//problem
+		Element probE = ratDoc.createElement("problem");
+		Text probText = ratDoc.createTextNode(problem);
+		probE.appendChild(probText);
+		patternE.appendChild(probE);
+		
+		//context
+		Element contE = ratDoc.createElement("context");
+		Text contText = ratDoc.createTextNode(context);
+		contE.appendChild(contText);
+		patternE.appendChild(contE);
+		
+		//Solution
+		Element solE = ratDoc.createElement("solution");
+		Text solText = ratDoc.createTextNode(solution);
+		solE.appendChild(solText);
+		patternE.appendChild(solE);
+		
+		//Implementation
+		Element implE = ratDoc.createElement("implementation");
+		Text implText = ratDoc.createTextNode(implementation);
+		implE.appendChild(implText);
+		patternE.appendChild(implE);
+		
+		//Example
+		Element examE = ratDoc.createElement("example");
+		Text examText = ratDoc.createTextNode(example);
+		examE.appendChild(examText);
+		patternE.appendChild(examE);
+		
+		Element urlE = ratDoc.createElement("url");
+		Text urlText = ratDoc.createTextNode(url);
+		urlE.appendChild(urlText);
+		patternE.appendChild(urlE);
+		
+		//Use the database problem category ID instead.
+		Element categoryE = ratDoc.createElement("refCategory");
+		Text categoryText = ratDoc.createTextNode("c" + new Integer(problemcategory).toString());
+		categoryE.appendChild(categoryText);
+		patternE.appendChild(categoryE);
+		
+		//Add reference id of positive ontology
+		Iterator<OntEntry> posi = posiOnts.iterator();
+		while (posi.hasNext()){
+			OntEntry cur = posi.next();
+			Element curE = ratDoc.createElement("refOntPos");
+			Text curText = ratDoc.createTextNode("r" + new Integer(cur.getID()));
+			curE.appendChild(curText);
+			patternE.appendChild(curE);
+		}
+		
+		//Add reference id of negative ontology
+		Iterator<OntEntry> negi = negaOnts.iterator();
+		while (negi.hasNext()){
+			OntEntry cur = negi.next();
+			Element curE = ratDoc.createElement("refOntNeg");
+			Text curText = ratDoc.createTextNode("r" + new Integer(cur.getID()));
+			curE.appendChild(curText);
+			patternE.appendChild(curE);
+		}
+		
+		//Add reference id of pattern decisions
+		Iterator<PatternDecision> deci = subDecisions.iterator();
+		while (deci.hasNext()){
+			PatternDecision cur = deci.next();
+			Element curE = ratDoc.createElement("refChildDecision");
+			Text curText = ratDoc.createTextNode("pd" + new Integer(cur.getID()));
+			curE.appendChild(curText);
+			patternE.appendChild(curE);
+		}
+		
+		return patternE;
 	}
 
 	public void fromDatabase(int patternID)

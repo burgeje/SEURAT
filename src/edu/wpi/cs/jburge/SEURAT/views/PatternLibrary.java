@@ -13,6 +13,7 @@ import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.util.IPropertyChangeListener;
 import org.eclipse.jface.util.PropertyChangeEvent;
 import org.eclipse.jface.viewers.DoubleClickEvent;
@@ -25,6 +26,7 @@ import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MessageBox;
 import org.eclipse.swt.widgets.Shell;
@@ -60,6 +62,7 @@ import edu.wpi.cs.jburge.SEURAT.rationaleData.PatternDecision;
 import edu.wpi.cs.jburge.SEURAT.rationaleData.PatternElementType;
 import edu.wpi.cs.jburge.SEURAT.rationaleData.Question;
 import edu.wpi.cs.jburge.SEURAT.rationaleData.RationaleDB;
+import edu.wpi.cs.jburge.SEURAT.rationaleData.RationaleDBUtil;
 import edu.wpi.cs.jburge.SEURAT.rationaleData.RationaleElement;
 import edu.wpi.cs.jburge.SEURAT.rationaleData.RationaleElementType;
 import edu.wpi.cs.jburge.SEURAT.rationaleData.RationaleStatus;
@@ -91,6 +94,8 @@ IPropertyChangeListener {
 	private Action showPatternDecisionEditor;
 	private Action attachCandidatePatterns;
 	private Action deletePattern;
+	private Action importXML;
+	private Action exportXML;
 
 	protected RationaleLabelProvider labelProvider;
 
@@ -112,7 +117,7 @@ IPropertyChangeListener {
 		makeActions();
 		hookContextMenu();
 		hookDoubleClickAction();
-		//contributeToActionBars();
+		contributeToActionBars();
 
 		PatternLibContentProvider pattern = new PatternLibContentProvider();
 		viewer.setInput(pattern.initialize());		
@@ -543,16 +548,56 @@ IPropertyChangeListener {
 		attachCandidatePatterns.setText("Attach candidate pattern");
 		attachCandidatePatterns.setToolTipText("Attach candidate pattern");
 
-		search = new Action() {
-			public void run() {
-
-
+		importXML = new Action(){
+			public void run(){
+				
 			}
-
 		};
-		search.setText("Search for Patterns");
-		search.setToolTipText("search for patterns for specific conditions");
+		
+		importXML.setText("Import from XML");
+		importXML.setToolTipText("Load an XML from the a file and store it to a database");
+		
+		exportXML = new Action(){
+			public void run(){
+				Shell shell = new Shell();
+				FileDialog path = new FileDialog(shell, SWT.SAVE);
+				String[] ext = {"*.xml"};
+				String[] name = {"XML (*.xml)"};
+				path.setFilterExtensions(ext);
+				path.setFilterNames(name);
+				// set default path to the static filename from RationaleDB
+				path.setFileName(RationaleDB.getOntName());
+				
+				shell.pack();
+				
+				// Open the path that the user selected
+				String filePath = path.open();
+				
+				if (RationaleDBUtil.exportToXML(filePath)){
+					showInformation("XML has been exported successfully.");
+				}
+				else showInformation("Cannot create this XML. Choose another filename, stop modifying, and try again.");
+				
+			}
+			
+		};
+		
+		exportXML.setText("Export XML");
+		exportXML.setToolTipText("Exports the database to an XML file and store it to a database");
 
+	}
+	
+	/**
+	 * This method is used to pop-up a message to inform the user that an action has been completed.
+	 * It is used when saving the argument ontology but could easily be re-used elsewhere.
+	 * @param message
+	 * @return return value from the dialog
+	 */
+	private void showInformation(String message) {
+		MessageDialog.openInformation(
+			viewer.getControl().getShell(),
+			"RationaleExplorer",
+			message);
 	}
 
 
@@ -619,8 +664,8 @@ IPropertyChangeListener {
 	}
 
 	private void fillLocalPullDown(IMenuManager manager) {
-		//manager.add(search);
-
+		manager.add(importXML);
+		manager.add(exportXML);
 	}
 
 	public void refreshBranch(TreeParent parent)
