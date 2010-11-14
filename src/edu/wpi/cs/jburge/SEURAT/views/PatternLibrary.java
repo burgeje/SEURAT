@@ -550,7 +550,26 @@ IPropertyChangeListener {
 
 		importXML = new Action(){
 			public void run(){
+				Shell shell = new Shell();
+				FileDialog path = new FileDialog(shell, SWT.SAVE);
+				String[] ext = {"*.xml"};
+				String[] name = {"XML (*.xml)"};
+				path.setFilterExtensions(ext);
+				path.setFilterNames(name);
+				// set default path to the static filename from RationaleDB
+				path.setFileName(RationaleDB.getOntName());
 				
+				shell.pack();
+				
+				// Open the path that the user selected
+				String filePath = path.open();
+				if (RationaleDBUtil.importFromXML(filePath)){
+					showInformation("XML has been imported successfully.");
+				}
+				else showInformation ("Cannot import this XML.");
+				rebuildTree();
+				if (RationaleExplorer.getHandle() != null)
+					RationaleExplorer.getHandle().rebuildTree(false);
 			}
 		};
 		

@@ -1,7 +1,9 @@
 package edu.wpi.cs.jburge.SEURAT.rationaleData;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.StringWriter;
 import java.io.FileWriter;
 import java.sql.Connection;
@@ -29,9 +31,11 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
 import edu.wpi.cs.jburge.SEURAT.SEURATPlugin;
+import edu.wpi.cs.jburge.SEURAT.views.PatternLibrary;
 import SEURAT.preferences.PreferenceConstants;
 
 /**
@@ -50,15 +54,15 @@ public class RationaleDBUtil
 	{
 		MYSQL,
 		DERBY,
-		
+
 		UNKNOWN
 	}
-	
+
 	/**
 	 * The preference store for the SEURAT plugin.
 	 */
 	private static IPreferenceStore store = SEURATPlugin.getDefault().getPreferenceStore();
-	
+
 	/**
 	 * Examines the preference store and determines the DB type that is currently in use.
 	 * @return DBTypes.x, where x is the DB type currently in use
@@ -69,12 +73,12 @@ public class RationaleDBUtil
 		if( lType.equals(PreferenceConstants.DatabaseType.DERBY) )
 			return DBTypes.DERBY;
 		else
-		if( lType.equals(PreferenceConstants.DatabaseType.MYSQL))
-			return DBTypes.MYSQL;
-		
+			if( lType.equals(PreferenceConstants.DatabaseType.MYSQL))
+				return DBTypes.MYSQL;
+
 		return DBTypes.UNKNOWN;			
 	}
-	
+
 	/**
 	 * Properly escapes a table name based on the database type that is in use.
 	 * @param pName the table name to be escaped
@@ -83,15 +87,15 @@ public class RationaleDBUtil
 	public static String escapeTableName(String pName)
 	{
 		DBTypes lType = checkDBType();
-		
+
 		pName=pName.toUpperCase();
-		
+
 		if( lType == DBTypes.MYSQL )
 			return "`" + pName + "`";
-		
+
 		if( lType == DBTypes.DERBY )
 			return "\"" + pName + "\"";
-		
+
 		// Use quote characters (") as default.
 		return "\"" + pName + "\"";		
 	}
@@ -111,7 +115,7 @@ public class RationaleDBUtil
 		{
 			txt = txt.substring(0, 254);
 		}
-		
+
 		if( checkDBType() == DBTypes.MYSQL ) {
 			Matcher matcher = Pattern.compile("([\'\"\'])").matcher(txt);
 			String out = matcher.replaceAll("\\\\$1");
@@ -119,10 +123,10 @@ public class RationaleDBUtil
 			return out;
 		}
 		else {// TREAT DERBY AS DEFAULT
-		// if (checkDBType() == DBTypes.DERBY )
+			// if (checkDBType() == DBTypes.DERBY )
 			Matcher matcher = Pattern.compile("([\'])").matcher(txt);
 			String out = matcher.replaceAll("'$1");
- 			return out;
+			return out;
 		}
 	}
 
@@ -143,13 +147,13 @@ public class RationaleDBUtil
 			return out;
 		}
 		else { // TREAT DERBY AS DEFAULT
-		// if( checkDBType() == DBTypes.DERBY )
+			// if( checkDBType() == DBTypes.DERBY )
 			//Matcher matcher = Pattern.compile("('')").matcher(txt);
-		//	String out = matcher.replaceAll("'");
+			//	String out = matcher.replaceAll("'");
 			return txt;
 		}
 	}
-	
+
 	/**
 	 * Returns the correct string represention of a boolean value based on 
 	 * current database type.
@@ -165,7 +169,7 @@ public class RationaleDBUtil
 			else return "0";
 		}
 	}
-	
+
 	/**
 	 * This method handles the exporting of a database to XML. Currently
 	 * the method only exports the pattern library and the ontology.
@@ -176,12 +180,12 @@ public class RationaleDBUtil
 		DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 		Document ratDoc = null;
 		RationaleDB db = RationaleDB.getHandle();
-		
+
 		try{
 			DocumentBuilder builder = factory.newDocumentBuilder();
-			
+
 			File xmlf = new File(xmlFile);
-			
+
 			//Right now, let's not worry about the case when the XML exists.
 			//If exists, then export fails for now...
 			if (xmlf.exists()){
@@ -205,10 +209,10 @@ public class RationaleDBUtil
 			ratTop.appendChild(ratNext);
 			ratDoc.appendChild(ratTop);
 			System.out.println("child appended");
-			
+
 			//I should now get the pattern xml written...
 			Element patternLib = ratDoc.createElement("DR:patternLibrary");
-			
+
 			//First, I should export the problem category database to XML in sequence...
 			Iterator<String[]> problemcategories = db.getProblemCategoryData().iterator();
 			while (problemcategories.hasNext()){
@@ -229,7 +233,7 @@ public class RationaleDBUtil
 				patternLib.appendChild(curE);
 				patternDecisions.addAll(cur.getSubDecisions());
 			}
-			
+
 			//Then, I need to export the pattern decisions
 			Iterator<PatternDecision> pdi = patternDecisions.iterator();
 			while (pdi.hasNext()){
@@ -237,32 +241,32 @@ public class RationaleDBUtil
 				Element curE = cur.toXML(ratDoc);
 				patternLib.appendChild(curE);
 			}
-			
+
 			//Finally, add patternLib to ratTop's child
 			ratTop.appendChild(patternLib);
-			
+
 		} catch (ParserConfigurationException e){
 			e.printStackTrace();
 			return false;
 		}
-		
+
 		try {
 			// set up a transformer
 			TransformerFactory transfac = TransformerFactory.newInstance();
-            Transformer trans = transfac.newTransformer();
-            trans.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "no");
-            trans.setOutputProperty(OutputKeys.INDENT, "no");
-            //create a string from the xml tree
-            StringWriter sw = new StringWriter();
-            StreamResult result = new StreamResult(sw);
-            DOMSource source = new DOMSource(ratDoc);
-            trans.transform(source, result);
-            String xmlString = sw.toString();
-            // write the file
-            FileWriter fw = new FileWriter(xmlFile);
-            fw.write(xmlString);
-            fw.close();
-            return true;
+			Transformer trans = transfac.newTransformer();
+			trans.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "no");
+			trans.setOutputProperty(OutputKeys.INDENT, "no");
+			//create a string from the xml tree
+			StringWriter sw = new StringWriter();
+			StreamResult result = new StreamResult(sw);
+			DOMSource source = new DOMSource(ratDoc);
+			trans.transform(source, result);
+			String xmlString = sw.toString();
+			// write the file
+			FileWriter fw = new FileWriter(xmlFile);
+			fw.write(xmlString);
+			fw.close();
+			return true;
 		} catch (TransformerConfigurationException e) {
 			System.err.println( e.toString());
 		} catch (TransformerException tfe) {
@@ -272,7 +276,7 @@ public class RationaleDBUtil
 		}
 		return false;
 	}
-	
+
 	/**
 	 * This method handles the exporting of a database's argument ontology to XML.
 	 * The file to export to is hardcoded in the RationaleDB class but
@@ -285,7 +289,7 @@ public class RationaleDBUtil
 	public static boolean exportArgumentOntology(String ontFile) {
 		DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 		Document ratDoc;
-		
+
 		try {
 			DocumentBuilder builder = factory.newDocumentBuilder();
 			File ontf = new File(ontFile);
@@ -296,7 +300,7 @@ public class RationaleDBUtil
 
 				Node nextNode = ratTop.getFirstChild();
 				Element ratNext = null;
-				
+
 				// Loop to handle class cast exceptions (sometimes the first
 				// child will be text or something other than an element)
 				while (nextNode != null) {
@@ -308,13 +312,13 @@ public class RationaleDBUtil
 					}
 					nextNode = nextNode.getNextSibling();
 				}
-				
+
 				if (ratNext == null) {
 					System.out.println("argument ontology not found in " + ontFile);
 				} else {
 					String nextName;
 					nextName = ratNext.getNodeName();
-					
+
 					//here we check the type, then process
 					if (nextName.compareTo("DR:argOntology") == 0)
 					{
@@ -326,7 +330,7 @@ public class RationaleDBUtil
 						topE.fromDatabase(1); // get root of ontology from database
 						System.out.println(topE.name + " " + topE.description);
 						Element newTopOnt = topE.toXML(ratDoc); // construct the new ontology xml
-						
+
 						// replace old topOnt with new one
 						ratNext.removeChild(topOnt);
 						ratNext.appendChild(newTopOnt);
@@ -360,20 +364,20 @@ public class RationaleDBUtil
 			try {
 				// set up a transformer
 				TransformerFactory transfac = TransformerFactory.newInstance();
-	            Transformer trans = transfac.newTransformer();
-	            trans.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "no");
-	            trans.setOutputProperty(OutputKeys.INDENT, "no");
-	            //create a string from the xml tree
-	            StringWriter sw = new StringWriter();
-	            StreamResult result = new StreamResult(sw);
-	            DOMSource source = new DOMSource(ratDoc);
-	            trans.transform(source, result);
-	            String xmlString = sw.toString();
-	            // write the file
-	            FileWriter fw = new FileWriter(ontf);
-	            fw.write(xmlString);
-	            fw.close();
-	            return true;
+				Transformer trans = transfac.newTransformer();
+				trans.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "no");
+				trans.setOutputProperty(OutputKeys.INDENT, "no");
+				//create a string from the xml tree
+				StringWriter sw = new StringWriter();
+				StreamResult result = new StreamResult(sw);
+				DOMSource source = new DOMSource(ratDoc);
+				trans.transform(source, result);
+				String xmlString = sw.toString();
+				// write the file
+				FileWriter fw = new FileWriter(ontf);
+				fw.write(xmlString);
+				fw.close();
+				return true;
 			} catch (TransformerConfigurationException e) {
 				System.err.println( e.toString());
 			} catch (TransformerException tfe) {
@@ -388,7 +392,141 @@ public class RationaleDBUtil
 		}
 		return false;
 	}
+
+	/**
+	 * This is the method to import XML. Currently, we're only importing the ontology
+	 * and the patternLibrary. But this can be easily changed here...
+	 * @param xmlFile
+	 * @return true if import is successful, false otherwise.
+	 */
+	public static boolean importFromXML(String xmlFile){
+		DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+		Document ratDoc;
+		try{
+			DocumentBuilder builder = factory.newDocumentBuilder();
+			InputSource source = new InputSource(new InputStreamReader(new FileInputStream(new File(xmlFile))));
+			source.setEncoding("UTF-8");
+			ratDoc = builder.parse(source);
+			Element ratTop = ratDoc.getDocumentElement();
+
+			//The child of document element tells me which xml I'm importing from...
+			NodeList ratList = ratTop.getChildNodes();
+			for (int i = 0; i < ratList.getLength(); i++){
+				Node rat = ratList.item(i);
+				String ratname = rat.getNodeName();
+				System.out.println("Identifier: " + ratname);
+				if (ratname.equals("DR:argOntology")){
+					System.out.println("Found Argument Ontology. Importing...");
+					xmlImportOntology(rat);
+				}
+				else if (ratname.equals("DR:patternLibrary")){
+					System.out.println("Found Pattern Library. Importing...");
+					xmlImportPatternLibrary(rat);
+				}
+			}
+			
+			return true;
+		} catch (SAXException e){
+			e.printStackTrace();
+		} catch (IOException e){
+			e.printStackTrace();
+		} catch (ParserConfigurationException e){
+			e.printStackTrace();
+		}
+
+		return false;
+	}
 	
+	/**
+	 * Given the top node DR:patternLibrary, import form the children.
+	 * @param patternLib
+	 * @return true if import is successful. false otherwise.
+	 */
+	public static boolean xmlImportPatternLibrary(Node patternLib){
+		if (!patternLib.getNodeName().equals("DR:patternLibrary")){
+			System.err.println("patternLibrary node is illegal");
+			return false;
+		}
+		RationaleDB db = RationaleDB.getHandle();
+		NodeList libraryNodes = patternLib.getChildNodes();
+		Vector<edu.wpi.cs.jburge.SEURAT.rationaleData.Pattern> patterns = 
+			new Vector<edu.wpi.cs.jburge.SEURAT.rationaleData.Pattern>();
+		Vector<PatternDecision> patternDecisions = new Vector<PatternDecision>();
+		
+		for (int i = 0; i < libraryNodes.getLength(); i++){
+			Node libItem = libraryNodes.item(i);
+			String libName = libItem.getNodeName();
+			
+			if (libName.equals("DR:patternCategory")){
+				Element element = (Element) libItem;
+				String rid = element.getAttribute("rid");
+				String name = element.getAttribute("name");
+				String type = element.getAttribute("type");
+				try{
+					int id = Integer.parseInt(rid.substring(1));
+					db.addProblemCategory(id, name, type);
+					System.out.println("Added category " + name);
+				} catch (RuntimeException e){
+					System.err.println("Invalid rid for pattern category... Skipping...");
+				}
+			}
+			else if (libName.equals("DR:pattern")){
+				edu.wpi.cs.jburge.SEURAT.rationaleData.Pattern pattern = 
+					new edu.wpi.cs.jburge.SEURAT.rationaleData.Pattern();
+				pattern.fromXML((Element) libItem);
+				patterns.add(pattern);
+				System.out.println("Added pattern " + pattern.getName());
+			}
+			else if (libName.equals("DR:patternDecision")){
+				PatternDecision pd = new PatternDecision();
+				pd.fromXML((Element) libItem);
+				patternDecisions.add(pd);
+				System.out.println("Added pattern decision " + pd.getName());
+			}
+			
+
+		}
+		System.out.println("Associating pattern to child decisions...");
+		//Associate pattern and child decisions.
+		for (int i = 0; i < patterns.size(); i++){
+			edu.wpi.cs.jburge.SEURAT.rationaleData.Pattern pattern = patterns.get(i);
+			Iterator<Integer> iteratorDecID = pattern.iteratorSubDecID();
+			while (iteratorDecID.hasNext()){
+				int pdID = iteratorDecID.next();
+				db.assocPatternAndDecisionFromXML(pattern.getID(), pdID);
+			}
+		}
+		System.out.println("Import to database was successful.");
+		
+		//At here, the database satisfies invariant and has been imported. But the elements are not correct.
+		//Easiest way to update the tree is to rebuild tree from database.
+		
+		
+		return true;
+	}
+
+	/**
+	 * Given the top node DR:argOntology, import from the children
+	 * @param argOntology
+	 * @return true if import is successful. false otherwise.
+	 */
+	public static boolean xmlImportOntology(Node argOntology){
+		if (argOntology.getNodeName().equals("DR:argOntology")){
+			//need to get the root ontology entry
+			Element topOnt = (Element) argOntology.getFirstChild();
+			//process argument ontology
+			OntEntry topE = new OntEntry();
+			topE.fromXML(topOnt, null); //null parent
+			// This will get us the entire ontology and relationships,
+			// so we should be able to simply send to database now
+			// Root of argument ontology is always id 0
+			topE.toDatabase(0);
+			return true;
+		}
+		System.err.println("ArgOntology node is illegal.");
+		return false;
+	}
+
 	/**
 	 * This method handles the importing of an argument ontology from XML.
 	 * The file to import from is hardcoded in the RationaleDB class but
@@ -401,7 +539,7 @@ public class RationaleDBUtil
 	public static boolean importArgumentOntology(String ontFile) {
 		DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 		Document ratDoc;
-		
+
 		try {
 			DocumentBuilder builder = factory.newDocumentBuilder();
 			ratDoc = builder.parse(new File(ontFile));
@@ -410,7 +548,7 @@ public class RationaleDBUtil
 
 			Node nextNode = ratTop.getFirstChild();
 			Element ratNext = null;
-			
+
 			// Loop to handle class cast exceptions (sometimes the first
 			// child will be text or something other than an element)
 			while (nextNode != null) {
@@ -422,17 +560,17 @@ public class RationaleDBUtil
 				}
 				nextNode = nextNode.getNextSibling();
 			}
-			
+
 			if (ratNext == null) {
 				System.out.println("argument ontology not found in " + ontFile);
 			} else {
 				String nextName;
 				nextName = ratNext.getNodeName();
-				
+
 				//here we check the type, then process
 				if (nextName.compareTo("DR:argOntology") == 0)
 				{
-//					System.out.println("found the ontology");
+					//					System.out.println("found the ontology");
 					//need to get the root ontology entry
 					Element topOnt = (Element) ratNext.getFirstChild();
 					//process argument ontology
@@ -457,74 +595,9 @@ public class RationaleDBUtil
 		}
 		return false;
 	}
-	
-	/**
-	 * This method imports patterns from an XML file provided by the argument
-	 * @param patternsFile
-	 * @return
-	 */
-	public static boolean importPatterns(String patternsFile){
-		boolean importSuccess = false;
-		DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-		Document patternsDoc;
-		
-		try {
-			DocumentBuilder builder = factory.newDocumentBuilder();
-			patternsDoc = builder.parse(new File(patternsFile));
-			Element patternTop = patternsDoc.getDocumentElement();
-			
-			Node nextNode = patternTop.getFirstChild();
-			Element patternNext = null;
-			
-			// Loop to handle class cast exceptions (sometimes the first
-			// child will be text or something other than an element)
-			while (nextNode != null) {
-				try {
-					patternNext = (Element) nextNode;
-					break; // got the element
-				} catch (ClassCastException cce) {
-					//System.out.println("cce");
-				}
-				nextNode = nextNode.getNextSibling();
-			}
-			
-			if (patternNext == null) {
-				System.out.println("patterns not found in " + patternsFile);
-			} else {
-				String nextName;
-				nextName = patternNext.getNodeName();
-				
-				//here we check the type, then process
-				if (nextName.compareTo("DR:patternLibrary") == 0)
-				{
-					//need to get the root pattern entry
-					NodeList patternElements = patternNext.getChildNodes();
-					for(int i=0;i<patternElements.getLength();i++){
-						//there's a pattern matcher above
-						edu.wpi.cs.jburge.SEURAT.rationaleData.Pattern pattern = new edu.wpi.cs.jburge.SEURAT.rationaleData.Pattern();
-						pattern.fromXML((Element)patternElements.item(i));
-						pattern.toDatabase(0);
-					}
-					
-					//import the 
-					
-					
-					importSuccess = true;
-				}
-				else {
-					System.out.println("something other than patterns specified in " + patternsFile);
-				}
-			}
-		} catch (SAXException sce) {
-			System.err.println( sce.toString());
-		} catch (IOException ioe) {
-			System.err.println (ioe.toString());
-		} catch (ParserConfigurationException pce) {
-			System.err.println (pce.toString());
-		}
-		return importSuccess;
-	}
-	
+
+
+
 	/**
 	 * Checks to see if an entry where name = given "name" is in the table "type".
 	 * @param name
@@ -539,7 +612,7 @@ public class RationaleDBUtil
 		ResultSet rs = null;
 		String query = "";
 		boolean flag = true;
-		
+
 		try{
 			stmt = conn.createStatement();
 			query = "SELECT name FROM " + RationaleDBUtil.escapeTableName(type) + " WHERE name = '"
@@ -558,7 +631,7 @@ public class RationaleDBUtil
 		}finally{
 			RationaleDB.releaseResources(stmt, rs);			
 		}
-		
+
 		return flag;
 	}
 }

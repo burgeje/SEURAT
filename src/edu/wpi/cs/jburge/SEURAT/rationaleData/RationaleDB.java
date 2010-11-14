@@ -404,8 +404,9 @@ public final class RationaleDB implements Serializable {
 		// Now import the pattern library
 		boolean importPatternSuccess = false;
 		if (new File(patternFile).exists()){
+			//TODO
 			// have not been implemented
-			importPatternSuccess = RationaleDBUtil.importPatterns(patternFile);
+			//importPatternSuccess = RationaleDBUtil.importPatterns(patternFile);
 		}
 		if (!importPatternSuccess){		
 
@@ -580,7 +581,7 @@ public final class RationaleDB implements Serializable {
 	 * exist then the database schema will be modified to contain
 	 * the new attributes with default values.
 	 * 
-	 * TODO: Move This To RationaleDBCreate
+	 * Move This To RationaleDBCreate
 	 * @see RationaleDBCreate
 	 */
 	private void migrate() {
@@ -2412,7 +2413,7 @@ public final class RationaleDB implements Serializable {
 			}			
 
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
+			
 			e.printStackTrace();
 		}		
 		return matchedPatterns;
@@ -4017,7 +4018,7 @@ public final class RationaleDB implements Serializable {
 		try {
 			istream = new FileInputStream(ratFile);
 		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
+			
 			e.printStackTrace();
 		}
 
@@ -4323,6 +4324,121 @@ public final class RationaleDB implements Serializable {
 	{
 		//ref is already in the correct form, no change needed
 		idRefs.put(sr, re);
+	}
+	
+	/**
+	 * Given a pattern object that was created from XML, add it to the database.
+	 * Note that at this point, the database may violate referential integrity constraints.
+	 * @param pattern
+	 */
+	public void addPatternFromXML(Pattern pattern){
+		
+		try{
+			//First, insert the pattern to the database. Easy...
+			PreparedStatement ps = conn.prepareStatement("INSERT INTO PATTERNS values (" +
+					"?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+			ps.setInt(1, pattern.getID());
+			ps.setString(2, pattern.getName());
+			ps.setString(3, pattern.getType().toString());
+			ps.setBytes(4, pattern.getDescription().getBytes());
+			ps.setBytes(5, pattern.getProblem().getBytes());
+			ps.setBytes(6, pattern.getContext().getBytes());
+			ps.setBytes(7, pattern.getSolution().getBytes());
+			ps.setBytes(8, pattern.getImplementation().getBytes());
+			ps.setBytes(9, pattern.getExample().getBytes());
+			ps.setString(10, pattern.getUrl());
+			ps.executeUpdate();
+			ps.close();
+			
+			//Next, create entry to connect with patternproblemcategory
+			Statement stmt = conn.createStatement();
+			String expr = "INSERT INTO PATTERN_PROBLEMCATEGORY (patternID, problemcategoryID)" + 
+			"values (" + pattern.getID() + ", " + pattern.getProblemCategory() + ")";
+			stmt.execute(expr);
+			
+			//Then, create entry to connect with positive ontology
+			Iterator<Integer> pos = pattern.iteratorPosOntID();
+			while (pos.hasNext()){
+				int ontID = pos.next();
+				expr = "INSERT INTO PATTERN_ONTENTRIES values (" + 
+				pattern.getID() + ", " + ontID + ", 'IS')";
+				stmt.execute(expr);
+			}
+			//Neg ontology
+			Iterator<Integer> neg = pattern.iteratorNegOntID();
+			while (neg.hasNext()){
+				int ontID = neg.next();
+				expr = "INSERT INTO PATTERN_ONTENTRIES values (" + 
+				pattern.getID() + ", " + ontID + ", 'NOT')";
+				stmt.execute(expr);
+			}
+			
+			//connection with sub-decision must be done in utility after decision has been created...
+		} catch (SQLException e){
+			e.printStackTrace();
+		}
+	}
+	
+	/**
+	 * Given a pattern decision imported from xml, add it to the database.
+	 * Note that the parent value must be updated later.
+	 * @param pd
+	 */
+	public void addPatternDecisionFromXML(PatternDecision pd){
+		try{
+			Statement stmt = conn.createStatement();
+			String expr = "INSERT INTO PATTERNDECISIONS (id, name, description, type, status, phase, ptype, subdecreq)"+
+			" values (" + pd.getID() + ", '" + pd.getName() + "', '" + pd.getDescription() + "', '" + 
+			pd.getType().toString() + "', '" + pd.getStatus().toString() + "', '" + pd.getPhase().toString() +
+			"', 'Pattern', 'No')";
+			stmt.execute(expr);
+			
+			//Now, add the associated candidate patterns
+			Iterator<Integer> candidatePID = pd.iteratorSubPatterns();
+			while (candidatePID.hasNext()){
+				int cpid = candidatePID.next();
+				expr = "INSERT INTO PATTERN_DECISION values (" + cpid + ", " + pd.getID() + ", 'Decision')";
+				stmt.execute(expr);
+			}
+		} catch (SQLException e){
+			e.printStackTrace();
+		}
+	}
+	
+	/**
+	 * Assume pattern and patterndecisions have been imported. Utility can call this method to associate
+	 * between pattern and child pattern-decisions.
+	 * @param patternID
+	 * @param pdID
+	 */
+	public void assocPatternAndDecisionFromXML(int patternID, int pdID){
+		try{
+			Statement stmt = conn.createStatement();
+			String expr = "UPDATE PATTERNDECISIONS set parent = " + patternID + " WHERE id = " + pdID;
+			stmt.execute(expr);
+		} catch (SQLException e){
+			e.printStackTrace();
+		}
+	}
+	
+	/**
+	 * This method is used for XML import of pattern problem category.
+	 * Given the database id, category, and type of the problem category, add
+	 * it to the database.
+	 * @param id The parsed id of the reference id in XML
+	 * @param category
+	 * @param type
+	 */
+	public void addProblemCategory(int id, String category, String type){
+		try{
+			Statement stmt = conn.createStatement();
+			String expr = "INSERT INTO PATTERNPROBLEMCATEGORIES values (" +
+			new Integer(id).toString() + ", '" + category + "', '" + type + "')";
+			stmt.execute(expr);
+		}
+		catch (SQLException e){
+			e.printStackTrace();
+		}
 	}
 
 	/**

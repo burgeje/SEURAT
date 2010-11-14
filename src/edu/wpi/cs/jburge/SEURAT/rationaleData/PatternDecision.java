@@ -36,6 +36,13 @@ public class PatternDecision extends RationaleElement{
 	private Vector<Pattern> candidatePatterns;
 	private int parentPattern; //this is used only to set the parentPattern during creation of patterndecision.
 	//We don't need this attribute in the DB, we can clean it up later on.
+	
+	
+	
+	/**
+	 * This is used for XML import...
+	 */
+	private Vector<Integer> subPatternsID;
 
 	private RationaleElementUpdateEventGenerator<PatternDecision> m_eventGenerator = 
 		new RationaleElementUpdateEventGenerator<PatternDecision>(this);
@@ -50,7 +57,12 @@ public class PatternDecision extends RationaleElement{
 		questions = new Vector<Question>();
 		constraints = new Vector<Constraint>();
 		candidatePatterns = new Vector<Pattern>();
+		subPatternsID = new Vector<Integer>();
 	} 
+	
+	public Iterator<Integer> iteratorSubPatterns(){
+		return subPatternsID.iterator();
+	}
 
 	public RationaleElementType getElementType()
 	{
@@ -815,98 +827,47 @@ public class PatternDecision extends RationaleElement{
 	 * @param decN - the XML element.
 	 */
 	public void fromXML(Element decN) {
-
+		//TODO
 		this.fromXML = true;
 
 		RationaleDB db = RationaleDB.getHandle();
-
-		//add idref ***from the XML***
-		String idref = decN.getAttribute("id");
-
-		//get our name
+		
+		String rid = decN.getAttribute("rid");
+		id = Integer.parseInt(rid.substring(2));
+		
 		name = decN.getAttribute("name");
-
-		//get our status
-		status = DecisionStatus.fromString(decN.getAttribute("status"));
-
-		//get our type
+		
 		type = DecisionType.fromString(decN.getAttribute("type"));
-
-		//get our phase
+		
 		devPhase = Phase.fromString(decN.getAttribute("phase"));
-
-		Node descN = decN.getFirstChild();
-		//get the description
-		//the text is actually the child of the element, odd...
-		Node descT = descN.getFirstChild();
-		if (descT instanceof Text) {
-			Text text = (Text) descT;
-			String data = text.getData();
-			setDescription(data);
+		
+		status = DecisionStatus.fromString(decN.getAttribute("status"));
+		
+		Node child = decN.getFirstChild();
+		importHelper(child);
+		
+		Node nextNode = child.getNextSibling();
+		while (nextNode != null){
+			importHelper(nextNode);
+			nextNode = nextNode.getNextSibling();
 		}
-
-		//and last....
-		db.addRef(idref, this); //important to use the ref from the XML file!
-
-		Element child = (Element) descN.getNextSibling();
-
-		while (child != null) {
-
-			String nextName;
-
-			nextName = child.getNodeName();
-			//here we check the type, then process
-			if (nextName.compareTo("DR:alternative") == 0) {
-				Alternative alt = new Alternative();
-				alts = true;
-				db.addAlternative(alt);
-				addAlternative(alt);
-				alt.fromXML(child);
-			}  else if (nextName.compareTo("DR:question") == 0) {
-				Question quest = new Question();
-				db.addQuestion(quest);
-				addQuestion(quest);	
-				quest.fromXML(child);
-			} else if (nextName.compareTo("DR:decisionproblem") == 0) {
-				PatternDecision dec = new PatternDecision();
-				alts = false;
-				//db.addDecision(dec);
-				addSubDecision(dec);
-				dec.fromXML(child);
-			} else if (nextName.compareTo("DR:history") == 0) {
-				History hist = new History();
-				historyFromXML(child);
-				updateHistory(hist);
-
-			} else if (nextName.compareTo("altref") == 0) {
-				Node childRef = child.getFirstChild(); //now, get the text
-				//decode the reference
-				Text refText = (Text) childRef;
-				String stRef = refText.getData();
-				alts = true;
-				addAlternative((Alternative) db.getRef(stRef));
-
-			} else if (nextName.compareTo("decref") == 0) {
-				Node childRef = child.getFirstChild(); //now, get the text
-				//decode the reference
-				Text refText = (Text) childRef;
-				String stRef = refText.getData();
-				alts = false;
-				addSubDecision((PatternDecision) db.getRef(stRef));
-
-			} else if (nextName.compareTo("questref") == 0) {
-				Node childRef = child.getFirstChild(); //now, get the text
-				//decode the reference
-				Text refText = (Text) childRef;
-				String stRef = refText.getData();
-				addQuestion((Question) db.getRef(stRef));
-
-			} else {
-				System.out.println("unrecognized element under argument!");
+		
+		db.addPatternDecisionFromXML(this);
+		
+	}
+	
+	public void importHelper(Node child){
+		if (child.getFirstChild() instanceof Text){
+			Text text = (Text) child.getFirstChild();
+			String data = text.getData();
+			if (child.getNodeName().equals("description")){
+				setDescription(data);
 			}
-
-			child = (Element) child.getNextSibling();
-		}  
+			if (child.getNodeName().equals("refChildPattern")){
+				int decID = Integer.parseInt(data.substring(1));
+				subPatternsID.add(decID);
+			}
+		}
 	}
 
 	/**
@@ -972,4 +933,5 @@ public class PatternDecision extends RationaleElement{
 	public void setParentPattern(int parent){
 		parentPattern = parent;
 	}
+	
 }

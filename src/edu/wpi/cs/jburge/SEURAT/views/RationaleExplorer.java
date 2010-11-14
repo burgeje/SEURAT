@@ -96,7 +96,8 @@ import edu.wpi.cs.jburge.SEURAT.decorators.*;
 public class RationaleExplorer extends ViewPart implements ISelectionListener, IRationaleUpdateEventListener,
 	IPropertyChangeListener{
 	
-
+	//This is the handle for RationaleExplorer. Used in XML import.
+	private static RationaleExplorer exp;
 	
 	/**
 	 * The view into the tree of rationale
@@ -351,7 +352,8 @@ public class RationaleExplorer extends ViewPart implements ISelectionListener, I
 		
 		//get the initial selected value
 		selectionChanged(null, getViewSite().getWorkbenchWindow().getSelectionService().getSelection());
-	
+		
+		exp = this;
 	}
 	
 	/**
@@ -4011,5 +4013,14 @@ public class RationaleExplorer extends ViewPart implements ISelectionListener, I
 				arg.toDatabase(xNode.getRationaleID(), RationaleElementType.ALTERNATIVE);
 			}
 		}
+	}
+	
+	/**
+	 * Package visibility.
+	 * Get the handle for RationaleExplorer, usually used to refresh the tree for XML import.
+	 * @return
+	 */
+	static RationaleExplorer getHandle(){
+		return exp;
 	}
 }

@@ -13,6 +13,7 @@ import org.eclipse.swt.widgets.Display;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 import org.w3c.dom.Text;
 
 import SEURAT.events.RationaleUpdateEvent;
@@ -46,6 +47,20 @@ public class Pattern extends RationaleElement {
 	
 	public Vector<PatternDecision> subDecisions;
 	
+	// These are used for XML import/export
+	/**
+	 * XML variable
+	 */
+	private Vector<Integer> posOntID;
+	/**
+	 * XML variable
+	 */
+	private Vector<Integer> negOntID;
+	/**
+	 * XML variable
+	 */
+	private Vector<Integer> subDecID;
+	
 	private RationaleElementUpdateEventGenerator<Pattern> m_eventGenerator = 
 		new RationaleElementUpdateEventGenerator<Pattern>(this);
 		
@@ -63,7 +78,22 @@ public class Pattern extends RationaleElement {
 		example = "";
 		url = "";
 		subDecisions = new Vector<PatternDecision>();
+		posOntID = new Vector<Integer>();
+		negOntID = new Vector<Integer>();
+		subDecID = new Vector<Integer>();
 	} 
+	
+	public Iterator<Integer> iteratorPosOntID(){
+		return posOntID.iterator();
+	}
+	
+	public Iterator<Integer> iteratorNegOntID(){
+		return negOntID.iterator();
+	}
+	
+	public Iterator<Integer> iteratorSubDecID(){
+		return subDecID.iterator();
+	}
 	
 	public RationaleElementType getElementType(){
 		return RationaleElementType.PATTERN;
@@ -201,6 +231,7 @@ public class Pattern extends RationaleElement {
 	public void setUrl(String url) {
 		this.url = url;
 	}
+	
 	
 	public Element toXML(Document ratDoc){
 		Element patternE;
@@ -439,7 +470,7 @@ public class Pattern extends RationaleElement {
 					}
 					}
 				}
-				//TODO using id or name for patterndecisions and onts?
+				
 				findQuery = "SELECT * FROM patterndecisions WHERE parent = " + this.id;
 				rs = stmt.executeQuery(findQuery);
 				while (rs.next()){
@@ -526,8 +557,6 @@ public class Pattern extends RationaleElement {
 				l_updateEvent = m_eventGenerator.MakeUpdated();
 			}else{
 				//new pattern
-				//TODO only for creating new patterns under pattern library, so don't care about ontology entries and sub-decisions???
-				//TODO I doubt this code works. Have to re-implement this if we want to insert patterns (YQ)	
 				PreparedStatement ps = conn.prepareStatement("INSERT INTO patterns " +
 						"(name, type, description, problem, context, solution, implementation, example, url) " +
 						"VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?)");
@@ -572,83 +601,90 @@ public class Pattern extends RationaleElement {
 		}		
 	}
 	
+	/**
+	 * This method imports the pattern from XML to the database. Note that
+	 * the vectors posiOnts, negaOnts, subDecisions, and ontEntries are not set by
+	 * the end of this method.
+	 * <br>
+	 * <b>XML Import utility function is responsible for those vectors.</b>
+	 * @param patternE The pattern DOM elment
+	 */
 	public void fromXML(Element patternE)
 	{
 		this.fromXML = true;
 		
 		RationaleDB db = RationaleDB.getHandle();
 		
-		//add idref ***from the XML***
-		String idref = patternE.getAttribute("id");
+		String rid = patternE.getAttribute("rid");
+		id = Integer.parseInt(rid.substring(1));
 		
-		
-		//get our name
 		name = patternE.getAttribute("name");
 		
-//		get our type
-		type = PatternElementType.fromString(patternE.getAttribute("type"));
-
-		//get description
-		Node  childE = patternE.getFirstChild();
+		Node child = patternE.getFirstChild();
+		importHelper(child);
 		
-		//the text is actually the child of the element, odd...
-		//set description
-		Node descN = childE.getFirstChild();
-		if (descN instanceof Text) 
-		{
-			Text text = (Text) descN;
-			String data = text.getData();
-			setDescription(data);
+		Node nextNode = child.getNextSibling();
+		while (nextNode != null){
+			importHelper(nextNode);
+			nextNode = nextNode.getNextSibling();
 		}
-		
-		//set problem
-		childE = (Element) childE.getNextSibling();
-		Node probN = childE.getFirstChild();
-		if (probN instanceof Text) 
-		{
-			Text text = (Text) probN;
+			
+			//Because when we add it, we will violate the referential integrity constraint,
+			//we should not immediately add pattern decisions. (Missing data)
+			//Instead, we need RationaleDB to have a helper method and we will call it
+			//to insert incomplete information about this pattern.
+			
+			db.addPatternFromXML(this);
+	}
+	
+	/**
+	 * Because how inconvenient the XML element control is, I have to seperate it...
+	 * @param child
+	 */
+	private void importHelper(Node child){
+		if (child.getFirstChild() instanceof Text){
+			Text text = (Text) child.getFirstChild();
 			String data = text.getData();
-			setProblem(data);
-		}
-		
-		//set context
-		childE = (Element) childE.getNextSibling();
-		Node contN = childE.getFirstChild();
-		if (contN instanceof Text) 
-		{
-			Text text = (Text) contN;
-			String data = text.getData();
-			setContext(data);
-		}
-		
-		//set solution
-		childE = (Element) childE.getNextSibling();
-		Node soluN = childE.getFirstChild();
-		if (soluN instanceof Text) 
-		{
-			Text text = (Text) soluN;
-			String data = text.getData();
-			setSolution(data);
-		}
-		
-		//set implementation
-		childE = (Element) childE.getNextSibling();
-		Node impleN = childE.getFirstChild();
-		if (impleN instanceof Text) 
-		{
-			Text text = (Text) impleN;
-			String data = text.getData();
-			setImplementation(data);
-		}
-		
-		//set example
-		childE = (Element) childE.getNextSibling();
-		Node examN = childE.getFirstChild();
-		if (examN instanceof Text) 
-		{
-			Text text = (Text) examN;
-			String data = text.getData();
-			setExample(data);
+			if (child.getNodeName().equals("type")){
+				type = PatternElementType.fromString(data);
+			}
+			else if (child.getNodeName().equals("description")){
+				setDescription(data);
+			}
+			else if (child.getNodeName().equals("problem")){
+				problem = data;
+			}
+			else if (child.getNodeName().equals("context")){
+				context = data;
+			}
+			else if (child.getNodeName().equals("solution")){
+				solution = data;
+			}
+			else if (child.getNodeName().equals("implementation")){
+				implementation = data;
+			}
+			else if (child.getNodeName().equals("example")){
+				example = data;
+			}
+			else if (child.getNodeName().equals("url")){
+				url = data;
+			}
+			else if (child.getNodeName().equals("refCategory")){
+				int catID = Integer.parseInt(data.substring(1));
+				problemcategory = catID;
+			}
+			else if (child.getNodeName().equals("refOntPos")){
+				int ontID = Integer.parseInt(data.substring(1));
+				posOntID.add(ontID);
+			}
+			else if (child.getNodeName().equals("refOntNeg")){
+				int ontID = Integer.parseInt(data.substring(1));
+				negOntID.add(ontID);
+			}
+			else if (child.getNodeName().equals("refChildDecision")){
+				int decID = Integer.parseInt(data.substring(2));
+				subDecID.add(decID);
+			}
 		}
 	}
 	
