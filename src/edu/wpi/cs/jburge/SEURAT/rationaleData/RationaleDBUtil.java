@@ -10,6 +10,7 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Vector;
 import java.util.regex.Matcher;
@@ -225,13 +226,24 @@ public class RationaleDBUtil
 			}
 			//Need to keep track of pattern decisions from each patterns.
 			Vector<PatternDecision> patternDecisions = new Vector<PatternDecision>();
+			Vector<Integer> subDecIDs = new Vector<Integer>();
 			//Next, I should export the patterns
 			Iterator<edu.wpi.cs.jburge.SEURAT.rationaleData.Pattern> patterns = db.getPatternData().iterator();
 			while (patterns.hasNext()){
 				edu.wpi.cs.jburge.SEURAT.rationaleData.Pattern cur = patterns.next();
 				Element curE = cur.toXML(ratDoc);
 				patternLib.appendChild(curE);
-				patternDecisions.addAll(cur.getSubDecisions());
+				//patternDecisions.addAll(cur.getSubDecisions());
+				
+				//There might be duplicated entries, so only add those to XML if there's no duplication.
+				Iterator<PatternDecision> subDec = cur.getSubDecisions().iterator();
+				while (subDec.hasNext()){
+					PatternDecision dec = subDec.next();
+					if (!subDecIDs.contains((dec.getID()))){
+						patternDecisions.add(dec);
+						subDecIDs.add(dec.getID());
+					}
+				}
 			}
 
 			//Then, I need to export the pattern decisions
@@ -402,6 +414,7 @@ public class RationaleDBUtil
 	public static boolean importFromXML(String xmlFile){
 		DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 		Document ratDoc;
+		System.out.println("Import from XML has started...");
 		try{
 			DocumentBuilder builder = factory.newDocumentBuilder();
 			InputSource source = new InputSource(new InputStreamReader(new FileInputStream(new File(xmlFile))));
@@ -527,6 +540,7 @@ public class RationaleDBUtil
 		return false;
 	}
 
+	
 	/**
 	 * This method handles the importing of an argument ontology from XML.
 	 * The file to import from is hardcoded in the RationaleDB class but
@@ -535,6 +549,7 @@ public class RationaleDBUtil
 	 * 
 	 * @param ontFile - the filename to import the XML ontology from
 	 * @return boolean indicating success or failure
+	 * @deprecated This method is no longer in use. We should use importFromXML(String) method.
 	 */
 	public static boolean importArgumentOntology(String ontFile) {
 		DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
@@ -595,7 +610,6 @@ public class RationaleDBUtil
 		}
 		return false;
 	}
-
 
 
 	/**

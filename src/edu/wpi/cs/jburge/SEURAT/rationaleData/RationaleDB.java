@@ -2,6 +2,7 @@ package edu.wpi.cs.jburge.SEURAT.rationaleData;
 
 import java.util.*;
 import java.io.*; //needed to be serializable
+import java.net.URL;
 
 import javax.xml.transform.*;
 import org.w3c.dom.*;
@@ -14,6 +15,7 @@ import org.xml.sax.SAXException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.sql.SQLIntegrityConstraintViolationException;
 import java.sql.Statement;
 import java.sql.ResultSet;
 import java.sql.PreparedStatement;
@@ -115,12 +117,12 @@ public final class RationaleDB implements Serializable {
 	private OntEntry argumentOntology;
 
 	/**
-	 * The location of the XML argument ontology
+	 * The location of the XML import file for DB creation.
 	 */
-	private static String ontFile = SEURATPlugin.getDefault().getStateLocation()
-	.addTrailingSeparator().toOSString() + "argument-ontology.xml";
-	private static String patternFile = SEURATPlugin.getDefault().getStateLocation()
-	.addTrailingSeparator().toOSString() + "patterns.xml";
+	//private static String ratDBCreateFile = SEURATPlugin.getDefault().getStateLocation()
+	//.addTrailingSeparator().toOSString() + "ratDBCreate.xml";
+	private static String ratDBCreateFile = SEURATPlugin.getDefault().getBundle().getLocation() +
+	"ratDBCreate.xml";
 	/**
 	 * The default database name
 	 */
@@ -378,13 +380,16 @@ public final class RationaleDB implements Serializable {
 			}
 		}
 
-		// Now import the argument ontology, if the file exists
-		boolean importSuccess = false;
-		if (new File(ontFile).exists()){
-			importSuccess = RationaleDBUtil.importArgumentOntology(ontFile);
+
+
+		// Now import the pattern library
+		boolean importXMLSuccess = false;
+		if (new File(ratDBCreateFile.substring(ratDBCreateFile.indexOf('/'))).exists()){
+			String xmlFile = ratDBCreateFile.substring(ratDBCreateFile.indexOf('/'));
+			importXMLSuccess = RationaleDBUtil.importFromXML(xmlFile);
 		}
-		if (!importSuccess) {
-			// File doesn't exist or import failed for some reason, use the hardcoded ontology
+		if (!importXMLSuccess){		
+			// Import hard-coded data, first the ontology, then the pattern library...
 			String [] l_ontQueries = RationaleDBCreate.getOntologyQueries();
 			for (String l_ontQuery : l_ontQueries) {
 				try
@@ -398,18 +403,6 @@ public final class RationaleDB implements Serializable {
 					throw eError;
 				}
 			}
-		}
-
-
-		// Now import the pattern library
-		boolean importPatternSuccess = false;
-		if (new File(patternFile).exists()){
-			//TODO
-			// have not been implemented
-			//importPatternSuccess = RationaleDBUtil.importPatterns(patternFile);
-		}
-		if (!importPatternSuccess){		
-
 
 			PreparedStatement ps = conn.prepareStatement("INSERT INTO patterns (name, type, description,problem, context, solution, implementation,example,url) values (?,?,?,?,?,?,?,?,?)");
 			importPatterns(ps);
@@ -2538,7 +2531,6 @@ public final class RationaleDB implements Serializable {
 			//				patternList.addElement(element);
 			//			}
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}		
 		return patterns;
@@ -4005,7 +3997,7 @@ public final class RationaleDB implements Serializable {
 	 * @return the filename
 	 */
 	public static String getOntName() {
-		return ontFile;
+		return ratDBCreateFile;
 	}
 
 	/**
@@ -4372,6 +4364,7 @@ public final class RationaleDB implements Serializable {
 				pattern.getID() + ", " + ontID + ", 'NOT')";
 				stmt.execute(expr);
 			}
+			stmt.close();
 			
 			//connection with sub-decision must be done in utility after decision has been created...
 		} catch (SQLException e){
@@ -4400,9 +4393,12 @@ public final class RationaleDB implements Serializable {
 				expr = "INSERT INTO PATTERN_DECISION values (" + cpid + ", " + pd.getID() + ", 'Decision')";
 				stmt.execute(expr);
 			}
-		} catch (SQLException e){
+			stmt.close();
+		} catch (SQLIntegrityConstraintViolationException e){
+			 System.out.println("WARNING: Duplicated Entry. Skipping: " + pd.getName());
+		 } catch (SQLException e){
 			e.printStackTrace();
-		}
+		} 
 	}
 	
 	/**
@@ -4435,6 +4431,7 @@ public final class RationaleDB implements Serializable {
 			String expr = "INSERT INTO PATTERNPROBLEMCATEGORIES values (" +
 			new Integer(id).toString() + ", '" + category + "', '" + type + "')";
 			stmt.execute(expr);
+			stmt.close();
 		}
 		catch (SQLException e){
 			e.printStackTrace();
@@ -4467,6 +4464,7 @@ public final class RationaleDB implements Serializable {
 				content[2] = rs.getString(3);
 				toReturn.add(content);
 			}
+			stmt.close();
 		} catch (SQLException e){
 			e.printStackTrace();
 		}
@@ -4492,6 +4490,7 @@ public final class RationaleDB implements Serializable {
 				pattern.fromDatabase(id);
 				toReturn.add(pattern);
 			}
+			stmt.close();
 		} catch (SQLException e){
 			e.printStackTrace();
 		}

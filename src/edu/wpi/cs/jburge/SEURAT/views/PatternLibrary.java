@@ -563,6 +563,12 @@ IPropertyChangeListener {
 				
 				// Open the path that the user selected
 				String filePath = path.open();
+				
+				if (filePath == null){
+					showInformation("XML import was aborted by the user.");
+					return;
+				}
+				
 				if (RationaleDBUtil.importFromXML(filePath)){
 					showInformation("XML has been imported successfully.");
 				}
@@ -591,6 +597,11 @@ IPropertyChangeListener {
 				
 				// Open the path that the user selected
 				String filePath = path.open();
+				
+				if (filePath == null){
+					showInformation("XML Export was aborted by the user.");
+					return;
+				}
 				
 				if (RationaleDBUtil.exportToXML(filePath)){
 					showInformation("XML has been exported successfully.");
