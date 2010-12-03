@@ -27,6 +27,11 @@ import edu.wpi.cs.jburge.SEURAT.inference.AlternativePatternInferences;
 import edu.wpi.cs.jburge.SEURAT.rationaleData.*;
 import edu.wpi.cs.jburge.SEURAT.views.TreeParent;
 
+/**
+ * This class contains Wang's implementation of Generate Candidate Patterns
+ * @author wangw2
+ * @deprecated This class is no longer in use. Instead, we use GenerateCandidatePatternsComposite
+ */
 public class GenerateCandidatePatternsDisplay {
 
 	private Shell shell;

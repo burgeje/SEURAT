@@ -22,8 +22,6 @@ import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.FileDialog;
@@ -39,9 +37,6 @@ import org.eclipse.ui.part.ViewPart;
 import SEURAT.editors.*;
 
 import edu.wpi.cs.jburge.SEURAT.SEURATPlugin;
-import edu.wpi.cs.jburge.SEURAT.editors.SelectPattern;
-import edu.wpi.cs.jburge.SEURAT.editors.EditOntEntry;
-import edu.wpi.cs.jburge.SEURAT.editors.EditPattern;
 import edu.wpi.cs.jburge.SEURAT.editors.SelectCandidatePatterns;
 import edu.wpi.cs.jburge.SEURAT.editors.SelectOntEntry;
 import edu.wpi.cs.jburge.SEURAT.inference.UpdateManager;
@@ -59,7 +54,6 @@ import edu.wpi.cs.jburge.SEURAT.rationaleData.Designer;
 import edu.wpi.cs.jburge.SEURAT.rationaleData.OntEntry;
 import edu.wpi.cs.jburge.SEURAT.rationaleData.Pattern;
 import edu.wpi.cs.jburge.SEURAT.rationaleData.PatternDecision;
-import edu.wpi.cs.jburge.SEURAT.rationaleData.PatternElementType;
 import edu.wpi.cs.jburge.SEURAT.rationaleData.Question;
 import edu.wpi.cs.jburge.SEURAT.rationaleData.RationaleDB;
 import edu.wpi.cs.jburge.SEURAT.rationaleData.RationaleDBUtil;
@@ -68,7 +62,6 @@ import edu.wpi.cs.jburge.SEURAT.rationaleData.RationaleElementType;
 import edu.wpi.cs.jburge.SEURAT.rationaleData.RationaleStatus;
 import edu.wpi.cs.jburge.SEURAT.rationaleData.Requirement;
 import edu.wpi.cs.jburge.SEURAT.rationaleData.Tradeoff;
-import edu.wpi.cs.jburge.SEURAT.reports.GenerateCandidatePatternsDisplay;
 import edu.wpi.cs.jburge.SEURAT.tasks.RationaleTaskList;
 
 public class PatternLibrary extends ViewPart implements ISelectionListener, IRationaleUpdateEventListener,
@@ -92,7 +85,6 @@ IPropertyChangeListener {
 	private Action addPatternDecision;
 	private Action addCandidatePattern;
 	private Action showPatternDecisionEditor;
-	private Action attachCandidatePatterns;
 	private Action deletePattern;
 	private Action importXML;
 	private Action exportXML;
@@ -522,31 +514,6 @@ IPropertyChangeListener {
 		addPatternDecision.setText("Add Decision");
 		showPatternDecisionEditor = new OpenRationaleEditorAction(PatternDecisionEditor.class, this, false);
 
-		attachCandidatePatterns = new Action(){
-			public void run(){
-				ISelection selection = viewer.getSelection();
-				Object obj = ((IStructuredSelection)selection).getFirstElement();
-				Pattern toBeAttachedPattern = new Pattern();
-				toBeAttachedPattern.fromDatabase(obj.toString());
-
-				Vector<Pattern> candidates = new Vector<Pattern>();
-
-				PatternDecision pd = new PatternDecision();
-				pd.fromDatabase(((TreeParent)obj).getParent().getName());
-				Pattern parentPattern = new Pattern();
-				parentPattern.fromDatabase(pd.getParent());
-				Vector<PatternDecision> subdecisions = parentPattern.getSubDecisions();
-				for(PatternDecision patternD: subdecisions){
-					candidates.addAll(patternD.getCandidatePatterns());
-				}			
-
-				SelectPattern acp = new SelectPattern(candidates, ourDisplay);
-
-
-			}
-		};
-		attachCandidatePatterns.setText("Attach candidate pattern");
-		attachCandidatePatterns.setToolTipText("Attach candidate pattern");
 
 		importXML = new Action(){
 			public void run(){
@@ -631,7 +598,10 @@ IPropertyChangeListener {
 	}
 
 
-	// for context menu setup
+	/**
+	 * For context menu setup
+	 * @param manager
+	 */
 	private void fillContextMenu (IMenuManager manager) {
 		ISelection selection = viewer.getSelection();
 		Object obj = ((IStructuredSelection)selection).getFirstElement();
@@ -654,11 +624,6 @@ IPropertyChangeListener {
 				//manager.add(new Separator());
 				//manager.add(search);
 			} else if(ourElement.getType() == RationaleElementType.PATTERN){
-				if(ourElement.getParent().getType() == RationaleElementType.PATTERNDECISION){
-					manager.add(editElement);
-					manager.add(deleteElement);
-					manager.add(attachCandidatePatterns);
-				}else{
 					manager.add(editElement);
 					manager.add(deletePattern);
 					manager.add(addPosiOntEntry);
@@ -666,7 +631,6 @@ IPropertyChangeListener {
 					manager.add(addPatternDecision);
 					//manager.add(new Separator());
 					//manager.add(search);
-				}
 			} else if (ourElement.getType() == RationaleElementType.RATIONALE){
 				if (ourElement.getName().equals("Architectural Patterns") || 
 						ourElement.getName().equals("Design Patterns") || 

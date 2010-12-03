@@ -505,10 +505,18 @@ public final class RationaleDB implements Serializable {
 		return m_ontEntryFromDB;
 	}
 
+	/**
+	 * Accessor method. Retrieves the prepared statement for patterns
+	 * @return
+	 */
 	public PreparedStatement getStatement_PatternFromDB() {
 		return m_patternFromDB;
 	}
 
+	/**
+	 * Accessor method. Retrieves the prepared statement for pattern alternatives
+	 * @return
+	 */
 	public PreparedStatement getStatement_AltPatternFromDB() {
 		return m_altPatternFromDB;
 	}
@@ -4227,6 +4235,11 @@ public final class RationaleDB implements Serializable {
 		return (String) idRefs.get(inti);
 	}
 
+	/**
+	 * Used to get the XML reference string of a pattern
+	 * @param p
+	 * @return
+	 */
 	public String getRef(Pattern p){
 		Iterator keyIterator = xmlRefs[PATTERN_XML_INDEX].keySet().iterator();
 		while (keyIterator.hasNext()){
@@ -4236,6 +4249,11 @@ public final class RationaleDB implements Serializable {
 		return null;
 	}
 
+	/**
+	 * Used to get the XML reference string of a pattern deicison
+	 * @param d
+	 * @return
+	 */
 	public String getRef(PatternDecision d){
 		Iterator keyIterator = xmlRefs[PATTERNDECISION_XML_INDEX].keySet().iterator();
 		while (keyIterator.hasNext()){
@@ -4245,6 +4263,13 @@ public final class RationaleDB implements Serializable {
 		return null;
 	}
 
+/**
+ * Used to get the XML reference string of a problem category
+ * @param id
+ * @param problem
+ * @param type
+ * @return
+ */
 	public String getRef(String id, String problem, String type){
 		Iterator keyIterator = xmlRefs[PATTERNPROBLEMCATEGORY_XML_INDEX].keySet().iterator();
 		while (keyIterator.hasNext()){
@@ -4498,31 +4523,11 @@ public final class RationaleDB implements Serializable {
 		return toReturn;
 	}
 
-	/* The following method does not appear to be used anywhere - why wouldn't
-	 * we need to do this???
-	 private void addXMLBackgroundKN(Document ratDoc, Element rationale)
-	 {
-	 System.out.println("adding background knowledge (if any)");
-	 Element knParent = ratDoc.createElement("DR:backgroundKn");
-	 rationale.appendChild(knParent);
-	 Enumeration trades = tradeoffs.elements();
-	 while (trades.hasMoreElements())
-	 {
-	 Tradeoff trade = (Tradeoff) trades.nextElement();
-	 }
-	 Enumeration occurences = co_occurences.elements();
-	 while (occurences.hasMoreElements())
-	 {
-	 Tradeoff trade = (Tradeoff) occurences.nextElement();
-	 }
-	 System.out.println("done adding background knowledge");
-	 }
-	 */
-
 	/**
 	 * What appears to be happening with the XML is that the rationale elements
 	 * are read from the file and stored into vectors. Then, this method is called
 	 * to put the elements actually INTO the database.
+	 * @deprecated not using it right now
 	 */
 	//	private void addXMLRequirements(Document ratDoc)
 	private void addXMLRequirements()
@@ -4536,7 +4541,10 @@ public final class RationaleDB implements Serializable {
 	}
 
 
-
+	/**
+	 * This method is called when adding XML decisions
+	 * @deprecated Not using it right now
+	 */
 	private void addXMLDecisions()
 	{
 
@@ -4551,6 +4559,11 @@ public final class RationaleDB implements Serializable {
 	}
 
 
+	/**
+	 * This method contains the hard-coded insertion of patterns.
+	 * Used when XML is not there.
+	 * @param ps
+	 */
 	private void importPatterns(PreparedStatement ps){
 		try{
 			ps.setString(1, "Three-layer");
@@ -5102,12 +5115,5 @@ public final class RationaleDB implements Serializable {
 		}
 		return dependent;
 	}
-	/*
-	 public static void  main (String [] argv)
-	 {
-	 RationaleDB d = RationaleDB.getHandle();
-	 Vector reqs = d.getRequirements(null, null);
-
-	 } */
 
 }

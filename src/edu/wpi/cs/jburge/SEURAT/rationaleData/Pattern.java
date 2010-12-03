@@ -21,10 +21,21 @@ import SEURAT.events.RationaleElementUpdateEventGenerator;
 
 import edu.wpi.cs.jburge.SEURAT.editors.EditPattern;
 
+/**
+ * This class is used to define a instance of Pattern in SEURAT.
+ * @author yechen
+ *
+ */
 public class Pattern extends RationaleElement {
 	
+	/**
+	 * The pattern type. For example, architecture, design, idiom
+	 */
 	PatternElementType type;
 	
+	/**
+	 * The id of the problem category this is associating with
+	 */
 	private int problemcategory;
 	
 	String problem;
@@ -39,25 +50,34 @@ public class Pattern extends RationaleElement {
 	
 	String url;
 	
+	/**
+	 * A vector containing all associated positive ontology entries
+	 */
 	public Vector<OntEntry> posiOnts;
 	
+	/**
+	 * A vector containing all associated negative ontology entries.
+	 */
 	public Vector<OntEntry> negaOnts;
 	
 	public Vector<OntEntry> ontEntries;
 	
+	/**
+	 * A vector containing all pattern decisions of the pattern.
+	 */
 	public Vector<PatternDecision> subDecisions;
 	
 	// These are used for XML import/export
 	/**
-	 * XML variable
+	 * XML variable, no use outside this context
 	 */
 	private Vector<Integer> posOntID;
 	/**
-	 * XML variable
+	 * XML variable, no use outside this context
 	 */
 	private Vector<Integer> negOntID;
 	/**
-	 * XML variable
+	 * XML variable, no use outside this context
 	 */
 	private Vector<Integer> subDecID;
 	
@@ -232,7 +252,12 @@ public class Pattern extends RationaleElement {
 		this.url = url;
 	}
 	
-	
+	/**
+	 * This is a method that will export this single Pattern to an XML.
+	 * It MUST be called by a XML exporter, as it does not have the header of the XML.
+	 * @param ratDoc
+	 * @return the SAX representation of the object.
+	 */
 	public Element toXML(Document ratDoc){
 		Element patternE;
 		RationaleDB db = RationaleDB.getHandle();

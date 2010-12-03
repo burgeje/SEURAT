@@ -273,6 +273,12 @@ ITreeContentProvider{
 		}	
 	}
 	
+	/**
+	 * This method adds ontology entries to the pattern library
+	 * @param parent
+	 * @param parentName
+	 * @param isPositive
+	 */
 	private void addOntEntries(TreeParent parent, String parentName, boolean isPositive)
 	{
 		RationaleDB d = RationaleDB.getHandle();
@@ -288,6 +294,12 @@ ITreeContentProvider{
 		}
 	}
 	
+	/**
+	 * This method adds sub-decisions to the pattern library.
+	 * @param parent
+	 * @param parentName
+	 * @param grandParentName
+	 */
 	private void addSubDecisions(TreeParent parent, String parentName, String grandParentName){
 		RationaleDB d = RationaleDB.getHandle();
 		Vector subDecisions = d.getPatternDecisions(parentName, grandParentName);
@@ -303,6 +315,11 @@ ITreeContentProvider{
 		}
 	}
 	
+	/**
+	 * This method helps to add candidate patterns to pattern library
+	 * @param parent
+	 * @param parentName
+	 */
 	private void addCandidatePatterns(TreeParent parent, String parentName){
 		RationaleDB d = RationaleDB.getHandle();
 		PatternDecision parentPatternDecision = new PatternDecision();
@@ -316,6 +333,12 @@ ITreeContentProvider{
 		}
 	}
 	
+	/**
+	 * @deprecated Not used
+	 * @param parent
+	 * @param parentName
+	 * @param parentType
+	 */
 	private void addDecisions(TreeParent parent, String parentName, RationaleElementType parentType)
 	{
 		RationaleDB d = RationaleDB.getHandle();
@@ -343,6 +366,12 @@ ITreeContentProvider{
 		}			
 	}
 	
+	/**
+	 * This method adds design patterns to the pattern library.
+	 * @param parent
+	 * @param parentName
+	 * @param parentType
+	 */
 	private void addDesignPatterns(TreeParent parent, String parentName, RationaleElementType parentType){
 		
 		RationaleDB d = RationaleDB.getHandle();
@@ -370,6 +399,12 @@ ITreeContentProvider{
 		}		
 	}
 	
+	/**
+	 * This method adds idiom patterns to pattern library.
+	 * @param parent
+	 * @param parentName
+	 * @param parentType
+	 */
 	private void addIdioms(TreeParent parent, String parentName, RationaleElementType parentType){
 		
 		RationaleDB d = RationaleDB.getHandle();

@@ -34,7 +34,7 @@ import edu.wpi.cs.jburge.SEURAT.views.UpdateType;
 /**
  * WARNING: This class is depreciated. We are using workbench editor instead.
  * @author wang2
- *
+ * @deprecated
  */
 public class EditPattern extends NewRationaleElementGUI implements Serializable{
 

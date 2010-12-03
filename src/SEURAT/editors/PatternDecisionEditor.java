@@ -42,9 +42,7 @@ import edu.wpi.cs.jburge.SEURAT.views.TreeParent;
 
 /**
  * Displays the editor for a decision in pattern library.
- */
-/**
- * @author wangw2
+ * @author qiaoy, wangw2
  *
  */
 public class PatternDecisionEditor extends RationaleEditorBase {
