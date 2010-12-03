@@ -14,4 +14,7 @@
    <topic label="Reference">
       <anchor id="reference"/>
    </topic>
+   <topic label="SEURAT Architecture">
+      <anchor id="architecture"/>
+   </topic>
 </toc>

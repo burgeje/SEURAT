@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<toc label="Architecture" link_to="toc.xml#architecture">
+   <topic href="html/architecture/index.htm" label="Overview">
+   </topic>
+   <topic href="html/architecture/upgrade.htm" label="Database Upgrade Instructions">
+   </topic>
+   <topic label="Pattern Library">
+      <topic href="html/architecture/patternLibrary/index.htm" label="Overview">
+      </topic>
+      <topic label="User Interface in Pattern Library">
+      </topic>
+      <topic label="Patterns">
+      </topic>
+      <topic label="Sub-decisions">
+      </topic>
+      <topic label="Ontology">
+      </topic>
+      <topic label="Candidate Patterns">
+      </topic>
+   </topic>
+   <topic label="XML Import/Export">
+      <topic label="Features of XML Import/Export">
+      </topic>
+      <topic label="XML Import">
+      </topic>
+      <topic label="XML Export">
+      </topic>
+   </topic>
+   <topic label="Architecture with Rationale Explorer">
+      <topic label="Create a new architecture project">
+      </topic>
+      <topic label="Generate Candidate Patterns">
+      </topic>
+   </topic>
+</toc>
