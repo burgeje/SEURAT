@@ -389,6 +389,9 @@ public final class RationaleDB implements Serializable {
 			importXMLSuccess = RationaleDBUtil.importFromXML(xmlFile);
 		}
 		if (!importXMLSuccess){		
+			System.err.println("Unable fo find " + ratDBCreateFile);
+			System.err.println("Loading from hard-coded defaults");
+			RationaleDBCreate.resetCurrentID();
 			// Import hard-coded data, first the ontology, then the pattern library...
 			String [] l_ontQueries = RationaleDBCreate.getOntologyQueries();
 			for (String l_ontQuery : l_ontQueries) {
@@ -400,28 +403,31 @@ public final class RationaleDB implements Serializable {
 				{
 					int i = 0;
 					i++;
+					System.out.println("DEBUG OntEntry: " + eError.getMessage());
+					eError.printStackTrace();
 					throw eError;
 				}
 			}
-
+			
+			RationaleDBCreate.resetCurrentID();
 			PreparedStatement ps = conn.prepareStatement("INSERT INTO patterns (name, type, description,problem, context, solution, implementation,example,url,id) values (?,?,?,?,?,?,?,?,?,?)");
 			importPatterns(ps);
 			ps.close();
 
-
+			RationaleDBCreate.resetCurrentID();
 			String[] l_patternDecisionQueries = RationaleDBCreate.getPatternDecisionQueries();
 			for (String l_patternDecisionQuery: l_patternDecisionQueries){
 				try {
-					System.out.println("Creating Pattern Decisions");
 					l_stmt.execute(l_patternDecisionQuery);
 				} catch (SQLException e) {
 					int i = 0;
 					i++;
-					System.err.println("Pattern decision creation has failed.");
+					System.err.println("Debug PatternDecision: " + e.getMessage());
 					throw e;
 				}				
 			}
 
+			RationaleDBCreate.resetCurrentID();
 			String[] l_patternOntEntryQueries = RationaleDBCreate.getPatternOntEntryQueries();
 			for (String l_patternOntEntryQuery: l_patternOntEntryQueries){
 				try {
@@ -429,10 +435,12 @@ public final class RationaleDB implements Serializable {
 				} catch (SQLException e) {
 					int i = 0;
 					i++;
+					System.err.println("Debug PatternOntEntry: " + e.getMessage());
 					throw e;
 				}				
 			}
 
+			RationaleDBCreate.resetCurrentID();
 			String[] l_patternDecisionRelationshipQueries = RationaleDBCreate.getPatternDecisionRelationShipQueries();
 			for (String l_patternDecisionRelationshipQuery: l_patternDecisionRelationshipQueries){
 				try {
@@ -444,6 +452,7 @@ public final class RationaleDB implements Serializable {
 				}				
 			}
 
+			RationaleDBCreate.resetCurrentID();
 			String[] l_patternProblemCategoriesQueries = RationaleDBCreate.getPatternProblemCategoriesQueries();
 			for (String l_patternProblemCategoryQuery: l_patternProblemCategoriesQueries){
 				try {
@@ -455,6 +464,7 @@ public final class RationaleDB implements Serializable {
 				}				
 			}
 
+			RationaleDBCreate.resetCurrentID();
 			String[] l_patternProblemCategoryQueries = RationaleDBCreate.getPatternProblemCategoryQueries();
 			for (String l_pattern_problemCategoryQuery: l_patternProblemCategoryQueries){
 				try {
@@ -4565,9 +4575,7 @@ public final class RationaleDB implements Serializable {
 	 * @param ps
 	 */
 	private void importPatterns(PreparedStatement ps){
-		int id;
 		try{
-			
 			ps.setString(1, "Three-layer");
 			ps.setString(2, "Architecture");
 			ps.setBytes(3, (new String("The system is organized into three primary layers: Presentation, Domain, and Data Source.")).getBytes());
@@ -4577,7 +4585,7 @@ public final class RationaleDB implements Serializable {
 			ps.setBytes(7, (new String("")).getBytes());
 			ps.setBytes(8, (new String("The three-layer architecture offers significant advantages even for relatively small applications. For instance, the single-user PC application First Account from the Norwegiancompany Economica encapsulates most of the accounting and invoicing functionality in adynamic link library (DLL), which in turn works against a local, flat-file database. This separationenabled the developers with knowledge of accounting and object-oriented design to dedicatethemselves to the central functionality, and user interface designers with little or no knowledge ofprogramming to fully control their part of the application.")).getBytes());
 			ps.setString(9, "http://msdn.microsoft.com/en-us/library/ms978689.aspx");
-			ps.setInt(10, findAvailableID("patterns"));
+			ps.setInt(10, RationaleDBCreate.pushCurrentID());
 			ps.executeUpdate();
 
 			ps.setString(1, "Layers");
@@ -4589,7 +4597,7 @@ public final class RationaleDB implements Serializable {
 			ps.setBytes(7, (new String("")).getBytes());
 			ps.setBytes(8, (new String("")).getBytes());
 			ps.setString(9, "http://vico.org/pages/PatronsDisseny/Pattern%20Layers/");
-			ps.setInt(10, findAvailableID("patterns"));
+			ps.setInt(10, RationaleDBCreate.pushCurrentID());
 			ps.executeUpdate();
 
 			ps.setString(1, "Pipes and Filters");
@@ -4601,7 +4609,7 @@ public final class RationaleDB implements Serializable {
 			ps.setBytes(7, (new String("")).getBytes());
 			ps.setBytes(8, (new String("")).getBytes());
 			ps.setString(9, "http://msdn.microsoft.com/en-us/library/ms978599.aspx");
-			ps.setInt(10, findAvailableID("patterns"));
+			ps.setInt(10, RationaleDBCreate.pushCurrentID());
 			ps.executeUpdate();
 
 			ps.setString(1, "Blackboard");
@@ -4613,7 +4621,7 @@ public final class RationaleDB implements Serializable {
 			ps.setBytes(7, (new String("")).getBytes());
 			ps.setBytes(8, (new String("")).getBytes());
 			ps.setString(9, "http://www.vico.org/pages/PatronsDisseny/Pattern%20Blackboard/");
-			ps.setInt(10, findAvailableID("patterns"));
+			ps.setInt(10, RationaleDBCreate.pushCurrentID());
 			ps.executeUpdate();
 
 			ps.setString(1, "Model-View-Controller");
@@ -4625,7 +4633,7 @@ public final class RationaleDB implements Serializable {
 			ps.setBytes(7, (new String("")).getBytes());
 			ps.setBytes(8, (new String("")).getBytes());
 			ps.setString(9, "http://msdn.microsoft.com/en-us/library/ms978748.aspx");
-			ps.setInt(10, findAvailableID("patterns"));
+			ps.setInt(10, RationaleDBCreate.pushCurrentID());
 			ps.executeUpdate();
 
 			ps.setString(1, "Broker");
@@ -4637,7 +4645,7 @@ public final class RationaleDB implements Serializable {
 			ps.setBytes(7, (new String("")).getBytes());
 			ps.setBytes(8, (new String("")).getBytes());
 			ps.setString(9, "http://msdn.microsoft.com/en-us/library/ms978706.aspx");
-			ps.setInt(10, findAvailableID("patterns"));
+			ps.setInt(10, RationaleDBCreate.pushCurrentID());
 			ps.executeUpdate();
 
 			ps.setString(1, "Presentation-Abstraction-Control");
@@ -4649,7 +4657,7 @@ public final class RationaleDB implements Serializable {
 			ps.setBytes(7, (new String("")).getBytes());
 			ps.setBytes(8, (new String("")).getBytes());
 			ps.setString(9, "http://vico.org/pages/PatronsDisseny/Pattern%20Presentation%20Abstra/");
-			ps.setInt(10, findAvailableID("patterns"));
+			ps.setInt(10, RationaleDBCreate.pushCurrentID());
 			ps.executeUpdate();
 
 			ps.setString(1, "Microkernel");
@@ -4661,7 +4669,7 @@ public final class RationaleDB implements Serializable {
 			ps.setBytes(7, (new String("")).getBytes());
 			ps.setBytes(8, (new String("")).getBytes());
 			ps.setString(9, "http://www.vico.org/pages/PatronsDisseny/Pattern%20MicroKernel/");
-			ps.setInt(10, findAvailableID("patterns"));
+			ps.setInt(10, RationaleDBCreate.pushCurrentID());
 			ps.executeUpdate();
 
 			ps.setString(1, "Reflection");
@@ -4673,7 +4681,7 @@ public final class RationaleDB implements Serializable {
 			ps.setBytes(7, (new String("")).getBytes());
 			ps.setBytes(8, (new String("")).getBytes());
 			ps.setString(9, "http://vico.org/pages/PatronsDisseny/Pattern%20Reflection/");
-			ps.setInt(10, findAvailableID("patterns"));
+			ps.setInt(10, RationaleDBCreate.pushCurrentID());
 			ps.executeUpdate();
 
 			ps.setString(1, "Whole-Part");
@@ -4685,7 +4693,7 @@ public final class RationaleDB implements Serializable {
 			ps.setBytes(7, (new String("")).getBytes());
 			ps.setBytes(8, (new String("")).getBytes());
 			ps.setString(9, "http://www.vico.org/pages/PatronsDisseny/Pattern%20Whole%20Part/index.html");
-			ps.setInt(10, findAvailableID("patterns"));
+			ps.setInt(10, RationaleDBCreate.pushCurrentID());
 			ps.executeUpdate();
 
 			ps.setString(1, "Master-Slave");
@@ -4697,7 +4705,7 @@ public final class RationaleDB implements Serializable {
 			ps.setBytes(7, (new String("")).getBytes());
 			ps.setBytes(8, (new String("")).getBytes());
 			ps.setString(9, "http://www.vico.org/pages/PatronsDisseny/Pattern%20Master%20Slave/");
-			ps.setInt(10, findAvailableID("patterns"));
+			ps.setInt(10, RationaleDBCreate.pushCurrentID());
 			ps.executeUpdate();
 
 			ps.setString(1, "Proxy");
@@ -4709,7 +4717,7 @@ public final class RationaleDB implements Serializable {
 			ps.setBytes(7, (new String("")).getBytes());
 			ps.setBytes(8, (new String("")).getBytes());
 			ps.setString(9, "http://www.vico.org/pages/PatronsDisseny/Pattern%20Broker/");
-			ps.setInt(10, findAvailableID("patterns"));
+			ps.setInt(10, RationaleDBCreate.pushCurrentID());
 			ps.executeUpdate();
 
 			ps.setString(1, "Command Processor");
@@ -4721,7 +4729,7 @@ public final class RationaleDB implements Serializable {
 			ps.setBytes(7, (new String("")).getBytes());
 			ps.setBytes(8, (new String("")).getBytes());
 			ps.setString(9, "http://www.vico.org/pages/PatronsDisseny/Pattern%20Command%20Processor/index.html");
-			ps.setInt(10, findAvailableID("patterns"));
+			ps.setInt(10, RationaleDBCreate.pushCurrentID());
 			ps.executeUpdate();
 
 			ps.setString(1, "View Handler");
@@ -4733,7 +4741,7 @@ public final class RationaleDB implements Serializable {
 			ps.setBytes(7, (new String("")).getBytes());
 			ps.setBytes(8, (new String("")).getBytes());
 			ps.setString(9, "http://vico.org/pages/PatronsDisseny/Pattern%20View%20Handler/");
-			ps.setInt(10, findAvailableID("patterns"));
+			ps.setInt(10, RationaleDBCreate.pushCurrentID());
 			ps.executeUpdate();
 
 			ps.setString(1, "Forward-Receiver");
@@ -4745,7 +4753,7 @@ public final class RationaleDB implements Serializable {
 			ps.setBytes(7, (new String("")).getBytes());
 			ps.setBytes(8, (new String("")).getBytes());
 			ps.setString(9, "http://vico.org/pages/PatronsDisseny/Pattern%20Forward-Receiver/");
-			ps.setInt(10, findAvailableID("patterns"));
+			ps.setInt(10, RationaleDBCreate.pushCurrentID());
 			ps.executeUpdate();
 
 			ps.setString(1, "Client-Dispatcher-Server");
@@ -4757,7 +4765,7 @@ public final class RationaleDB implements Serializable {
 			ps.setBytes(7, (new String("")).getBytes());
 			ps.setBytes(8, (new String("")).getBytes());
 			ps.setString(9, "http://vico.org/pages/PatronsDisseny/Pattern%20ClientDispatcherServer/");
-			ps.setInt(10, findAvailableID("patterns"));
+			ps.setInt(10, RationaleDBCreate.pushCurrentID());
 			ps.executeUpdate();
 
 			ps.setString(1, "Publisher-Subscriber");
@@ -4769,7 +4777,7 @@ public final class RationaleDB implements Serializable {
 			ps.setBytes(7, (new String("")).getBytes());
 			ps.setBytes(8, (new String("")).getBytes());
 			ps.setString(9, "http://vico.org/pages/PatronsDisseny/Pattern%20Publisher%20Subscriber/");
-			ps.setInt(10, findAvailableID("patterns"));
+			ps.setInt(10, RationaleDBCreate.pushCurrentID());
 			ps.executeUpdate();
 
 			ps.setString(1, "Strategy");
@@ -4781,7 +4789,7 @@ public final class RationaleDB implements Serializable {
 			ps.setBytes(7, (new String("")).getBytes());
 			ps.setBytes(8, (new String("")).getBytes());
 			ps.setString(9, "http://vico.org/pages/PatronsDisseny/Pattern%20Strategy/");
-			ps.setInt(10, findAvailableID("patterns"));
+			ps.setInt(10, RationaleDBCreate.pushCurrentID());
 			ps.executeUpdate();
 
 			ps.setString(1, "Factory");
@@ -4793,7 +4801,7 @@ public final class RationaleDB implements Serializable {
 			ps.setBytes(7, (new String("")).getBytes());
 			ps.setBytes(8, (new String("")).getBytes());
 			ps.setString(9, "http://vico.org/pages/PatronsDisseny/Pattern%20Factory%20Method/");
-			ps.setInt(10, findAvailableID("patterns"));
+			ps.setInt(10, RationaleDBCreate.pushCurrentID());
 			ps.executeUpdate();
 
 			ps.setString(1, "Decorator");
@@ -4805,7 +4813,7 @@ public final class RationaleDB implements Serializable {
 			ps.setBytes(7, (new String("")).getBytes());
 			ps.setBytes(8, (new String("")).getBytes());
 			ps.setString(9, "http://vico.org/pages/PatronsDisseny/Pattern%20Decorator/");
-			ps.setInt(10, findAvailableID("patterns"));
+			ps.setInt(10, RationaleDBCreate.pushCurrentID());
 			ps.executeUpdate();
 
 			ps.setString(1, "Composite");
@@ -4817,7 +4825,7 @@ public final class RationaleDB implements Serializable {
 			ps.setBytes(7, (new String("")).getBytes());
 			ps.setBytes(8, (new String("")).getBytes());
 			ps.setString(9, "http://vico.org/pages/PatronsDisseny/Pattern%20Composite/");
-			ps.setInt(10, findAvailableID("patterns"));
+			ps.setInt(10, RationaleDBCreate.pushCurrentID());
 			ps.executeUpdate();
 
 			ps.setString(1, "Template Method");
@@ -4829,7 +4837,7 @@ public final class RationaleDB implements Serializable {
 			ps.setBytes(7, (new String("")).getBytes());
 			ps.setBytes(8, (new String("")).getBytes());
 			ps.setString(9, "http://vico.org/pages/PatronsDisseny/Pattern%20Template%20Method/");
-			ps.setInt(10, findAvailableID("patterns"));
+			ps.setInt(10, RationaleDBCreate.pushCurrentID());
 			ps.executeUpdate();
 
 			ps.setString(1, "Command");
@@ -4841,7 +4849,7 @@ public final class RationaleDB implements Serializable {
 			ps.setBytes(7, (new String("")).getBytes());
 			ps.setBytes(8, (new String("")).getBytes());
 			ps.setString(9, "http://vico.org/pages/PatronsDisseny/Pattern%20Command/");
-			ps.setInt(10, findAvailableID("patterns"));
+			ps.setInt(10, RationaleDBCreate.pushCurrentID());
 			ps.executeUpdate();
 
 			ps.setString(1, "Chain of Responsibility");
@@ -4853,7 +4861,7 @@ public final class RationaleDB implements Serializable {
 			ps.setBytes(7, (new String("")).getBytes());
 			ps.setBytes(8, (new String("")).getBytes());
 			ps.setString(9, "http://vico.org/pages/PatronsDisseny/Pattern%20Chain%20of%20Responsability/");
-			ps.setInt(10, findAvailableID("patterns"));
+			ps.setInt(10, RationaleDBCreate.pushCurrentID());
 			ps.executeUpdate();
 
 			ps.setString(1, "Facade");
@@ -4865,7 +4873,7 @@ public final class RationaleDB implements Serializable {
 			ps.setBytes(7, (new String("")).getBytes());
 			ps.setBytes(8, (new String("")).getBytes());
 			ps.setString(9, "http://vico.org/pages/PatronsDisseny/Pattern%20Facade/");
-			ps.setInt(10, findAvailableID("patterns"));
+			ps.setInt(10, RationaleDBCreate.pushCurrentID());
 			ps.executeUpdate();
 
 			ps.setString(1, "Transaction Script");
@@ -4877,7 +4885,7 @@ public final class RationaleDB implements Serializable {
 			ps.setBytes(7, (new String("")).getBytes());
 			ps.setBytes(8, (new String("")).getBytes());
 			ps.setString(9, "EAA Book Online");
-			ps.setInt(10, findAvailableID("patterns"));
+			ps.setInt(10, RationaleDBCreate.pushCurrentID());
 			ps.executeUpdate();
 
 			ps.setString(1, "Domain Model");
@@ -4889,7 +4897,7 @@ public final class RationaleDB implements Serializable {
 			ps.setBytes(7, (new String("")).getBytes());
 			ps.setBytes(8, (new String("")).getBytes());
 			ps.setString(9, "EAA Book Online");
-			ps.setInt(10, findAvailableID("patterns"));
+			ps.setInt(10, RationaleDBCreate.pushCurrentID());
 			ps.executeUpdate();
 
 			ps.setString(1, "Table Module");
@@ -4901,7 +4909,7 @@ public final class RationaleDB implements Serializable {
 			ps.setBytes(7, (new String("")).getBytes());
 			ps.setBytes(8, (new String("")).getBytes());
 			ps.setString(9, "EAA Book Online");
-			ps.setInt(10, findAvailableID("patterns"));
+			ps.setInt(10, RationaleDBCreate.pushCurrentID());
 			ps.executeUpdate();
 
 			ps.setString(1, "Gateway");
@@ -4913,7 +4921,7 @@ public final class RationaleDB implements Serializable {
 			ps.setBytes(7, (new String("")).getBytes());
 			ps.setBytes(8, (new String("")).getBytes());
 			ps.setString(9, "EAA Book Online");
-			ps.setInt(10, findAvailableID("patterns"));
+			ps.setInt(10, RationaleDBCreate.pushCurrentID());
 			ps.executeUpdate();
 
 			ps.setString(1, "Row Data Gateway");
@@ -4925,7 +4933,7 @@ public final class RationaleDB implements Serializable {
 			ps.setBytes(7, (new String("")).getBytes());
 			ps.setBytes(8, (new String("")).getBytes());
 			ps.setString(9, "EAA Book Online");
-			ps.setInt(10, findAvailableID("patterns"));
+			ps.setInt(10, RationaleDBCreate.pushCurrentID());
 			ps.executeUpdate();
 
 			ps.setString(1, "Active Record");
@@ -4937,7 +4945,7 @@ public final class RationaleDB implements Serializable {
 			ps.setBytes(7, (new String("The essence of an Active Record is a Domain Model in which the classes match very closely the record structure of an underlying database. Each Active Record is responsible for saving and loading to the database and also for any domain logic that acts on the data. This may be all the domain logic in the application, or you may find that some domain logic is held in Transaction Scripts with common and data-oriented code in the Active Record.")).getBytes());
 			ps.setBytes(8, (new String("")).getBytes());
 			ps.setString(9, "EAA Book Online");
-			ps.setInt(10, findAvailableID("patterns"));
+			ps.setInt(10, RationaleDBCreate.pushCurrentID());
 			ps.executeUpdate();
 
 			ps.setString(1, "Table Data Gateway");
@@ -4949,7 +4957,7 @@ public final class RationaleDB implements Serializable {
 			ps.setBytes(7, (new String("A Row Data Gateway acts as an object that exactly mimics a single record, such as one database row. In it each column in the database becomes one field. The Row Data Gateway will usually do any type conversion from the data source types to the in-memory types, but this conversion is pretty simple. This pattern holds the data about a row so that a client can then access the Row")).getBytes());
 			ps.setBytes(8, (new String("")).getBytes());
 			ps.setString(9, "EAA Book Online");
-			ps.setInt(10, findAvailableID("patterns"));
+			ps.setInt(10, RationaleDBCreate.pushCurrentID());
 			ps.executeUpdate();
 
 			ps.setString(1, "Application Controller");
@@ -4961,7 +4969,7 @@ public final class RationaleDB implements Serializable {
 			ps.setBytes(7, (new String("")).getBytes());
 			ps.setBytes(8, (new String("")).getBytes());
 			ps.setString(9, "EAA Book Online");
-			ps.setInt(10, findAvailableID("patterns"));
+			ps.setInt(10, RationaleDBCreate.pushCurrentID());
 			ps.executeUpdate();
 
 			ps.setString(1, "Transform View");
@@ -4973,7 +4981,7 @@ public final class RationaleDB implements Serializable {
 			ps.setBytes(7, (new String("")).getBytes());
 			ps.setBytes(8, (new String("")).getBytes());
 			ps.setString(9, "EAA Book Online");
-			ps.setInt(10, findAvailableID("patterns"));
+			ps.setInt(10, RationaleDBCreate.pushCurrentID());
 			ps.executeUpdate();
 
 			ps.setString(1, "Template View");
@@ -4985,7 +4993,7 @@ public final class RationaleDB implements Serializable {
 			ps.setBytes(7, (new String("")).getBytes());
 			ps.setBytes(8, (new String("")).getBytes());
 			ps.setString(9, "EAA Book Online");
-			ps.setInt(10, findAvailableID("patterns"));
+			ps.setInt(10, RationaleDBCreate.pushCurrentID());
 			ps.executeUpdate();
 
 			ps.setString(1, "Two Step View");
@@ -4997,7 +5005,7 @@ public final class RationaleDB implements Serializable {
 			ps.setBytes(7, (new String("")).getBytes());
 			ps.setBytes(8, (new String("")).getBytes());
 			ps.setString(9, "EAA Book Online");
-			ps.setInt(10, findAvailableID("patterns"));
+			ps.setInt(10, RationaleDBCreate.pushCurrentID());
 			ps.executeUpdate();
 
 			ps.setString(1, "Bridge");
@@ -5009,7 +5017,7 @@ public final class RationaleDB implements Serializable {
 			ps.setBytes(7, (new String("")).getBytes());
 			ps.setBytes(8, (new String("")).getBytes());
 			ps.setString(9, "http://vico.org/pages/PatronsDisseny/Pattern%20Bridge/");
-			ps.setInt(10, findAvailableID("patterns"));
+			ps.setInt(10, RationaleDBCreate.pushCurrentID());
 			ps.executeUpdate();
 
 			ps.setString(1, "Data Mappter");
@@ -5021,7 +5029,7 @@ public final class RationaleDB implements Serializable {
 			ps.setBytes(7, (new String("")).getBytes());
 			ps.setBytes(8, (new String("")).getBytes());
 			ps.setString(9, "http://vico.org/pages/PatronsDisseny/Pattern%20Bridge/");
-			ps.setInt(10, findAvailableID("patterns"));
+			ps.setInt(10, RationaleDBCreate.pushCurrentID());
 			ps.executeUpdate();
 
 			ps.setString(1, "Counted Pointer");
@@ -5033,7 +5041,7 @@ public final class RationaleDB implements Serializable {
 			ps.setBytes(7, (new String("")).getBytes());
 			ps.setBytes(8, (new String("")).getBytes());
 			ps.setString(9, "Book Reference");
-			ps.setInt(10, findAvailableID("patterns"));
+			ps.setInt(10, RationaleDBCreate.pushCurrentID());
 			ps.executeUpdate();
 
 			ps.setString(1, "Singleton");
@@ -5045,7 +5053,7 @@ public final class RationaleDB implements Serializable {
 			ps.setBytes(7, (new String("")).getBytes());
 			ps.setBytes(8, (new String("")).getBytes());
 			ps.setString(9, "http://vico.org/pages/PatronsDisseny/Pattern%20Singleton/");
-			ps.setInt(10, findAvailableID("patterns"));
+			ps.setInt(10, RationaleDBCreate.pushCurrentID());
 			ps.executeUpdate();
 
 			ps.setString(1, "Indented Control Flow");
@@ -5057,7 +5065,7 @@ public final class RationaleDB implements Serializable {
 			ps.setBytes(7, (new String("")).getBytes());
 			ps.setBytes(8, (new String("")).getBytes());
 			ps.setString(9, "Book Reference");
-			ps.setInt(10, findAvailableID("patterns"));
+			ps.setInt(10, RationaleDBCreate.pushCurrentID());
 			ps.executeUpdate();
 		}catch(Exception ex){
 			ex.printStackTrace();
