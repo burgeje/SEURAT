@@ -24,7 +24,7 @@ public class PatternDecision extends RationaleElement{
 
 	private DecisionType type;
 	private Phase devPhase;
-	private int parent; //TODO This doesn't look good. What if there are subdec?
+	private int parent;
 	private RationaleElementType ptype;
 	private boolean alts;
 	private Designer designer;
@@ -324,6 +324,8 @@ public class PatternDecision extends RationaleElement{
 			}
 			else 
 			{
+				int id = RationaleDB.findAvailableID("PatternDecisions");
+				
 				String parentSt;
 				String parentTSt;
 
@@ -345,8 +347,8 @@ public class PatternDecision extends RationaleElement{
 					updateD = new Integer(designer.getID()).toString();
 
 				updateQuery = "INSERT INTO PatternDecisions "+
-				"(name, description, type, status, phase, subdecreq, parent, ptype, designer) " +
-				"VALUES ('" +
+				"(id, name, description, type, status, phase, subdecreq, parent, ptype, designer) " +
+				"VALUES (" + id + ", '" +
 				RationaleDBUtil.escape(this.name) + "', '" +
 				RationaleDBUtil.escape(this.description) + "', '" +
 				this.type.toString() + "', '" +
@@ -708,46 +710,6 @@ public class PatternDecision extends RationaleElement{
 
 
 	/**
-	 * Display our decision by bringing up the decision editor.
-	 * @param disp - points back to our display
-	 * @return true if the user cancels the editor
-//	 */
-//	public boolean display(Display disp)
-//	{
-//	EditDecision ar = new EditDecision(disp, this, false);
-////	System.out.println("this after = " + this.getStatus().toString());
-////	System.out.println(ar.getCanceled());
-//	String msg = "Edited decision " + this.getName() + " " + ar.getCanceled();
-//	DataLog d = DataLog.getHandle();
-//	d.writeData(msg);
-//	return ar.getCanceled(); //can I do this?
-
-//	}
-	/**
-	 * Create a new decision using the decision editor.
-	 * @param disp - points to the display
-	 * @param parent - the parent of our decision
-	 * @return true if the user cancels out
-//	 */
-//	public boolean create(Display disp, RationaleElement parent)
-//	{
-////	System.out.println("create decision");
-//	if (parent != null)
-//	{
-//	this.parent = parent.getID();
-//	this.ptype = parent.getElementType();
-//	}
-//	else
-//	{
-//	this.parent = 0;
-//	}
-
-//	EditDecision ar = new EditDecision(disp, this, true);
-//	System.out.println("name in create = " + this.getName());
-//	return ar.getCanceled(); //can I do this?
-//	}
-
-	/**
 	 * Deletes a decision from SEURAT and the database. This only works
 	 * if there aren't any associated alternatives, questions, or subdecisions.
 	 */
@@ -808,31 +770,6 @@ public class PatternDecision extends RationaleElement{
 	{	
 		this.parent = id;
 	}
-
-	/**
-	 * Inference over the decision to determine if the status should
-	 * be changed.
-	 * @return the status updates
-	 */
-//	public Vector<RationaleStatus> updateStatus()
-//	{
-//	DecisionInferences inf = new DecisionInferences();
-//	Vector<RationaleStatus> newStat = inf.updateDecisionStatus( this);
-//	return newStat;
-//	}
-
-
-	/**
-	 * If we delete a decision, the status of other elements may change so
-	 * we need to run the appropriate inferences.
-	 * @return the status updates
-	 */
-//	public Vector<RationaleStatus> updateOnDelete()
-//	{
-//	DecisionInferences inf = new DecisionInferences();
-//	Vector<RationaleStatus> newStat = inf.updateOnDelete( this);
-//	return newStat;
-//	}
 
 	/**
 	 * Reads in a decision stored in XML.

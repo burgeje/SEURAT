@@ -581,38 +581,30 @@ public class Pattern extends RationaleElement {
 				
 				l_updateEvent = m_eventGenerator.MakeUpdated();
 			}else{
+				id = RationaleDB.findAvailableID("patterns");
 				//new pattern
 				PreparedStatement ps = conn.prepareStatement("INSERT INTO patterns " +
-						"(name, type, description, problem, context, solution, implementation, example, url) " +
-						"VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-				ps.setString(1, name);
-				ps.setString(2, type.toString());
-				ps.setBytes(3, description.getBytes());
-				ps.setBytes(4, problem.getBytes());
-				ps.setBytes(5, context.getBytes());
-				ps.setBytes(6, solution.getBytes());
-				ps.setBytes(7, implementation.getBytes());
-				ps.setBytes(8, example.getBytes());
-				ps.setString(9, url);
+						"(id, name, type, description, problem, context, solution, implementation, example, url) " +
+						"VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+				ps.setInt(1, id);
+				ps.setString(2, name);
+				ps.setString(3, type.toString());
+				ps.setBytes(4, description.getBytes());
+				ps.setBytes(5, problem.getBytes());
+				ps.setBytes(6, context.getBytes());
+				ps.setBytes(7, solution.getBytes());
+				ps.setBytes(8, implementation.getBytes());
+				ps.setBytes(9, example.getBytes());
+				ps.setString(10, url);
 				ps.executeUpdate();
 				ps.close();
 				System.out.println("insert new pattern done!");
-				
-				//Now, update pattern_problemcategory
-				//First, get the id of the pattern, then use the id of the pattern to insert a new relationship between pattern and the associated pattern problem category.
-				stmt = conn.createStatement();
-				String getID = "select id from patterns where name = '" + name + "' and type = '" + type.toString() + "'";
-				rs = stmt.executeQuery(getID);
-				if (rs.next()){
-					id = rs.getInt("id");
-				}
-				else {
-					System.err.println("Warning: id of the pattern does not exist!");
-				}
+
 				l_updateEvent = m_eventGenerator.MakeCreated();
 			}
 			//Finally, it's time to add the pattern_problemcategory relationship
-			String addNewPCRelation = RationaleDBCreate.pattern_problemCategoryInsert("" + id + ", " + problemcategory + "");
+			stmt = conn.createStatement();
+			String addNewPCRelation = RationaleDBCreate.pattern_problemCategoryInsert("" + this.id + ", " + this.problemcategory + "");
 			stmt.execute(addNewPCRelation);
 			
 			m_eventGenerator.Broadcast(l_updateEvent);

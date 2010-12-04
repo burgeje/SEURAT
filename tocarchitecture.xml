@@ -7,13 +7,11 @@
    <topic label="Pattern Library">
       <topic href="html/architecture/patternLibrary/index.htm" label="Overview">
       </topic>
-      <topic label="User Interface in Pattern Library">
+      <topic href="html/architecture/patternLibrary/interface.htm" label="User Interface in Pattern Library">
       </topic>
-      <topic label="Patterns">
+      <topic href="html/architecture/patternLibrary/Patterns.htm" label="Patterns">
       </topic>
       <topic label="Sub-decisions">
-      </topic>
-      <topic label="Ontology">
       </topic>
       <topic label="Candidate Patterns">
       </topic>

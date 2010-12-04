@@ -404,7 +404,7 @@ public final class RationaleDB implements Serializable {
 				}
 			}
 
-			PreparedStatement ps = conn.prepareStatement("INSERT INTO patterns (name, type, description,problem, context, solution, implementation,example,url) values (?,?,?,?,?,?,?,?,?)");
+			PreparedStatement ps = conn.prepareStatement("INSERT INTO patterns (name, type, description,problem, context, solution, implementation,example,url,id) values (?,?,?,?,?,?,?,?,?,?)");
 			importPatterns(ps);
 			ps.close();
 
@@ -2414,7 +2414,7 @@ public final class RationaleDB implements Serializable {
 			}			
 
 		} catch (SQLException e) {
-			
+
 			e.printStackTrace();
 		}		
 		return matchedPatterns;
@@ -4018,7 +4018,7 @@ public final class RationaleDB implements Serializable {
 		try {
 			istream = new FileInputStream(ratFile);
 		} catch (FileNotFoundException e) {
-			
+
 			e.printStackTrace();
 		}
 
@@ -4263,13 +4263,13 @@ public final class RationaleDB implements Serializable {
 		return null;
 	}
 
-/**
- * Used to get the XML reference string of a problem category
- * @param id
- * @param problem
- * @param type
- * @return
- */
+	/**
+	 * Used to get the XML reference string of a problem category
+	 * @param id
+	 * @param problem
+	 * @param type
+	 * @return
+	 */
 	public String getRef(String id, String problem, String type){
 		Iterator keyIterator = xmlRefs[PATTERNPROBLEMCATEGORY_XML_INDEX].keySet().iterator();
 		while (keyIterator.hasNext()){
@@ -4342,18 +4342,18 @@ public final class RationaleDB implements Serializable {
 		//ref is already in the correct form, no change needed
 		idRefs.put(sr, re);
 	}
-	
+
 	/**
 	 * Given a pattern object that was created from XML, add it to the database.
 	 * Note that at this point, the database may violate referential integrity constraints.
 	 * @param pattern
 	 */
 	public void addPatternFromXML(Pattern pattern){
-		
+
 		try{
 			//First, insert the pattern to the database. Easy...
 			PreparedStatement ps = conn.prepareStatement("INSERT INTO PATTERNS values (" +
-					"?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+			"?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
 			ps.setInt(1, pattern.getID());
 			ps.setString(2, pattern.getName());
 			ps.setString(3, pattern.getType().toString());
@@ -4366,13 +4366,13 @@ public final class RationaleDB implements Serializable {
 			ps.setString(10, pattern.getUrl());
 			ps.executeUpdate();
 			ps.close();
-			
+
 			//Next, create entry to connect with patternproblemcategory
 			Statement stmt = conn.createStatement();
 			String expr = "INSERT INTO PATTERN_PROBLEMCATEGORY (patternID, problemcategoryID)" + 
-			"values (" + pattern.getID() + ", " + pattern.getProblemCategory() + ")";
+			" values (" + pattern.getID() + ", " + pattern.getProblemCategory() + ")";
 			stmt.execute(expr);
-			
+
 			//Then, create entry to connect with positive ontology
 			Iterator<Integer> pos = pattern.iteratorPosOntID();
 			while (pos.hasNext()){
@@ -4390,13 +4390,13 @@ public final class RationaleDB implements Serializable {
 				stmt.execute(expr);
 			}
 			stmt.close();
-			
+
 			//connection with sub-decision must be done in utility after decision has been created...
 		} catch (SQLException e){
 			e.printStackTrace();
 		}
 	}
-	
+
 	/**
 	 * Given a pattern decision imported from xml, add it to the database.
 	 * Note that the parent value must be updated later.
@@ -4410,7 +4410,7 @@ public final class RationaleDB implements Serializable {
 			pd.getType().toString() + "', '" + pd.getStatus().toString() + "', '" + pd.getPhase().toString() +
 			"', 'Pattern', 'No')";
 			stmt.execute(expr);
-			
+
 			//Now, add the associated candidate patterns
 			Iterator<Integer> candidatePID = pd.iteratorSubPatterns();
 			while (candidatePID.hasNext()){
@@ -4420,12 +4420,12 @@ public final class RationaleDB implements Serializable {
 			}
 			stmt.close();
 		} catch (SQLIntegrityConstraintViolationException e){
-			 System.out.println("WARNING: Duplicated Entry. Skipping: " + pd.getName());
-		 } catch (SQLException e){
+			System.out.println("WARNING: Duplicated Entry. Skipping: " + pd.getName());
+		} catch (SQLException e){
 			e.printStackTrace();
 		} 
 	}
-	
+
 	/**
 	 * Assume pattern and patterndecisions have been imported. Utility can call this method to associate
 	 * between pattern and child pattern-decisions.
@@ -4441,7 +4441,7 @@ public final class RationaleDB implements Serializable {
 			e.printStackTrace();
 		}
 	}
-	
+
 	/**
 	 * This method is used for XML import of pattern problem category.
 	 * Given the database id, category, and type of the problem category, add
@@ -4495,7 +4495,7 @@ public final class RationaleDB implements Serializable {
 		}
 		return toReturn;
 	}
-	
+
 	/**
 	 * This method returns all database info about patterns.
 	 * Used for XML export.
@@ -4508,7 +4508,7 @@ public final class RationaleDB implements Serializable {
 			ResultSet rs = null;
 			String query = "SELECT id FROM patterns";
 			rs = stmt.executeQuery(query);
-			
+
 			while (rs.next()){
 				Integer id = rs.getInt(1);
 				Pattern pattern = new Pattern();
@@ -4519,7 +4519,7 @@ public final class RationaleDB implements Serializable {
 		} catch (SQLException e){
 			e.printStackTrace();
 		}
-		
+
 		return toReturn;
 	}
 
@@ -4565,7 +4565,9 @@ public final class RationaleDB implements Serializable {
 	 * @param ps
 	 */
 	private void importPatterns(PreparedStatement ps){
+		int id;
 		try{
+			
 			ps.setString(1, "Three-layer");
 			ps.setString(2, "Architecture");
 			ps.setBytes(3, (new String("The system is organized into three primary layers: Presentation, Domain, and Data Source.")).getBytes());
@@ -4575,6 +4577,7 @@ public final class RationaleDB implements Serializable {
 			ps.setBytes(7, (new String("")).getBytes());
 			ps.setBytes(8, (new String("The three-layer architecture offers significant advantages even for relatively small applications. For instance, the single-user PC application First Account from the Norwegiancompany Economica encapsulates most of the accounting and invoicing functionality in adynamic link library (DLL), which in turn works against a local, flat-file database. This separationenabled the developers with knowledge of accounting and object-oriented design to dedicatethemselves to the central functionality, and user interface designers with little or no knowledge ofprogramming to fully control their part of the application.")).getBytes());
 			ps.setString(9, "http://msdn.microsoft.com/en-us/library/ms978689.aspx");
+			ps.setInt(10, findAvailableID("patterns"));
 			ps.executeUpdate();
 
 			ps.setString(1, "Layers");
@@ -4586,6 +4589,7 @@ public final class RationaleDB implements Serializable {
 			ps.setBytes(7, (new String("")).getBytes());
 			ps.setBytes(8, (new String("")).getBytes());
 			ps.setString(9, "http://vico.org/pages/PatronsDisseny/Pattern%20Layers/");
+			ps.setInt(10, findAvailableID("patterns"));
 			ps.executeUpdate();
 
 			ps.setString(1, "Pipes and Filters");
@@ -4597,6 +4601,7 @@ public final class RationaleDB implements Serializable {
 			ps.setBytes(7, (new String("")).getBytes());
 			ps.setBytes(8, (new String("")).getBytes());
 			ps.setString(9, "http://msdn.microsoft.com/en-us/library/ms978599.aspx");
+			ps.setInt(10, findAvailableID("patterns"));
 			ps.executeUpdate();
 
 			ps.setString(1, "Blackboard");
@@ -4608,6 +4613,7 @@ public final class RationaleDB implements Serializable {
 			ps.setBytes(7, (new String("")).getBytes());
 			ps.setBytes(8, (new String("")).getBytes());
 			ps.setString(9, "http://www.vico.org/pages/PatronsDisseny/Pattern%20Blackboard/");
+			ps.setInt(10, findAvailableID("patterns"));
 			ps.executeUpdate();
 
 			ps.setString(1, "Model-View-Controller");
@@ -4619,6 +4625,7 @@ public final class RationaleDB implements Serializable {
 			ps.setBytes(7, (new String("")).getBytes());
 			ps.setBytes(8, (new String("")).getBytes());
 			ps.setString(9, "http://msdn.microsoft.com/en-us/library/ms978748.aspx");
+			ps.setInt(10, findAvailableID("patterns"));
 			ps.executeUpdate();
 
 			ps.setString(1, "Broker");
@@ -4630,6 +4637,7 @@ public final class RationaleDB implements Serializable {
 			ps.setBytes(7, (new String("")).getBytes());
 			ps.setBytes(8, (new String("")).getBytes());
 			ps.setString(9, "http://msdn.microsoft.com/en-us/library/ms978706.aspx");
+			ps.setInt(10, findAvailableID("patterns"));
 			ps.executeUpdate();
 
 			ps.setString(1, "Presentation-Abstraction-Control");
@@ -4641,6 +4649,7 @@ public final class RationaleDB implements Serializable {
 			ps.setBytes(7, (new String("")).getBytes());
 			ps.setBytes(8, (new String("")).getBytes());
 			ps.setString(9, "http://vico.org/pages/PatronsDisseny/Pattern%20Presentation%20Abstra/");
+			ps.setInt(10, findAvailableID("patterns"));
 			ps.executeUpdate();
 
 			ps.setString(1, "Microkernel");
@@ -4652,6 +4661,7 @@ public final class RationaleDB implements Serializable {
 			ps.setBytes(7, (new String("")).getBytes());
 			ps.setBytes(8, (new String("")).getBytes());
 			ps.setString(9, "http://www.vico.org/pages/PatronsDisseny/Pattern%20MicroKernel/");
+			ps.setInt(10, findAvailableID("patterns"));
 			ps.executeUpdate();
 
 			ps.setString(1, "Reflection");
@@ -4663,6 +4673,7 @@ public final class RationaleDB implements Serializable {
 			ps.setBytes(7, (new String("")).getBytes());
 			ps.setBytes(8, (new String("")).getBytes());
 			ps.setString(9, "http://vico.org/pages/PatronsDisseny/Pattern%20Reflection/");
+			ps.setInt(10, findAvailableID("patterns"));
 			ps.executeUpdate();
 
 			ps.setString(1, "Whole-Part");
@@ -4674,6 +4685,7 @@ public final class RationaleDB implements Serializable {
 			ps.setBytes(7, (new String("")).getBytes());
 			ps.setBytes(8, (new String("")).getBytes());
 			ps.setString(9, "http://www.vico.org/pages/PatronsDisseny/Pattern%20Whole%20Part/index.html");
+			ps.setInt(10, findAvailableID("patterns"));
 			ps.executeUpdate();
 
 			ps.setString(1, "Master-Slave");
@@ -4685,6 +4697,7 @@ public final class RationaleDB implements Serializable {
 			ps.setBytes(7, (new String("")).getBytes());
 			ps.setBytes(8, (new String("")).getBytes());
 			ps.setString(9, "http://www.vico.org/pages/PatronsDisseny/Pattern%20Master%20Slave/");
+			ps.setInt(10, findAvailableID("patterns"));
 			ps.executeUpdate();
 
 			ps.setString(1, "Proxy");
@@ -4696,6 +4709,7 @@ public final class RationaleDB implements Serializable {
 			ps.setBytes(7, (new String("")).getBytes());
 			ps.setBytes(8, (new String("")).getBytes());
 			ps.setString(9, "http://www.vico.org/pages/PatronsDisseny/Pattern%20Broker/");
+			ps.setInt(10, findAvailableID("patterns"));
 			ps.executeUpdate();
 
 			ps.setString(1, "Command Processor");
@@ -4707,6 +4721,7 @@ public final class RationaleDB implements Serializable {
 			ps.setBytes(7, (new String("")).getBytes());
 			ps.setBytes(8, (new String("")).getBytes());
 			ps.setString(9, "http://www.vico.org/pages/PatronsDisseny/Pattern%20Command%20Processor/index.html");
+			ps.setInt(10, findAvailableID("patterns"));
 			ps.executeUpdate();
 
 			ps.setString(1, "View Handler");
@@ -4718,6 +4733,7 @@ public final class RationaleDB implements Serializable {
 			ps.setBytes(7, (new String("")).getBytes());
 			ps.setBytes(8, (new String("")).getBytes());
 			ps.setString(9, "http://vico.org/pages/PatronsDisseny/Pattern%20View%20Handler/");
+			ps.setInt(10, findAvailableID("patterns"));
 			ps.executeUpdate();
 
 			ps.setString(1, "Forward-Receiver");
@@ -4729,6 +4745,7 @@ public final class RationaleDB implements Serializable {
 			ps.setBytes(7, (new String("")).getBytes());
 			ps.setBytes(8, (new String("")).getBytes());
 			ps.setString(9, "http://vico.org/pages/PatronsDisseny/Pattern%20Forward-Receiver/");
+			ps.setInt(10, findAvailableID("patterns"));
 			ps.executeUpdate();
 
 			ps.setString(1, "Client-Dispatcher-Server");
@@ -4740,6 +4757,7 @@ public final class RationaleDB implements Serializable {
 			ps.setBytes(7, (new String("")).getBytes());
 			ps.setBytes(8, (new String("")).getBytes());
 			ps.setString(9, "http://vico.org/pages/PatronsDisseny/Pattern%20ClientDispatcherServer/");
+			ps.setInt(10, findAvailableID("patterns"));
 			ps.executeUpdate();
 
 			ps.setString(1, "Publisher-Subscriber");
@@ -4751,6 +4769,7 @@ public final class RationaleDB implements Serializable {
 			ps.setBytes(7, (new String("")).getBytes());
 			ps.setBytes(8, (new String("")).getBytes());
 			ps.setString(9, "http://vico.org/pages/PatronsDisseny/Pattern%20Publisher%20Subscriber/");
+			ps.setInt(10, findAvailableID("patterns"));
 			ps.executeUpdate();
 
 			ps.setString(1, "Strategy");
@@ -4762,6 +4781,7 @@ public final class RationaleDB implements Serializable {
 			ps.setBytes(7, (new String("")).getBytes());
 			ps.setBytes(8, (new String("")).getBytes());
 			ps.setString(9, "http://vico.org/pages/PatronsDisseny/Pattern%20Strategy/");
+			ps.setInt(10, findAvailableID("patterns"));
 			ps.executeUpdate();
 
 			ps.setString(1, "Factory");
@@ -4773,6 +4793,7 @@ public final class RationaleDB implements Serializable {
 			ps.setBytes(7, (new String("")).getBytes());
 			ps.setBytes(8, (new String("")).getBytes());
 			ps.setString(9, "http://vico.org/pages/PatronsDisseny/Pattern%20Factory%20Method/");
+			ps.setInt(10, findAvailableID("patterns"));
 			ps.executeUpdate();
 
 			ps.setString(1, "Decorator");
@@ -4784,6 +4805,7 @@ public final class RationaleDB implements Serializable {
 			ps.setBytes(7, (new String("")).getBytes());
 			ps.setBytes(8, (new String("")).getBytes());
 			ps.setString(9, "http://vico.org/pages/PatronsDisseny/Pattern%20Decorator/");
+			ps.setInt(10, findAvailableID("patterns"));
 			ps.executeUpdate();
 
 			ps.setString(1, "Composite");
@@ -4795,6 +4817,7 @@ public final class RationaleDB implements Serializable {
 			ps.setBytes(7, (new String("")).getBytes());
 			ps.setBytes(8, (new String("")).getBytes());
 			ps.setString(9, "http://vico.org/pages/PatronsDisseny/Pattern%20Composite/");
+			ps.setInt(10, findAvailableID("patterns"));
 			ps.executeUpdate();
 
 			ps.setString(1, "Template Method");
@@ -4806,6 +4829,7 @@ public final class RationaleDB implements Serializable {
 			ps.setBytes(7, (new String("")).getBytes());
 			ps.setBytes(8, (new String("")).getBytes());
 			ps.setString(9, "http://vico.org/pages/PatronsDisseny/Pattern%20Template%20Method/");
+			ps.setInt(10, findAvailableID("patterns"));
 			ps.executeUpdate();
 
 			ps.setString(1, "Command");
@@ -4817,6 +4841,7 @@ public final class RationaleDB implements Serializable {
 			ps.setBytes(7, (new String("")).getBytes());
 			ps.setBytes(8, (new String("")).getBytes());
 			ps.setString(9, "http://vico.org/pages/PatronsDisseny/Pattern%20Command/");
+			ps.setInt(10, findAvailableID("patterns"));
 			ps.executeUpdate();
 
 			ps.setString(1, "Chain of Responsibility");
@@ -4828,6 +4853,7 @@ public final class RationaleDB implements Serializable {
 			ps.setBytes(7, (new String("")).getBytes());
 			ps.setBytes(8, (new String("")).getBytes());
 			ps.setString(9, "http://vico.org/pages/PatronsDisseny/Pattern%20Chain%20of%20Responsability/");
+			ps.setInt(10, findAvailableID("patterns"));
 			ps.executeUpdate();
 
 			ps.setString(1, "Facade");
@@ -4839,6 +4865,7 @@ public final class RationaleDB implements Serializable {
 			ps.setBytes(7, (new String("")).getBytes());
 			ps.setBytes(8, (new String("")).getBytes());
 			ps.setString(9, "http://vico.org/pages/PatronsDisseny/Pattern%20Facade/");
+			ps.setInt(10, findAvailableID("patterns"));
 			ps.executeUpdate();
 
 			ps.setString(1, "Transaction Script");
@@ -4850,6 +4877,7 @@ public final class RationaleDB implements Serializable {
 			ps.setBytes(7, (new String("")).getBytes());
 			ps.setBytes(8, (new String("")).getBytes());
 			ps.setString(9, "EAA Book Online");
+			ps.setInt(10, findAvailableID("patterns"));
 			ps.executeUpdate();
 
 			ps.setString(1, "Domain Model");
@@ -4861,6 +4889,7 @@ public final class RationaleDB implements Serializable {
 			ps.setBytes(7, (new String("")).getBytes());
 			ps.setBytes(8, (new String("")).getBytes());
 			ps.setString(9, "EAA Book Online");
+			ps.setInt(10, findAvailableID("patterns"));
 			ps.executeUpdate();
 
 			ps.setString(1, "Table Module");
@@ -4872,6 +4901,7 @@ public final class RationaleDB implements Serializable {
 			ps.setBytes(7, (new String("")).getBytes());
 			ps.setBytes(8, (new String("")).getBytes());
 			ps.setString(9, "EAA Book Online");
+			ps.setInt(10, findAvailableID("patterns"));
 			ps.executeUpdate();
 
 			ps.setString(1, "Gateway");
@@ -4883,6 +4913,7 @@ public final class RationaleDB implements Serializable {
 			ps.setBytes(7, (new String("")).getBytes());
 			ps.setBytes(8, (new String("")).getBytes());
 			ps.setString(9, "EAA Book Online");
+			ps.setInt(10, findAvailableID("patterns"));
 			ps.executeUpdate();
 
 			ps.setString(1, "Row Data Gateway");
@@ -4894,6 +4925,7 @@ public final class RationaleDB implements Serializable {
 			ps.setBytes(7, (new String("")).getBytes());
 			ps.setBytes(8, (new String("")).getBytes());
 			ps.setString(9, "EAA Book Online");
+			ps.setInt(10, findAvailableID("patterns"));
 			ps.executeUpdate();
 
 			ps.setString(1, "Active Record");
@@ -4905,6 +4937,7 @@ public final class RationaleDB implements Serializable {
 			ps.setBytes(7, (new String("The essence of an Active Record is a Domain Model in which the classes match very closely the record structure of an underlying database. Each Active Record is responsible for saving and loading to the database and also for any domain logic that acts on the data. This may be all the domain logic in the application, or you may find that some domain logic is held in Transaction Scripts with common and data-oriented code in the Active Record.")).getBytes());
 			ps.setBytes(8, (new String("")).getBytes());
 			ps.setString(9, "EAA Book Online");
+			ps.setInt(10, findAvailableID("patterns"));
 			ps.executeUpdate();
 
 			ps.setString(1, "Table Data Gateway");
@@ -4916,6 +4949,7 @@ public final class RationaleDB implements Serializable {
 			ps.setBytes(7, (new String("A Row Data Gateway acts as an object that exactly mimics a single record, such as one database row. In it each column in the database becomes one field. The Row Data Gateway will usually do any type conversion from the data source types to the in-memory types, but this conversion is pretty simple. This pattern holds the data about a row so that a client can then access the Row")).getBytes());
 			ps.setBytes(8, (new String("")).getBytes());
 			ps.setString(9, "EAA Book Online");
+			ps.setInt(10, findAvailableID("patterns"));
 			ps.executeUpdate();
 
 			ps.setString(1, "Application Controller");
@@ -4927,6 +4961,7 @@ public final class RationaleDB implements Serializable {
 			ps.setBytes(7, (new String("")).getBytes());
 			ps.setBytes(8, (new String("")).getBytes());
 			ps.setString(9, "EAA Book Online");
+			ps.setInt(10, findAvailableID("patterns"));
 			ps.executeUpdate();
 
 			ps.setString(1, "Transform View");
@@ -4938,6 +4973,7 @@ public final class RationaleDB implements Serializable {
 			ps.setBytes(7, (new String("")).getBytes());
 			ps.setBytes(8, (new String("")).getBytes());
 			ps.setString(9, "EAA Book Online");
+			ps.setInt(10, findAvailableID("patterns"));
 			ps.executeUpdate();
 
 			ps.setString(1, "Template View");
@@ -4949,6 +4985,7 @@ public final class RationaleDB implements Serializable {
 			ps.setBytes(7, (new String("")).getBytes());
 			ps.setBytes(8, (new String("")).getBytes());
 			ps.setString(9, "EAA Book Online");
+			ps.setInt(10, findAvailableID("patterns"));
 			ps.executeUpdate();
 
 			ps.setString(1, "Two Step View");
@@ -4960,6 +4997,7 @@ public final class RationaleDB implements Serializable {
 			ps.setBytes(7, (new String("")).getBytes());
 			ps.setBytes(8, (new String("")).getBytes());
 			ps.setString(9, "EAA Book Online");
+			ps.setInt(10, findAvailableID("patterns"));
 			ps.executeUpdate();
 
 			ps.setString(1, "Bridge");
@@ -4971,6 +5009,7 @@ public final class RationaleDB implements Serializable {
 			ps.setBytes(7, (new String("")).getBytes());
 			ps.setBytes(8, (new String("")).getBytes());
 			ps.setString(9, "http://vico.org/pages/PatronsDisseny/Pattern%20Bridge/");
+			ps.setInt(10, findAvailableID("patterns"));
 			ps.executeUpdate();
 
 			ps.setString(1, "Data Mappter");
@@ -4982,6 +5021,7 @@ public final class RationaleDB implements Serializable {
 			ps.setBytes(7, (new String("")).getBytes());
 			ps.setBytes(8, (new String("")).getBytes());
 			ps.setString(9, "http://vico.org/pages/PatronsDisseny/Pattern%20Bridge/");
+			ps.setInt(10, findAvailableID("patterns"));
 			ps.executeUpdate();
 
 			ps.setString(1, "Counted Pointer");
@@ -4993,6 +5033,7 @@ public final class RationaleDB implements Serializable {
 			ps.setBytes(7, (new String("")).getBytes());
 			ps.setBytes(8, (new String("")).getBytes());
 			ps.setString(9, "Book Reference");
+			ps.setInt(10, findAvailableID("patterns"));
 			ps.executeUpdate();
 
 			ps.setString(1, "Singleton");
@@ -5004,6 +5045,7 @@ public final class RationaleDB implements Serializable {
 			ps.setBytes(7, (new String("")).getBytes());
 			ps.setBytes(8, (new String("")).getBytes());
 			ps.setString(9, "http://vico.org/pages/PatronsDisseny/Pattern%20Singleton/");
+			ps.setInt(10, findAvailableID("patterns"));
 			ps.executeUpdate();
 
 			ps.setString(1, "Indented Control Flow");
@@ -5015,6 +5057,7 @@ public final class RationaleDB implements Serializable {
 			ps.setBytes(7, (new String("")).getBytes());
 			ps.setBytes(8, (new String("")).getBytes());
 			ps.setString(9, "Book Reference");
+			ps.setInt(10, findAvailableID("patterns"));
 			ps.executeUpdate();
 		}catch(Exception ex){
 			ex.printStackTrace();
@@ -5114,6 +5157,28 @@ public final class RationaleDB implements Serializable {
 
 		}
 		return dependent;
+	}
+
+	/**
+	 * It seems the XML Import/Export has broken the ID auto_increment. I need this for every
+	 * insertion of all entities.
+	 * This method returns the next available ID after the max of ID's given dbName.
+	 * @param dbName The database name to find the max ID.
+	 */
+	public static int findAvailableID(String dbName){
+		Statement stmt = null;
+		ResultSet r = null;
+		String query = "SELECT max(id) FROM " + dbName;
+		try{
+			stmt = conn.createStatement();
+			r = stmt.executeQuery(query);
+			if (r.next()){
+				return r.getInt(1) + 1;
+			}
+		} catch (SQLException e){
+			e.printStackTrace();
+		}
+		return 1;
 	}
 
 }

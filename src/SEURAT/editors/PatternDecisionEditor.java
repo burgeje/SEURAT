@@ -83,10 +83,6 @@ public class PatternDecisionEditor extends RationaleEditorBase {
 		 */
 		int phase;
 		/**
-		 * Last known good subdecisions
-		 */
-		boolean subdecisions;
-		/**
 		 *  last known good designer
 		 */
 		int designer;
@@ -102,10 +98,6 @@ public class PatternDecisionEditor extends RationaleEditorBase {
 	 */
 	private Text descArea;
 
-	/**
-	 * A button to specify sub-decisions
-	 */
-	private Button subDecButton;
 	
 	/**
 	 * The decision type
@@ -135,10 +127,6 @@ public class PatternDecisionEditor extends RationaleEditorBase {
 	 */
 	private Composite designerComposite;
 	
-	/**
-	 * A list of alternatives
-	 */
-	private List altModel;
 	
 	/**
 	 * Member variable storing last known good
@@ -257,7 +245,7 @@ public class PatternDecisionEditor extends RationaleEditorBase {
 				pEvent.getCreated() &&
 				pEvent.getElement() instanceof Alternative )
 			{
-				refreshAlternatives(pEvent);
+				
 			}
 			else
 			if( pEvent.getElement().equals(getDecision()) )
@@ -279,84 +267,7 @@ public class PatternDecisionEditor extends RationaleEditorBase {
 		}
 	}
 	
-	/**
-	 * Update the listbox displaying alternatives associated
-	 * with the decision. 
-	 * 
-	 * @param pEvent the event which caused the list of alternatives
-	 * 		to need updating. This parameter may be null.
-	 */
-	public void refreshAlternatives(RationaleUpdateEvent pEvent)
-	{
-		boolean l_dirty = isDirty();
-		
-		// Something Has Changed, Reload This Element From The DB
-		getDecision().fromDatabase(getDecision().getID());
-		
-		String subscribeFunc = null;
-		altModel.removeAll();
-		
-		Iterator iterator = getDecision().getAlternatives().iterator();
-		while (iterator.hasNext())
-		{
-			Alternative alt = (Alternative) iterator.next();
-			String altDesc = alt.getName();
-			altDesc = "(" + Double.toString(alt.getEvaluation()) + ") " + altDesc; 
-			altModel.add( altDesc);
-
-			if( pEvent == null )
-				continue;			
-			if( !alt.equals(pEvent.getElement()) )
-				continue;
-
-			// If the element was created we need to register
-			// a new subscription.
-			if( pEvent.getCreated() )
-			{
-				subscribeFunc = "onForArgumentUpdate";				
-			}
-		} 
-		
-		// The New Argument Will Not Publish Further Events Using
-		// The Parent As A Pseudonym, therefore we must subscribe to it's
-		// publications
-		try
-		{
-			RationaleDB l_db = RationaleDB.getHandle();
-			
-			if (pEvent != null )
-			{
-				Alternative l_target = (Alternative)pEvent.getElement();
-				if(subscribeFunc != null)
-				{					
-					l_db.Notifier().Subscribe(l_target, this, subscribeFunc);
-				}
-				else
-				if( pEvent.getDestroyed() )
-				{
-					l_db.Notifier().Unsubscribe(this, l_target);
-				}
-			}
-		}
-		catch( Exception e )
-		{
-			System.out.println("Decision Editor: Created Alternative Subscription Failure");
-		}
-		
-		setDirty(l_dirty);
-	}
 	
-	/**
-	 * Respond to changes to changes made to alternatives
-	 * which are children of the decision being edited.
-	 * 
-	 * @param pAlternative the alternative which changed
-	 * @param pEvent a description of the change that occurred
-	 */
-	public void onAlternativeUpdate(Alternative pAlternative, RationaleUpdateEvent pEvent)
-	{
-		refreshAlternatives(pEvent);
-	}
 	
 	/* (non-Javadoc)
 	 * @see SEURAT.editors.RationaleEditorBase#updateFormCache()
@@ -383,8 +294,6 @@ public class PatternDecisionEditor extends RationaleEditorBase {
 		if( phaseBox != null )
 			dataCache.phase = phaseBox.getSelectionIndex();
 		
-		if( subDecButton != null )
-			dataCache.subdecisions = subDecButton.getSelection();
 	}
 
 	/* (non-Javadoc)
@@ -479,14 +388,6 @@ public class PatternDecisionEditor extends RationaleEditorBase {
 		}
 		else
 			l_dirty = true;
-
-		if( subDecButton.getSelection() == dataCache.subdecisions )
-		{
-			subDecButton.setSelection(!getDecision().getAlts());
-			dataCache.subdecisions = subDecButton.getSelection();
-		}
-		else
-			l_dirty = true;
 		
 		setDirty(l_dirty);
 	}
@@ -499,7 +400,7 @@ public class PatternDecisionEditor extends RationaleEditorBase {
 		ourPattern = new Pattern();
 		ourPattern.fromDatabase(patternName);
 		//Finally, I GOT IT! Now we can use this to save to the relationship (YQ)
-		//TODO SaveData
+		
 		GridLayout gridLayout = new GridLayout();
 		gridLayout.numColumns = 6;
 		gridLayout.marginHeight = 5;
@@ -634,62 +535,6 @@ public class PatternDecisionEditor extends RationaleEditorBase {
 		gridData.horizontalAlignment = GridData.FILL;
 		phaseBox.setLayoutData(gridData);
 		phaseBox.addModifyListener(getNeedsSaveListener());
-		
-		subDecButton = new Button(parent, SWT.CHECK);
-		subDecButton.setText("Sub-Decisions Required");
-		subDecButton.addSelectionListener(getSelNeedsSaveListener());
-		subDecButton.setSelection(!getDecision().getAlts());
-		
-		gridData = new GridData(GridData.HORIZONTAL_ALIGN_FILL);
-		gridData.horizontalSpan = 2;
-		gridData.grabExcessHorizontalSpace = true;
-		gridData.horizontalAlignment = GridData.FILL;
-		subDecButton.setLayoutData(gridData);
-		
-		new Label(parent, SWT.NONE).setText("");
-		new Label(parent, SWT.NONE).setText("");
-		new Label(parent, SWT.NONE).setText("");
-		new Label(parent, SWT.NONE).setText("");
-		
-		new Label(parent, SWT.NONE).setText("(Evaluation) Alternatives:");
-		new Label(parent, SWT.NONE).setText(" ");
-		new Label(parent, SWT.NONE).setText(" ");
-		
-		
-		new Label(parent, SWT.NONE).setText("");
-		
-		altModel = new List(parent, SWT.SINGLE | SWT.V_SCROLL);
-		
-		gridData = new GridData(GridData.HORIZONTAL_ALIGN_FILL);
-		gridData.horizontalSpan = 6;
-		gridData.grabExcessHorizontalSpace = true;
-		gridData.grabExcessVerticalSpace = true;
-		gridData.verticalAlignment = GridData.FILL;
-		gridData.horizontalAlignment = GridData.FILL;
-		int listHeight = altModel.getItemHeight() * 5;
-		Rectangle trim = altModel.computeTrim(0, 0, 0, listHeight);
-		gridData.heightHint = trim.height;
-		Iterator altI = getDecision().getAlternatives().iterator();
-		while (altI.hasNext())
-		{
-			Alternative alt = (Alternative) altI.next();
-			String altDesc = alt.getName();
-			altDesc = "(" + Double.toString(alt.getEvaluation()) + ") " + altDesc; 
-			altModel.add( altDesc);
-
-			// Register Event Notification
-			try
-			{
-				RationaleDB.getHandle().Notifier().Subscribe(alt, this, "onAlternativeUpdate");
-			}
-			catch( Exception e )
-			{
-				System.out.println("PatternDecision Editor: Alternative Update Not Available!");
-			}
-		}    
-		// add a list of arguments against to the right side
-		altModel.setLayoutData(gridData);
-		
 
 		// Register Event Notification
 		try
@@ -722,7 +567,7 @@ public class PatternDecisionEditor extends RationaleEditorBase {
 					//				ourDec.setArtifact( artifactField.getText());
 					getDecision().setPhase(Phase.fromString(phaseBox.getItem(phaseBox.getSelectionIndex())));
 					getDecision().updateHistory(new History(getDecision().getStatus().toString(), "Initial Entry"));
-					getDecision().setAlts(!subDecButton.getSelection());
+					getDecision().setAlts(true);
 					getDecision().setParentPattern(ourPattern.getID());
 					getDecision().setParentID(ourPattern.getID());
 					// TODO Wang uses PARENT instead of relationship set pattern_decision to determine which pattern is it.
@@ -751,7 +596,7 @@ public class PatternDecisionEditor extends RationaleEditorBase {
 				getDecision().setDescription(descArea.getText());
 				getDecision().setType(DecisionType.fromString(typeBox.getItem(typeBox.getSelectionIndex())));
 				DecisionStatus newStat = DecisionStatus.fromString(statusBox.getItem(statusBox.getSelectionIndex()));
-				getDecision().setAlts(!subDecButton.getSelection());
+				getDecision().setAlts(true);
 				getDecision().setPhase(Phase.fromString(phaseBox.getItem(phaseBox.getSelectionIndex())));
 				if (!newStat.toString().equals(getDecision().getStatus().toString())) {
 						ReasonGUI rg = new ReasonGUI();
