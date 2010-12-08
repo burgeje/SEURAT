@@ -866,6 +866,12 @@ public class Decision extends RationaleElement implements Serializable
 	 */
 	public Vector<RationaleStatus> updateStatus()
 	{
+		//To be on the safe side, I added this so it won't get -1 if saving data broke the order.
+		if (name != null){
+			Decision dec = new Decision();
+			dec.fromDatabase(this.name);
+			if (dec.getID() != -1) id = dec.getID();
+		}
 		DecisionInferences inf = new DecisionInferences();
 		Vector<RationaleStatus> newStat = inf.updateDecisionStatus( this);
 		return newStat;

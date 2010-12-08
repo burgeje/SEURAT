@@ -409,6 +409,7 @@ public class ArgumentEditor extends RationaleEditorBase {
 				if( typeChoice.getSelectionIndex() == dataCache.argumentStance )
 				{
 					refreshChoices();
+					boolean hasSelected = false;
 					for (int h=0; h < typeChoice.getItemCount(); h++)
 					{
 						ArgType choiceArg = ArgType.fromString(typeChoice.getItem(h));
@@ -417,7 +418,11 @@ public class ArgumentEditor extends RationaleEditorBase {
 						{
 							typeChoice.select(h);
 							dataCache.argumentStance = typeChoice.getSelectionIndex();
+							hasSelected = true;
 						}
+					}
+					if (!hasSelected){
+						typeChoice.select(0); //To prevent "Index out of bound error"
 					}
 				}
 				else

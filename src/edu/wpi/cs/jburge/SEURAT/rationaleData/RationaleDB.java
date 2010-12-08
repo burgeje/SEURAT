@@ -3414,6 +3414,7 @@ public final class RationaleDB implements Serializable {
 			if (stat.getParent() <= 0) {
 				System.out.println("error in status value");
 			} else {
+				System.out.println("Added status " + stat.getDescription());
 				stat.toDatabase(stat.getParent());
 			}
 
