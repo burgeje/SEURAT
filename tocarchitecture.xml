@@ -17,17 +17,17 @@
       </topic>
    </topic>
    <topic label="XML Import/Export">
-      <topic label="Features of XML Import/Export">
+      <topic href="html/architecture/XML/features.htm" label="Features of XML Import/Export">
       </topic>
-      <topic label="XML Import">
+      <topic href="html/architecture/XML/XML Import.htm" label="XML Import">
       </topic>
-      <topic label="XML Export">
+      <topic href="html/architecture/XML/XML Export.htm" label="XML Export">
       </topic>
    </topic>
    <topic label="Architecture with Rationale Explorer">
-      <topic label="Create a new architecture project">
+      <topic href="html/architecture/RatExplorer/create arch project.htm" label="Create a new architecture project">
       </topic>
-      <topic label="Generate Candidate Patterns">
+      <topic href="html/architecture/RatExplorer/Generate Candidate Patterns.htm" label="Generate Candidate Patterns">
       </topic>
    </topic>
 </toc>

@@ -11,8 +11,17 @@ import java.util.Enumeration;
 
 import edu.wpi.cs.jburge.SEURAT.rationaleData.*;
 
+/**
+ * This class calculates the candidate pattern matching
+ * scores, can be either exact or contribution matching.
+ */
 public class AlternativePatternInferences {
 	
+	/**
+	 * Calculate Scores of exact matching.
+	 * @param toBeMatchedPatterns
+	 * @return
+	 */
 	public Hashtable<Pattern, Double> exactMatching(ArrayList<Pattern> toBeMatchedPatterns){
 		RationaleDB db = RationaleDB.getHandle();
 		Vector<Requirement> ourRequirements = db.getNFRs();
@@ -25,23 +34,35 @@ public class AlternativePatternInferences {
 		System.out.println("------------------------------------");
 		for(Pattern pattern: toBeMatchedPatterns){
 			Double valueOfPattern = 0.0;
-			Enumeration rqus = ourRequirements.elements();
+			Enumeration<Requirement> rqus = ourRequirements.elements();
 			while (rqus.hasMoreElements()){				
-				boolean matched = false;
+				boolean matched = false, matchedNeg = false;
 				Requirement q = (Requirement)rqus.nextElement();
-				ArrayList<String> ontNames = new ArrayList<String>();
+				//Positive match
 				for(OntEntry eo: (pattern.getPosiOnts())){
 					if(eo.getName().compareTo(q.getOntology().getName()) == 0){
 						matched = true;
 					}
 				}
 				if (matched){
-					String test = q.getImportance().toString();
 					if(q.getImportance().toString().compareTo(Importance.DEFAULT.toString()) == 0){
 						valueOfPattern = valueOfPattern + 1.0;
 					}else{
 						valueOfPattern = valueOfPattern + q.getImportance().getValue();
 					}				
+				}
+				//Negative match
+				for (OntEntry eo: (pattern.getNegaOnts())){
+					if(eo.getName().compareTo(q.getOntology().getName()) == 0){
+						matchedNeg = true;
+					}
+				}
+				if (matchedNeg){
+					if(q.getImportance().toString().compareTo(Importance.DEFAULT.toString()) == 0){
+						valueOfPattern = valueOfPattern - 1.0;
+					}else{
+						valueOfPattern = valueOfPattern - q.getImportance().getValue();
+					}			
 				}
 			}
 			pattern_values.put(pattern.getName(), new Double(valueOfPattern));
@@ -104,11 +125,12 @@ public class AlternativePatternInferences {
 			Double valueOfPattern = 0.0;
 			Enumeration rqus = ourRequirements.elements();
 			while (rqus.hasMoreElements()){				
-				boolean matched = false;
+				boolean matched = false, matchedNeg = false;
 				Requirement q = (Requirement)rqus.nextElement();
 				for(OntEntry eo: (pattern.getPosiOnts())){
 					if(eo.getName().compareTo(q.getOntology().getName()) == 0){
 						matched = true;
+						break;
 					}else{						
 						RationaleDB d = RationaleDB.getHandle();
 						Vector ontList = d.getOntologyElements(eo.getName());
@@ -117,8 +139,10 @@ public class AlternativePatternInferences {
 							OntEntry ont = (OntEntry)ontChildren.nextElement();
 							if(ont.getName().compareTo(q.getOntology().getName()) == 0){
 								matched = true;
+								break;
 							}
 						}
+						if (matched) break;
 					}
 				}
 				if(matched){
@@ -129,32 +153,32 @@ public class AlternativePatternInferences {
 					}	
 				}
 				
-//				if (pattern.getPosiOnts().contains(q.assoOntEntry)){
-//					//String test = q.getImportance().toString();
-//					if(q.getImportance().toString().compareTo(Importance.DEFAULT.toString()) == 0){
-//						valueOfPattern = valueOfPattern + 1.0;
-//					}else{
-//						valueOfPattern = valueOfPattern + q.getImportance().getValue();
-//					}				
-//				}else{
-//					OntEntry o = new OntEntry();
-//					o.fromDatabase(q.getOntEntry().getName());
-//					RationaleDB d = RationaleDB.getHandle();
-//					Vector ontList = d.getOntologyElements(o.getName());
-//					Enumeration ontChildren = ontList.elements();
-//					while (ontChildren.hasMoreElements()){
-//						OntEntry ont = (OntEntry)ontChildren.nextElement();
-//						//System.out.println(ont.getName());
-//						if(pattern.getPosiOnts().contains(ont)){
-//							//String test = q.getImportance().toString();
-//							if(q.getImportance().toString().compareTo(Importance.DEFAULT.toString()) == 0){
-//								valueOfPattern = valueOfPattern + 1.0;
-//							}else{
-//								valueOfPattern = valueOfPattern + q.getImportance().getValue();
-//							}	
-//						}
-//					}					
-//				}
+				//Negatives...
+				for(OntEntry eo: (pattern.getNegaOnts())){
+					if(eo.getName().compareTo(q.getOntology().getName()) == 0){
+						matchedNeg = true;
+						break;
+					}else{						
+						RationaleDB d = RationaleDB.getHandle();
+						Vector<OntEntry> ontList = d.getOntologyElements(eo.getName());
+						Enumeration<OntEntry> ontChildren = ontList.elements();
+						while (ontChildren.hasMoreElements()){
+							OntEntry ont = (OntEntry)ontChildren.nextElement();
+							if(ont.getName().compareTo(q.getOntology().getName()) == 0){
+								matchedNeg = true;
+								break;
+							}
+						}
+						if (matchedNeg) break;
+					}
+				}
+				if(matchedNeg){
+					if(q.getImportance().toString().compareTo(Importance.DEFAULT.toString()) == 0){
+						valueOfPattern = valueOfPattern - 1.0;
+					}else{
+						valueOfPattern = valueOfPattern - q.getImportance().getValue();
+					}	
+				}
 			}
 			pattern_values.put(pattern.getName(), new Double(valueOfPattern));
 			System.out.println(pattern.getName());
