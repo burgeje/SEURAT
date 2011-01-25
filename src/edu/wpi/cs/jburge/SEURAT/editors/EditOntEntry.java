@@ -118,6 +118,10 @@ public class EditOntEntry extends NewRationaleElementGUI implements Serializable
 			}
 			l++;
 		}
+		//Error checking: if no such selection is valid, set it to select index 0
+		if (importanceBox.getSelectionIndex() == -1){
+			importanceBox.select(0);
+		}
 		importanceBox.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_FILL));
 		
 		new Label(shell, SWT.NONE).setText(" ");
