@@ -2,6 +2,8 @@ package edu.wpi.cs.jburge.SEURAT.rationaleData;
 
 import java.util.*;
 import java.io.*; //needed to be serializable
+import java.net.URL;
+
 import javax.xml.transform.*;
 import org.w3c.dom.*;
 import javax.xml.transform.stream.StreamResult;
@@ -13,6 +15,7 @@ import org.xml.sax.SAXException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.sql.SQLIntegrityConstraintViolationException;
 import java.sql.Statement;
 import java.sql.ResultSet;
 import java.sql.PreparedStatement;
@@ -57,6 +60,11 @@ public final class RationaleDB implements Serializable {
 	 * Used when reading in from XML
 	 */
 	private static Hashtable idRefs;
+	private static Hashtable xmlRefs[];
+	private static final int NUM_XML_CLASSES = 3;
+	private static final int PATTERN_XML_INDEX = 0;
+	private static final int PATTERNDECISION_XML_INDEX = 1;
+	private static final int PATTERNPROBLEMCATEGORY_XML_INDEX = 2;
 	/**
 	 * Contains the last rationale ID. I'm not sure what this is used
 	 * for - I'd guess maybe the XML?
@@ -107,13 +115,14 @@ public final class RationaleDB implements Serializable {
 	 * argument ontology import functionality.)
 	 */
 	private OntEntry argumentOntology;
-	
+
 	/**
-	 * The location of the XML argument ontology
+	 * The location of the XML import file for DB creation.
 	 */
-	private static String ontFile = SEURATPlugin.getDefault().getStateLocation()
-		.addTrailingSeparator().toOSString() + "argument-ontology.xml";
-		
+	//private static String ratDBCreateFile = SEURATPlugin.getDefault().getStateLocation()
+	//.addTrailingSeparator().toOSString() + "ratDBCreate.xml";
+	private static String ratDBCreateFile = SEURATPlugin.getDefault().getBundle().getLocation() +
+	"ratDBCreate.xml";
 	/**
 	 * The default database name
 	 */
@@ -128,18 +137,18 @@ public final class RationaleDB implements Serializable {
 	 * The connection to our database
 	 */
 	private static Connection conn;
-	
+
 	private PublishSubscribeManager<RationaleElement,Object,RationaleUpdateEvent>
-		updateNotifier = new 
-			PublishSubscribeManager<RationaleElement,Object,RationaleUpdateEvent>(
-				new RationaleUpdateEvent(), false
-			);
+	updateNotifier = new 
+	PublishSubscribeManager<RationaleElement,Object,RationaleUpdateEvent>(
+			new RationaleUpdateEvent(), false
+	);
 
 	public PublishSubscribeManager<RationaleElement,Object,RationaleUpdateEvent>
-		Notifier()
-		{
-			return updateNotifier;
-		}
+	Notifier()
+	{
+		return updateNotifier;
+	}
 	/**
 	 * Rationale DB Constructor. This MUST remain PRIVATE in order for this
 	 * class to stay a d. This class sets up the JDBC database
@@ -148,6 +157,12 @@ public final class RationaleDB implements Serializable {
 	 */
 	private RationaleDB(int x) {
 		idRefs = new Hashtable();
+		xmlRefs = new Hashtable[NUM_XML_CLASSES];
+		xmlRefs[PATTERN_XML_INDEX] = new Hashtable<String, Pattern>();
+		xmlRefs[PATTERNDECISION_XML_INDEX] = new Hashtable<String, PatternDecision>();
+		//This hashtable's second element is String[3], with String[1] as problemcategory
+		//and String[2] as type (Architecture, Design, Idiom), and String[0] as id in the database.
+		xmlRefs[PATTERNPROBLEMCATEGORY_XML_INDEX] = new Hashtable<String, String[]>();
 		requirements = new Vector<Requirement>();
 		arguments = new Vector<Argument>();
 		assumptions = new Vector<Assumption>();
@@ -161,8 +176,8 @@ public final class RationaleDB implements Serializable {
 		saveLast = RationaleElement.getLastID();
 
 		if( store.getString(PreferenceConstants.P_DATABASETYPE).equals(
-							PreferenceConstants.DatabaseType.DERBY
-			))
+				PreferenceConstants.DatabaseType.DERBY
+		))
 		{
 			derbyConnect();
 		}
@@ -172,9 +187,9 @@ public final class RationaleDB implements Serializable {
 		{
 			sqlConnect();
 		}
-		
+
 		migrate();
-		
+
 		prepareStatements();
 	};
 
@@ -201,14 +216,14 @@ public final class RationaleDB implements Serializable {
 		try {
 			// The newInstance() call is a work around for some
 			// broken Java implementations
-
-			Class.forName("com.mysql.jdbc.Driver").newInstance();
+			com.mysql.jdbc.Driver.class.newInstance();
+			//Class.forName("com.mysql.jdbc.Driver").newInstance();
 		} catch (Exception ex) {
 			// handle the error
 			int i = 0;
 			i++;
 		}
-		
+
 		String passwordSpec;
 		String password = store.getString(PreferenceConstants.P_DATABASEPASSWORD);
 		if (password.length() == 0)
@@ -220,9 +235,9 @@ public final class RationaleDB implements Serializable {
 			passwordSpec = "&password=" + password;
 			// passwordSpec = " ?password=" + password;
 		}
-		
+
 		String connStr = "jdbc:mysql://";
-		
+
 		// Set up connection string based on server location, address, and port preferences
 		if (store.getString(PreferenceConstants.P_MYSQLLOCATION).equals(PreferenceConstants.
 				MySQLLocationType.LOCAL)) {
@@ -231,7 +246,7 @@ public final class RationaleDB implements Serializable {
 		else {
 			String address = store.getString(PreferenceConstants.P_MYSQLADDRESS);
 			String port = store.getString(PreferenceConstants.P_MYSQLPORT);
-			
+
 			if (port.length() == 0) {
 				connStr += address+"/";
 			}
@@ -240,13 +255,13 @@ public final class RationaleDB implements Serializable {
 			}
 		}
 		connStr += dbName
-			+ "?user="
-			+ store
-			.getString(PreferenceConstants.P_DATABASEUSER)
-			+ passwordSpec;
-		
+		+ "?user="
+		+ store
+		.getString(PreferenceConstants.P_DATABASEUSER)
+		+ passwordSpec;
+
 		try {
-			
+
 			System.out.println(connStr);
 			conn = DriverManager.getConnection(connStr);
 		} catch (SQLException ex) {
@@ -286,7 +301,7 @@ public final class RationaleDB implements Serializable {
 			mbox.setMessage("Error getting preferences");
 			mbox.open();
 		}
-		
+
 		final String l_ConnectString = "jdbc:derby:";
 		Properties props = new Properties();
 		props.put("user", "seurat_dummy");
@@ -303,9 +318,9 @@ public final class RationaleDB implements Serializable {
 		props.put("databaseName", l_dbPath);
 
 		try {
-			final String DRIVER = "org.apache.derby.jdbc.EmbeddedDriver";
-
-			Class.forName(DRIVER).newInstance();
+			//final String DRIVER = "org.apache.derby.jdbc.EmbeddedDriver";
+			org.apache.derby.jdbc.EmbeddedDriver.class.newInstance();
+			//Class.forName(DRIVER).newInstance();
 		} catch (Exception ex) {
 			// handle the error
 			int i = 0;
@@ -321,10 +336,10 @@ public final class RationaleDB implements Serializable {
 			try
 			{
 				props.put("create", "true");
-	    		// If the database can't be opened, it needs to be created.
-	    		conn = DriverManager.getConnection(l_ConnectString, props);
+				// If the database can't be opened, it needs to be created.
+				conn = DriverManager.getConnection(l_ConnectString, props);
 
-	    		createTables();
+				createTables();
 			}
 			catch( SQLException eInner )
 			{
@@ -350,7 +365,7 @@ public final class RationaleDB implements Serializable {
 		String []l_queries = RationaleDBCreate.getQueries();
 
 		Statement l_stmt = conn.createStatement();
-		
+
 		for( String l_query : l_queries )
 		{
 			try
@@ -364,14 +379,20 @@ public final class RationaleDB implements Serializable {
 				throw eError;
 			}
 		}
-		
-		// Now import the argument ontology, if the file exists
-		boolean importSuccess = false;
-		if (new File(ontFile).exists()){
-			importSuccess = RationaleDBUtil.importArgumentOntology(ontFile);
+
+
+
+		// Now import the pattern library
+		boolean importXMLSuccess = false;
+		if (new File(ratDBCreateFile.substring(ratDBCreateFile.indexOf('/'))).exists()){
+			String xmlFile = ratDBCreateFile.substring(ratDBCreateFile.indexOf('/'));
+			importXMLSuccess = RationaleDBUtil.importFromXML(xmlFile);
 		}
-		if (!importSuccess) {
-			// File doesn't exist or import failed for some reason, use the hardcoded ontology
+		if (!importXMLSuccess){		
+			System.err.println("Unable fo find " + ratDBCreateFile);
+			System.err.println("Loading from hard-coded defaults");
+			RationaleDBCreate.resetCurrentID();
+			// Import hard-coded data, first the ontology, then the pattern library...
 			String [] l_ontQueries = RationaleDBCreate.getOntologyQueries();
 			for (String l_ontQuery : l_ontQueries) {
 				try
@@ -382,12 +403,81 @@ public final class RationaleDB implements Serializable {
 				{
 					int i = 0;
 					i++;
+					System.out.println("DEBUG OntEntry: " + eError.getMessage());
+					eError.printStackTrace();
 					throw eError;
 				}
 			}
+			
+			RationaleDBCreate.resetCurrentID();
+			PreparedStatement ps = conn.prepareStatement("INSERT INTO patterns (name, type, description,problem, context, solution, implementation,example,url,id) values (?,?,?,?,?,?,?,?,?,?)");
+			importPatterns(ps);
+			ps.close();
+
+			RationaleDBCreate.resetCurrentID();
+			String[] l_patternDecisionQueries = RationaleDBCreate.getPatternDecisionQueries();
+			for (String l_patternDecisionQuery: l_patternDecisionQueries){
+				try {
+					l_stmt.execute(l_patternDecisionQuery);
+				} catch (SQLException e) {
+					int i = 0;
+					i++;
+					System.err.println("Debug PatternDecision: " + e.getMessage());
+					throw e;
+				}				
+			}
+
+			RationaleDBCreate.resetCurrentID();
+			String[] l_patternOntEntryQueries = RationaleDBCreate.getPatternOntEntryQueries();
+			for (String l_patternOntEntryQuery: l_patternOntEntryQueries){
+				try {
+					l_stmt.execute(l_patternOntEntryQuery);
+				} catch (SQLException e) {
+					int i = 0;
+					i++;
+					System.err.println("Debug PatternOntEntry: " + e.getMessage());
+					throw e;
+				}				
+			}
+
+			RationaleDBCreate.resetCurrentID();
+			String[] l_patternDecisionRelationshipQueries = RationaleDBCreate.getPatternDecisionRelationShipQueries();
+			for (String l_patternDecisionRelationshipQuery: l_patternDecisionRelationshipQueries){
+				try {
+					l_stmt.execute(l_patternDecisionRelationshipQuery);
+				} catch (SQLException e) {
+					int i = 0;
+					i++;
+					throw e;
+				}				
+			}
+
+			RationaleDBCreate.resetCurrentID();
+			String[] l_patternProblemCategoriesQueries = RationaleDBCreate.getPatternProblemCategoriesQueries();
+			for (String l_patternProblemCategoryQuery: l_patternProblemCategoriesQueries){
+				try {
+					l_stmt.execute(l_patternProblemCategoryQuery);
+				} catch (SQLException e) {
+					int i = 0;
+					i++;
+					throw e;
+				}				
+			}
+
+			RationaleDBCreate.resetCurrentID();
+			String[] l_patternProblemCategoryQueries = RationaleDBCreate.getPatternProblemCategoryQueries();
+			for (String l_pattern_problemCategoryQuery: l_patternProblemCategoryQueries){
+				try {
+					l_stmt.execute(l_pattern_problemCategoryQuery);
+				} catch (SQLException e) {
+					int i = 0;
+					i++;
+					throw e;
+				}				
+			}
 		}
-		
-		l_stmt.close();		
+		l_stmt.close();	
+
 	}
 
 	/**
@@ -398,7 +488,7 @@ public final class RationaleDB implements Serializable {
 	 * @see SelectOntEntry
 	 */
 	private static PreparedStatement m_ontEntriesQuery = null;
-	
+
 	/**
 	 * Prepared Statement For The Ontology Entry's
 	 * FromDatabase pseudo constructor.
@@ -406,7 +496,11 @@ public final class RationaleDB implements Serializable {
 	 * @see OntEntry#fromDatabase(String)
 	 */
 	private static PreparedStatement m_ontEntryFromDB = null;
-	
+
+	private static PreparedStatement m_patternFromDB = null;
+
+	private static PreparedStatement m_altPatternFromDB = null;
+
 	/**
 	 * Accessor Method For The Ontology Entries FromDatabase Pseudo
 	 * Constructor. This is how the Ontology Entry Class Retrieves
@@ -420,7 +514,23 @@ public final class RationaleDB implements Serializable {
 	public PreparedStatement getStatement_OntologyEntryFromDB() {
 		return m_ontEntryFromDB;
 	}
-	
+
+	/**
+	 * Accessor method. Retrieves the prepared statement for patterns
+	 * @return
+	 */
+	public PreparedStatement getStatement_PatternFromDB() {
+		return m_patternFromDB;
+	}
+
+	/**
+	 * Accessor method. Retrieves the prepared statement for pattern alternatives
+	 * @return
+	 */
+	public PreparedStatement getStatement_AltPatternFromDB() {
+		return m_altPatternFromDB;
+	}
+
 	/**
 	 * Generate prepared statements for use in database queries. The
 	 * Prepared Statements Make accessing The Database Much Faster. 
@@ -429,29 +539,52 @@ public final class RationaleDB implements Serializable {
 		try {
 			if( m_ontEntriesQuery != null )
 				m_ontEntriesQuery.close();
-			
+
 			m_ontEntriesQuery = conn.prepareStatement("SELECT childName from " 
-				+ RationaleDBUtil.escapeTableName("ONT_HIERARCHY") + " "
-				+ " where parentName = ?");
+					+ RationaleDBUtil.escapeTableName("ONT_HIERARCHY") + " "
+					+ " where parentName = ?");
 			m_ontEntriesQuery.setEscapeProcessing(true);
 		} catch( SQLException eError ) {
-			int doNothing;
-			doNothing = 0;
+			//int doNothing;
+			//doNothing = 0;
 		}
 		try {
 			if( m_ontEntryFromDB != null )
 				m_ontEntryFromDB.close();
-			
+
 			m_ontEntryFromDB = conn.prepareStatement("SELECT id, importance, description "
 					+ " from " + RationaleDBUtil.escapeTableName("OntEntries")
 					+ " where name = ?");
 			m_ontEntryFromDB.setEscapeProcessing(true);
 		} catch( SQLException eError ) {
-			int doNothing;
-			doNothing = 0;
+			//int doNothing;
+			//doNothing = 0;
+		}
+
+		//for pattern library
+		try {
+			if( m_patternFromDB != null )
+				m_patternFromDB.close();
+
+			m_patternFromDB = conn.prepareStatement("SELECT * "
+					+ " from " + RationaleDBUtil.escapeTableName("patterns")
+					+ " where name = ?");
+			m_patternFromDB.setEscapeProcessing(true);
+
+			if( m_altPatternFromDB != null )
+				m_altPatternFromDB.close();
+
+			m_altPatternFromDB = conn.prepareStatement("SELECT * "
+					+ " from " + RationaleDBUtil.escapeTableName("alternativepatterns")
+					+ " where name = ?");
+			m_altPatternFromDB.setEscapeProcessing(true);
+
+		} catch( SQLException eError ) {
+			//int doNothing;
+			//doNothing = 0;
 		}
 	}
-	
+
 	/**
 	 * This Code Seamlessly Updates A Database With New Data. It will
 	 * check the existing database schema and determine whether the
@@ -459,22 +592,22 @@ public final class RationaleDB implements Serializable {
 	 * exist then the database schema will be modified to contain
 	 * the new attributes with default values.
 	 * 
-	 * TODO: Move This To RationaleDBCreate
+	 * Move This To RationaleDBCreate
 	 * @see RationaleDBCreate
 	 */
 	private void migrate() {
 		Statement l_stmt = null;
-		
+
 		try {
 			l_stmt = conn.createStatement();
-			
+
 			l_stmt.executeQuery("SELECT * FROM " + RationaleDBUtil.escapeTableName("ONT_HIERARCHY"));
 		}
 		catch( Exception eError ) {
 			Statement l_create = null;
 			try {
 				l_create = conn.createStatement();
-				
+
 				l_create.execute(RationaleDBCreate.CREATEVIEW_ONTRELATIONSHIP_HIERARCHY());
 			}
 			catch( Exception eInner ) 
@@ -484,7 +617,7 @@ public final class RationaleDB implements Serializable {
 			}
 			finally {
 				try {
-				l_create.close();
+					l_create.close();
 				}
 				catch( Exception eInner ) {
 				}
@@ -497,7 +630,7 @@ public final class RationaleDB implements Serializable {
 			catch( Exception eInner ) {
 			}
 		}
-		
+
 	}
 
 	/**
@@ -508,7 +641,7 @@ public final class RationaleDB implements Serializable {
 	{
 		RationaleElement.setLastID(saveLast);
 	}
-	
+
 	/**
 	 * Get the connection to the database so we can query it.
 	 * @return the database connection
@@ -556,19 +689,19 @@ public final class RationaleDB implements Serializable {
 	public static void createNewDB(String newDBName)
 	{
 		IPreferenceStore store = SEURATPlugin.getDefault().getPreferenceStore();
-		
+
 		//set our preferences to give the new database name
 		if( store.getString(PreferenceConstants.P_DATABASETYPE).equals
-			(PreferenceConstants.DatabaseType.DERBY) )
+				(PreferenceConstants.DatabaseType.DERBY) )
 		{
 			store.setValue(PreferenceConstants.P_DERBYNAME, newDBName);
 		}
 		else
-		if( store.getString(PreferenceConstants.P_DATABASETYPE).equals
-				(PreferenceConstants.DatabaseType.MYSQL) )
-		{
-			store.setValue(PreferenceConstants.P_DATABASE, newDBName);
-		}
+			if( store.getString(PreferenceConstants.P_DATABASETYPE).equals
+					(PreferenceConstants.DatabaseType.MYSQL) )
+			{
+				store.setValue(PreferenceConstants.P_DATABASE, newDBName);
+			}
 	}
 
 	/**
@@ -610,7 +743,7 @@ public final class RationaleDB implements Serializable {
 	 * @param parentType - type of the parent element
 	 * @return a vector of the children elements
 	 */
-	public Vector getRequirements(String parentName,
+	public Vector<TreeParent> getRequirements(String parentName,
 			RationaleElementType parentType) {
 		return getTreeElements(parentName, "requirements", parentType);
 	}
@@ -622,7 +755,7 @@ public final class RationaleDB implements Serializable {
 	 * @param parentType - type of the parent element
 	 * @return a vector of the children elements
 	 */
-	public Vector getContingencies(String parentName,
+	public Vector<TreeParent> getContingencies(String parentName,
 			RationaleElementType parentType) {
 		return getTreeElements(parentName, "contingencies", parentType);
 	}
@@ -633,7 +766,7 @@ public final class RationaleDB implements Serializable {
 	 * @param parentType - type of the parent element
 	 * @return a vector of the children elements
 	 */
-	public Vector getDesigners(String parentName,
+	public Vector<TreeParent> getDesigners(String parentName,
 			RationaleElementType parentType) {
 		return getTreeElements(parentName, "designerprofiles", parentType);
 	}
@@ -667,7 +800,7 @@ public final class RationaleDB implements Serializable {
 		}
 		return assocs;
 	}
-	
+
 	/**
 	 * Get all the associations from the database that are at a given resource.
 	 * @return a vector of associations
@@ -730,7 +863,7 @@ public final class RationaleDB implements Serializable {
 		}
 		return reqst;
 	}
-	
+
 	/**
 	 * Get all the requirements from the database that are either enabled
 	 * or disabled, depending on what we are looking for
@@ -769,13 +902,47 @@ public final class RationaleDB implements Serializable {
 	}
 
 	/**
+	 * Return a vector of all non-functional requirements
+	 * @return
+	 * @author wang2
+	 */
+	public Vector<Requirement> getNFRs(){
+		Vector<Requirement> nfrs = new Vector<Requirement>();
+		Statement stmt = null;
+		ResultSet rs = null;
+		String findQuery = "";
+		try {
+			stmt = conn.createStatement();
+			findQuery = "SELECT name from "
+				+ RationaleDBUtil.escapeTableName("requirements") + " "
+				+ "where type = 'NFR'";
+			//System.out.println(findQuery);
+			rs = stmt.executeQuery(findQuery);
+			while (rs.next()) {
+				String name = RationaleDBUtil.decode(rs.getString("name"));
+				//System.out.println(name);
+				Requirement req = new Requirement();
+				req.fromDatabase(name);
+				nfrs.add(req);
+			}
+			//System.out.println(nfrs.size());
+		} catch (SQLException ex) {
+			reportError(ex, "Error in getNFRs", findQuery);
+		} finally {
+			releaseResources(stmt, rs);
+		}
+
+		return nfrs;
+	}
+
+	/**
 	 * Get all the decisions that correspond to a particular parent and
 	 * parent type.
 	 * @param parentName - the name of our parent element
 	 * @param parentType - the parent type
 	 * @return the list of decisions
 	 */
-	public Vector getDecisions(String parentName,
+	public Vector<TreeParent> getDecisions(String parentName,
 			RationaleElementType parentType) {
 		//		return getElements(parentName, "decisions", parentType);
 		return getTreeElements(parentName, "decisions", parentType);
@@ -787,7 +954,7 @@ public final class RationaleDB implements Serializable {
 	 * @param parentType - the parent type
 	 * @return the list of questions
 	 */
-	public Vector getQuestions(String parentName,
+	public Vector<TreeParent> getQuestions(String parentName,
 			RationaleElementType parentType) {
 		//   	return getElements(parentName, "questions", parentType);
 		return getTreeElements(parentName, "questions", parentType);
@@ -824,10 +991,10 @@ public final class RationaleDB implements Serializable {
 			}
 
 			if (altV.size() > 0) {
-				Iterator altI = altV.iterator();
+				Iterator<Integer> altI = altV.iterator();
 				while (altI.hasNext()) {
 					Alternative relAlt = new Alternative();
-					relAlt.fromDatabase(((Integer) altI.next()).intValue());
+					relAlt.fromDatabase((altI.next()).intValue());
 					dependent.add(relAlt);
 				}
 			}
@@ -840,7 +1007,56 @@ public final class RationaleDB implements Serializable {
 		}
 		return dependent;
 	}
-	
+
+	/**
+	 * Return a list of alternatives that are dependent on the given pattern alternative.
+	 * @param alt
+	 * @param atype
+	 * @return
+	 */
+	public Vector<Alternative> getDependentAlternatives(AlternativePattern alt, ArgType atype) {
+		Vector<Alternative> dependent = new Vector<Alternative>();
+		Statement stmt = null;
+		ResultSet rs = null;
+		String findQuery = "";
+		try {
+			Vector<Integer> altV = new Vector<Integer>();
+			stmt = conn.createStatement();
+			findQuery = "SELECT parent, ptype from " 
+				+ RationaleDBUtil.escapeTableName("arguments") 
+				+ " where alternative = "
+				+ new Integer(alt.getID()).toString()
+				+ " and (type = '"
+				+ atype.toString() + "')";
+			//***			System.out.println(findQuery);
+			rs = stmt.executeQuery(findQuery);
+			while (rs.next()) {
+				if ((RationaleElementType) RationaleElementType.fromString(rs
+						.getString("ptype")) == RationaleElementType.ALTERNATIVE) {
+					int altID = rs.getInt("parent");
+					altV.add(new Integer(altID));
+
+				}
+			}
+
+			if (altV.size() > 0) {
+				Iterator altI = altV.iterator();
+				while (altI.hasNext()) {
+					Alternative relAlt = new Alternative();
+					relAlt.fromDatabase(((Integer) altI.next()).intValue());
+					dependent.add(relAlt);
+				}
+			}
+
+		} catch (SQLException ex) {
+			reportError(ex, "Error in getDependentAlternatives2", findQuery);
+		} finally {
+			releaseResources(stmt, rs);
+
+		}
+		return dependent;
+	}
+
 	/**
 	 * Get all  arguments that argue about a specific requirement
 	 * @param reqID - the requirement ID
@@ -862,12 +1078,12 @@ public final class RationaleDB implements Serializable {
 			//***			System.out.println(findQuery);
 			rs = stmt.executeQuery(findQuery);
 			while (rs.next()) {
-					int altID = rs.getInt("id");
-					argV.add(new Integer(altID));
+				int altID = rs.getInt("id");
+				argV.add(new Integer(altID));
 			}
 
 			if (argV.size() > 0) {
-				Iterator argI = argV.iterator();
+				Iterator<Integer> argI = argV.iterator();
 				while (argI.hasNext()) {
 					Argument relArg = new Argument();
 					relArg.fromDatabase(((Integer) argI.next()).intValue());
@@ -905,12 +1121,12 @@ public final class RationaleDB implements Serializable {
 			//***			System.out.println(findQuery);
 			rs = stmt.executeQuery(findQuery);
 			while (rs.next()) {
-					int altID = rs.getInt("id");
-					argV.add(new Integer(altID));
+				int altID = rs.getInt("id");
+				argV.add(new Integer(altID));
 			}
 
 			if (argV.size() > 0) {
-				Iterator argI = argV.iterator();
+				Iterator<Integer> argI = argV.iterator();
 				while (argI.hasNext()) {
 					Argument relArg = new Argument();
 					relArg.fromDatabase(((Integer) argI.next()).intValue());
@@ -959,7 +1175,7 @@ public final class RationaleDB implements Serializable {
 			}
 
 			if (altV.size() > 0) {
-				Iterator altI = altV.iterator();
+				Iterator<Integer> altI = altV.iterator();
 				while (altI.hasNext()) {
 					Alternative relAlt = new Alternative();
 					relAlt.fromDatabase(((Integer) altI.next()).intValue());
@@ -1013,18 +1229,18 @@ public final class RationaleDB implements Serializable {
 	 * @param parentType - the type of the parent
 	 * @return a vector of alternatives
 	 */
-	public Vector getAlternatives(String parentName,
+	public Vector<TreeParent> getAlternatives(String parentName,
 			RationaleElementType parentType) {
 		String findQuery = "";
 		//    	return getElements(parentName, "alternatives", parentType);
-		Vector altTree = getTreeElements(parentName, "alternatives", parentType);
+		Vector<TreeParent> altTree = getTreeElements(parentName, "alternatives", parentType);
 		if (altTree != null) {
 			Statement stmt = null;
 			ResultSet rs = null;
 			try {
 				stmt = conn.createStatement();
 				//we need to find out if we are selected
-				Enumeration alts = altTree.elements();
+				Enumeration<TreeParent> alts = altTree.elements();
 				while (alts.hasMoreElements()) {
 					TreeParent alt = (TreeParent) alts.nextElement();
 					alt.setActive(false);
@@ -1062,7 +1278,7 @@ public final class RationaleDB implements Serializable {
 	 * @param parentType - the type of the parent
 	 * @return the arguments
 	 */
-	public Vector getArguments(String parentName,
+	public Vector<TreeParent> getArguments(String parentName,
 			RationaleElementType parentType) {
 		//    	return getElements(parentName, "arguments", parentType);
 		return getTreeElements(parentName, "arguments", parentType);
@@ -1090,7 +1306,7 @@ public final class RationaleDB implements Serializable {
 				//				rs.close();
 			}
 
-			Iterator decI = decNames.iterator();
+			Iterator<String> decI = decNames.iterator();
 			while (decI.hasNext()) {
 				Decision dec = new Decision();
 				dec.fromDatabase((String) decI.next());
@@ -1138,7 +1354,13 @@ public final class RationaleDB implements Serializable {
 			return ("contingencies");
 		} else if (element == RationaleElementType.DESIGNER) {
 			return ("designerprofiles");
-		} else {
+		} else if (element == RationaleElementType.PATTERN) {
+			return ("patterns");
+		}else if (element == RationaleElementType.ALTERNATIVEPATTERN) {
+			return ("alternativepatterns");
+		}else if (element == RationaleElementType.PATTERNDECISION) {
+			return ("patterndecisions");
+		}else {
 			//   		System.out.println("Need to add new type " + parent.toString() );
 
 			return null;
@@ -1176,6 +1398,8 @@ public final class RationaleDB implements Serializable {
 			return RationaleElementType.CONTINGENCY; //or contingency?
 		} else if (elementType.compareTo("designerprofiles") == 0) {
 			return RationaleElementType.DESIGNER;
+		} else if (elementType.compareTo("patterns") == 0) {
+			return RationaleElementType.PATTERN;
 		}
 		/*		else if (elementType.compareTo("requirements" == 0))
 		 {
@@ -1229,6 +1453,17 @@ public final class RationaleDB implements Serializable {
 				RationaleElementType.ALTERNATIVE);
 		return claims;
 	}
+
+	/**
+	 * Return the name of the alternative pattern mapping to the given parent
+	 * @param parentName
+	 * @return the alternative pattern
+	 */
+	public String getAlternativePattern(String parentName) {
+		String alternativePattern = getElement(parentName, "arguments", "alternativepattern",
+				RationaleElementType.ALTERNATIVEPATTERN);
+		return alternativePattern;
+	}
 	/**
 	 * Return the name of the ontology entry mapping to the parent tradeoff
 	 * @param tradeName - the parents name
@@ -1250,6 +1485,8 @@ public final class RationaleDB implements Serializable {
 				RationaleElementType.ONTENTRY);
 		return onts;
 	}
+
+
 
 	/**
 	 * Given the name of the parent, the table type of the parent, the name
@@ -1293,7 +1530,7 @@ public final class RationaleDB implements Serializable {
 			}
 
 			findQuery = "SELECT name FROM " 
-				+ RationaleDBUtil.escapeTableName(this.getTableName(elementType)) 
+				+ RationaleDBUtil.escapeTableName(RationaleDB.getTableName(elementType)) 
 				+ " WHERE id = " + new Integer(pid).toString();
 
 			rs = stmt.executeQuery(findQuery);
@@ -1345,7 +1582,7 @@ public final class RationaleDB implements Serializable {
 			findQuery = "SELECT name FROM " 
 				+ RationaleDBUtil.escapeTableName("OntEntries") + " " 
 				+ " WHERE id = "
-			+ new Integer(pid).toString();
+				+ new Integer(pid).toString();
 			//			System.out.println(findQuery);
 			rs = stmt.executeQuery(findQuery);
 
@@ -1403,7 +1640,7 @@ public final class RationaleDB implements Serializable {
 			}
 			rs.close();
 			//Now, finally, get our children
-			Enumeration ids = children.elements();
+			Enumeration<String> ids = children.elements();
 			while (ids.hasMoreElements()) {
 				findQuery = "SELECT name FROM "
 					+ RationaleDBUtil.escapeTableName("ontentries") + " "
@@ -1423,6 +1660,177 @@ public final class RationaleDB implements Serializable {
 
 		}
 		return onts;
+	}
+
+	/**
+	 * Delete a pattern from the database. Before deleting, must first delete all
+	 * references to this pattern.
+	 * @param patternName
+	 */
+	public void removePattern(String patternName){
+		Statement stmt = null;
+		ResultSet rs = null;
+		String query = "";
+		int patternID = -1;
+
+		//First, get the ID of the pattern.
+		query = "SELECT id from PATTERNS where name = '" + patternName + "'";
+		try{
+			stmt = conn.createStatement();
+			rs = stmt.executeQuery(query);
+			if (rs.next()){
+				patternID = rs.getInt(1);
+			}
+			if (patternID == -1){
+				System.err.println("Cannot find the ID of the pattern");
+				return;
+			}
+
+			Vector<Integer> assocDecision = new Vector<Integer>(); //vector of all associated pattern-decisions
+
+			query = "SELECT id from PATTERNDECISIONS where parent = " + patternID;
+			rs = stmt.executeQuery(query);
+			while (rs.next()){
+				assocDecision.add(rs.getInt(1));
+			}
+
+			//Remove subpatterns first, then decisions, then ontologies.
+			Iterator<Integer> decIterator = assocDecision.iterator();
+			while (decIterator.hasNext()){
+				query = "DELETE FROM PATTERN_DECISION where decisionID = " + Integer.parseInt(decIterator.next().toString());
+				stmt.execute(query);
+			}
+			query = "DELETE FROM PATTERNDECISIONS where parent = " + patternID;
+			stmt.execute(query);
+			query = "DELETE FROM PATTERN_ONTENTRIES where patternID = " + patternID;
+			stmt.execute(query);
+			query = "DELETE FROM PATTERNS where id = " + patternID;
+			stmt.execute(query);
+
+		} catch (SQLException e){
+			e.printStackTrace();
+		}
+
+	}
+
+	/**
+	 * Return a vector containing all parents created from the database entry.
+	 * @return a vector of patterns created.
+	 */
+	public Vector<Pattern> getPatterns(){
+		Vector<Pattern> patterns = new Vector<Pattern>();
+		String findQuery = "";
+		Statement stmt = null;
+		ResultSet rs = null;
+		try {
+			stmt = conn.createStatement();
+			findQuery = "SELECT name FROM patterns";
+			rs = stmt.executeQuery(findQuery);
+			while (rs.next()) {
+				Pattern newPattern = new Pattern();
+				newPattern.fromDatabase(rs.getString("name"));
+				patterns.add(newPattern);
+			}
+		} catch (SQLException ex) {
+			reportError(ex, "error in getPatterns", findQuery);
+		} finally {
+			releaseResources(stmt, rs);
+		}	
+		return patterns;		
+	}
+
+	/**
+	 * Create a vector of new OntEntries that are associated with the given pattern(name).
+	 * @param parentName
+	 * @param isPositive
+	 * @return
+	 */
+	public Vector<OntEntry> getPatternOntologies(String parentName, boolean isPositive){
+
+		Pattern patternSelected = new Pattern();
+		patternSelected.fromDatabase(parentName);
+
+		Vector<OntEntry> onts = new Vector<OntEntry>();
+
+		if(isPositive){
+			onts = patternSelected.getPosiOnts();
+		}else{
+			onts = patternSelected.getNegaOnts();
+		}
+		return onts;
+	}
+
+	/**
+	 * Create a vector of new Candidate Patterns that are associated with the given pattern(name)
+	 * @param parentName
+	 * @return
+	 */
+	public Vector<Pattern> getCandidatePatterns(String parentName){
+		Vector<Pattern> candidatePatterns = new Vector<Pattern>();
+		Statement stmt = null;
+		ResultSet rs = null;
+		String findQuery = "";
+
+		try {
+			PatternDecision parentDecision = new PatternDecision();
+			parentDecision.fromDatabase(parentName);
+			findQuery = "SELECT patternID FROM pattern_decision WHERE decisionID = "
+				+ parentDecision.getID()
+				+ " and parentType = 'Decision'";
+			stmt = conn.createStatement();
+			rs = stmt.executeQuery(findQuery);
+			while(rs.next()){
+				Pattern candidate = new Pattern();
+				candidate.fromDatabase(rs.getInt("patternID"));
+				candidatePatterns.add(candidate);
+			}
+		} catch (SQLException ex) {
+			reportError(ex, "error in getOntology", findQuery);
+		} finally {
+			releaseResources(stmt, rs);
+		}
+
+		return candidatePatterns;		
+	}
+
+
+	/**
+	 * Create a vector of decisions for a given pattern(name) and its grandparent(name).
+	 * @param parentName
+	 * @param grandParentName
+	 * @return
+	 */
+	public Vector<PatternDecision> getPatternDecisions(String parentName, String grandParentName){
+
+		Vector<PatternDecision> children = new Vector<PatternDecision>();
+		Statement stmt = null;
+		ResultSet rs = null;
+		String findQuery = "";
+		try {
+			findQuery = "SELECT id from patterns where name = '" + parentName + "'";
+			stmt = conn.createStatement();
+			rs = stmt.executeQuery(findQuery);
+			int patternID = -1;
+			if(rs.next()){
+				patternID = rs.getInt("id");
+			}		
+			findQuery = "SELECT * FROM patterndecisions where parent = " + patternID;
+			rs = stmt.executeQuery(findQuery);
+
+			while(rs.next()){
+				PatternDecision patternDecision = new PatternDecision();
+				patternDecision.fromDatabase(RationaleDBUtil.decode(rs.getString("name")));
+
+				children.addElement(patternDecision);
+			}
+		}catch (SQLException ex) {
+			reportError(ex, "error in getOntology", findQuery);
+		} finally {
+			releaseResources(stmt, rs);
+		}
+
+
+		return children;
 	}
 
 	/**
@@ -1468,7 +1876,7 @@ public final class RationaleDB implements Serializable {
 
 				while (rs.next()) {
 					children.addElement(new Integer(rs.getInt("child"))
-							.toString());
+					.toString());
 				}
 				rs.close();
 			} else if (ptype == RationaleElementType.ALTCONSTREL) {
@@ -1497,7 +1905,7 @@ public final class RationaleDB implements Serializable {
 
 				while (rs.next()) {
 					children.addElement(new Integer(rs.getInt("constr"))
-							.toString());
+					.toString());
 				}
 				rs.close();
 			} else if (ptype == RationaleElementType.DECISION) {
@@ -1526,12 +1934,12 @@ public final class RationaleDB implements Serializable {
 
 				while (rs.next()) {
 					children.addElement(new Integer(rs.getInt("constr"))
-							.toString());
+					.toString());
 				}
 				rs.close();
 			}
 			//Now, finally, get our children
-			Enumeration ids = children.elements();
+			Enumeration<String> ids = children.elements();
 			while (ids.hasMoreElements()) {
 				findQuery = "SELECT name FROM " 
 					+ RationaleDBUtil.escapeTableName("CONSTRAINTS") + " " 
@@ -1570,9 +1978,9 @@ public final class RationaleDB implements Serializable {
 			int pid = 0;
 			//first, get the ID of our element
 			findQuery = "SELECT id " + " FROM " 
-				+ RationaleDBUtil.escapeTableName("Alternatives") + " "
-				+ " WHERE name = '"
-				+ RationaleDBUtil.escape(parentName) + "'";
+			+ RationaleDBUtil.escapeTableName("Alternatives") + " "
+			+ " WHERE name = '"
+			+ RationaleDBUtil.escape(parentName) + "'";
 
 			rs = stmt.executeQuery(findQuery);
 			if (rs.next()) {
@@ -1645,7 +2053,7 @@ public final class RationaleDB implements Serializable {
 			}
 			rs.close();
 			//Now, finally, get our children
-			Enumeration ids = children.elements();
+			Enumeration<String> ids = children.elements();
 			while (ids.hasMoreElements()) {
 				findQuery = "SELECT name FROM " 
 					+ RationaleDBUtil.escapeTableName("DesignComponents") + " " 
@@ -1679,9 +2087,9 @@ public final class RationaleDB implements Serializable {
 			rs = m_ontEntriesQuery.executeQuery();
 
 			while (rs.next()) {			
-					OntEntry entry = new OntEntry();
-					entry.fromDatabase(rs.getString("childName"));
-					onts.addElement(entry);
+				OntEntry entry = new OntEntry();
+				entry.fromDatabase(rs.getString("childName"));
+				onts.addElement(entry);
 			}
 			rs.close();
 		} catch (SQLException ex) {
@@ -1691,7 +2099,7 @@ public final class RationaleDB implements Serializable {
 		}
 		return onts;
 	}
-	
+
 	/**
 	 * Return a list of child element entries given the parent for treeview display
 	 * @param parentName - the name of the parent
@@ -1699,7 +2107,7 @@ public final class RationaleDB implements Serializable {
 	 * @return a list of child elements - the actual elements, not just names
 	 */
 	public Vector<String> getElements_TreeView(String parentName, RationaleElementType type,boolean firstTime) {
-		
+
 		Vector<String> elements = new Vector<String>();
 		ResultSet rs = null;
 		try {
@@ -1729,13 +2137,13 @@ public final class RationaleDB implements Serializable {
 				else if (type==RationaleElementType.ARGUMENT)
 					selectStr="Select * from (SELECT a.id as childID,a.name as childName,a.parent as parentID,b.name as parentName FROM (arguments as a) left join (arguments as b) on (a.parent=b.id)) as t where t.parentName="+"'"+parentName+"'";
 			}
-//			System.out.println(selectStr);
+			//			System.out.println(selectStr);
 			stmt = conn.createStatement();
 			rs = stmt.executeQuery(selectStr);
 			while (rs.next()) {			
-					String name = "";
-					name = rs.getString("childName");
-					elements.addElement(name);
+				String name = "";
+				name = rs.getString("childName");
+				elements.addElement(name);
 			}
 			rs.close();
 		} catch (SQLException ex) {
@@ -1745,7 +2153,7 @@ public final class RationaleDB implements Serializable {
 		}
 		return elements;
 	}
-	
+
 
 	/**
 	 * Given a parent constraint, return a list of sub-constraints
@@ -1789,7 +2197,7 @@ public final class RationaleDB implements Serializable {
 			}
 			rs.close();
 			//Now, finally, get our children
-			Enumeration ids = children.elements();
+			Enumeration<String> ids = children.elements();
 			while (ids.hasMoreElements()) {
 				findQuery = "SELECT name FROM "
 					+ RationaleDBUtil.escape("CONSTRAINTS") + " "
@@ -1847,8 +2255,8 @@ public final class RationaleDB implements Serializable {
 			}
 
 			findQuery = "SELECT child FROM " 
-			+ RationaleDBUtil.escapeTableName("DesignComponentRelationships") + " "
-			+ " WHERE parent = " + new Integer(pid).toString();
+				+ RationaleDBUtil.escapeTableName("DesignComponentRelationships") + " "
+				+ " WHERE parent = " + new Integer(pid).toString();
 
 			rs = stmt.executeQuery(findQuery);
 
@@ -1857,7 +2265,7 @@ public final class RationaleDB implements Serializable {
 			}
 			rs.close();
 			//Now, finally, get our children
-			Enumeration ids = children.elements();
+			Enumeration<String> ids = children.elements();
 			while (ids.hasMoreElements()) {
 				findQuery = "SELECT name FROM "
 					+ RationaleDBUtil.escapeTableName("DesignComponents") + " "
@@ -1927,7 +2335,7 @@ public final class RationaleDB implements Serializable {
 	 */
 	public Vector<String> getNameList(RationaleElementType type) {
 		Vector<String> ourElements = new Vector<String>();
-		String tableName = this.getTableName(type);
+		String tableName = RationaleDB.getTableName(type);
 		String findQuery = "";
 		Statement stmt = null;
 		ResultSet rs = null;
@@ -1959,7 +2367,193 @@ public final class RationaleDB implements Serializable {
 		return ourElements;
 
 	}
-	
+
+	/**
+	 * This method provides better running time than getPatternByCategory.
+	 * Used for generate candidate patterns.
+	 * @param categoryID
+	 * @return
+	 */
+	public ArrayList<Pattern> getPatternByCategoryID(int categoryID){
+		ArrayList<Pattern> matchingPatterns = new ArrayList<Pattern>();
+
+		try{
+			String query = "";
+			Statement stmt = null;
+			ResultSet rs = null;
+			stmt = conn.createStatement();
+			query = "select patternID from pattern_problemcategory where problemcategoryID = " + categoryID;
+			rs = stmt.executeQuery(query);
+			while (rs.next()){
+				Pattern pattern = new Pattern();
+				pattern.fromDatabase(new Integer(rs.getInt("patternID")));
+				matchingPatterns.add(pattern);
+			}
+		} catch (SQLException e){
+			e.printStackTrace();
+		}
+		return matchingPatterns;
+	}
+
+	/**
+	 * List all patterns associated with one category
+	 * @param category
+	 * @return An array list of patterns
+	 */
+	public ArrayList<Pattern> getPatternByCategory(String category){
+		ArrayList<Pattern> matchedPatterns = new ArrayList<Pattern>();
+
+		try {
+			String query = "";
+			Statement stmt = null;
+			ResultSet rs = null;
+			stmt = conn.createStatement();
+			query = "SELECT id FROM patternproblemcategories WHERE problemcategory = '" + category + "'";
+			rs = stmt.executeQuery(query);
+
+			if(rs.next()){
+
+				query = "SELECT patternID FROM pattern_problemcategory WHERE problemcategoryID = " + rs.getInt("id");
+				rs = stmt.executeQuery(query);
+
+				while(rs.next()){
+					Pattern pattern = new Pattern();
+					pattern.fromDatabase(new Integer(rs.getInt("patternID")));
+					matchedPatterns.add(pattern);
+				}
+			}			
+
+		} catch (SQLException e) {
+
+			e.printStackTrace();
+		}		
+		return matchedPatterns;
+	}
+
+	/**
+	 * Returns the id of the problem category given a pattern ID
+	 * @param patternID
+	 * @return -1 if it is not associated, otherwise it returns the ID of the problem category.
+	 */
+	public int getCategoryByPattern(int patternID){
+		int toReturn = -1;
+		Statement stmt = null;
+		ResultSet rs = null;
+		try{
+			stmt = conn.createStatement();
+			String query = "SELECT problemcategoryID from pattern_problemcategory WHERE patternID = " + patternID + "";
+			rs = stmt.executeQuery(query);
+			if (rs.next()){
+				toReturn = rs.getInt("problemcategoryID");
+			}
+		}catch (SQLException e){
+			e.printStackTrace();
+		}
+		finally{
+			releaseResources(stmt, rs);
+		}
+		return toReturn;
+	}
+
+	/**
+	 * Given a pattern type, return a map from name to id of problem categories.
+	 * @param patternType
+	 * @return a has map between category id and category name.
+	 */
+	public HashMap<String, Integer> getCategories(String patternType){
+
+		//Wang uses upper case for archiecture name, so we should 'convert' it first...
+		/*char upperCaseBeginning = patternType.toUpperCase().charAt(0);
+		String correctedType = upperCaseBeginning + patternType.substring(1);
+		patternType = correctedType;*/
+		//This should be fixed...
+
+		HashMap<String, Integer> map = new HashMap<String, Integer>();
+		Statement stmt = null;
+		ResultSet rs = null;
+		try{
+			stmt = conn.createStatement();
+			String query = "SELECT id, problemcategory FROM patternproblemcategories  WHERE patterntype = '" + patternType + "'";
+			rs = stmt.executeQuery(query);
+			while (rs.next()){
+				Integer id = rs.getInt("id");
+				String problemcategory = rs.getString("problemcategory");
+				map.put(problemcategory, id);
+			}
+		} catch (SQLException e) {e.printStackTrace();};
+		return map;
+	}
+
+	/**
+	 * Given a pattern type, return all patterns matches the type.
+	 * The type is "archiecture", "idiom", or "design" 
+	 * @param patternType
+	 * @return A vector of TreeParent, having element type pattern
+	 */
+	private Vector<TreeParent> getPatterns(String patternType){
+		Vector<TreeParent> patternList = new Vector<TreeParent>();
+		String query = "";
+		Statement stmt = null;
+		ResultSet rs = null;
+		Pattern pattern = new Pattern();
+
+		try {
+			stmt = conn.createStatement();
+			query = "SELECT name FROM patterns WHERE type = '"
+				+ patternType + "'";
+			rs = stmt.executeQuery(query);
+			//			while(rs.next()){
+			//				pattern.fromDatabase((rs.getString("name")));
+			//				System.out.println(pattern.getName());
+			//				patternList.add(pattern);
+			//			}q1]
+
+			while (rs.next()) {
+				TreeParent element = new TreeParent(RationaleDBUtil.decode(rs
+						.getString("name")), RationaleElementType.PATTERN);
+				patternList.addElement(element);
+			}
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}		
+		return patternList;
+	}
+
+	/**
+	 * Given a pattern type, return all patterns matches the type
+	 * @param type
+	 * @return A vector of Patterns
+	 */
+	public ArrayList<Pattern> getPatternsByType(String type){
+		ArrayList<Pattern> patterns = new ArrayList<Pattern>();
+		String query = "";
+		Statement stmt = null;
+		ResultSet rs = null;		
+
+		try {
+			stmt = conn.createStatement();
+			query = "SELECT name FROM patterns WHERE type = '"
+				+ type + "'";
+			rs = stmt.executeQuery(query);
+			while(rs.next()){
+				Pattern pattern = new Pattern();
+				pattern.fromDatabase((rs.getString("name")));
+				System.out.println(pattern.getName());
+				patterns.add(pattern);
+			}
+
+			//			while (rs.next()) {
+			//				TreeParent element = new TreeParent(RationaleDBUtil.decode(rs
+			//						.getString("name")), RationaleElementType.PATTERN);
+			//				patternList.addElement(element);
+			//			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}		
+		return patterns;
+	}
+
 	/**
 	 * Get a list of names of all elements in the database that have a
 	 * particular rationale element type and where the name contains a search string
@@ -1969,7 +2563,7 @@ public final class RationaleDB implements Serializable {
 	 */
 	public Vector<String> getNameList(RationaleElementType type, String sstring) {
 		Vector<String> ourElements = new Vector<String>();
-		String tableName = this.getTableName(type);
+		String tableName = RationaleDB.getTableName(type);
 		String findQuery = "";
 		Statement stmt = null;
 		ResultSet rs = null;
@@ -2010,12 +2604,12 @@ public final class RationaleDB implements Serializable {
 	 * @return - the list of names
 	 */
 	public static boolean elementExists(String name, RationaleElementType type) {
-		
+
 		boolean exists;
 		exists = false;
-		int id = -1;
-		
-		Vector<String> ourElements = new Vector<String>();
+		//int id = -1;
+
+		//Vector<String> ourElements = new Vector<String>();
 		String tableName = RationaleDB.getTableName(type);
 		String findQuery = "";
 		Statement stmt = null;
@@ -2030,7 +2624,7 @@ public final class RationaleDB implements Serializable {
 			rs = stmt.executeQuery(findQuery);
 
 			while (rs.next()) {
-				int nextID = rs.getInt("id");
+				//int nextID = rs.getInt("id");
 				exists = true;
 			}
 			rs.close();
@@ -2077,12 +2671,12 @@ public final class RationaleDB implements Serializable {
 			}
 			System.out.println(findQuery);
 			rs = stmt.executeQuery(findQuery);
-			
+
 			while (rs.next()) {
 				ourElements
 				.addElement(RationaleDBUtil.decode(rs.getString("name")));
 			}
-			
+
 		} catch (SQLException ex) {
 			reportError(ex, "Error in getNameList", findQuery);
 		} finally {
@@ -2090,7 +2684,7 @@ public final class RationaleDB implements Serializable {
 		}
 		return ourElements;
 	}
-	
+
 	/**
 	 * Get a list of all "potential new parents" for a particular type of rationale element
 	 * @param type - the type of element whose new parent we are looking for
@@ -2107,7 +2701,7 @@ public final class RationaleDB implements Serializable {
 			{
 				findQuery = "SELECT name FROM decisions";
 			}
-/*			else if (type == RationaleElementType.ARGUMENT)
+			/*			else if (type == RationaleElementType.ARGUMENT)
 			{
 				findQuery = "(SELECT name FROM requirements) union (select name FROM alternatives)";	
 			} */
@@ -2129,12 +2723,12 @@ public final class RationaleDB implements Serializable {
 			}
 			System.out.println(findQuery);
 			rs = stmt.executeQuery(findQuery);
-			
+
 			while (rs.next()) {
 				ourElements
 				.addElement(RationaleDBUtil.decode(rs.getString("name")));
 			}
-			
+
 		} catch (SQLException ex) {
 			reportError(ex, "Error in getNameList", findQuery);
 		} finally {
@@ -2142,7 +2736,7 @@ public final class RationaleDB implements Serializable {
 		}
 		return ourElements;	
 	}
-	
+
 	/**
 	 * Get a list of all "potential new parents" for Argument type of rationale element
 	 * @param type - the type of element whose new parent we are looking for
@@ -2156,7 +2750,7 @@ public final class RationaleDB implements Serializable {
 		ResultSet rs = null;
 		try {
 			stmt = conn.createStatement();
-			
+
 			if (type == RationaleElementType.ARGUMENT && ptype== RationaleElementType.REQUIREMENT)
 			{
 				findQuery = "SELECT name FROM requirements";	
@@ -2175,12 +2769,12 @@ public final class RationaleDB implements Serializable {
 			}
 			System.out.println(findQuery);
 			rs = stmt.executeQuery(findQuery);
-			
+
 			while (rs.next()) {
 				ourElements
 				.addElement(RationaleDBUtil.decode(rs.getString("name")));
 			}
-			
+
 		} catch (SQLException ex) {
 			reportError(ex, "Error in getNameList", findQuery);
 		} finally {
@@ -2188,8 +2782,8 @@ public final class RationaleDB implements Serializable {
 		}
 		return ourElements;
 	}
-	
-	
+
+
 	/**
 	 * Returns a list of TreeParent items (to put in the tree from the RationaleExplorer)
 	 * from the database given the parent name, the element type, and the parent type.
@@ -2219,7 +2813,6 @@ public final class RationaleDB implements Serializable {
 					+ RationaleDBUtil.escapeTableName(getTableName(parentType))
 					+ "  WHERE name= '" + RationaleDBUtil.escape(parentName)
 					+ "'";
-				//
 				rs = stmt.executeQuery(findQuery);
 				if (rs.next()) {
 					pid = rs.getInt("id");
@@ -2231,19 +2824,20 @@ public final class RationaleDB implements Serializable {
 							+ " for name " + parentName);
 					return (new Vector<TreeParent>());
 				}
-
+				/*already have parentType==null in the front. This can't happen.
 				if (parentType == null) {
 					findQuery = "SELECT name FROM " 
 						+ RationaleDBUtil.escapeTableName(elementType) + " "
 						+ " WHERE parent = " + new Integer(pid).toString()
 						+ " ORDER BY name ASC";
 				} else {
-					findQuery = "SELECT name FROM " 
-						+ RationaleDBUtil.escapeTableName(elementType) + " "
-						+ " WHERE parent = " + new Integer(pid).toString()
-						+ " AND ptype = '" + parentType.toString()
-						+ "' ORDER BY name ASC";
-				}
+				 */
+				findQuery = "SELECT name FROM " 
+					+ RationaleDBUtil.escapeTableName(elementType) + " "
+					+ " WHERE parent = " + new Integer(pid).toString()
+					+ " AND ptype = '" + parentType.toString()
+					+ "' ORDER BY name ASC";
+				//}
 
 			}
 			if (error) {
@@ -2265,7 +2859,7 @@ public final class RationaleDB implements Serializable {
 					|| (type == RationaleElementType.DECISION)
 					|| (type == RationaleElementType.ALTERNATIVE)) {
 
-				Enumeration stats = treeElementList.elements();
+				Enumeration<TreeParent> stats = treeElementList.elements();
 				while (stats.hasMoreElements()) {
 					TreeParent element = (TreeParent) stats.nextElement();
 					RationaleErrorLevel ourStatus = getActiveStatus(element
@@ -2294,12 +2888,12 @@ public final class RationaleDB implements Serializable {
 	 * @return a list of tree elements
 	 */
 	public Vector<CandidateTreeParent> getCandidateTreeElements(RationaleElementType etype) {
-		
+
 		Vector<CandidateTreeParent> treeElementList = new Vector<CandidateTreeParent>();
 		String findQuery = "";
 		Statement stmt = null;
 		ResultSet rs = null;
-		boolean error = false;
+		//boolean error = false;
 		try {
 			stmt = conn.createStatement();
 			findQuery = "Select name FROM candidates where type = '" + 
@@ -2311,7 +2905,7 @@ public final class RationaleDB implements Serializable {
 				treeElementList.add(treeE);
 			}
 
-			
+
 		} catch (SQLException ex) {
 			if (ex.getErrorCode() == 1146) {
 				reportError(ex, "getTreeElements - could not find table",
@@ -2324,7 +2918,7 @@ public final class RationaleDB implements Serializable {
 		}
 		return treeElementList;
 	}
-	
+
 
 	/**
 	 * Given an alternative, find all the related constraints.
@@ -2489,7 +3083,7 @@ public final class RationaleDB implements Serializable {
 	     return worst;
 
 	     }
-	     */
+	 */
 
 
 	/**
@@ -2565,7 +3159,7 @@ public final class RationaleDB implements Serializable {
 		tradeoffNames = getTradeoffs(RationaleElementType.TRADEOFF);
 		tradeoffNames.addAll(getTradeoffs(RationaleElementType.COOCCURRENCE));
 
-		Iterator tradeI = tradeoffNames.iterator();
+		Iterator<String> tradeI = tradeoffNames.iterator();
 		while (tradeI.hasNext()) {
 			Tradeoff ourTrade = new Tradeoff();
 			ourTrade.fromDatabase((String) tradeI.next());
@@ -2665,9 +3259,9 @@ public final class RationaleDB implements Serializable {
 			findQuery = "SELECT status  FROM " 
 				+ RationaleDBUtil.escapeTableName("status")
 				+ " WHERE parent = "
-			+ new Integer(parent).toString() + " and ptype = '" + ptype
-			+ "'" + " and description = '"
-			+ RationaleDBUtil.escape(descrip) + "'";
+				+ new Integer(parent).toString() + " and ptype = '" + ptype
+				+ "'" + " and description = '"
+				+ RationaleDBUtil.escape(descrip) + "'";
 			System.out.println(findQuery);
 			rs = stmt.executeQuery(findQuery);
 
@@ -2777,17 +3371,50 @@ public final class RationaleDB implements Serializable {
 	}
 
 	/**
+	 * Get patterns of type architecture
+	 * @param parentName
+	 * @param parentType
+	 * @return
+	 */
+	public Vector getArchitecturePatterns(String parentName,
+			RationaleElementType parentType) {
+
+
+		return getPatterns("Architecture");
+	}
+
+	/**
+	 * Get patterns of type design
+	 * @param parentName
+	 * @param parentType
+	 * @return
+	 */
+	public Vector getDesignPatterns(String parentName,
+			RationaleElementType parentType) {
+		return getPatterns("Design");
+	}
+
+	/**
+	 * Get patterns of type idiom
+	 * @return
+	 */
+	public Vector getIdioms() {
+		return getPatterns("Idiom");
+	}
+
+	/**
 	 * Add a new status elements to the database. This is done because
 	 * SEURAT detected problems with the rationale.
 	 * @param newStatus - the status element
 	 */
 	public void addStatus(Vector<RationaleStatus> newStatus) {
-		Iterator statI = newStatus.iterator();
+		Iterator<RationaleStatus> statI = newStatus.iterator();
 		while (statI.hasNext()) {
 			RationaleStatus stat = (RationaleStatus) statI.next();
 			if (stat.getParent() <= 0) {
 				System.out.println("error in status value");
 			} else {
+				System.out.println("Added status " + stat.getDescription());
 				stat.toDatabase(stat.getParent());
 			}
 
@@ -2801,7 +3428,7 @@ public final class RationaleDB implements Serializable {
 	 */
 	public void removeStatus(Vector<RationaleStatus> oldStatus) {
 		String updateStr = "";
-		Iterator statI = oldStatus.iterator();
+		Iterator<RationaleStatus> statI = oldStatus.iterator();
 		while (statI.hasNext()) {
 			RationaleStatus stat = (RationaleStatus) statI.next();
 			Statement stmt = null;
@@ -2929,6 +3556,80 @@ public final class RationaleDB implements Serializable {
 		}
 	}
 
+
+	/**
+	 * Delete the candidate pattern associated with a pattern decision in Pattern Library
+	 * @param String - the name of the pattern, String - the name of the parent decision
+	 */
+	public void removeCandidatePattern(String patternName, String decisionName){
+		Statement stmt = null;
+		String removeCanPattern = "";
+		try {
+			stmt = conn.createStatement();
+			Pattern p = new Pattern();
+			p.fromDatabase(patternName);
+			PatternDecision pd = new PatternDecision();
+			pd.fromDatabase(decisionName);
+			removeCanPattern = "Delete from pattern_decision where parentType = 'Decision' and patternID = " + p.getID() + " and decisionID = " + pd.getID();
+			stmt.execute(removeCanPattern);
+		} catch (SQLException e) {
+			reportError(e, "Error in removeCandidatePattern", removeCanPattern);
+		} finally {
+			releaseResources(stmt, null);
+		}
+
+	}
+
+	/**
+	 * Remove pattern ontology entry
+	 * @param ontName
+	 * @param patternName
+	 * @param direction
+	 */
+	public void removePatternOnt(String ontName, String patternName, String direction){
+		Statement stmt = null;
+		String removePOnt = "";
+		try {
+			stmt = conn.createStatement();
+			Pattern p = new Pattern();
+			p.fromDatabase(patternName);
+			OntEntry oe = new OntEntry();
+			oe.fromDatabase(ontName);
+			removePOnt = "Delete from pattern_ontentries where ontID = " + oe.getID() + " and patternID = " + p.getID() + " and direction = '" + direction + "'";
+			stmt.execute(removePOnt);
+		} catch (SQLException e) {
+			reportError(e, "Error in removePatternOnt", removePOnt);
+		} finally {
+			releaseResources(stmt, null);
+		}
+	}
+
+	/**
+	 * Save candidate patterns 
+	 * @param decisionName
+	 * @param patternNames
+	 */
+	public void saveCandidatePatterns(String decisionName, Vector<String> patternNames){
+		String insertCanPattern = "";
+		Statement stmt = null;
+		try {
+			stmt = conn.createStatement();
+			PatternDecision pd = new PatternDecision();
+			pd.fromDatabase(decisionName);
+			for(int k=0; k<patternNames.size(); k++){
+				Pattern p = new Pattern();
+				p.fromDatabase(patternNames.get(k));				
+				insertCanPattern = "INSERT INTO pattern_decision (patternID, decisionID, parentType) VALUES (" + p.getID() + "," + pd.getID() + ", 'Decision')";
+				//System.out.println(insertCanPattern);
+				stmt.execute(insertCanPattern);
+			}
+		} catch (SQLException e) {
+			reportError(e, "Error in saveCandidatePatterns", insertCanPattern);
+		} finally {
+			releaseResources(stmt, null);
+		}
+	}
+
 	/**
 	 * Remove all status records for a specific rationale element.
 	 * @param id - the ID of the element
@@ -3032,7 +3733,7 @@ public final class RationaleDB implements Serializable {
 		try {
 			stmt = conn.createStatement();
 			deleteCmd = "DELETE FROM "
-				+ RationaleDBUtil.escapeTableName(this.getTableName(ele.getElementType()))
+				+ RationaleDBUtil.escapeTableName(RationaleDB.getTableName(ele.getElementType()))
 				+ " where id = "
 				+ new Integer(id).toString();
 			//		 System.out.println(deleteCmd);
@@ -3047,38 +3748,38 @@ public final class RationaleDB implements Serializable {
 		}
 
 	}
-	
+
 	/** 
-	* Remove a rationale candidate from the database. This can't use the generic
-	* deleteRationaleElement because the type doesn't signify the table name. 
+	 * Remove a rationale candidate from the database. This can't use the generic
+	 * deleteRationaleElement because the type doesn't signify the table name. 
 	 * @param ele - the rationale element to remove.
 	 */
 	public void deleteCandidateRationaleElement(CandidateRationale ele) {
 
 		int id = ele.getID();
-		
+
 		//now, delete ourself from the database
 		Connection conn = getConnection();
 		String deleteCmd = "";
 		Statement stmt = null;
-		
+
 		//		System.out.println("Deleting rationale from the database");
-		
+
 		try {
 			stmt = conn.createStatement();
 			deleteCmd = "DELETE FROM Candidates where id = "
 				+ new Integer(id).toString();
 			//		 System.out.println(deleteCmd);
 			stmt.execute(deleteCmd);
-			
+
 		} catch (SQLException ex) {
 			reportError(ex, "Error in deleteRationaleElement", deleteCmd);
 		}
-		
+
 		finally {
 			releaseResources(stmt, null);
 		}
-		
+
 	}
 
 	/**
@@ -3117,7 +3818,7 @@ public final class RationaleDB implements Serializable {
 			findCmd = "Select id FROM "
 				+ RationaleDBUtil.escapeTableName("arguments") + " "
 				+ " where " + argField + " = "
-			+ new Integer(id).toString();
+				+ new Integer(id).toString();
 			//***			 System.out.println(findCmd);
 			rs = stmt.executeQuery(findCmd);
 
@@ -3152,7 +3853,7 @@ public final class RationaleDB implements Serializable {
 			findQuery = "SELECT *  FROM " 
 				+ RationaleDBUtil.escapeTableName("claims") + " "
 				+ " WHERE importance <> '"
-			+ Importance.DEFAULT.toString() + "'";
+				+ Importance.DEFAULT.toString() + "'";
 			//***		System.out.println(findQuery);
 			rs = stmt.executeQuery(findQuery);
 
@@ -3309,13 +4010,13 @@ public final class RationaleDB implements Serializable {
 	public static String getDbName() {
 		return dbName;
 	}
-	
+
 	/**
 	 * Gets the name of the default ontology file
 	 * @return the filename
 	 */
 	public static String getOntName() {
-		return ontFile;
+		return ratDBCreateFile;
 	}
 
 	/**
@@ -3328,7 +4029,7 @@ public final class RationaleDB implements Serializable {
 		try {
 			istream = new FileInputStream(ratFile);
 		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
+
 			e.printStackTrace();
 		}
 
@@ -3385,11 +4086,11 @@ public final class RationaleDB implements Serializable {
 		{
 			String nextName;
 			nextName = ratNext.getNodeName();
-//			System.out.println(nextName);
+			//			System.out.println(nextName);
 			//here we check the type, then process
 			if (nextName.compareTo("DR:argOntology") == 0)
 			{
-//				System.out.println("found the ontology");
+				//				System.out.println("found the ontology");
 				//need to get the root ontology entry
 				Element topOnt = (Element) ratNext.getFirstChild();
 				//process argument ontology
@@ -3400,7 +4101,7 @@ public final class RationaleDB implements Serializable {
 			else if (nextName.compareTo("DR:requirement") == 0)
 			{
 				Requirement nextReq = new Requirement();
-//				s.addRequirement(nextReq);
+				//				s.addRequirement(nextReq);
 				nextReq.fromXML(ratNext);
 				s.addRequirement(nextReq);
 			}
@@ -3429,7 +4130,7 @@ public final class RationaleDB implements Serializable {
 		}
 
 	}
-	
+
 	/**
 	 * Exports the argument ontology to XML by calling the appropriate
 	 * utility function and passing it the name of the file we are exporting to.
@@ -3439,6 +4140,17 @@ public final class RationaleDB implements Serializable {
 	 */
 	public boolean exportOntology(String path) {
 		return RationaleDBUtil.exportArgumentOntology(path);
+	}
+
+	/**
+	 * Exports the whole db to an XML file.
+	 * (Currently, we're only exporting pattern library and the ontology)
+	 * This is done by calling the utlity function in RationaleDBUtil.
+	 * @param path
+	 * @return true if it's successful. false otherwise.
+	 */
+	public boolean exportXML(String path){
+		return RationaleDBUtil.exportToXML(path);
 	}
 
 	/**
@@ -3535,6 +4247,53 @@ public final class RationaleDB implements Serializable {
 	}
 
 	/**
+	 * Used to get the XML reference string of a pattern
+	 * @param p
+	 * @return
+	 */
+	public String getRef(Pattern p){
+		Iterator keyIterator = xmlRefs[PATTERN_XML_INDEX].keySet().iterator();
+		while (keyIterator.hasNext()){
+			String current = (String) keyIterator.next();
+			if (p.equals(xmlRefs[PATTERN_XML_INDEX].get(current))) return current;
+		}
+		return null;
+	}
+
+	/**
+	 * Used to get the XML reference string of a pattern deicison
+	 * @param d
+	 * @return
+	 */
+	public String getRef(PatternDecision d){
+		Iterator keyIterator = xmlRefs[PATTERNDECISION_XML_INDEX].keySet().iterator();
+		while (keyIterator.hasNext()){
+			String current = (String) keyIterator.next();
+			if (d.equals(xmlRefs[PATTERNDECISION_XML_INDEX].get(current))) return current;
+		}
+		return null;
+	}
+
+	/**
+	 * Used to get the XML reference string of a problem category
+	 * @param id
+	 * @param problem
+	 * @param type
+	 * @return
+	 */
+	public String getRef(String id, String problem, String type){
+		Iterator keyIterator = xmlRefs[PATTERNPROBLEMCATEGORY_XML_INDEX].keySet().iterator();
+		while (keyIterator.hasNext()){
+			String current = (String) keyIterator.next();
+			String[] curValue = (String[]) xmlRefs[PATTERNPROBLEMCATEGORY_XML_INDEX].get(current);
+			if (id.equals(curValue[0])){
+				return current;
+			}
+		}
+		return null;
+	}
+
+	/**
 	 * this is the version of getRef that returns a rationale element
 	 * this is used when reading in rationale from the XML, in this
 	 * case, storing ids is not sufficient
@@ -3564,6 +4323,27 @@ public final class RationaleDB implements Serializable {
 		return newRef;
 	}
 
+	public String addPatternRef(Pattern p){
+		Integer tempi = new Integer(p.getID());
+		String ref = "p" + tempi.toString();
+		xmlRefs[PATTERN_XML_INDEX].put(ref, p);
+		return ref;
+	}
+
+	public String addPatternDecisionRef(PatternDecision d){
+		Integer tempi = new Integer(d.getID());
+		String ref = "pd" + tempi.toString();
+		xmlRefs[PATTERNDECISION_XML_INDEX].put(ref, d);
+		return ref;
+	}
+
+	public String addPatternCategoryRef(String id, String category, String type){
+		String ref = "c" + id;
+		String[] value = {id, category, type};
+		xmlRefs[PATTERNPROBLEMCATEGORY_XML_INDEX].put(ref, value);
+		return ref;
+	}
+
 	/**
 	 * This is the version of addRef that puts a RationaleElement into the hash
 	 * table. This is used when reading in the XML
@@ -3574,36 +4354,196 @@ public final class RationaleDB implements Serializable {
 		idRefs.put(sr, re);
 	}
 
-	/* The following method does not appear to be used anywhere - why wouldn't
-	 * we need to do this???
-	 private void addXMLBackgroundKN(Document ratDoc, Element rationale)
-	 {
-	 System.out.println("adding background knowledge (if any)");
-	 Element knParent = ratDoc.createElement("DR:backgroundKn");
-	 rationale.appendChild(knParent);
-	 Enumeration trades = tradeoffs.elements();
-	 while (trades.hasMoreElements())
-	 {
-	 Tradeoff trade = (Tradeoff) trades.nextElement();
-	 }
-	 Enumeration occurences = co_occurences.elements();
-	 while (occurences.hasMoreElements())
-	 {
-	 Tradeoff trade = (Tradeoff) occurences.nextElement();
-	 }
-	 System.out.println("done adding background knowledge");
-	 }
+	/**
+	 * Given a pattern object that was created from XML, add it to the database.
+	 * Note that at this point, the database may violate referential integrity constraints.
+	 * @param pattern
 	 */
+	public void addPatternFromXML(Pattern pattern){
+
+		try{
+			//First, insert the pattern to the database. Easy...
+			PreparedStatement ps = conn.prepareStatement("INSERT INTO PATTERNS values (" +
+			"?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+			ps.setInt(1, pattern.getID());
+			ps.setString(2, pattern.getName());
+			ps.setString(3, pattern.getType().toString());
+			ps.setBytes(4, pattern.getDescription().getBytes());
+			ps.setBytes(5, pattern.getProblem().getBytes());
+			ps.setBytes(6, pattern.getContext().getBytes());
+			ps.setBytes(7, pattern.getSolution().getBytes());
+			ps.setBytes(8, pattern.getImplementation().getBytes());
+			ps.setBytes(9, pattern.getExample().getBytes());
+			ps.setString(10, pattern.getUrl());
+			ps.executeUpdate();
+			ps.close();
+
+			//Next, create entry to connect with patternproblemcategory
+			Statement stmt = conn.createStatement();
+			String expr = "INSERT INTO PATTERN_PROBLEMCATEGORY (patternID, problemcategoryID)" + 
+			" values (" + pattern.getID() + ", " + pattern.getProblemCategory() + ")";
+			stmt.execute(expr);
+
+			//Then, create entry to connect with positive ontology
+			Iterator<Integer> pos = pattern.iteratorPosOntID();
+			while (pos.hasNext()){
+				int ontID = pos.next();
+				expr = "INSERT INTO PATTERN_ONTENTRIES values (" + 
+				pattern.getID() + ", " + ontID + ", 'IS')";
+				stmt.execute(expr);
+			}
+			//Neg ontology
+			Iterator<Integer> neg = pattern.iteratorNegOntID();
+			while (neg.hasNext()){
+				int ontID = neg.next();
+				expr = "INSERT INTO PATTERN_ONTENTRIES values (" + 
+				pattern.getID() + ", " + ontID + ", 'NOT')";
+				stmt.execute(expr);
+			}
+			stmt.close();
+
+			//connection with sub-decision must be done in utility after decision has been created...
+		} catch (SQLException e){
+			e.printStackTrace();
+		}
+	}
+
+	/**
+	 * Given a pattern decision imported from xml, add it to the database.
+	 * Note that the parent value must be updated later.
+	 * @param pd
+	 */
+	public void addPatternDecisionFromXML(PatternDecision pd){
+		try{
+			Statement stmt = conn.createStatement();
+			String expr = "INSERT INTO PATTERNDECISIONS (id, name, description, type, status, phase, ptype, subdecreq)"+
+			" values (" + pd.getID() + ", '" + pd.getName() + "', '" + pd.getDescription() + "', '" + 
+			pd.getType().toString() + "', '" + pd.getStatus().toString() + "', '" + pd.getPhase().toString() +
+			"', 'Pattern', 'No')";
+			stmt.execute(expr);
+
+			//Now, add the associated candidate patterns
+			Iterator<Integer> candidatePID = pd.iteratorSubPatterns();
+			while (candidatePID.hasNext()){
+				int cpid = candidatePID.next();
+				expr = "INSERT INTO PATTERN_DECISION values (" + cpid + ", " + pd.getID() + ", 'Decision')";
+				stmt.execute(expr);
+			}
+			stmt.close();
+		} catch (SQLIntegrityConstraintViolationException e){
+			System.out.println("WARNING: Duplicated Entry. Skipping: " + pd.getName());
+		} catch (SQLException e){
+			e.printStackTrace();
+		} 
+	}
+
+	/**
+	 * Assume pattern and patterndecisions have been imported. Utility can call this method to associate
+	 * between pattern and child pattern-decisions.
+	 * @param patternID
+	 * @param pdID
+	 */
+	public void assocPatternAndDecisionFromXML(int patternID, int pdID){
+		try{
+			Statement stmt = conn.createStatement();
+			String expr = "UPDATE PATTERNDECISIONS set parent = " + patternID + " WHERE id = " + pdID;
+			stmt.execute(expr);
+		} catch (SQLException e){
+			e.printStackTrace();
+		}
+	}
+
+	/**
+	 * This method is used for XML import of pattern problem category.
+	 * Given the database id, category, and type of the problem category, add
+	 * it to the database.
+	 * @param id The parsed id of the reference id in XML
+	 * @param category
+	 * @param type
+	 */
+	public void addProblemCategory(int id, String category, String type){
+		try{
+			Statement stmt = conn.createStatement();
+			String expr = "INSERT INTO PATTERNPROBLEMCATEGORIES values (" +
+			new Integer(id).toString() + ", '" + category + "', '" + type + "')";
+			stmt.execute(expr);
+			stmt.close();
+		}
+		catch (SQLException e){
+			e.printStackTrace();
+		}
+	}
+
+	/**
+	 * This method returns all database info about problem category.
+	 * Used for XML export
+	 * String[0] represents the id of each problem category
+	 * String[1] represents the problem category names
+	 * String[2] represents the type of each problem category
+	 * @return Vector containing String[3]
+	 */
+	public Vector<String[]> getProblemCategoryData(){
+		Vector<String[]> toReturn = new Vector<String[]>();
+		try{
+			Statement stmt = conn.createStatement();
+			ResultSet rs = null;
+
+			String query = "SELECT *" +
+			"FROM PATTERNPROBLEMCATEGORIES";
+
+			rs = stmt.executeQuery(query);
+
+			while (rs.next()){
+				String[] content = new String[3];
+				content[0] = new Integer(rs.getInt(1)).toString();
+				content[1] = rs.getString(2);
+				content[2] = rs.getString(3);
+				toReturn.add(content);
+			}
+			stmt.close();
+		} catch (SQLException e){
+			e.printStackTrace();
+		}
+		return toReturn;
+	}
+
+	/**
+	 * This method returns all database info about patterns.
+	 * Used for XML export.
+	 * @return
+	 */
+	public Vector<Pattern> getPatternData(){
+		Vector<Pattern> toReturn = new Vector<Pattern>();
+		try{
+			Statement stmt = conn.createStatement();
+			ResultSet rs = null;
+			String query = "SELECT id FROM patterns";
+			rs = stmt.executeQuery(query);
+
+			while (rs.next()){
+				Integer id = rs.getInt(1);
+				Pattern pattern = new Pattern();
+				pattern.fromDatabase(id);
+				toReturn.add(pattern);
+			}
+			stmt.close();
+		} catch (SQLException e){
+			e.printStackTrace();
+		}
+
+		return toReturn;
+	}
 
 	/**
 	 * What appears to be happening with the XML is that the rationale elements
 	 * are read from the file and stored into vectors. Then, this method is called
 	 * to put the elements actually INTO the database.
+	 * @deprecated not using it right now
 	 */
-//	private void addXMLRequirements(Document ratDoc)
+	//	private void addXMLRequirements(Document ratDoc)
 	private void addXMLRequirements()
 	{
-		Enumeration reqs = requirements.elements();
+		Enumeration<Requirement> reqs = requirements.elements();
 		while (reqs.hasMoreElements())
 		{
 			Requirement req = (Requirement) reqs.nextElement();
@@ -3612,11 +4552,14 @@ public final class RationaleDB implements Serializable {
 	}
 
 
-
+	/**
+	 * This method is called when adding XML decisions
+	 * @deprecated Not using it right now
+	 */
 	private void addXMLDecisions()
 	{
 
-		Enumeration decs = decisions.elements();
+		Enumeration<Decision> decs = decisions.elements();
 		while (decs.hasMoreElements())
 		{
 			Decision dec = (Decision) decs.nextElement();
@@ -3624,6 +4567,510 @@ public final class RationaleDB implements Serializable {
 			//dec.toDatabase(0, RationaleElementType.NONE);
 		}
 		System.out.println("done adding decisions");
+	}
+
+
+	/**
+	 * This method contains the hard-coded insertion of patterns.
+	 * Used when XML is not there.
+	 * @param ps
+	 */
+	private void importPatterns(PreparedStatement ps){
+		try{
+			ps.setString(1, "Three-layer");
+			ps.setString(2, "Architecture");
+			ps.setBytes(3, (new String("The system is organized into three primary layers: Presentation, Domain, and Data Source.")).getBytes());
+			ps.setBytes(4, (new String("In a system in which abstract domains must be implemented in terms of more concrete (less abstract) domains, we need a simple organizational pattern. Additionally, in many systems we need portability of the application to other platforms, or we want to provide an abstract platform or execution environment for which applications may be easily adapted.")).getBytes());
+			ps.setBytes(5, (new String("Development of a large business application, where many users share common data and operations on them. In addition, there might be legacy systems which have to be integrated in the new application.")).getBytes());
+			ps.setBytes(6, (new String("'Base your layered architecture on three layers: Presentation, Domain, and Data Source.  Presentation layer is about how to handle the interaction between the user and the software. This can be as simple as a command-line or text-based menu system, but these days it’ more likely to be a rich-client graphics UI or an HTML-based browser UI. Data source layer is about communicating with other systems that carry out tasks on behalf of the application. These can be transaction monitors, other applications, messaging systems, and so forth. Domain logic, also referred to as business logic. This is the work that this application needs to do for the domain you’e working with. It involves calculations based on inputs and stored data, validation of any data that comes in from the presentation, and figuring out exactly what data source logic to dispatch, depending on commands received from the presentation.")).getBytes());
+			ps.setBytes(7, (new String("")).getBytes());
+			ps.setBytes(8, (new String("The three-layer architecture offers significant advantages even for relatively small applications. For instance, the single-user PC application First Account from the Norwegiancompany Economica encapsulates most of the accounting and invoicing functionality in adynamic link library (DLL), which in turn works against a local, flat-file database. This separationenabled the developers with knowledge of accounting and object-oriented design to dedicatethemselves to the central functionality, and user interface designers with little or no knowledge ofprogramming to fully control their part of the application.")).getBytes());
+			ps.setString(9, "http://msdn.microsoft.com/en-us/library/ms978689.aspx");
+			ps.setInt(10, RationaleDBCreate.pushCurrentID());
+			ps.executeUpdate();
+
+			ps.setString(1, "Layers");
+			ps.setString(2, "Architecture");
+			ps.setBytes(3, (new String("The Layers architectural pattern helps to structure applications that can be decomposed into groups of subtasks in which each group of subtasks is at a particular level of abstraction.")).getBytes());
+			ps.setBytes(4, (new String("In a system in which abstract domains must be implemented in terms of more concrete (less abstract) domains, we need a simple organizational pattern. Additionally, in many systems we need portability of the application to other platforms, or we want to provide an abstract platform or execution environment for which applications may be easily adapted.")).getBytes());
+			ps.setBytes(5, (new String("You are designing a Layered Application. You want to expose some of the core functionality of your application as services that other applications can consume, and you want your application to consume services exposed by other applications.")).getBytes());
+			ps.setBytes(6, (new String("")).getBytes());
+			ps.setBytes(7, (new String("")).getBytes());
+			ps.setBytes(8, (new String("")).getBytes());
+			ps.setString(9, "http://vico.org/pages/PatronsDisseny/Pattern%20Layers/");
+			ps.setInt(10, RationaleDBCreate.pushCurrentID());
+			ps.executeUpdate();
+
+			ps.setString(1, "Pipes and Filters");
+			ps.setString(2, "Architecture");
+			ps.setBytes(3, (new String("The Pipes and Filters architectural pattern provides a structure for systems that process a stream of data. Each processing step is encapsulated in a filter component. Data is passed through pipes between adjacent filters. Recombining filters allows you to build families of related systems.")).getBytes());
+			ps.setBytes(4, (new String("")).getBytes());
+			ps.setBytes(5, (new String("")).getBytes());
+			ps.setBytes(6, (new String("")).getBytes());
+			ps.setBytes(7, (new String("")).getBytes());
+			ps.setBytes(8, (new String("")).getBytes());
+			ps.setString(9, "http://msdn.microsoft.com/en-us/library/ms978599.aspx");
+			ps.setInt(10, RationaleDBCreate.pushCurrentID());
+			ps.executeUpdate();
+
+			ps.setString(1, "Blackboard");
+			ps.setString(2, "Architecture");
+			ps.setBytes(3, (new String("The Blackboard architectural pattern is useful for problems for which no deterministic solution strategies are known. In Blackboard several specialized subsystem assemble their knowledge to build a possibly partial or approximate solution.")).getBytes());
+			ps.setBytes(4, (new String("")).getBytes());
+			ps.setBytes(5, (new String("")).getBytes());
+			ps.setBytes(6, (new String("")).getBytes());
+			ps.setBytes(7, (new String("")).getBytes());
+			ps.setBytes(8, (new String("")).getBytes());
+			ps.setString(9, "http://www.vico.org/pages/PatronsDisseny/Pattern%20Blackboard/");
+			ps.setInt(10, RationaleDBCreate.pushCurrentID());
+			ps.executeUpdate();
+
+			ps.setString(1, "Model-View-Controller");
+			ps.setString(2, "Architecture");
+			ps.setBytes(3, (new String("The MVC architectural pattern divides an interactive application into three components. The model contains the core functionality and data. Views display information to the user. Controllers handle user input. Views and Controllers together comprise the user interface. A change-propagation mechanism ensures consistency between the user interface and the model.")).getBytes());
+			ps.setBytes(4, (new String("")).getBytes());
+			ps.setBytes(5, (new String("")).getBytes());
+			ps.setBytes(6, (new String("")).getBytes());
+			ps.setBytes(7, (new String("")).getBytes());
+			ps.setBytes(8, (new String("")).getBytes());
+			ps.setString(9, "http://msdn.microsoft.com/en-us/library/ms978748.aspx");
+			ps.setInt(10, RationaleDBCreate.pushCurrentID());
+			ps.executeUpdate();
+
+			ps.setString(1, "Broker");
+			ps.setString(2, "Architecture");
+			ps.setBytes(3, (new String("The Broker architectural pattern can be used to structure distributed software systems with decoupled components that interact by remote service invocations. A broker component is responsible for coordinating communication, such as forwarding requests, as well as for transmitting results and exceptions.")).getBytes());
+			ps.setBytes(4, (new String("")).getBytes());
+			ps.setBytes(5, (new String("")).getBytes());
+			ps.setBytes(6, (new String("")).getBytes());
+			ps.setBytes(7, (new String("")).getBytes());
+			ps.setBytes(8, (new String("")).getBytes());
+			ps.setString(9, "http://msdn.microsoft.com/en-us/library/ms978706.aspx");
+			ps.setInt(10, RationaleDBCreate.pushCurrentID());
+			ps.executeUpdate();
+
+			ps.setString(1, "Presentation-Abstraction-Control");
+			ps.setString(2, "Architecture");
+			ps.setBytes(3, (new String("The Presentation-Abstraction-Control architectural pattern (PAC) defines a structure for interactive software systems in the form of a hierarchy of cooperating agents. Every agent is responsible for a specific aspect of the applications functionality and consists of three components: presentation, abstraction, and control. This subdivision separates the human-computer interaction aspects of the agent from its functional core and its communication with other agents.")).getBytes());
+			ps.setBytes(4, (new String("")).getBytes());
+			ps.setBytes(5, (new String("")).getBytes());
+			ps.setBytes(6, (new String("")).getBytes());
+			ps.setBytes(7, (new String("")).getBytes());
+			ps.setBytes(8, (new String("")).getBytes());
+			ps.setString(9, "http://vico.org/pages/PatronsDisseny/Pattern%20Presentation%20Abstra/");
+			ps.setInt(10, RationaleDBCreate.pushCurrentID());
+			ps.executeUpdate();
+
+			ps.setString(1, "Microkernel");
+			ps.setString(2, "Architecture");
+			ps.setBytes(3, (new String("The Microkernel architectural pattern applies to software systems that must be able to adapt to changing system requirements. It separates a minimal functional core from extended functionality and customer-specific parts. The microkernel also serves as a socket for plugging in these extensions and coordinating their collaboration.")).getBytes());
+			ps.setBytes(4, (new String("")).getBytes());
+			ps.setBytes(5, (new String("")).getBytes());
+			ps.setBytes(6, (new String("")).getBytes());
+			ps.setBytes(7, (new String("")).getBytes());
+			ps.setBytes(8, (new String("")).getBytes());
+			ps.setString(9, "http://www.vico.org/pages/PatronsDisseny/Pattern%20MicroKernel/");
+			ps.setInt(10, RationaleDBCreate.pushCurrentID());
+			ps.executeUpdate();
+
+			ps.setString(1, "Reflection");
+			ps.setString(2, "Architecture");
+			ps.setBytes(3, (new String("The Reflection architectural pattern provides a mechanism for changing structure and behavior of software systems dynamically. It supports the modification of fundamental aspects, such as type structures and function call mechanisms. In this pattern, an application is split into two parts. A meta level provides information about selected system properties and makes the software self-aware. A base level includes the application logic. Its implementation builds on the meta level. Changes to information kept in the meta level affect subsequent base-level behavior.")).getBytes());
+			ps.setBytes(4, (new String("")).getBytes());
+			ps.setBytes(5, (new String("")).getBytes());
+			ps.setBytes(6, (new String("'")).getBytes());
+			ps.setBytes(7, (new String("")).getBytes());
+			ps.setBytes(8, (new String("")).getBytes());
+			ps.setString(9, "http://vico.org/pages/PatronsDisseny/Pattern%20Reflection/");
+			ps.setInt(10, RationaleDBCreate.pushCurrentID());
+			ps.executeUpdate();
+
+			ps.setString(1, "Whole-Part");
+			ps.setString(2, "Design");
+			ps.setBytes(3, (new String("The Whole-Part design pattern helps with the aggregation of components that together form a semantic unit. An aggregate component, the Whole, encapsulates its constituent components, the Parts, organizes their collaboration, and provides a common interface to its functionality. Direct access to the Parts is not possible.")).getBytes());
+			ps.setBytes(4, (new String("")).getBytes());
+			ps.setBytes(5, (new String("")).getBytes());
+			ps.setBytes(6, (new String("'")).getBytes());
+			ps.setBytes(7, (new String("")).getBytes());
+			ps.setBytes(8, (new String("")).getBytes());
+			ps.setString(9, "http://www.vico.org/pages/PatronsDisseny/Pattern%20Whole%20Part/index.html");
+			ps.setInt(10, RationaleDBCreate.pushCurrentID());
+			ps.executeUpdate();
+
+			ps.setString(1, "Master-Slave");
+			ps.setString(2, "Design");
+			ps.setBytes(3, (new String("The Master-Slave design pattern supports fault tolerance, parallel computation and computational accuracy. A master component distributes work to identical slave components and computes a final result from the results these slaves return.")).getBytes());
+			ps.setBytes(4, (new String("")).getBytes());
+			ps.setBytes(5, (new String("")).getBytes());
+			ps.setBytes(6, (new String("'")).getBytes());
+			ps.setBytes(7, (new String("")).getBytes());
+			ps.setBytes(8, (new String("")).getBytes());
+			ps.setString(9, "http://www.vico.org/pages/PatronsDisseny/Pattern%20Master%20Slave/");
+			ps.setInt(10, RationaleDBCreate.pushCurrentID());
+			ps.executeUpdate();
+
+			ps.setString(1, "Proxy");
+			ps.setString(2, "Design");
+			ps.setBytes(3, (new String("Provide a surrogate or placeholder for another object to control access to it.")).getBytes());
+			ps.setBytes(4, (new String("")).getBytes());
+			ps.setBytes(5, (new String("")).getBytes());
+			ps.setBytes(6, (new String("'")).getBytes());
+			ps.setBytes(7, (new String("")).getBytes());
+			ps.setBytes(8, (new String("")).getBytes());
+			ps.setString(9, "http://www.vico.org/pages/PatronsDisseny/Pattern%20Broker/");
+			ps.setInt(10, RationaleDBCreate.pushCurrentID());
+			ps.executeUpdate();
+
+			ps.setString(1, "Command Processor");
+			ps.setString(2, "Design");
+			ps.setBytes(3, (new String("The Command Processor design pattern separates the request for a service from its execution. A command processor component manages requests as separate objects, schedules their execution, and provides additional services such as the storing of request objects for later undo.")).getBytes());
+			ps.setBytes(4, (new String("")).getBytes());
+			ps.setBytes(5, (new String("")).getBytes());
+			ps.setBytes(6, (new String("'")).getBytes());
+			ps.setBytes(7, (new String("")).getBytes());
+			ps.setBytes(8, (new String("")).getBytes());
+			ps.setString(9, "http://www.vico.org/pages/PatronsDisseny/Pattern%20Command%20Processor/index.html");
+			ps.setInt(10, RationaleDBCreate.pushCurrentID());
+			ps.executeUpdate();
+
+			ps.setString(1, "View Handler");
+			ps.setString(2, "Design");
+			ps.setBytes(3, (new String("The View Handler design pattern helps to manage all views that a software system provides. A view handler component allows clients to open, manipulate and dispose of views. It also coordinates dependencies between view and organizes their update.")).getBytes());
+			ps.setBytes(4, (new String("")).getBytes());
+			ps.setBytes(5, (new String("")).getBytes());
+			ps.setBytes(6, (new String("'")).getBytes());
+			ps.setBytes(7, (new String("")).getBytes());
+			ps.setBytes(8, (new String("")).getBytes());
+			ps.setString(9, "http://vico.org/pages/PatronsDisseny/Pattern%20View%20Handler/");
+			ps.setInt(10, RationaleDBCreate.pushCurrentID());
+			ps.executeUpdate();
+
+			ps.setString(1, "Forward-Receiver");
+			ps.setString(2, "Design");
+			ps.setBytes(3, (new String("The Forwarder-Receiver design pattern provides transparent interprocess communication for software systems with a peer-to-peer interaction model. It introduces forwarders and receivers to decouple peers from the underlying communication mechanisms.")).getBytes());
+			ps.setBytes(4, (new String("")).getBytes());
+			ps.setBytes(5, (new String("")).getBytes());
+			ps.setBytes(6, (new String("'")).getBytes());
+			ps.setBytes(7, (new String("")).getBytes());
+			ps.setBytes(8, (new String("")).getBytes());
+			ps.setString(9, "http://vico.org/pages/PatronsDisseny/Pattern%20Forward-Receiver/");
+			ps.setInt(10, RationaleDBCreate.pushCurrentID());
+			ps.executeUpdate();
+
+			ps.setString(1, "Client-Dispatcher-Server");
+			ps.setString(2, "Design");
+			ps.setBytes(3, (new String("The Client-Dispatcher-Server design pattern introduces an intermediate layer between clients and servers, the dispatcher component. It provides location transparency by means of a name service, and hides the details of the establishment of the communication connection between clients and servers.")).getBytes());
+			ps.setBytes(4, (new String("")).getBytes());
+			ps.setBytes(5, (new String("")).getBytes());
+			ps.setBytes(6, (new String("'")).getBytes());
+			ps.setBytes(7, (new String("")).getBytes());
+			ps.setBytes(8, (new String("")).getBytes());
+			ps.setString(9, "http://vico.org/pages/PatronsDisseny/Pattern%20ClientDispatcherServer/");
+			ps.setInt(10, RationaleDBCreate.pushCurrentID());
+			ps.executeUpdate();
+
+			ps.setString(1, "Publisher-Subscriber");
+			ps.setString(2, "Design");
+			ps.setBytes(3, (new String("The Publisher-Subscriber design pattern helps to keep the state of cooperating components synchronized. To achieve this it enables one-way propagation of changes: one publisher notifies any number of subscribers about changes to its state.")).getBytes());
+			ps.setBytes(4, (new String("")).getBytes());
+			ps.setBytes(5, (new String("")).getBytes());
+			ps.setBytes(6, (new String("'")).getBytes());
+			ps.setBytes(7, (new String("")).getBytes());
+			ps.setBytes(8, (new String("")).getBytes());
+			ps.setString(9, "http://vico.org/pages/PatronsDisseny/Pattern%20Publisher%20Subscriber/");
+			ps.setInt(10, RationaleDBCreate.pushCurrentID());
+			ps.executeUpdate();
+
+			ps.setString(1, "Strategy");
+			ps.setString(2, "Design");
+			ps.setBytes(3, (new String("Define a family of algorithms, encapsulate each one, and make them interchangeable. Strategy lets the algorithm vary independently from clients that use it.")).getBytes());
+			ps.setBytes(4, (new String("")).getBytes());
+			ps.setBytes(5, (new String("")).getBytes());
+			ps.setBytes(6, (new String("'")).getBytes());
+			ps.setBytes(7, (new String("")).getBytes());
+			ps.setBytes(8, (new String("")).getBytes());
+			ps.setString(9, "http://vico.org/pages/PatronsDisseny/Pattern%20Strategy/");
+			ps.setInt(10, RationaleDBCreate.pushCurrentID());
+			ps.executeUpdate();
+
+			ps.setString(1, "Factory");
+			ps.setString(2, "Design");
+			ps.setBytes(3, (new String("Define an interface for creating an object, but let subclasses decide which class to instantiate. Factory Method lets a class defer instantiation to subclasses.")).getBytes());
+			ps.setBytes(4, (new String("")).getBytes());
+			ps.setBytes(5, (new String("")).getBytes());
+			ps.setBytes(6, (new String("'")).getBytes());
+			ps.setBytes(7, (new String("")).getBytes());
+			ps.setBytes(8, (new String("")).getBytes());
+			ps.setString(9, "http://vico.org/pages/PatronsDisseny/Pattern%20Factory%20Method/");
+			ps.setInt(10, RationaleDBCreate.pushCurrentID());
+			ps.executeUpdate();
+
+			ps.setString(1, "Decorator");
+			ps.setString(2, "Design");
+			ps.setBytes(3, (new String("Attach additional responsibilities to an object dynamically. Decorators provide a flexible alternative to subclassing for extending functionality.")).getBytes());
+			ps.setBytes(4, (new String("")).getBytes());
+			ps.setBytes(5, (new String("")).getBytes());
+			ps.setBytes(6, (new String("'")).getBytes());
+			ps.setBytes(7, (new String("")).getBytes());
+			ps.setBytes(8, (new String("")).getBytes());
+			ps.setString(9, "http://vico.org/pages/PatronsDisseny/Pattern%20Decorator/");
+			ps.setInt(10, RationaleDBCreate.pushCurrentID());
+			ps.executeUpdate();
+
+			ps.setString(1, "Composite");
+			ps.setString(2, "Design");
+			ps.setBytes(3, (new String("Compose objects into tree structures to represent part-whole hierarchies. Composite lets clients treat individual objects and compositions of objects uniformly.")).getBytes());
+			ps.setBytes(4, (new String("")).getBytes());
+			ps.setBytes(5, (new String("")).getBytes());
+			ps.setBytes(6, (new String("'")).getBytes());
+			ps.setBytes(7, (new String("")).getBytes());
+			ps.setBytes(8, (new String("")).getBytes());
+			ps.setString(9, "http://vico.org/pages/PatronsDisseny/Pattern%20Composite/");
+			ps.setInt(10, RationaleDBCreate.pushCurrentID());
+			ps.executeUpdate();
+
+			ps.setString(1, "Template Method");
+			ps.setString(2, "Design");
+			ps.setBytes(3, (new String("Define the skeleton of an algorithm in an operation, deferring some steps to subclasses. Template Method lets subclasses redefine certain steps of an algorithm without changing the algorithms structure.")).getBytes());
+			ps.setBytes(4, (new String("")).getBytes());
+			ps.setBytes(5, (new String("")).getBytes());
+			ps.setBytes(6, (new String("'")).getBytes());
+			ps.setBytes(7, (new String("")).getBytes());
+			ps.setBytes(8, (new String("")).getBytes());
+			ps.setString(9, "http://vico.org/pages/PatronsDisseny/Pattern%20Template%20Method/");
+			ps.setInt(10, RationaleDBCreate.pushCurrentID());
+			ps.executeUpdate();
+
+			ps.setString(1, "Command");
+			ps.setString(2, "Design");
+			ps.setBytes(3, (new String("Encapsulate a request as an object, thereby letting you parameterize clients with different requests, queue or log requests, and support undoable operations.")).getBytes());
+			ps.setBytes(4, (new String("")).getBytes());
+			ps.setBytes(5, (new String("")).getBytes());
+			ps.setBytes(6, (new String("'")).getBytes());
+			ps.setBytes(7, (new String("")).getBytes());
+			ps.setBytes(8, (new String("")).getBytes());
+			ps.setString(9, "http://vico.org/pages/PatronsDisseny/Pattern%20Command/");
+			ps.setInt(10, RationaleDBCreate.pushCurrentID());
+			ps.executeUpdate();
+
+			ps.setString(1, "Chain of Responsibility");
+			ps.setString(2, "Design");
+			ps.setBytes(3, (new String("Avoid coupling the sender of a request to its receiver by giving more than one object a chance to handle the request. Chain the receiving objects and pass the request along the chain until an object handles it.")).getBytes());
+			ps.setBytes(4, (new String("")).getBytes());
+			ps.setBytes(5, (new String("")).getBytes());
+			ps.setBytes(6, (new String("'")).getBytes());
+			ps.setBytes(7, (new String("")).getBytes());
+			ps.setBytes(8, (new String("")).getBytes());
+			ps.setString(9, "http://vico.org/pages/PatronsDisseny/Pattern%20Chain%20of%20Responsability/");
+			ps.setInt(10, RationaleDBCreate.pushCurrentID());
+			ps.executeUpdate();
+
+			ps.setString(1, "Facade");
+			ps.setString(2, "Design");
+			ps.setBytes(3, (new String("Provide a unified interface to a set of interfaces in a subsystem. Fa?ade defines a higher-level interface that makes the subsystem easier to user.")).getBytes());
+			ps.setBytes(4, (new String("")).getBytes());
+			ps.setBytes(5, (new String("")).getBytes());
+			ps.setBytes(6, (new String("'")).getBytes());
+			ps.setBytes(7, (new String("")).getBytes());
+			ps.setBytes(8, (new String("")).getBytes());
+			ps.setString(9, "http://vico.org/pages/PatronsDisseny/Pattern%20Facade/");
+			ps.setInt(10, RationaleDBCreate.pushCurrentID());
+			ps.executeUpdate();
+
+			ps.setString(1, "Transaction Script");
+			ps.setString(2, "Design");
+			ps.setBytes(3, (new String("Organizes business logic by procedures where each procedure handles a single request from the presentation.")).getBytes());
+			ps.setBytes(4, (new String("")).getBytes());
+			ps.setBytes(5, (new String("")).getBytes());
+			ps.setBytes(6, (new String("'")).getBytes());
+			ps.setBytes(7, (new String("")).getBytes());
+			ps.setBytes(8, (new String("")).getBytes());
+			ps.setString(9, "EAA Book Online");
+			ps.setInt(10, RationaleDBCreate.pushCurrentID());
+			ps.executeUpdate();
+
+			ps.setString(1, "Domain Model");
+			ps.setString(2, "Design");
+			ps.setBytes(3, (new String("An object model of the domain that incorporates both behavior and data.")).getBytes());
+			ps.setBytes(4, (new String("")).getBytes());
+			ps.setBytes(5, (new String("")).getBytes());
+			ps.setBytes(6, (new String("'")).getBytes());
+			ps.setBytes(7, (new String("")).getBytes());
+			ps.setBytes(8, (new String("")).getBytes());
+			ps.setString(9, "EAA Book Online");
+			ps.setInt(10, RationaleDBCreate.pushCurrentID());
+			ps.executeUpdate();
+
+			ps.setString(1, "Table Module");
+			ps.setString(2, "Design");
+			ps.setBytes(3, (new String("A single instance that handles the business logic for all rows in a database table or view.")).getBytes());
+			ps.setBytes(4, (new String("")).getBytes());
+			ps.setBytes(5, (new String("")).getBytes());
+			ps.setBytes(6, (new String("'")).getBytes());
+			ps.setBytes(7, (new String("")).getBytes());
+			ps.setBytes(8, (new String("")).getBytes());
+			ps.setString(9, "EAA Book Online");
+			ps.setInt(10, RationaleDBCreate.pushCurrentID());
+			ps.executeUpdate();
+
+			ps.setString(1, "Gateway");
+			ps.setString(2, "Design");
+			ps.setBytes(3, (new String("An object that encapsulates access to an external system or resource.")).getBytes());
+			ps.setBytes(4, (new String("")).getBytes());
+			ps.setBytes(5, (new String("")).getBytes());
+			ps.setBytes(6, (new String("'")).getBytes());
+			ps.setBytes(7, (new String("")).getBytes());
+			ps.setBytes(8, (new String("")).getBytes());
+			ps.setString(9, "EAA Book Online");
+			ps.setInt(10, RationaleDBCreate.pushCurrentID());
+			ps.executeUpdate();
+
+			ps.setString(1, "Row Data Gateway");
+			ps.setString(2, "Design");
+			ps.setBytes(3, (new String("An object that acts as a Gateway to a single record in a data source. There is one instance per row.")).getBytes());
+			ps.setBytes(4, (new String("")).getBytes());
+			ps.setBytes(5, (new String("")).getBytes());
+			ps.setBytes(6, (new String("'")).getBytes());
+			ps.setBytes(7, (new String("")).getBytes());
+			ps.setBytes(8, (new String("")).getBytes());
+			ps.setString(9, "EAA Book Online");
+			ps.setInt(10, RationaleDBCreate.pushCurrentID());
+			ps.executeUpdate();
+
+			ps.setString(1, "Active Record");
+			ps.setString(2, "Design");
+			ps.setBytes(3, (new String("An object that wraps a row in a database table or view, encapsulates the database access, and adds domain logic on that data.")).getBytes());
+			ps.setBytes(4, (new String("")).getBytes());
+			ps.setBytes(5, (new String("")).getBytes());
+			ps.setBytes(6, (new String("")).getBytes());
+			ps.setBytes(7, (new String("The essence of an Active Record is a Domain Model in which the classes match very closely the record structure of an underlying database. Each Active Record is responsible for saving and loading to the database and also for any domain logic that acts on the data. This may be all the domain logic in the application, or you may find that some domain logic is held in Transaction Scripts with common and data-oriented code in the Active Record.")).getBytes());
+			ps.setBytes(8, (new String("")).getBytes());
+			ps.setString(9, "EAA Book Online");
+			ps.setInt(10, RationaleDBCreate.pushCurrentID());
+			ps.executeUpdate();
+
+			ps.setString(1, "Table Data Gateway");
+			ps.setString(2, "Design");
+			ps.setBytes(3, (new String("An object that acts as a Gateway to a database table. One instance handles all the rows in the table.")).getBytes());
+			ps.setBytes(4, (new String("")).getBytes());
+			ps.setBytes(5, (new String("")).getBytes());
+			ps.setBytes(6, (new String("")).getBytes());
+			ps.setBytes(7, (new String("A Row Data Gateway acts as an object that exactly mimics a single record, such as one database row. In it each column in the database becomes one field. The Row Data Gateway will usually do any type conversion from the data source types to the in-memory types, but this conversion is pretty simple. This pattern holds the data about a row so that a client can then access the Row")).getBytes());
+			ps.setBytes(8, (new String("")).getBytes());
+			ps.setString(9, "EAA Book Online");
+			ps.setInt(10, RationaleDBCreate.pushCurrentID());
+			ps.executeUpdate();
+
+			ps.setString(1, "Application Controller");
+			ps.setString(2, "Design");
+			ps.setBytes(3, (new String("A centralized point for handling screen navigation and the flow of an application.")).getBytes());
+			ps.setBytes(4, (new String("")).getBytes());
+			ps.setBytes(5, (new String("")).getBytes());
+			ps.setBytes(6, (new String("'")).getBytes());
+			ps.setBytes(7, (new String("")).getBytes());
+			ps.setBytes(8, (new String("")).getBytes());
+			ps.setString(9, "EAA Book Online");
+			ps.setInt(10, RationaleDBCreate.pushCurrentID());
+			ps.executeUpdate();
+
+			ps.setString(1, "Transform View");
+			ps.setString(2, "Design");
+			ps.setBytes(3, (new String("A view that processes domain data element by element and transforms it into HTML.")).getBytes());
+			ps.setBytes(4, (new String("")).getBytes());
+			ps.setBytes(5, (new String("")).getBytes());
+			ps.setBytes(6, (new String("'")).getBytes());
+			ps.setBytes(7, (new String("")).getBytes());
+			ps.setBytes(8, (new String("")).getBytes());
+			ps.setString(9, "EAA Book Online");
+			ps.setInt(10, RationaleDBCreate.pushCurrentID());
+			ps.executeUpdate();
+
+			ps.setString(1, "Template View");
+			ps.setString(2, "Design");
+			ps.setBytes(3, (new String("Renders information into HTML by embedding markers in an HTML page.")).getBytes());
+			ps.setBytes(4, (new String("")).getBytes());
+			ps.setBytes(5, (new String("")).getBytes());
+			ps.setBytes(6, (new String("'")).getBytes());
+			ps.setBytes(7, (new String("")).getBytes());
+			ps.setBytes(8, (new String("")).getBytes());
+			ps.setString(9, "EAA Book Online");
+			ps.setInt(10, RationaleDBCreate.pushCurrentID());
+			ps.executeUpdate();
+
+			ps.setString(1, "Two Step View");
+			ps.setString(2, "Design");
+			ps.setBytes(3, (new String("Turns domain data into HTML in two steps: first by forming some kind of logical page, then rendering the logical page into HTML.")).getBytes());
+			ps.setBytes(4, (new String("")).getBytes());
+			ps.setBytes(5, (new String("")).getBytes());
+			ps.setBytes(6, (new String("'")).getBytes());
+			ps.setBytes(7, (new String("")).getBytes());
+			ps.setBytes(8, (new String("")).getBytes());
+			ps.setString(9, "EAA Book Online");
+			ps.setInt(10, RationaleDBCreate.pushCurrentID());
+			ps.executeUpdate();
+
+			ps.setString(1, "Bridge");
+			ps.setString(2, "Design");
+			ps.setBytes(3, (new String("Decouple an abstraction from its implementation so that the two can vary independently.")).getBytes());
+			ps.setBytes(4, (new String("")).getBytes());
+			ps.setBytes(5, (new String("")).getBytes());
+			ps.setBytes(6, (new String("'")).getBytes());
+			ps.setBytes(7, (new String("")).getBytes());
+			ps.setBytes(8, (new String("")).getBytes());
+			ps.setString(9, "http://vico.org/pages/PatronsDisseny/Pattern%20Bridge/");
+			ps.setInt(10, RationaleDBCreate.pushCurrentID());
+			ps.executeUpdate();
+
+			ps.setString(1, "Data Mappter");
+			ps.setString(2, "Design");
+			ps.setBytes(3, (new String("A layer of Mappers that moves data between objects and a database while keeping them independent of each other and the mapper itself.")).getBytes());
+			ps.setBytes(4, (new String("")).getBytes());
+			ps.setBytes(5, (new String("Objects and relational databases have different mechanisms for structuring data. Many parts of an object, such as collections and inheritance, aren’t present in relational databases. When you build an object model with a lot of business logic it’s valuable to use these mechanisms to better organize the data and the behavior that goes with it.  Doing so leads to variant schemas; that is, the object schema and the relational schema don’t match up.")).getBytes());
+			ps.setBytes(6, (new String("The Data Mapper is a layer of software that separates the in-memory objects from the database. Its responsibility is to transfer data between the two and also to isolate them from each other. With Data Mapper the in-memory objects needn’t know even that there’s a database present; they need no SQL interface code, and certainly no knowledge of the database schema. (The database schema is always ignorant of the objects that use it.) Since it’s a form of Mapper, Data Mapper itself is even unknown to the domain layer.")).getBytes());
+			ps.setBytes(7, (new String("")).getBytes());
+			ps.setBytes(8, (new String("")).getBytes());
+			ps.setString(9, "http://vico.org/pages/PatronsDisseny/Pattern%20Bridge/");
+			ps.setInt(10, RationaleDBCreate.pushCurrentID());
+			ps.executeUpdate();
+
+			ps.setString(1, "Counted Pointer");
+			ps.setString(2, "Idiom");
+			ps.setBytes(3, (new String("This idiom makes memory management of dynamically-allocated shared objects in C++ easier. It introduces a reference counter to a body class that is updated by handle objects. Clients access body class objects only through handles via the overloaded operator ->()..")).getBytes());
+			ps.setBytes(4, (new String("")).getBytes());
+			ps.setBytes(5, (new String("")).getBytes());
+			ps.setBytes(6, (new String("'")).getBytes());
+			ps.setBytes(7, (new String("")).getBytes());
+			ps.setBytes(8, (new String("")).getBytes());
+			ps.setString(9, "Book Reference");
+			ps.setInt(10, RationaleDBCreate.pushCurrentID());
+			ps.executeUpdate();
+
+			ps.setString(1, "Singleton");
+			ps.setString(2, "Idiom");
+			ps.setBytes(3, (new String("Ensure a class only has one instance, and provide a global point of access to it.")).getBytes());
+			ps.setBytes(4, (new String("")).getBytes());
+			ps.setBytes(5, (new String("")).getBytes());
+			ps.setBytes(6, (new String("'")).getBytes());
+			ps.setBytes(7, (new String("")).getBytes());
+			ps.setBytes(8, (new String("")).getBytes());
+			ps.setString(9, "http://vico.org/pages/PatronsDisseny/Pattern%20Singleton/");
+			ps.setInt(10, RationaleDBCreate.pushCurrentID());
+			ps.executeUpdate();
+
+			ps.setString(1, "Indented Control Flow");
+			ps.setString(2, "Idiom");
+			ps.setBytes(3, (new String("")).getBytes());
+			ps.setBytes(4, (new String("")).getBytes());
+			ps.setBytes(5, (new String("")).getBytes());
+			ps.setBytes(6, (new String("'")).getBytes());
+			ps.setBytes(7, (new String("")).getBytes());
+			ps.setBytes(8, (new String("")).getBytes());
+			ps.setString(9, "Book Reference");
+			ps.setInt(10, RationaleDBCreate.pushCurrentID());
+			ps.executeUpdate();
+		}catch(Exception ex){
+			ex.printStackTrace();
+		}
 	}
 
 	/**
@@ -3643,10 +5090,10 @@ public final class RationaleDB implements Serializable {
 			//***			System.out.println(findQuery);
 			rs = stmt.executeQuery(findQuery);
 			while (rs.next()) {
-					int mapID = rs.getInt("id");
-					XFeatureMapping xNode = new XFeatureMapping();
-					xNode.fromDatabase(mapID);
-					xfeaturenodes.add(xNode);
+				int mapID = rs.getInt("id");
+				XFeatureMapping xNode = new XFeatureMapping();
+				xNode.fromDatabase(mapID);
+				xfeaturenodes.add(xNode);
 			}
 
 		} catch (SQLException ex) {
@@ -3674,10 +5121,10 @@ public final class RationaleDB implements Serializable {
 			//***			System.out.println(findQuery);
 			rs = stmt.executeQuery(findQuery);
 			while (rs.next()) {
-					int mapID = rs.getInt("id");
-					XFeatureMapping relArg = new XFeatureMapping();
-					relArg.fromDatabase(mapID);
-					dependent.add(relArg);
+				int mapID = rs.getInt("id");
+				XFeatureMapping relArg = new XFeatureMapping();
+				relArg.fromDatabase(mapID);
+				dependent.add(relArg);
 			}
 
 		} catch (SQLException ex) {
@@ -3706,10 +5153,10 @@ public final class RationaleDB implements Serializable {
 			//***			System.out.println(findQuery);
 			rs = stmt.executeQuery(findQuery);
 			while (rs.next()) {
-					int mapID = rs.getInt("id");
-					XFeatureMapping relArg = new XFeatureMapping();
-					relArg.fromDatabase(mapID);
-					dependent.add(relArg);
+				int mapID = rs.getInt("id");
+				XFeatureMapping relArg = new XFeatureMapping();
+				relArg.fromDatabase(mapID);
+				dependent.add(relArg);
 			}
 
 		} catch (SQLException ex) {
@@ -3720,12 +5167,27 @@ public final class RationaleDB implements Serializable {
 		}
 		return dependent;
 	}
-	/*
-	 public static void  main (String [] argv)
-	 {
-	 RationaleDB d = RationaleDB.getHandle();
-	 Vector reqs = d.getRequirements(null, null);
 
-	 } */
+	/**
+	 * It seems the XML Import/Export has broken the ID auto_increment. I need this for every
+	 * insertion of all entities.
+	 * This method returns the next available ID after the max of ID's given dbName.
+	 * @param dbName The database name to find the max ID.
+	 */
+	public static int findAvailableID(String dbName){
+		Statement stmt = null;
+		ResultSet r = null;
+		String query = "SELECT max(id) FROM " + dbName;
+		try{
+			stmt = conn.createStatement();
+			r = stmt.executeQuery(query);
+			if (r.next()){
+				return r.getInt(1) + 1;
+			}
+		} catch (SQLException e){
+			e.printStackTrace();
+		}
+		return 1;
+	}
 
 }
