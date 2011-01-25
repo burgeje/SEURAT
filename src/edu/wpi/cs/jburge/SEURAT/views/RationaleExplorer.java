@@ -9,7 +9,6 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.*;
-import java.util.zip.ZipException;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -30,7 +29,6 @@ import org.eclipse.jface.viewers.*;
 import org.eclipse.jface.window.Window;
 import org.eclipse.jface.action.*;
 import org.eclipse.jface.dialogs.InputDialog;
-import org.eclipse.jface.dialogs.PopupDialog;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.util.IPropertyChangeListener;
 import org.eclipse.jface.util.PropertyChangeEvent;
@@ -64,12 +62,10 @@ import edu.wpi.cs.jburge.SEURAT.tasks.RationaleTaskList;
 
 import org.eclipse.core.resources.IFile;
 import edu.wpi.cs.jburge.SEURAT.SEURATResourcePropertiesManager;
-import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.core.resources.IWorkspaceRunnable;
 import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.CoreException;
-import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jface.action.Action;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -77,7 +73,6 @@ import org.w3c.dom.Node;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
-import com.sun.org.apache.xml.internal.dtm.ref.DTMDefaultBaseIterators.ChildrenIterator;
 
 import edu.wpi.cs.jburge.SEURAT.rationaleData.Argument;
 import SEURAT.editors.*;
@@ -96,8 +91,13 @@ import edu.wpi.cs.jburge.SEURAT.decorators.*;
   * <p>
   */
 
+
+
 public class RationaleExplorer extends ViewPart implements ISelectionListener, IRationaleUpdateEventListener,
 	IPropertyChangeListener{
+	
+	//This is the handle for RationaleExplorer. Used in XML import.
+	private static RationaleExplorer exp;
 	
 	/**
 	 * The view into the tree of rationale
@@ -162,6 +162,12 @@ public class RationaleExplorer extends ViewPart implements ISelectionListener, I
 	 * Menu item to associate a constraint with a decision or alternative
 	 */
 	private Action associateConstraint;
+	
+	/**
+	 * Menu item to generate new candidate patterns
+	 */
+	private Action generateCandidatePatterns;
+	
 	/**
 	 * Menu item to add a new alternative-constraint relationship
 	 */
@@ -266,6 +272,11 @@ public class RationaleExplorer extends ViewPart implements ISelectionListener, I
 	private Action showTradeoffEditor;
 	private Action addQuestionEditor;
 	private Action showQuestionEditor;
+	//private Action editPattern;
+	//editPattern seems to be deprecated with the workbench editor implementation.
+	//Disabling this now and see whether we can still run eclipse.
+	//If so, clean up these stuff later.
+	private Action newArchitectureProject;
 	
 	/**
 	 * Menu item to move an element
@@ -290,7 +301,7 @@ public class RationaleExplorer extends ViewPart implements ISelectionListener, I
 	class NameSorter extends ViewerSorter {
 	}
 	
-	
+
 	
 	/**
 	 * The constructor.
@@ -341,7 +352,8 @@ public class RationaleExplorer extends ViewPart implements ISelectionListener, I
 		
 		//get the initial selected value
 		selectionChanged(null, getViewSite().getWorkbenchWindow().getSelectionService().getSelection());
-	
+		
+		exp = this;
 	}
 	
 	/**
@@ -384,6 +396,7 @@ public class RationaleExplorer extends ViewPart implements ISelectionListener, I
 		//manager.add(findImportanceOverrides);
 		manager.add(changeDatabase);
 		manager.add(newRationale);
+		manager.add(newArchitectureProject);
 		//restoreAssociations exists to re-set the rationale from a database
 		//this would not be used operationally and should be removed.
 		manager.add(restoreAssociations);
@@ -469,6 +482,7 @@ public class RationaleExplorer extends ViewPart implements ISelectionListener, I
 				//manager.add(addQuestion);
 				// manager.add(associateConstraint);
 				manager.add(showHistory);
+				manager.add(generateCandidatePatterns);
 				
 			}
 			else if (ourElement.getType() == RationaleElementType.ASSUMPTION)
@@ -582,6 +596,12 @@ public class RationaleExplorer extends ViewPart implements ISelectionListener, I
 				manager.add(editElement);
 				manager.add(deleteElement);
 			}
+			else if (ourElement.getType() == RationaleElementType.ALTERNATIVEPATTERN )
+			{
+				//manager.add(editPattern);
+				manager.add(deleteElement);
+				manager.add(addArgumentEditor);
+			}
 			
 		}
 		manager.add(new Separator());
@@ -647,9 +667,24 @@ public class RationaleExplorer extends ViewPart implements ISelectionListener, I
 		showQuestionEditor = new OpenRationaleEditorAction(QuestionEditor.class, this, false);
 		
 		//Views that open as editors
-		
-		
-		
+		//editPattern = new OpenRationaleEditorAction(PatternEditor.class, this, false);
+		/*editPattern = new Action() {
+			public void run() {
+
+				ISelection selection = viewer.getSelection();
+				Object obj = ((IStructuredSelection)selection).getFirstElement();
+				//showPatternEditor.run();
+				AlternativePattern patternSelected = new AlternativePattern();
+				patternSelected.fromDatabase(((TreeObject)obj).getName());
+				
+				boolean canceled = patternSelected.display(ourDisplay);
+
+				
+			}			
+		}; //end of the edit element action definition
+		editPattern.setText("Edit");
+		editPattern.setToolTipText("Edit Pattern");
+		*/
 		//
 		//associate action - used to associate rationale with a java element
 		//
@@ -660,10 +695,46 @@ public class RationaleExplorer extends ViewPart implements ISelectionListener, I
 		changeDatabase = new Action () {
 			public void run() {
 				rebuildTree(false);
+				PatternLibrary.getHandle().rebuildTree();
 			}
 		};
 		changeDatabase.setText("Change Rationale DB");
 		changeDatabase.setToolTipText("Changes the display to show the database set in the preferences.");
+		
+		//new Architecture Project
+		newArchitectureProject = new Action() {
+			public void run() {
+				Frame rf = new Frame();
+				String dbName;
+
+				InputDialog dlg = new InputDialog(Display.getCurrent().getActiveShell(),
+				"New Architecture Project", "Enter the new database name",
+				null, null);
+
+				if (dlg.open() == Window.OK) {
+				dbName = dlg.getValue();
+
+				RationaleDB.createNewDB(dbName);
+				RationaleDB newDB = RationaleDB.getHandle();
+				newDB.resetConnection();
+				Decision first = new Decision();
+				first.setName("What is the basic architecture for the system?");
+				//first.setID(-1);
+				first.setParent(0);
+				first.setType(DecisionType.SINGLECHOICE);
+				first.setStatus(DecisionStatus.UNRESOLVED);
+				first.setPhase(Phase.ARCHITECTURE);
+				first.toDatabase(0, RationaleElementType.DECISION);
+				
+				rebuildTree(false);
+				PatternLibrary pl = PatternLibrary.getHandle();
+				pl.rebuildTree();
+				}
+				
+			}
+		};
+		newArchitectureProject.setText("Create New Architecture Project");
+		newArchitectureProject.setToolTipText("Creates a new architecture design project");
 		
 		//new Rationale
 		newRationale = new Action() {
@@ -684,8 +755,44 @@ public class RationaleExplorer extends ViewPart implements ISelectionListener, I
 				
 			}
 		};
+		
+		//new archiecture project
 		newRationale.setText("Create New Rationale DB");
 		newRationale.setToolTipText("Creates a new set of rationale");
+		newArchitectureProject = new Action() {
+			public void run() {
+				Frame rf = new Frame();
+				String dbName;
+
+				InputDialog dlg = new InputDialog(Display.getCurrent().getActiveShell(),
+				"New Architecture Project", "Enter the new database name",
+				null, null);
+
+				if (dlg.open() == Window.OK) {
+				dbName = dlg.getValue();
+
+				RationaleDB.createNewDB(dbName);
+				RationaleDB newDB = RationaleDB.getHandle();
+				newDB.resetConnection();
+				Decision first = new Decision();
+				first.setName("What is the basic architecture for the system?");
+				//first.setID(-1);
+				first.setParent(0);
+				first.setType(DecisionType.SINGLECHOICE);
+				first.setStatus(DecisionStatus.UNRESOLVED);
+				first.setPhase(Phase.ARCHITECTURE);
+				first.toDatabase(0, RationaleElementType.DECISION);
+				
+				rebuildTree(false);
+				PatternLibrary pl = PatternLibrary.getHandle();
+				pl.rebuildTree();
+				}
+				
+			}
+		};
+		newArchitectureProject.setText("Create New Architecture Project");
+		newArchitectureProject.setToolTipText("Creates a new architecture design project");
+		
 		
 		//
 		// input Rationale
@@ -815,6 +922,38 @@ public class RationaleExplorer extends ViewPart implements ISelectionListener, I
 		};
 		generateRatReportFromHere.setText("Generate Rationale Report From Here");
 		generateRatReportFromHere.setToolTipText("Generates a rationale report from this node down.");
+
+		//Generate candidate patterns
+		//TODO Still have not yet finished!
+		generateCandidatePatterns = new Action(){
+			public void run() {
+				Object selection = viewer.getSelection();
+				//GenerateCandidatePatternsDisplay gcpDisplay = new GenerateCandidatePatternsDisplay(viewer.getControl().getShell().getDisplay(), selection);
+				//refreshBranch((TreeParent)selection);
+				//ArrayList<Alternative> newAlternatives = gcpDisplay.getNewlyAddedAlternative();
+				//TODO Have not finished this yet!
+				GenerateCandidatePatternsComposite gcpWizard = new GenerateCandidatePatternsComposite(viewer.getControl().getShell().getDisplay(), selection);
+				ArrayList<Alternative> newAlternatives = gcpWizard.getNewlyAddedAlternative();
+				if(newAlternatives != null && newAlternatives.size() != 0){
+					IStructuredSelection isel = (IStructuredSelection) selection;
+				    TreeParent tp = (TreeParent)isel.getFirstElement();
+				    //Decision parentDecision = (Decision) getElement(tp, false);
+					for(int k=0; k<newAlternatives.size(); k++){	
+						//refreshBranch(createUpdate(tp, newAlternatives.get(k)));
+						createUpdate(tp, newAlternatives.get(k));
+						//createNewElement(parentDecision, newAlternatives.get(k), tp);
+						refreshBranch(tp);
+					}
+					rebuildTree(false);
+					viewer.expandToLevel(3);
+					RationaleTreeMap map = RationaleTreeMap.getHandle();
+					Vector treeObjs = map.getKeys(map.makeKey(tp.getName(), RationaleElementType.DECISION));
+					viewer.expandToLevel(treeObjs.elementAt(0),2);
+				}				
+			}
+		};
+		generateCandidatePatterns.setText("Generate Candidate Patterns");
+		generateCandidatePatterns.setToolTipText("Generates candidate patterns that cover the NRFs");
 		
 		generateRatReport = new Action(){
 			public void run(){
@@ -933,7 +1072,8 @@ public class RationaleExplorer extends ViewPart implements ISelectionListener, I
 						showTradeoffEditor.run();
 					} else if (ourElement.getType() == RationaleElementType.COOCCURRENCE) {
 						showTradeoffEditor.run();
-					} else {
+					}
+					else {
 						try {
 							RationaleElement rElement = getElement((TreeParent) obj, false);
 							editElement((TreeParent) obj, rElement, ourDisplay);
@@ -1546,6 +1686,14 @@ public class RationaleExplorer extends ViewPart implements ISelectionListener, I
 		{
 			ourElement = new Tradeoff(false);
 		}
+		else if (type == RationaleElementType.PATTERN)
+		{
+			ourElement = new Pattern();
+		}
+		else if (type == RationaleElementType.ALTERNATIVEPATTERN)
+		{
+			ourElement = new AlternativePattern();
+		}
 		else if (type == RationaleElementType.RATIONALE)
 		{
 			if (name.compareTo("Tradeoffs") == 0)
@@ -2093,6 +2241,13 @@ public class RationaleExplorer extends ViewPart implements ISelectionListener, I
 			//if there is no alternative selected, provide a select items of alternative
 			else{
 				SelectItem selectItem = new SelectItem(ourDisplay, RationaleElementType.fromString("Alternative"));
+				//DEBUG: Is this where the infinite loop is? (YQ)
+				if (selectItem == null) {
+					System.out.println("NULL selectItem at line 2098");
+					}
+				if (selectItem.getNewItem() == null){
+					System.out.println("NULL Pointer at line 2099 in RationaleExplorer.java Expect Crashes");
+				}
 				alternativeName=selectItem.getNewItem().getName();
 			}
 			
@@ -2269,6 +2424,13 @@ public class RationaleExplorer extends ViewPart implements ISelectionListener, I
 //					***						System.out.println("added our property");  
 					// Refresh the label decorations... Change it to DemoDecoratorWithImageCaching if image caching should be used
 //					((TreeParent) obj).setStatus(RationaleErrorLevel.ERROR);
+					//Is this the inf loop? (YQ)
+					if (obj == null){
+						System.out.println("CRITICAL ERROR: Obj is null at RationaleExplorer.java, line 2280");
+					}
+					if (viewer == null){
+						System.out.println("Viewer is null at RationaleExplorer.java line 2283");
+					}
 					viewer.update((TreeParent) obj, null);
 					SEURATLightWeightDecorator.getRatDecorator().refresh();
 //					***						System.out.println("refresh");
@@ -3851,5 +4013,14 @@ public class RationaleExplorer extends ViewPart implements ISelectionListener, I
 				arg.toDatabase(xNode.getRationaleID(), RationaleElementType.ALTERNATIVE);
 			}
 		}
+	}
+	
+	/**
+	 * Package visibility.
+	 * Get the handle for RationaleExplorer, usually used to refresh the tree for XML import.
+	 * @return
+	 */
+	static RationaleExplorer getHandle(){
+		return exp;
 	}
 }
