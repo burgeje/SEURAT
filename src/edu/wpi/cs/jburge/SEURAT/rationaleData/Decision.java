@@ -82,7 +82,8 @@ public class Decision extends RationaleElement implements Serializable
 	DecisionStatus status;		//don't know if maybe this should be an integer?
 	Vector<Alternative> alternatives;    //the decision will have alternatives *or* sub-decisions
 	Vector<Decision> subDecisions;
-	Vector<Question> questions;       
+	Vector<Question> questions;   
+	Vector<AlternativePattern> alternativePatterns;
 
 	private RationaleElementUpdateEventGenerator<Decision> m_eventGenerator = 
 		new RationaleElementUpdateEventGenerator<Decision>(this);
@@ -96,6 +97,7 @@ public class Decision extends RationaleElement implements Serializable
 		subDecisions = new Vector<Decision>();
 		questions = new Vector<Question>();
 		constraints = new Vector<Constraint>();
+		alternativePatterns = new Vector<AlternativePattern>();
 	} 
 	
 	public Element toXML(Document ratDoc)
@@ -311,6 +313,32 @@ public class Decision extends RationaleElement implements Serializable
 			found = (alt.getStatus() == AlternativeStatus.ADOPTED);
 		}
 		return alt;
+	}
+	
+	/**
+	 * Add a pattern to the database (on decisions table) to associate a patternID
+	 * to a decision (given decision name)
+	 * @param name
+	 * @param patternsID
+	 * @return
+	 */
+	public int savePatterns(String name, String patternsID){
+		RationaleDB db = RationaleDB.getHandle();
+		Connection conn = db.getConnection();
+		Statement stmt = null;
+		String updateQuery = "";
+		
+		updateQuery = "Update decisions set patterns = '" + patternsID + "' where name = '" + name + "'";
+		try {
+			stmt = conn.createStatement();
+			stmt.execute(updateQuery);
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		
+		return 0;
 	}
 	
 	/**
@@ -701,6 +729,16 @@ public class Decision extends RationaleElement implements Serializable
 				rs.close();
 			}
 			
+			findQuery = "SELECT name FROM alternativepatterns WHERE ptype = 'decision' and parent = " + this.id;
+			rs = stmt.executeQuery(findQuery);
+			if (rs != null){
+				while(rs.next()){
+					AlternativePattern altPattern = new AlternativePattern();
+					altPattern.fromDatabase(RationaleDBUtil.decode(rs.getString("name")));
+					addAlternativePattern(altPattern);
+				}
+			}
+			
 		} catch (SQLException ex) {
 			// handle any errors 
 			RationaleDB.reportError(ex,"Error in Decision.fromDatabase", findQuery);
@@ -828,6 +866,12 @@ public class Decision extends RationaleElement implements Serializable
 	 */
 	public Vector<RationaleStatus> updateStatus()
 	{
+		//To be on the safe side, I added this so it won't get -1 if saving data broke the order.
+		if (name != null){
+			Decision dec = new Decision();
+			dec.fromDatabase(this.name);
+			if (dec.getID() != -1) id = dec.getID();
+		}
 		DecisionInferences inf = new DecisionInferences();
 		Vector<RationaleStatus> newStat = inf.updateDecisionStatus( this);
 		return newStat;
@@ -1009,5 +1053,47 @@ public class Decision extends RationaleElement implements Serializable
 	public void setPtype(RationaleElementType ptype) {
 		this.ptype = ptype;
 	}
+	
+//trivial pattern stuff
+	public Vector<AlternativePattern> getAlternativePatterns() {
+		return alternativePatterns;
+	}
+
+	public void setCandidatePatterns(Vector<AlternativePattern> alternativePatterns) {
+		this.alternativePatterns = alternativePatterns;
+	}
+	
+	public void addAlternativePattern(AlternativePattern alterPattern){
+		alternativePatterns.add(alterPattern);
+	}
+	/**
+	 * Save alternative patterns of type decisions to the db
+	 */
+	public void saveAlterPatterns(){
+		RationaleDB db = RationaleDB.getHandle();
+		Connection conn = db.getConnection();
+				
+		Statement stmt = null; 
+		ResultSet rs = null;		
+		
+		try {
+			stmt = conn.createStatement();
+//			String oldones = "SELECT patternID FROM pattern_decision WHERE decisionID = " + this.id + " AND parentType = 'decisions'";
+//			rs = stmt.executeQuery(oldones);
+//			if(rs.next()){
+//			String deleteonts = "DELETE FROM pattern_decision where decisionID = " + this.id + " AND parentType = 'decision'";
+//			stmt.execute(deleteonts);
+//			}
+			Enumeration patterns = getAlternativePatterns().elements();
+			while(patterns.hasMoreElements()){
+				String altPatternName = ((AlternativePattern)patterns.nextElement()).getName();					
+				String updateQuery = "INSERT INTO alternativepatterns (name, ptype, parent) VALUES ('" + altPatternName + "','decision'," + this.id + " )";
+				stmt.execute(updateQuery);
+			} 
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}		
+	}	
 	
 }
