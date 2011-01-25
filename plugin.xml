@@ -67,6 +67,14 @@
             category="edu.wpi.cs.jburge.SEURAT"
             class="edu.wpi.cs.jburge.SEURAT.views.RationaleTaskView"
             id="edu.wpi.cs.jburge.SEURAT.views.RationaleTaskView">
+      </view>
+      <view
+            category="edu.wpi.cs.jburge.SEURAT"
+            class="edu.wpi.cs.jburge.SEURAT.views.PatternLibrary"
+            icon="icons/rat.GIF"
+            id="edu.wpi.cs.jburge.SEURAT.patternlibrary"
+            name="Pattern Library"
+            restorable="true">
       </view>   
    </extension>
     
@@ -285,6 +293,22 @@ isGoToNextNavigationTargetKey="ismyAppRecordGoToNextNavigationTarget"
                 id="SEURAT.editors.CandidateRationaleEditor"
                 name="SEURAT Candidate Rationale Editor">
           </editor>
+          <editor
+                class="SEURAT.editors.PatternEditor"
+                default="true"
+                extensions="seurat_pattern_editor"
+                icon="/icons/PatternLib.GIF"
+                id="SEURAT.editors.PatternEditor"
+                name="SEURAT pattern editor">
+          </editor>
+          <editor
+                class="SEURAT.editors.PatternDecisionEditor"
+                default="true"
+                extensions="seurat_editors_paterndecisioneditor"
+                icon="/icons/Dec.gif"
+                id="SEURAT.editors.PatternDecisionEditor"
+                name="Pattern Decision Editor">
+          </editor>
        </extension>	
        
 	<extension point="org.eclipse.help.toc">
@@ -295,6 +319,7 @@ isGoToNextNavigationTargetKey="ismyAppRecordGoToNextNavigationTarget"
       	<toc file="tocreference.xml"/>
      	<toc file="toctasks.xml"/>
    		<toc file="tocsamples.xml"/>
+     	<toc file="tocarchitecture.xml"/>
 	</extension>
        
 	<extension point="org.eclipse.search.searchPages">
