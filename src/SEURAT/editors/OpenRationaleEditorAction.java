@@ -7,10 +7,8 @@ import org.eclipse.ui.PlatformUI;
 
 import edu.wpi.cs.jburge.SEURAT.rationaleData.RationaleElement;
 import edu.wpi.cs.jburge.SEURAT.rationaleData.RationaleElementType;
-import edu.wpi.cs.jburge.SEURAT.views.RationaleExplorer;
-import edu.wpi.cs.jburge.SEURAT.views.TreeObject;
-import edu.wpi.cs.jburge.SEURAT.views.TreeParent;
 import edu.wpi.cs.jburge.SEURAT.views.*;
+
 import java.lang.reflect.*;
 
 import java.util.*;
@@ -22,6 +20,11 @@ import java.util.*;
  * to simplify the interface significantly.
  */
 public class OpenRationaleEditorAction extends Action {
+	/**
+	 * Pattern library object to be edited, analogous to RationaleExplorer.
+	 */
+	PatternLibrary patternLib;
+	
 	/**
 	 * The class object that is going to be used to 
 	 * instantiate a new editor window.
@@ -65,6 +68,14 @@ public class OpenRationaleEditorAction extends Action {
 		targetTreeParent = null;
 	}
 	
+	public OpenRationaleEditorAction(Class pClass, PatternLibrary pOwner, boolean pNew)
+	{
+		editorClass = pClass;
+		patternLib = pOwner;
+		isNew = pNew;
+		reqType = null;
+	}
+	
 	/**
 	 * Construct A Rationale Editor Action
 	 * 
@@ -92,6 +103,14 @@ public class OpenRationaleEditorAction extends Action {
 		targetTreeParent = pParent;
 	}
 	
+	public OpenRationaleEditorAction(Class pClass, PatternLibrary pOwner, boolean pNew, RationaleElementType rType)
+	{
+		editorClass = pClass;
+		patternLib = pOwner;
+		isNew = pNew;		
+		reqType = rType;  
+	}
+	
 	/**
 	 * Standard action listener event function. Retrieve or create the rationale element
 	 * needed for the editor to open and then instructs eclipse to load the edtior. For this function
@@ -115,9 +134,39 @@ public class OpenRationaleEditorAction extends Action {
 	 */
 	public void run() {
 
-		try {			
+		try {		
+
 			// Get Selected Node In The Rationale Explorer
 			TreeParent tree;
+			
+			if(patternLib != null){
+				tree = (TreeParent)((IStructuredSelection)patternLib.getViewer().getSelection()).getFirstElement();
+				RationaleElement rElement, rParent;
+				if (reqType == null) 
+					rElement = patternLib.getElement(tree, isNew);
+				else 
+					rElement = patternLib.getElement(new TreeObject("unused", reqType), true);
+				
+				rParent = patternLib.getElement(tree, isNew);
+
+				Class parameterTypes[] = {
+						PatternLibrary.class,
+						TreeParent.class,
+						RationaleElement.class,
+						RationaleElement.class,
+						Boolean.TYPE
+				};
+				Object parameters[] = { patternLib, tree, rParent, rElement, isNew };
+
+				Method getInput = editorClass.getMethod("createInput", parameterTypes);
+				RationaleEditorInput data = (RationaleEditorInput)getInput.invoke(null, parameters);
+
+				// Get The Workbench Information
+				IWorkbenchPage l_page = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage();
+				String l_className = editorClass.getName();
+				l_page.openEditor(data, l_className);
+				return;
+			}
 		/*	if( pTarget != null )
 			{
 				explorer.
