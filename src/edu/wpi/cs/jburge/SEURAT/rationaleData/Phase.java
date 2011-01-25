@@ -5,7 +5,7 @@
 package edu.wpi.cs.jburge.SEURAT.rationaleData;
 
   import java.util.*;
-  import java.io.*;
+import java.io.*;
 
   /**
    * The enumerated type that defines different development phases
@@ -81,6 +81,11 @@ Phase("Requirements");
      */
     public static final Phase ANALYSIS = new 
 Phase("Analysis");
+    /**
+     * The architecture phase
+     */
+    public static final Phase ARCHITECTURE = new
+Phase("Architecture");    
     /**
      * The design phase
      */

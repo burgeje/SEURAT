@@ -296,12 +296,12 @@ public class OntEntry extends RationaleElement implements Serializable
 			}
 			else 
 			{
-				
+				id = RationaleDB.findAvailableID("OntEntries");
 				//now, we have determined that the ontolgy entry is new
 				
 				String newArgSt = "INSERT INTO OntEntries " +
-				"(name, description, importance) " +
-				"VALUES ('" +
+				"(id, name, description, importance) " +
+				"VALUES (" + id + ", '" +
 				RationaleDBUtil.escape(this.name) + "', '" +
 				RationaleDBUtil.escape(this.description) + "', '" +
 				this.importance.toString() + "')"; 
