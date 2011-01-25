@@ -90,6 +90,11 @@ public class Alternative extends RationaleElement implements Serializable {
 	 * Questions that have to be answered in order to evaluate the alternative
 	 */
 	Vector<Question> questions;
+	
+	/**
+	 * If this alternative is generated from pattern, patterID is the id for that pattern. If not, patternID = -1;
+	 */
+	int patternID;
 
 	private RationaleElementUpdateEventGenerator<Alternative> m_eventGenerator = new RationaleElementUpdateEventGenerator<Alternative>(
 			this);
@@ -108,6 +113,7 @@ public class Alternative extends RationaleElement implements Serializable {
 		questions = new Vector<Question>();
 		artifacts = new Vector<String>();
 		arguments = new Vector<Argument>();
+		patternID = -1;
 	}
 
 	public Element toXML(Document ratDoc) {
@@ -273,6 +279,14 @@ public class Alternative extends RationaleElement implements Serializable {
 	public void delQuestion(Question quest) {
 		questions.remove(quest);
 	}
+	
+	public int getPatternID() {
+		return patternID;
+	}
+	
+	public void setPatternID(int patternID) {
+		this.patternID = patternID;
+	}
 
 	/**
 	 * Generic function to get a list of sub-elements of a particular type -
@@ -391,8 +405,7 @@ public class Alternative extends RationaleElement implements Serializable {
 					// Or Broadcast A Notification About It
 				}
 			} catch (Exception e) {
-				System.out
-						.println("Exception while saving evaluation score to database");
+				System.out.println("Exception while saving evaluation score to database");
 			} finally {
 				RationaleDB.releaseResources(stmt, rs);
 			}
@@ -529,7 +542,9 @@ public class Alternative extends RationaleElement implements Serializable {
 						+ "', R.status = '" + status.toString()
 						+ "', R.evaluation = "
 						+ new Double(evaluation).toString()
-						+ ", R.designType = " + updateC + " WHERE " + "R.id = "
+						+ ", R.designType = " + updateC
+						+ ", R.patternID = " + new Integer(this.patternID).toString()
+						+ " WHERE " + "R.id = "
 						+ this.id + " ";
 				// System.out.println(updateParent);
 				stmt.execute(updateParent);
@@ -554,13 +569,13 @@ public class Alternative extends RationaleElement implements Serializable {
 					updateD = new Integer(designer.getID()).toString();
 
 				String newAltSt = "INSERT INTO Alternatives "
-						+ "(name, description, status, ptype, parent, evaluation, designer, designType) "
+						+ "(name, description, status, ptype, parent, evaluation, designer, designType, patternID) "
 						+ "VALUES ('" + RationaleDBUtil.escape(this.name)
 						+ "', '" + RationaleDBUtil.escape(this.description)
 						+ "', '" + this.status.toString() + "', '"
 						+ ptype.toString() + "', " + parentSt + ", "
 						+ new Double(evaluation).toString() + ", " + updateD
-						+ "," + updateC + ")";
+						+ "," + updateC + ", " + new Integer(this.patternID).toString() + ")";
 				// *** System.out.println(newAltSt);
 				stmt.execute(newAltSt);
 
@@ -794,6 +809,7 @@ public class Alternative extends RationaleElement implements Serializable {
 				status = (AlternativeStatus) AlternativeStatus.fromString(rs
 						.getString("status"));
 				evaluation = rs.getFloat("evaluation");
+				patternID = rs.getInt("patternID");
 
 				try {
 					int desID = rs.getInt("designer");
@@ -1317,5 +1333,274 @@ public class Alternative extends RationaleElement implements Serializable {
 		RationaleUpdateEvent l_updateEvent = m_eventGenerator.MakeUpdated();
 		l_updateEvent.setTag("artifacts");
 		m_eventGenerator.Broadcast(l_updateEvent);
+	}
+	
+/**
+ * 
+ * @return
+ */
+	public ArrayList<Decision> savePatternSubDecisions(){
+		ArrayList<Decision> addedDecisions = new ArrayList<Decision>();
+		
+		RationaleDB db = RationaleDB.getHandle();
+		Connection conn = db.getConnection();
+		
+		Statement stmt = null; 
+		ResultSet rs = null; 		
+		System.out.println("Get here");
+		Vector<PatternDecision> pds = new Vector<PatternDecision>();
+		Pattern pattern = new Pattern();
+		String thePatternName = this.getName();
+		if(thePatternName.contains("~")){
+			thePatternName = thePatternName.substring(0, thePatternName.indexOf("~"));
+		}
+		
+		System.out.println("Get here!");
+		pattern.fromDatabase(thePatternName);		
+		pds = pattern.getSubDecisions();
+		Enumeration enu = pds.elements();
+		while(enu.hasMoreElements()){
+			PatternDecision patternDecision = (PatternDecision)enu.nextElement();
+			
+			String theNewDecisionName = patternDecision.getName();
+			while(RationaleDBUtil.isExist(theNewDecisionName, "Decisions")){
+				theNewDecisionName = theNewDecisionName + "~";
+			}
+			
+			String update = "INSERT INTO decisions (name, description, type, status, subdecreq, phase, ptype, parent) VALUES (" 
+				+ "'" + theNewDecisionName + "',"
+				+ "'" + patternDecision.getDescription() + "',"
+				+ "'" + patternDecision.getType().toString() + "',"
+				+ "'" + patternDecision.getStatus().toString() + "',"
+				+ "'No',"
+				+ "'" + patternDecision.getPhase().toString() + "',"
+				+ "'Alternative',"
+				+ this.id + ")";
+//					"(SELECT name, description, type, status, phase, subdecreq, ptype, parent, subsys, designer" +
+//					" FROM patterndecisions WHERE name = '" + name + "')";			
+			try {
+				stmt = conn.createStatement();
+				stmt.executeUpdate(update);
+//				System.out.println("Get here!!!");
+//				String getLastID = "SELECT LAST_INSERT_ID()";
+//				rs = stmt.executeQuery(getLastID);
+//				Vector<Integer> decisionIDs = new Vector<Integer>();
+//				if(rs.next()){
+//					//String theID = rs.getString("LAST_INSERT_ID()");
+//					decisionIDs.add((rs.getInt("LAST_INSERT_ID()")));
+//				}
+//				for(int k=0;k < decisionIDs.size();k++){
+//					int decisionID = (Integer)decisionIDs.get(k);
+//					Decision decision = new Decision();
+//					decision.fromDatabase(decisionID);
+//					
+//					System.out.println(decisionID);
+//
+//					update = "UPDATE decisions SET ptype = 'Alternative', parent = " + this.id + " WHERE id=" + decisionID;
+//					System.out.println(update);
+//					stmt.executeUpdate(update);
+//					decision.fromDatabase(decisionID);
+					//addedDecisions.add(decision);
+
+					//generate alternatives for each of the subdecisions
+//					PatternDecision pd = new PatternDecision();
+//					pd.fromDatabase(name);
+					System.out.println("Get here!!!!!");
+					String findQuery = "SELECT patternID FROM pattern_decision WHERE decisionID = "
+						+ patternDecision.getID()
+						+ " and parentType = 'Decision'";
+					System.out.println(findQuery);
+					rs = stmt.executeQuery(findQuery);
+					Vector<String> names = new Vector<String>();
+					while(rs.next()){
+						Pattern candidate = new Pattern();
+						candidate.fromDatabase(rs.getInt("patternID"));
+						names.add(candidate.getName());
+					}
+					for(int j=0;j<names.size();j++){					
+						String patternName = (String)names.get(j);
+						Pattern thePattern = new Pattern();
+						thePattern.fromDatabase(patternName);
+						while(RationaleDBUtil.isExist(patternName, "Alternatives")){
+							patternName = patternName + "~";
+						}
+						Alternative alt = new Alternative();
+						alt.setName(patternName);
+						alt.setPatternID(thePattern.getID());
+						Decision newCreatedDecision = new Decision();
+						newCreatedDecision.fromDatabase(theNewDecisionName);
+						alt.generateFromPattern(newCreatedDecision, 1);
+						
+//						String insertPattern = "INSERT INTO alternativepatterns (name, status, evaluation, ptype, parent) VALUES ('" + 
+//						(String)names.get(j) + "', 'At_Issue', 0, 'Decision', " + decisionID + ")";
+//						System.out.println(insertPattern);
+//						stmt.execute(insertPattern);
+					}
+				//}
+			} catch (SQLException e) {
+				RationaleDB.reportError(e, "Alternative.savePatternDecisions", "Bad update");
+			}			
+			
+		}
+		this.fromDatabase(this.name);
+		
+		return addedDecisions;
+	}
+	
+	/**
+	 * This is the old generate from pattern helper from Wang's code.
+	 * It creates requirement and arguments from the pattern that are selected under the decision.
+	 * Minimal changes are done so far. Some changes have been made to provide support to my GUI.
+	 * @param decision
+	 * @param matchingMethod 0 = exact matching, 1 = contribution matching, 2 = not matching
+	 * @return
+	 */
+	public boolean generateFromPattern(Decision decision, int matchingMethod){
+		boolean isCompleted = false;
+		if(getPatternID() != -1){
+			Pattern pattern = new Pattern();
+			pattern.fromDatabase(this.getPatternID());
+			setDescription("This argument is generated on the basis of the pattern " + pattern.getName());
+			setStatus(AlternativeStatus.ATISSUE);
+			setParent(decision);
+
+			toDatabase(decision.getID(), RationaleElementType.DECISION);
+			fromDatabase(getName());
+			if(pattern.getOntEntries()!=null && pattern.getOntEntries().size() != 0){
+				RationaleDB db = RationaleDB.getHandle();
+				Vector<Requirement> nfrs = db.getNFRs();
+				
+				for(int i=0; i<pattern.getOntEntries().size(); i++){
+					OntEntry oe = pattern.getOntEntries().get(i);
+					//whether satisfied by this pattern
+					//matchingMethod == 2 is the "not" matching method.
+					if(matchingMethod != 2){
+						boolean isMatched = false;
+						ArrayList<Requirement> matchedRequirements = new ArrayList<Requirement>();
+						for (int k=0; k<nfrs.size(); k++){
+							//matchingMethod == 0 is exact matching method
+							if(matchingMethod == 0){
+								if(nfrs.get(k).getOntology().getName().equals(oe.getName())){
+									isMatched = true;
+									matchedRequirements.add(nfrs.get(k));
+								}
+							}
+							//matchingMethod == 1 is the contribution matching method
+							else if(matchingMethod == 1){
+								Vector ontList = db.getOntologyElements(oe.getName());
+								Enumeration ontChildren = ontList.elements();
+								while (ontChildren.hasMoreElements()){
+									OntEntry ont = (OntEntry)ontChildren.nextElement();
+									if(ont.getName().compareTo(nfrs.get(k).getOntology().getName()) == 0){
+										isMatched = true;
+										matchedRequirements.add(nfrs.get(k));
+									}
+								}
+							}
+						}
+						if(isMatched && matchedRequirements.size() != 0){
+							for(Requirement matchedR: matchedRequirements){
+								Argument argu = new Argument();
+								String arguName = "";
+								if(pattern.getPosiOnts().contains(oe)){
+									arguName = "Requirement Satisfaction - " + oe.getName();
+									argu.setType(ArgType.SATISFIES);
+
+								}else{
+									arguName = "Requirement Violation - " + oe.getName();
+									argu.setType(ArgType.VIOLATES);
+								}
+								while(RationaleDBUtil.isExist(arguName, "Arguments")){
+									arguName = arguName + "~";
+								}
+								argu.setName(arguName);
+								argu.setRequirement(matchedR);
+								argu.setPlausibility(Plausibility.CERTAIN);
+								argu.setDescription("");
+								argu.setAmount(10);
+								argu.setImportance(Importance.ESSENTIAL);
+								argu.setParent(this);
+
+								argu.toDatabase(this.getID(), RationaleElementType.ALTERNATIVE);
+							}									
+						}else{
+							Argument argu = new Argument();
+							Claim claim = new Claim();
+							String claimName = "";
+							if(pattern.getPosiOnts().contains(oe)){
+								claimName = "Positive Quality Attribute - " + oe.getName();
+								claim.setDirection(Direction.IS);
+								argu.setType(ArgType.SUPPORTS);
+							}else{
+								claimName = "Negative Quality Attribute - " + oe.getName();
+								claim.setDirection(Direction.NOT);
+								argu.setType(ArgType.DENIES);
+							}								
+							while(RationaleDBUtil.isExist(claimName, "Claims")){
+								claimName = claimName + "~";
+							}
+							claim.setName(claimName);
+
+							claim.setImportance(Importance.DEFAULT);
+							claim.setOntology(oe);
+							claim.setEnabled(true);
+							claim.toDatabase();
+
+							argu.setClaim(claim);
+
+							argu.setName(claimName);
+							argu.setPlausibility(Plausibility.HIGH);
+							argu.setDescription("");
+							argu.setAmount(10);
+							argu.setImportance(Importance.DEFAULT);
+							argu.setParent(this);
+
+							argu.toDatabase(this.getID(), RationaleElementType.ALTERNATIVE);
+						}
+					}else{
+						//no matching, arguments only
+						Argument argu = new Argument();
+						Claim claim = new Claim();
+						String claimName = "";
+						if(pattern.getPosiOnts().contains(oe)){
+							claimName = "Positive Quality Attribute - " + oe.getName();
+							claim.setDirection(Direction.IS);
+							argu.setType(ArgType.SUPPORTS);
+						}else{
+							claimName = "Negative Quality Attribute - " + oe.getName();
+							claim.setDirection(Direction.NOT);
+							argu.setType(ArgType.DENIES);
+						}								
+						while(RationaleDBUtil.isExist(claimName, "Claims")){
+							claimName = claimName + "~";
+						}
+						claim.setName(claimName);
+
+						claim.setImportance(Importance.ESSENTIAL);
+						claim.setOntology(oe);
+						claim.setEnabled(true);
+						claim.toDatabase();
+
+						argu.setClaim(claim);
+
+						argu.setName(claimName);
+						argu.setPlausibility(Plausibility.HIGH);
+						argu.setDescription("");
+						argu.setAmount(10);
+						argu.setImportance(Importance.ESSENTIAL);
+						argu.setParent(this);
+
+						argu.toDatabase(this.getID(), RationaleElementType.ALTERNATIVE);
+					}
+				}
+			}
+			
+			isCompleted = true;
+			this.fromDatabase(this.name);
+			this.evaluate(true);
+			this.fromDatabase(this.name);
+		}
+		
+		return isCompleted;
 	}
 }
