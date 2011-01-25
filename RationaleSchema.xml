@@ -16,7 +16,25 @@
 	<xsd:element name="rationale" type="Rationale"/>
 
 	<!-- ATTRIBUTES -->
-
+	
+	<!--Pattern Library Attributes -->
+	<xsd:simpleType name="PatternType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="Architecture"/>
+			<xsd:enumeration value="Design"/>
+			<xsd:enumeration value="Idiom"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	
+	<xsd:simpleType name="patID">
+		<xsd:restriction base="xsd:ID"></xsd:restriction>
+	</xsd:simpleType>
+	
+	<xsd:simpleType name="patIDref">
+		<xsd:restriction base="xsd:IDREF"></xsd:restriction>
+	</xsd:simpleType>
+	<!-- End of Pattern Library Attributes -->
+	
 	<xsd:simpleType name="id">
 		<xsd:restriction base="xsd:ID"/>
 	</xsd:simpleType>
@@ -56,6 +74,8 @@
 		<xsd:restriction base="xsd:string">
 			<xsd:enumeration value="Requirements"/>
 			<xsd:enumeration value="Analysis"/>
+			<!-- Pattern's Arch -->
+			<xsd:enumeration value="Architecture"/>
 			<xsd:enumeration value="Design"/>
 			<xsd:enumeration value="Implementation"/>
 			<xsd:enumeration value="Test"/>
@@ -132,12 +152,9 @@
 
 	<xsd:simpleType name="AltStatus">
 		<xsd:restriction base="xsd:string">
-			<xsd:enumeration value="Admissible"/>
-			<xsd:enumeration value="Valid"/>
 			<xsd:enumeration value="Adopted"/>
 			<xsd:enumeration value="At_Issue"/>
 			<xsd:enumeration value="Rejected"/>
-			<xsd:enumeration value="Retracted"/>
 		</xsd:restriction>
 	</xsd:simpleType>
 
@@ -227,6 +244,7 @@
 			<xsd:element name="designConstraint" type="DesignConstraints" minOccurs="0" maxOccurs="unbounded"/>
 			<xsd:element name="designContingency" type="DesignContingency" minOccurs="0" maxOccurs="unbounded"/>
 			<xsd:element name="designerProfile" type="DesignerProfile" minOccurs="0" maxOccurs="unbounded"/>
+			<xsd:element name="patternLibrary" type="PatternLib" minOccurs="1" maxOccurs="unbounded"/>
 		</xsd:sequence>
 	</xsd:complexType>
 
@@ -493,6 +511,59 @@
 			</xsd:choice>
 		</xsd:sequence>
 	</xsd:complexType>
+	
+	<!-- Pattern Library Complex Types -->
+	
+	<xsd:complexType name="PatternLib">
+		<xsd:sequence>
+			<xsd:choice>
+				<xsd:element name="pattern" type="Pattern"/>
+				<xsd:element name="patternDecision" type="PatternDec"/>
+				<xsd:element name="patternCategory" type="PatternProblemCategory"/>
+			</xsd:choice>
+		</xsd:sequence>
+	</xsd:complexType>
+	
+	<xsd:complexType name="PatternProblemCategory">
+		<xsd:attribute name="rid" type="patIDref" use="required"/>
+		<xsd:attribute name="name" type="xsd:string" use="required"/>
+		<xsd:attribute name="type" type="PatternType" use="required"/>
+	</xsd:complexType>
+	
+	<xsd:complexType name="PatternDec">
+		<xsd:sequence>
+			<xsd:element name="description" type="xsd:string" minOccurs="1" maxOccurs="1"/>
+			<xsd:element name="refChildPattern" type="patIDRef" minOccurs="0" maxOccurs="unbounded"/>
+		</xsd:sequence>
+		<xsd:attribute name="rid" type="patIDref" use="required"/>
+		<xsd:attribute name="name" type="xsd:string" use="required"/>
+		<xsd:attribute name="type" type="DecisionType" use="required"/>
+		<xsd:attribute name="phase" type="Phase" use="required"/>
+		<xsd:attribute name="status" type="DecisionStatus" use="required"/>
+		<!-- xsd:attribute name="artifact" type="xsd:string"/ -->
+	</xsd:complexType>
+	
+	<xsd:complexType name="Pattern">
+		<xsd:sequence>
+			<!-- refChildDecision contains the id of Pattern Decisions that are child of this pattern -->
+			<xsd:element name="refChildDecision" type="patIDRef" minOccurs="0" maxOccurs="unbounded"/>
+			<!-- refChildOntology contains the ontology entries this pattern is using  -->
+			<xsd:element name="refOntPos" type="ref" minOccurs="0" maxOccurs="unbounded"/>
+			<xsd:element name="refOntNeg" type="ref" minOccurs="0" maxOccurs="unbounded"/>
+			<xsd:element name="refCategory" type="patIDRef" minOccurs="1" maxOccurs="1"/>
+			<xsd:element name="type" type="PatternType" minOccurs="0" maxOccurs="1"/>
+			<xsd:element name="description" type="xsd:string" minOccurs="1" maxOccurs="1"/>
+			<xsd:element name="problem" type="xsd:string" minOccurs="1" maxOccurs="1"/>
+			<xsd:element name="context" type="xsd:string" minOccurs="1" maxOccurs="1"/>
+			<xsd:element name="solution" type="xsd:string" minOccurs="1" maxOccurs="1"/>
+			<xsd:element name="implementation" type="xsd:string" minOccurs="1" maxOccurs="1"/>
+			<xsd:element name="example" type="xsd:string" minOccurs="1" maxOccurs="1"/>
+			<xsd:element name="url" type="xsd:string" minOccurs="1" maxOccurs="1"/>
+		</xsd:sequence>
+		<xsd:attribute name="rid" type="patIDref" use="required"/>
+		<xsd:attribute name="name" type="xsd:string" use="required"/>
+	</xsd:complexType>
+	<!-- End of Pattern Library Complex Types -->
 
 	<!--	Each ontology entry consists of its description and any child entries
 		The ID for the ontology entry should be sufficient to explain what it is
