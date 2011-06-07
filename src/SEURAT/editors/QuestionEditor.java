@@ -286,7 +286,7 @@ public class QuestionEditor extends RationaleEditorBase {
 		descArea.setLayoutData(gridData);
 		
 		new Label(parent, SWT.NONE).setText("Status:");
-		statusBox = new Combo(parent, SWT.NONE);
+		statusBox = new Combo(parent, SWT.DROP_DOWN | SWT.READ_ONLY);
 		statusBox.addModifyListener(getNeedsSaveListener());
 		Enumeration statEnum = QuestionStatus.elements();
 		int j=0;

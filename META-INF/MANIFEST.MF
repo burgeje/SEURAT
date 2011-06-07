@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: SEURAT Plug-in
 Bundle-SymbolicName: SEURAT; singleton:=true
-Bundle-Version: 6.0.0
+Bundle-Version: 6.0.1
 Bundle-ClassPath: SEURAT.jar,
  mysql-connector-java-3.0.8-stable-bin.jar,
  derby.jar
