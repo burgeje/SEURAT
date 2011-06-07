@@ -93,7 +93,7 @@ public class EditDesigner extends NewRationaleElementGUI implements Serializable
 		
 		//row 2: position in company, position on project
 		new Label(shell, SWT.NONE).setText("Position (Company):");
-		corpPosBox = new Combo(shell, SWT.NONE);
+		corpPosBox = new Combo(shell, SWT.DROP_DOWN | SWT.READ_ONLY);
 		gridData = new GridData(GridData.HORIZONTAL_ALIGN_FILL | GridData.VERTICAL_ALIGN_BEGINNING);
 		
 		gridData.horizontalSpan = 1;
@@ -118,7 +118,7 @@ public class EditDesigner extends NewRationaleElementGUI implements Serializable
 		
 		new Label(shell, SWT.NONE).setText("Position (Project):");
 		
-		orgPosBox = new Combo(shell, SWT.NONE);
+		orgPosBox = new Combo(shell, SWT.DROP_DOWN | SWT.READ_ONLY);
 		gridData = new GridData(GridData.HORIZONTAL_ALIGN_FILL | GridData.VERTICAL_ALIGN_BEGINNING);
 		gridData.horizontalSpan = 1;
 		orgPosBox.setLayoutData(gridData);
