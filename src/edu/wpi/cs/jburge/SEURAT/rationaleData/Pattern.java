@@ -730,7 +730,7 @@ public class Pattern extends RationaleElement {
 			try {
 				stmt = conn.createStatement(); 
 				findQuery = "SELECT id FROM patterns where name='" +
-				this.name + "'";
+				RationaleDBUtil.escape(this.name) + "'";
 				rs = stmt.executeQuery(findQuery); 
 				
 				if (rs.next())

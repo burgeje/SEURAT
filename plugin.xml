@@ -76,6 +76,14 @@
             name="Pattern Library"
             restorable="true">
       </view>   
+            <view
+            category="edu.wpi.cs.jburge.SEURAT"
+            class="edu.wpi.cs.jburge.SEURAT.views.TacticLibrary"
+            icon="icons/rat.GIF"
+            id="edu.wpi.cs.jburge.SEURAT.tacticlibrary"
+            name="Tactic Library"
+            restorable="true">
+      </view> 
    </extension>
     
    <extension
@@ -308,6 +316,14 @@ isGoToNextNavigationTargetKey="ismyAppRecordGoToNextNavigationTarget"
                 icon="/icons/Dec.gif"
                 id="SEURAT.editors.PatternDecisionEditor"
                 name="Pattern Decision Editor">
+          </editor>
+                    <editor
+                class="SEURAT.editors.TacticEditor"
+                default="true"
+                extensions="seurat_editors_tacticeditor"
+                icon="/icons/rat.gif"
+                id="SEURAT.editors.TacticEditor"
+                name="Tactic Editor">
           </editor>
        </extension>	
        

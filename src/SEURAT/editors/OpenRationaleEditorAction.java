@@ -26,6 +26,11 @@ public class OpenRationaleEditorAction extends Action {
 	PatternLibrary patternLib;
 	
 	/**
+	 * Tactic library object to be edited, analogous to RationaleExplorer.
+	 */
+	TacticLibrary tacticLib;
+	
+	/**
 	 * The class object that is going to be used to 
 	 * instantiate a new editor window.
 	 */
@@ -76,6 +81,14 @@ public class OpenRationaleEditorAction extends Action {
 		reqType = null;
 	}
 	
+	public OpenRationaleEditorAction(Class pClass, TacticLibrary pOwner, boolean pNew)
+	{
+		editorClass = pClass;
+		tacticLib = pOwner;
+		isNew = pNew;
+		reqType = null;
+	}
+	
 	/**
 	 * Construct A Rationale Editor Action
 	 * 
@@ -109,6 +122,14 @@ public class OpenRationaleEditorAction extends Action {
 		patternLib = pOwner;
 		isNew = pNew;		
 		reqType = rType;  
+	}
+	
+	public OpenRationaleEditorAction(Class pClass, TacticLibrary pOwner, boolean pNew, RationaleElementType rType)
+	{
+		editorClass = pClass;
+		tacticLib = pOwner;
+		isNew = pNew;
+		reqType = rType;
 	}
 	
 	/**
@@ -162,6 +183,34 @@ public class OpenRationaleEditorAction extends Action {
 				RationaleEditorInput data = (RationaleEditorInput)getInput.invoke(null, parameters);
 
 				// Get The Workbench Information
+				IWorkbenchPage l_page = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage();
+				String l_className = editorClass.getName();
+				l_page.openEditor(data, l_className);
+				return;
+			}
+			
+			if (tacticLib != null){
+				tree = (TreeParent) ((IStructuredSelection) tacticLib.getViewer().getSelection()).getFirstElement();
+				RationaleElement rElement, rParent;
+				if (reqType == null)
+					rElement = tacticLib.getElement(tree, isNew);
+				else
+					rElement = tacticLib.getElement(new TreeObject("unused", reqType), true);
+				
+				rParent = tacticLib.getElement(tree, isNew);
+				
+				Class parameterTypes[] = {
+						TacticLibrary.class,
+						TreeParent.class,
+						RationaleElement.class,
+						RationaleElement.class,
+						Boolean.TYPE
+				};
+				Object parameters[] = { tacticLib, tree, rParent, rElement, isNew };
+				Method getInput = editorClass.getMethod("createInput", parameterTypes);
+				RationaleEditorInput data = (RationaleEditorInput) getInput.invoke(null, parameters);
+				
+				//Get workbench info
 				IWorkbenchPage l_page = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage();
 				String l_className = editorClass.getName();
 				l_page.openEditor(data, l_className);

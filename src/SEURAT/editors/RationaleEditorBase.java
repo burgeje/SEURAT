@@ -23,6 +23,7 @@ import edu.wpi.cs.jburge.SEURAT.rationaleData.RationaleDB;
 import edu.wpi.cs.jburge.SEURAT.rationaleData.RationaleElement;
 import edu.wpi.cs.jburge.SEURAT.views.RationaleExplorer;
 import edu.wpi.cs.jburge.SEURAT.views.PatternLibrary;
+import edu.wpi.cs.jburge.SEURAT.views.TacticLibrary;
 import edu.wpi.cs.jburge.SEURAT.views.TreeParent;
 
 /**
@@ -166,11 +167,18 @@ public abstract class RationaleEditorBase extends EditorPart
 		// ---> Get Necessarry Data From Logical File
 		RationaleExplorer explorer;
 		PatternLibrary pattern;
+		TacticLibrary tactic;
 		RationaleElement parentElement;
 		explorer = (RationaleExplorer)getEditorInput().getAdapter(RationaleExplorer.class);
 		
 		if (explorer == null){
 			pattern = (PatternLibrary)getEditorInput().getAdapter(PatternLibrary.class);
+			if (pattern == null){
+				tactic = (TacticLibrary)getEditorInput().getAdapter(TacticLibrary.class);
+				TreeParent parentTree = getTreeParent();
+				TreeParent newEle = tactic.createUpdate(parentTree, getRationaleElement());
+				return newEle;
+			}
 			//parentElement = (RationaleElement)getEditorInput().getAdapter(RationaleElement.class);
 			TreeParent parentTree = getTreeParent();
 			TreeParent newEle = pattern.createUpdate(parentTree, getRationaleElement());
@@ -196,12 +204,19 @@ public abstract class RationaleEditorBase extends EditorPart
 		// ---> Get Necessarry Data From Logical File
 		RationaleExplorer explorer;
 		PatternLibrary pattern;
+		TacticLibrary tactic;
 		TreeParent parentTree;
 		parentTree = (TreeParent)getEditorInput().getAdapter(TreeParent.class);
 		
 		explorer = (RationaleExplorer)getEditorInput().getAdapter(RationaleExplorer.class);
 		if (explorer == null){
 			pattern = (PatternLibrary)getEditorInput().getAdapter(PatternLibrary.class);
+			if (pattern == null){
+				tactic = (TacticLibrary)getEditorInput().getAdapter(TacticLibrary.class);
+				parentTree = tactic.editUpdate(parentTree, getRationaleElement());
+				((RationaleEditorInput) getEditorInput()).setTreeParent(parentTree);
+				return;
+			}
 			parentTree = pattern.editUpdate(parentTree, getRationaleElement());
 			((RationaleEditorInput) getEditorInput()).setTreeParent(parentTree);
 			return;

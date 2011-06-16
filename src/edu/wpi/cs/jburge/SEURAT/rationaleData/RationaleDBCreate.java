@@ -1123,7 +1123,10 @@ public class RationaleDBCreate
 				CREATE_PATTERNDECISIONS(),
 				CREATE_PATTERN_ONTENTRIES(),
 				CREATE_PATTERNPROBLEMCATEGORIES(),
-				CREATE_PATTERN_PROBLEMCATEGORY_RELATIONSHIP()
+				CREATE_PATTERN_PROBLEMCATEGORY_RELATIONSHIP(),
+				CREATE_TACTICS(),
+				CREATE_TACTIC_PATTERN(),
+				CREATE_TACTIC_NEGONTENTRIES()
 		};
 	};
 
@@ -1134,10 +1137,7 @@ public class RationaleDBCreate
 	public static String[] getQueries()
 	{
 		int l_index = 0;
-		String l_retval[] = new String
-		[
-		 CREATE_TABLES().length 
-		 ];
+		String l_retval[] = new String[CREATE_TABLES().length ];
 
 		for( String l_s : CREATE_TABLES() )
 		{
@@ -1714,6 +1714,44 @@ public class RationaleDBCreate
 		+ tablePart("ontID INTEGER default NULL")
 		+ endTable("direction varchar(50) default NULL");
 	}
+	
+	/**
+	 * Returns the tactics table statement
+	 * @return String containing the statement
+	 */
+	public static final String CREATE_TACTICS(){
+		return beginTable("tactics") + tablePart("ID INTEGER NOT NULL")
+		+ tablePart("NAME VARCHAR(255) NOT NULL UNIQUE")
+		+ tablePart("QUALITY INTEGER NOT NULL REFERENCES ONTENTRIES(ID)")
+		+ tablePart("DESCRIPTION VARCHAR(255)")
+		+ tablePart("TIME_BEH INTEGER DEFAULT 0 check (time_beh >= 0 AND time_beh < " + Tactic.behaviorCategories.length + ")")
+		+ endTable("PRIMARY KEY (ID)");
+	}
+	
+	/**
+	 * Returns the tactic_pattern relationship table statement
+	 * @return String containing the statement
+	 */
+	public static final String CREATE_TACTIC_PATTERN(){
+		return beginTable("tactic_pattern") + tablePart("ID INTEGER PRIMARY KEY")
+		+ tablePart("TACTIC_ID INTEGER NOT NULL REFERENCES TACTICS(ID)")
+		+ tablePart("PATTERN_ID INTEGER NOT NULL REFERENCES PATTERNS(ID)")
+		+ tablePart("STRUCT_CHANGE INTEGER NOT NULL CHECK (STRUCT_CHANGE >= 0 AND STRUCT_CHANGE <" + TacticPattern.changeCategories.length +")")
+		+ tablePart("beh_change integer not null check(beh_change>=0 AND beh_change <" + TacticPattern.changeCategories.length +")")
+		+ tablePart("changes integer not null check(changes >= 0)")
+		+ endTable("description varchar(255)");
+	}
+	
+	/**
+	 * Returns the tactic_negative-quality-attribute relationship table statement
+	 * @return String containing the statement
+	 */
+	public static final String CREATE_TACTIC_NEGONTENTRIES(){
+		return beginTable("TACTIC_NEGONTENTRIES") + tablePart("ID INTEGER PRIMARY KEY")
+		+ tablePart("TACTIC_ID INTEGER NOT NULL REFERENCES TACTICS(ID)")
+		+ endTable("ONT_ID INTEGER NOT NULL REFERENCES ONTENTRIES(ID)");
+	}
+	
 	public static String[] getPatternQueries(){
 		return INSERT_PATTERNS();
 	}

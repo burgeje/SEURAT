@@ -500,6 +500,7 @@ public final class RationaleDB implements Serializable {
 	private static PreparedStatement m_patternFromDB = null;
 
 	private static PreparedStatement m_altPatternFromDB = null;
+	
 
 	/**
 	 * Accessor Method For The Ontology Entries FromDatabase Pseudo
@@ -583,6 +584,7 @@ public final class RationaleDB implements Serializable {
 			//int doNothing;
 			//doNothing = 0;
 		}
+		
 	}
 
 	/**
@@ -1712,6 +1714,40 @@ public final class RationaleDB implements Serializable {
 		}
 
 	}
+	
+	/**
+	 * Delete a tactic from database. Before deleting, must delete all references to the tactic first.
+	 * @param tacticName
+	 */
+	public void removeTactic(String tacticName){
+		Statement stmt = null;
+		ResultSet rs = null;
+		String query = "";
+		int tacticID = -1;
+		
+		//First, get the ID of the tactic.
+		query = "SELECT id from TACTICS where name = '" + tacticName + "'";
+		try {
+			stmt = conn.createStatement();
+			rs = stmt.executeQuery(query);
+			if (rs.next()){
+				tacticID = rs.getInt("id");
+			}
+			else {
+				System.err.println("Cannot find the ID of the tactic");
+				return;
+			}
+			
+			query = "DELETE FROM TACTIC_PATTERN WHERE tactic_id = " + tacticID;
+			stmt.execute(query);
+			query = "DELETE FROM TACTIC_NEGONTENTRIES WHERE tactic_id = " + tacticID;
+			stmt.execute(query);
+			query = "DELETE FROM TACTICS where id = " + tacticID;
+			stmt.execute(query);
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+	}
 
 	/**
 	 * Return a vector containing all parents created from the database entry.
@@ -2495,7 +2531,6 @@ public final class RationaleDB implements Serializable {
 		String query = "";
 		Statement stmt = null;
 		ResultSet rs = null;
-		Pattern pattern = new Pattern();
 
 		try {
 			stmt = conn.createStatement();
@@ -2513,11 +2548,50 @@ public final class RationaleDB implements Serializable {
 						.getString("name")), RationaleElementType.PATTERN);
 				patternList.addElement(element);
 			}
+			
+			rs.close();
+			stmt.close();
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		}		
+		}
 		return patternList;
+	}
+	
+	/**
+	 * Given positive quality attribute, get tactics helps the quality attribute.
+	 * 
+	 * @param category positive quality attribute. If null, then get all tactics from DB.
+	 * @return A vector of TreeParent, having element type TACTIC
+	 */
+	public Vector<TreeParent> getTactics(String category){
+		Vector<TreeParent> tacticList = new Vector<TreeParent>();
+		String query = "";
+		Statement stmt = null;
+		ResultSet rs = null;
+		try {
+			stmt = conn.createStatement();
+			query = "SELECT name FROM tactics ORDER BY name ASC ";
+			
+			if (category != null && category.length() > 0){
+				OntEntry entry = new OntEntry();
+				entry.fromDatabase(category);
+				int categoryID = entry.getID();
+				if (categoryID > 0)
+					query += "WHERE quality = " + categoryID;
+			}
+			rs = stmt.executeQuery(query);
+			
+			while (rs.next()){
+				TreeParent element = new TreeParent(RationaleDBUtil.decode(rs.getString("name")), 
+						RationaleElementType.TACTIC);
+				tacticList.add(element);
+			}
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return tacticList;
 	}
 
 	/**
@@ -5172,7 +5246,7 @@ public final class RationaleDB implements Serializable {
 	 * It seems the XML Import/Export has broken the ID auto_increment. I need this for every
 	 * insertion of all entities.
 	 * This method returns the next available ID after the max of ID's given dbName.
-	 * @param dbName The database name to find the max ID.
+	 * @param dbName The table name to find the max ID.
 	 */
 	public static int findAvailableID(String dbName){
 		Statement stmt = null;
