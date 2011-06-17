@@ -237,10 +237,8 @@ ITreeContentProvider{
 	@Override
 	public void inputChanged(Viewer viewer, Object oldInput, Object newInput) {
 		this.viewer = (TreeViewer)viewer;
-		System.out.println("viewer ok");
 		if (!(oldInput instanceof TreeParent))
 		{
-			System.out.println("not a TreeParent???");
 			if (oldInput instanceof TreeObject)
 			{
 				System.out.println("it is a tree object");

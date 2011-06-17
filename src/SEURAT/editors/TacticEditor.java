@@ -6,6 +6,7 @@ import java.util.Vector;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
@@ -40,6 +41,7 @@ public class TacticEditor extends RationaleEditorBase {
 
 	private Text nameField, descArea;
 	private Button selectCategoryButton;
+	private SelectionListener selSaveListener;
 	private Label catDesc;
 	private Combo behCombo;
 	private List patterns, negQAs;
@@ -74,7 +76,7 @@ public class TacticEditor extends RationaleEditorBase {
 	@Override
 	public boolean saveData() {
 		//Consistency checker is unnecessary because the uniqueness of names is defined in database as an implicit constraint.
-		if (catDesc.getText().equals("Not Selected!")){
+		if (catDesc.getText().equals(defaultCategory)){
 			String l_message = "You must select a positive quality attribute for the tactic!";
 			MessageBox mbox = new MessageBox(getSite().getShell(), SWT.ICON_ERROR);
 			mbox.setMessage(l_message);
@@ -93,7 +95,7 @@ public class TacticEditor extends RationaleEditorBase {
 			mbox.open();
 			return false;
 		}
-		
+
 		if (nameField.getText().trim().equals("")){
 			String l_message = "The name you have specified is not valid. Please give the tactic a name!";
 			MessageBox mbox = new MessageBox(getSite().getShell(), SWT.ICON_ERROR);
@@ -102,7 +104,7 @@ public class TacticEditor extends RationaleEditorBase {
 			mbox.open();
 			return false;
 		}
-		
+
 		ourTactic.setName(nameField.getText());
 		ourTactic.setCategory(category);
 		ourTactic.setDescription(descArea.getText());
@@ -110,7 +112,99 @@ public class TacticEditor extends RationaleEditorBase {
 		ourTactic.toDatabase();
 		return true;
 	}
+
+	/**
+	 * Respond to changes which have been made to the alternative
+	 * being edited. Also respond to new arguments created which
+	 * are children of this alternative.
+	 * 
+	 * @param pElement the element which generated the event
+	 * @param pEvent the rationale update event which describes
+	 * 		what caused the event to be generated.
+	 */
+	public void onUpdate(Tactic pElement, RationaleUpdateEvent pEvent)
+	{
+		try{
+			if (pEvent.getElement().equals(ourTactic)){
+				if (pEvent.getDestroyed()){
+					closeEditor();
+				}
+				else if (pEvent.getModified()){
+					refreshForm(pEvent);
+				}
+			}
+		} catch (Exception e){
+			System.err.println("Error on update of Tactic Editor");
+			e.printStackTrace();
+		}
+	}
 	
+	public void onUpdateTacticPattern(TacticPattern tp, RationaleUpdateEvent pEvent){
+		refreshTacticPattern(pEvent);
+	}
+	
+	public void onUpdateNegQA(OntEntry entry, RationaleUpdateEvent pEvent){
+		refreshNegQA(pEvent);
+	}
+
+	public void refreshTacticPattern(RationaleUpdateEvent pEvent){
+		RationaleDB l_db = RationaleDB.getHandle();
+		if (ourTactic != null && patterns != null){
+			patterns.removeAll();
+			Tactic tactic = new Tactic();
+			tactic.fromDatabase(ourTactic.getName());
+			Vector<TacticPattern> ptV = tactic.getPatterns();
+			Iterator<TacticPattern> ptI = ptV.iterator();
+			while (ptI.hasNext()){
+				TacticPattern pt = ptI.next();
+
+				patterns.add(pt.getPatternName());
+
+				try{
+					if (pEvent != null &&  pEvent.getElement() instanceof TacticPattern && 
+							((TacticPattern) (pEvent.getElement())).equals(pt) && pEvent.getModified()){
+						l_db.Notifier().Unsubscribe(this, pt);
+					}
+					l_db.Notifier().Subscribe(pt, this, "onUpdateTacticPattern");
+					if (pEvent != null && pEvent.getElement() instanceof TacticPattern && 
+							((TacticPattern) (pEvent.getElement())).equals(pt) && pEvent.getDestroyed()){
+						l_db.Notifier().Unsubscribe(this, pt);
+					}
+				} catch (Exception e){
+					System.err.println("Unable to subscribe to tactic-pattern under the selected tactic!");
+				}
+			}
+		}
+	}
+
+	public void refreshNegQA(RationaleUpdateEvent pEvent){
+		RationaleDB l_db = RationaleDB.getHandle();
+		if (ourTactic == null || negQAs == null) return;
+		negQAs.removeAll();
+		Tactic tactic = new Tactic();
+		tactic.fromDatabase(ourTactic.getName());
+		Iterator<OntEntry> negI = tactic.getBadEffects().iterator();
+		while (negI.hasNext()){
+			OntEntry cur = negI.next();
+
+			negQAs.add(cur.getName());
+
+			try{
+				if ( pEvent != null && pEvent.getElement() instanceof OntEntry && 
+						((OntEntry) (pEvent.getElement())).equals(cur) && pEvent.getModified()){
+					l_db.Notifier().Unsubscribe(this,cur);
+				}
+				l_db.Notifier().Subscribe(cur, this, "onUpdateNegQA");
+				if ( pEvent != null && pEvent.getElement() instanceof OntEntry && 
+						((OntEntry) (pEvent.getElement())).equals(cur) && pEvent.getDestroyed()){
+					l_db.Notifier().Unsubscribe(this,cur);
+				}
+			} catch (Exception e){
+				System.err.println("Unable to subscribe to negative QA under the selected tactic!");
+			}
+		}
+	}
+
 	@Override
 	protected void updateFormCache() {
 		if (nameField != null){
@@ -143,7 +237,7 @@ public class TacticEditor extends RationaleEditorBase {
 		}
 		if (ourTactic == null) return;
 		ourTactic.fromDatabase(ourTactic.getID());
-		
+
 		this.ourTactic = ourTactic;
 
 		if (ourTactic.getCategory() != null){
@@ -154,27 +248,27 @@ public class TacticEditor extends RationaleEditorBase {
 				l_dirty = true;
 			}
 		}
-		
+
 		if (nameField.getText().equals(dataCache.name)){
 			nameField.setText(ourTactic.getName());
 			dataCache.name = nameField.getText();
 		}
 		else
 			l_dirty = true;
-		
+
 		if (descArea.getText().equals(dataCache.description)){
 			descArea.setText(ourTactic.getDescription());
 			dataCache.description = descArea.getText();
 		}
 		else
 			l_dirty = true;
-		
+
 		if (behCombo.getSelectionIndex() == dataCache.beh){
 			dataCache.beh = behCombo.getSelectionIndex();
 		}
 		else
 			l_dirty = true;
-		
+
 		setDirty(l_dirty);
 	}
 
@@ -216,7 +310,7 @@ public class TacticEditor extends RationaleEditorBase {
 			catDesc.setText(ourTactic.getCategory().getName());
 		}
 		else{
-			catDesc.setText("Not Selected!");
+			catDesc.setText(defaultCategory);
 		}
 		gridData = new GridData(GridData.HORIZONTAL_ALIGN_FILL);
 		gridData.horizontalSpan=4;
@@ -227,6 +321,7 @@ public class TacticEditor extends RationaleEditorBase {
 		gridData = new GridData(GridData.HORIZONTAL_ALIGN_END | GridData.VERTICAL_ALIGN_BEGINNING);
 		selectCategoryButton.setLayoutData(gridData);
 		ourParent = parent;
+		selSaveListener = this.getSelNeedsSaveListener();
 
 		selectCategoryButton.addSelectionListener(new SelectionAdapter() {
 			public void widgetSelected(SelectionEvent event){
@@ -236,6 +331,7 @@ public class TacticEditor extends RationaleEditorBase {
 				if (newOnt != null){
 					ourTactic.setCategory(newOnt);
 					catDesc.setText(newOnt.toString());
+					selSaveListener.widgetSelected(event);
 				}
 			}
 		});
@@ -251,7 +347,7 @@ public class TacticEditor extends RationaleEditorBase {
 		gridData.grabExcessHorizontalSpace = true;
 		gridData.horizontalAlignment = GridData.FILL;
 		descArea.setLayoutData(gridData);
-		
+
 		new Label(parent, SWT.NONE).setText("Time Behavior:");
 		behCombo = new Combo(parent, SWT.DROP_DOWN | SWT.READ_ONLY);
 		behCombo.addModifyListener(getNeedsSaveListener());
@@ -286,13 +382,7 @@ public class TacticEditor extends RationaleEditorBase {
 		gridData.horizontalSpan = 3;
 		gridData.horizontalAlignment = GridData.FILL;
 		gridData.heightHint = 120;
-		Vector<TacticPattern> ptV = ourTactic.getPatterns();
-		Iterator<TacticPattern> ptI = ptV.iterator();
-		while (ptI.hasNext()){
-			TacticPattern pt = ptI.next();
-
-			patterns.add(pt.getName());
-		}
+		refreshTacticPattern(null);
 		patterns.setLayoutData(gridData);
 
 		negQAs = new List(parent, SWT.SINGLE | SWT.V_SCROLL);
@@ -300,13 +390,16 @@ public class TacticEditor extends RationaleEditorBase {
 		gridData.horizontalSpan = 3;
 		gridData.horizontalAlignment = GridData.FILL;
 		gridData.heightHint = 120;
-		Iterator<OntEntry> negI = ourTactic.getBadEffects().iterator();
-		while (negI.hasNext()){
-			OntEntry cur = negI.next();
-
-			negQAs.add(cur.getName());
-		}
+		refreshNegQA(null);
 		negQAs.setLayoutData(gridData);
+
+		//Register Event Notification
+		try{
+			RationaleDB.getHandle().Notifier().Subscribe(ourTactic, this, "onUpdate");
+		}
+		catch (Exception e){
+			System.err.println("Unable to subscribe on the selected object!");
+		}
 
 	}
 

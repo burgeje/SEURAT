@@ -84,12 +84,12 @@ import edu.wpi.cs.jburge.SEURAT.decorators.*;
 
 public class TacticLibrary extends ViewPart implements ISelectionListener, IRationaleUpdateEventListener,
 IPropertyChangeListener{
-	
+
 	/**
 	 * This is the handle for tactic library
 	 */
 	private static TacticLibrary handle;
-	
+
 	/**
 	 * The view into the tree of rationale
 	 */
@@ -102,12 +102,12 @@ IPropertyChangeListener{
 	 * ?
 	 */
 	private DrillDownAdapter drillDownAdapter;
-	
+
 	/**
 	 * the associate action is used to associate code with rationale
 	 */
 	private AssociateArtifactAction associate;
-	
+
 	//Actions available in this library goes here...
 	private Action addTactic;
 	private Action editTactic;
@@ -117,26 +117,26 @@ IPropertyChangeListener{
 	private Action addTacticPattern;
 	private Action editTacticPattern;
 	private Action deleteTacticPattern;
-	
+
 	//Double clicking allows editing the element
 	private Action editElement;
 
-	
+
 	/**
 	 * Points to our display
 	 */
 	private Display ourDisplay;
-	
+
 	/**
 	 * The Java Element selected
 	 */
 	private IJavaElement navigatorSelection;
-	
+
 	/**
 	 * The rationale object selected in the tree view (used in associations)
 	 */
 	private Object obj;
-	
+
 	/**
 	 * The index for the first character of the artifact we're looking for.  This determines
 	 * where we will place the marker once we find it.
@@ -146,42 +146,42 @@ IPropertyChangeListener{
 	 * The Java resource
 	 */
 	private IResource ourRes;
-	
+
 	/**
 	 * Constructor
 	 */
 	public TacticLibrary(){
-		
+
 	}
 
 	@Override
 	public void propertyChange(PropertyChangeEvent event) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
 	public void associateAlternative(RationaleUpdateEvent e) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
 	public void openDatabase(RationaleUpdateEvent e) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
 	public void updateRationaleStatus(RationaleUpdateEvent e) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
 	public void addNewElement(RationaleUpdateEvent e) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	/**
@@ -192,16 +192,16 @@ IPropertyChangeListener{
 		{
 			if (((IStructuredSelection) selection).getFirstElement() instanceof IJavaElement) 
 			{
-//				System.out.println("found Java Element");
+				//				System.out.println("found Java Element");
 				navigatorSelection = (IJavaElement) ((IStructuredSelection) selection).getFirstElement();
 				associate.setSelection(navigatorSelection);
 			}
 			else
 			{
-//				System.out.println("not a java item");
+				//				System.out.println("not a java item");
 			}
 		}
-		
+
 	}
 
 	/**
@@ -216,10 +216,10 @@ IPropertyChangeListener{
 		viewer.setLabelProvider(labelProvider);
 		viewer.setSorter(null);
 		viewer.setInput(ResourcesPlugin.getWorkspace());
-		
+
 		//get our display information so we can use it later
 		ourDisplay = viewer.getControl().getDisplay();
-		
+
 		//initialize our update manager
 		UpdateManager mgr = UpdateManager.getHandle();
 		mgr.setTree(viewer);
@@ -227,27 +227,27 @@ IPropertyChangeListener{
 		hookContextMenu();
 		hookDoubleClickAction();
 		contributeToActionBars();
-		
+
 		viewer.setInput(((TacticLibContentProvider) viewer.getContentProvider()).initialize());
 		viewer.expandToLevel(2);
 
 		//add an action listener for the workbench window
 		getViewSite().getWorkbenchWindow().getSelectionService().addSelectionListener(this);
-		
+
 		//add an action listener for this so we can get events
 		SEURATPlugin plugin = SEURATPlugin.getDefault();
 		plugin.addUpdateListener(this);
-		
+
 		// add this as a property change listener so we can be notified of preference changes
 		plugin.getPreferenceStore().addPropertyChangeListener(this);
-		
+
 		//get the initial selected value
 		selectionChanged(null, getViewSite().getWorkbenchWindow().getSelectionService().getSelection());
-		
+
 		handle = this;
-		
+
 	}
-	
+
 	public void rebuildTree()
 	{
 		RationaleDB.resetConnection();
@@ -257,7 +257,7 @@ IPropertyChangeListener{
 		//this should re-fresh from the new database
 		viewer.setInput(((TacticLibContentProvider) viewer.getContentProvider()).initialize());
 	}
-	
+
 	/**
 	 * Set up our context menu
 	 *
@@ -274,7 +274,7 @@ IPropertyChangeListener{
 		viewer.getControl().setMenu(menu);
 		getSite().registerContextMenu(menuMgr, viewer);
 	}
-	
+
 	/**
 	 * Set up our action bars - toolbar, pull down
 	 *
@@ -284,15 +284,15 @@ IPropertyChangeListener{
 		fillLocalPullDown(bars.getMenuManager());
 		fillLocalToolBar(bars.getToolBarManager());
 	}
-	
+
 	/**
 	 * This method is used to populate the pulldown menu on this view.
 	 * @param manager
 	 */
 	private void fillLocalPullDown(IMenuManager manager) {
-		
+
 	}
-	
+
 	/**
 	 * This method is used to populate the context menus for each of the different
 	 * types of rationale elements.
@@ -302,18 +302,15 @@ IPropertyChangeListener{
 	private void fillContextMenu(IMenuManager manager) {
 		ISelection selection = viewer.getSelection();
 		Object obj = ((IStructuredSelection)selection).getFirstElement();
-		
+
 		if (obj instanceof TreeParent)
 		{
 			TreeParent ourElement = (TreeParent) obj;
-			
-			System.out.println("Selected type is: " + ourElement.getType());
-			
+
 			if (ourElement.getType() == RationaleElementType.TACTIC){
 				manager.add(editTactic);
 				manager.add(deleteTactic);
-				//Commented out since they haven't got their editors yet...
-				//manager.add(addTacticPattern);
+				manager.add(addTacticPattern);
 				manager.add(associateNegOntology);
 			}
 			else if (ourElement.getType() == RationaleElementType.TACTICPATTERN){
@@ -327,15 +324,16 @@ IPropertyChangeListener{
 				}
 			}
 			else if (ourElement.getType() == RationaleElementType.RATIONALE){
-				manager.add(addTactic);
+				if (ourElement.getName().contains("Tactic Library"))
+					manager.add(addTactic);
 			}
 		}
 	}
-	
+
 	private void fillLocalToolBar(IToolBarManager manager) {
 		drillDownAdapter.addNavigationActions(manager);
 	}
-	
+
 	/**
 	 * This method sets up the actions invoked by chosing menu items
 	 *
@@ -344,19 +342,19 @@ IPropertyChangeListener{
 		/* SEURAT ECLIPSE-STYLE EDITORS ACTION DEFINITIONS */
 
 		// Currently unused editors
-		
+
 		// Assumption editor removed for consistency reasons (pop-up boxes to select assumption, then
 		// a tab to edit it? would be confusing to users
 		/*addAssumptionEditor = new OpenRationaleEditorAction(AssumptionEditor.class, this, true);
 		addAssumptionEditor.setText("Create New Assumption (With Editor)");
 		addAssumptionEditor.setToolTipText("Create A New Assumption Using The Assumption Editor Window");
-		
+
 		showAssumptionEditor = new OpenRationaleEditorAction(AssumptionEditor.class, this, false);
 		showAssumptionEditor.setText("Assumption Editor Page");
 		showAssumptionEditor.setToolTipText("Edit An Assumption In An Editor Window");*/
-		
+
 		// Editors that are used
-		
+
 		addTactic = new OpenRationaleEditorAction(TacticEditor.class, this, true);
 		addTactic.setText("New Tactic");
 		addTactic.setToolTipText("Add a new tactic to the library.");
@@ -384,13 +382,13 @@ IPropertyChangeListener{
 		};
 		deleteTactic.setText("Delete Tactic and ALL associations in the library");
 		deleteTactic.setToolTipText("Iteratively delete all assocations of the tactic in the library, then delete the tactic. " +
-				"The original data of patterns and quality attributes in argument ontology remain unchanged.");
-		
+		"The original data of patterns and quality attributes in argument ontology remain unchanged.");
+
 		associateNegOntology = new Action(){
 			public void run(){
 				ISelection selection = viewer.getSelection();
 				Object obj = ((IStructuredSelection)selection).getFirstElement();
-				
+
 				if (obj instanceof TreeParent){
 					TreeParent ourElement = (TreeParent) obj;
 					if (ourElement.getType() == RationaleElementType.TACTIC){
@@ -419,19 +417,19 @@ IPropertyChangeListener{
 		};
 		associateNegOntology.setText("Add Negative Quality");
 		associateNegOntology.setToolTipText("Add another negative quality to the selected tactic.");
-		
+
 		deleteNegOntology = new Action(){
 			public void run(){
 				ISelection selection = viewer.getSelection();
 				Object obj = ((IStructuredSelection)selection).getFirstElement();
-				
+
 				if (obj instanceof TreeParent){
 					TreeParent ourElement = (TreeParent) obj;
 					if (ourElement.getType() != RationaleElementType.ONTENTRY){
 						System.err.println("Selected element is not an ontology. Abort deletion");
 						return;
 					}
-					
+
 					TreeParent ourTactic = ourElement.getParent().getParent();
 					if (ourTactic instanceof TreeParent && ourTactic.getType() == RationaleElementType.TACTIC){
 						Tactic tactic = new Tactic();
@@ -452,22 +450,55 @@ IPropertyChangeListener{
 		};
 		deleteNegOntology.setText("Delete QA");
 		deleteNegOntology.setText("Deletes this quality attribute from the associated tactic.");
-		
-		//TODO
-		
+
+		addTacticPattern = new OpenRationaleEditorAction(TacticPatternEditor.class, this, true, RationaleElementType.TACTICPATTERN);
+		addTacticPattern.setText("Associate Pattern");
+		addTacticPattern.setToolTipText("Associate a pattern to the selected tactic.");
+		editTacticPattern = new OpenRationaleEditorAction(TacticPatternEditor.class, this, false, RationaleElementType.TACTICPATTERN);
+		editTacticPattern.setText("Edit Tactic-Pattern");
+		editTacticPattern.setToolTipText("Edits the selected tactic-pattern association");
+		deleteTacticPattern = new Action(){
+			public void run(){
+				ISelection selection = viewer.getSelection();
+				Object obj = ((IStructuredSelection)selection).getFirstElement();
+
+				if (obj instanceof TreeParent){
+					TreeParent ourElement = (TreeParent) obj;
+					TreeParent ourParent = ourElement.getParent();
+					if (ourElement.getType() == RationaleElementType.TACTICPATTERN){
+						TacticPattern tp = new TacticPattern();
+						tp.fromDatabase(TacticPattern.combineNames(ourElement.getName(), ourElement.getParent().getParent().getName()));
+						boolean success = tp.deleteFromDB();
+						if (!success){
+							System.err.println("Cannot delete the tactic-pattern from DB!");
+							return;
+						}
+						TacticLibContentProvider provider = (TacticLibContentProvider) viewer.getContentProvider();
+						provider.removeElement(ourElement);
+						refreshBranch(ourParent);
+					}
+					else{
+						System.err.println("The selected element to delete is not tactic-pattern!");
+					}
+				}
+			}
+		};
+		deleteTacticPattern.setText("Delete Association");
+		deleteTacticPattern.setToolTipText("Delete the selected pattern-tactic association.");
+
 		//
 		//edit rationale element Action
 		//For the new editors, will get the rationale type and run the appropriate editor.
 		//
 		editElement = new Action() {
 			public void run() {
-				
+
 				ISelection selection = viewer.getSelection();
 				Object obj = ((IStructuredSelection)selection).getFirstElement();
 				if (obj instanceof TreeParent)
 				{
 					TreeParent ourElement = (TreeParent) obj;
-					
+
 					if (ourElement.getType() == RationaleElementType.TACTIC){
 						editTactic.run();
 					}
@@ -478,7 +509,7 @@ IPropertyChangeListener{
 			}
 		};
 	}
-	
+
 	/**
 	 * hookDoubleClickAction is used to edit the rationale elements when you 
 	 * double-click them
@@ -487,11 +518,11 @@ IPropertyChangeListener{
 	private void hookDoubleClickAction() {
 		viewer.addDoubleClickListener(new IDoubleClickListener() {
 			public void doubleClick(DoubleClickEvent event) {
-//				doubleClickAction.run();
-				
+				//				doubleClickAction.run();
+
 				ISelection selection = viewer.getSelection();
 				Object obj = ((IStructuredSelection)selection).getFirstElement();
-				
+
 				if (obj instanceof TreeParent)
 				{
 					try {
@@ -504,20 +535,20 @@ IPropertyChangeListener{
 			}
 		});
 	}
-	
+
 
 	@Override
 	public void setFocus() {
 		viewer.getControl().setFocus();
-		
+
 	}
-	
+
 	public void dispose() {
 		getViewSite().getWorkbenchWindow().getSelectionService().
 		removeSelectionListener(this);
 		super.dispose();
 	}
-	
+
 	/**
 	 * Updates the tree branch (to display new children, etc.)
 	 * @param parent - the top of the branch to refresh
@@ -531,7 +562,7 @@ IPropertyChangeListener{
 			refreshBranch((TreeParent) childrenI.next());
 		}
 	}
-	
+
 	/**
 	 * This method serves as a factory method that either creates a new element of the
 	 * type specified by the treeElement passed in to it or that uses the name of the treeElement
@@ -562,7 +593,14 @@ IPropertyChangeListener{
 		}
 		if (!newElement && !name.equals("imaginary root"))
 		{
-			ourElement.fromDatabase(treeElement.getName());
+			if (type == RationaleElementType.TACTICPATTERN){
+				TreeParent ourSelection = (TreeParent) treeElement;
+				ourElement.fromDatabase(TacticPattern.combineNames(ourSelection.getName(),
+						ourSelection.getParent().getParent().getName()));
+			}
+			else {
+				ourElement.fromDatabase(treeElement.getName());
+			}
 		}
 		return ourElement;
 	}
@@ -580,8 +618,8 @@ IPropertyChangeListener{
 		if (!canceled)
 		{
 			//need to add the new element to the tree...
-//			TreeParent newChild = new TreeParent(rElement.getName(), rElement.getElementType());				
-//			((TreeParent) obj).addChild(newChild);
+			//			TreeParent newChild = new TreeParent(rElement.getName(), rElement.getElementType());				
+			//			((TreeParent) obj).addChild(newChild);
 			System.out.println("name in createNewElement = " + rElement.getName());
 			addElement((TreeParent) obj, rElement);
 			//we update the parent status, not the new element status
@@ -603,14 +641,14 @@ IPropertyChangeListener{
 				//update our task list as well
 				tlist.removeTasks(curStatus);
 			}
-			
+
 			//add our new element
 			refreshBranch((TreeParent) obj);
-			
+
 			Vector<TreeObject> treeUpdates = manager.makeUpdates();
 			//update what is displayed in the tree
 			//how do I update if name changes?
-//			System.out.println(rElement.getName() + ": enabled = " + new Boolean(rElement.getEnabled()).toString());
+			//			System.out.println(rElement.getName() + ": enabled = " + new Boolean(rElement.getEnabled()).toString());
 			//need to iterate through all the items
 			Iterator<TreeObject> treeI = treeUpdates.iterator();
 			while (treeI.hasNext())
@@ -619,7 +657,7 @@ IPropertyChangeListener{
 			}
 		}
 	}
-	
+
 	/**
 	 * Update method for creating a new element using the new editors.  The function
 	 * is similar to the createNewElement method except that this is called from the
@@ -633,26 +671,19 @@ IPropertyChangeListener{
 	 * the rationale editor class that calls this method can get the correct reference to
 	 * the new element and update itself accordingly- otherwise it will be editing the parent!
 	 */
-	public TreeParent createUpdate(TreeParent p, RationaleElement e) {
-		RationaleDB db = RationaleDB.getHandle();		
+	public TreeParent createUpdate(TreeParent p, RationaleElement e) {	
 
 		// Add The Element TO The Tree
 		TreeParent newEle = addElement(p, e);
-		
 
-		// Update Status Of Element
-		Vector<RationaleStatus> status = null;
-		
-		status = e.updateStatus();
-		
+
 		// Update Rationale Task List And Database With New Status
-		RationaleTaskList tlist = RationaleTaskList.getHandle();
-		Vector<RationaleStatus> oldStatus = null;
+
 		UpdateManager manager = UpdateManager.getHandle();
-		
+
 		// Refresh Affected Branch Of Tree
 		refreshBranch(p);
-		
+
 		// Update Anything In Tree Affected By Insertion
 		Vector<TreeObject> treeUpdates = manager.makeUpdates();
 		Iterator<TreeObject> treeIterator = treeUpdates.iterator();
@@ -660,18 +691,24 @@ IPropertyChangeListener{
 		{
 			getViewer().update((TreeParent)treeIterator.next(), null);
 		}
-		
-		RationaleTreeMap map = RationaleTreeMap.getHandle();		
-		Vector<TreeObject> treeObjs = map.getKeys(map.makeKey(e.getName(), e.getElementType()));
+
+		Vector<TreeObject> treeObjs;
+		RationaleTreeMap map = RationaleTreeMap.getHandle();
+		if (e.getElementType() == RationaleElementType.TACTICPATTERN){
+			treeObjs = map.getKeys(map.makeKey(TacticPattern.sepNames(e.getName())[0], e.getElementType()));
+		}
+		else {
+			treeObjs = map.getKeys(map.makeKey(e.getName(), e.getElementType()));
+		}
 		//if there's more than one we don't care, just get the first
 		viewer.reveal(treeObjs.elementAt(0));
 		viewer.expandToLevel(treeObjs.elementAt(0), 4);
-		
+
 		return newEle;
 	}
-	
+
 	public TreeViewer getViewer() { return viewer; }
-	
+
 	/**
 	 * This is used to assocate different types of rationale elements
 	 * with each other. For example, a constraint has an ontology element associated. A 
@@ -707,14 +744,14 @@ IPropertyChangeListener{
 				//update our task list as well
 				tlist.removeTasks(curStatus);
 			}
-			
+
 			//add our new element
 			refreshBranch((TreeParent) obj);
-			
+
 			Vector treeUpdates = manager.makeUpdates();
 			//update what is displayed in the tree
 			//how do I update if name changes?
-//			System.out.println(rElement.getName() + ": enabled = " + new Boolean(rElement.getEnabled()).toString());
+			//			System.out.println(rElement.getName() + ": enabled = " + new Boolean(rElement.getEnabled()).toString());
 			//need to iterate through all the items
 			Iterator treeI = treeUpdates.iterator();
 			while (treeI.hasNext())
@@ -723,7 +760,7 @@ IPropertyChangeListener{
 			}
 		}
 	}
-	
+
 	/**
 	 * Adding a new element to our rationale tree
 	 * @param parent - the parent element in the tree
@@ -743,7 +780,7 @@ IPropertyChangeListener{
 		}
 		return null;
 	}
-	
+
 	/**
 	 * Removes an element from the tree. This is done when something is deleted but
 	 * also done if the underlying tree structure is changed (the old is removed, and a new
@@ -763,9 +800,9 @@ IPropertyChangeListener{
 		//re-draw this branch of the tree
 		refreshBranch(grandParent);		
 		return grandParent;
-		
+
 	}
-	
+
 	/**
 	 * This is the editing code that is called in response to a menu item from
 	 * the tree OR on receipt of an event from the task list.
@@ -775,16 +812,16 @@ IPropertyChangeListener{
 	 */
 	private void editElement (TreeParent obj, RationaleElement rElement, Display theDisplay)
 	{
-//		boolean canceled = rElement.display();
+		//		boolean canceled = rElement.display();
 		boolean canceled = rElement.display(viewer.getControl().getShell().getDisplay());
-//		System.out.println("canceled? = " + canceled);
+		//		System.out.println("canceled? = " + canceled);
 		if (!canceled)
 		{
 			updateTreeElement(obj, rElement);
 		}
-		
+
 	}
-	
+
 	/**
 	 * Update method for editing an existing element.  This has the same function as the
 	 * editElement method, but is designed to be called by the new editors instead (there is
@@ -796,7 +833,7 @@ IPropertyChangeListener{
 	public TreeParent editUpdate(TreeParent p, RationaleElement e) {
 		return updateTreeElement(p, e);
 	}
-	
+
 	/**
 	 * updateTreeElement - updates our tree element after it has been edited. 
 	 * This includes any name changes, any status changes, and adding any new rationale
@@ -809,11 +846,19 @@ IPropertyChangeListener{
 	{
 		RationaleDB db = RationaleDB.getHandle();
 		//need to check to see if the name has changed
-		if (obj.getName().compareTo(rElement.getName()) != 0)
-		{
-//			System.out.println("name has changed");
-			//need to save the old and new names and make the changes
-			updateName(obj.getName(), rElement.getName(), rElement.getElementType());
+		if (rElement.getElementType() != RationaleElementType.TACTICPATTERN){
+			if (obj.getName().compareTo(rElement.getName()) != 0)
+			{
+				//			System.out.println("name has changed");
+				//need to save the old and new names and make the changes
+				updateName(obj.getName(), rElement.getName(), rElement.getElementType());
+			}
+		}
+		else {
+			String patternName = TacticPattern.sepNames(rElement.getName())[0]; //New name
+			if (obj.getName().compareTo(patternName) != 0){
+				updateName(obj.getName(), patternName, rElement.getElementType());
+			}
 		}
 		Vector<RationaleStatus> newStat = rElement.updateStatus();
 		//		System.out.println("new stat ln (editor) = " + newStat.size());
@@ -825,7 +870,7 @@ IPropertyChangeListener{
 		{
 			db.removeStatus(curStatus);
 			//update our task list as well
-//			System.out.println("removing a task");
+			//			System.out.println("removing a task");
 			tlist.removeTasks(curStatus);
 		}
 		//moved to after to see if this helps (???)
@@ -836,13 +881,19 @@ IPropertyChangeListener{
 			//update tasks too
 			tlist.addTasks(newStat);
 		}
-		
+
 		//now make our updates
 		Vector treeUpdates = manager.makeUpdates();
 		//update what is displayed in the tree
 		//how do I update if name changes?
-//		System.out.println(rElement.getName() + ": enabled = " + new Boolean(rElement.getEnabled()).toString());
-		obj.update(rElement.getName(), rElement.getEnabled());
+		//		System.out.println(rElement.getName() + ": enabled = " + new Boolean(rElement.getEnabled()).toString());
+		if (rElement.getElementType() != RationaleElementType.TACTICPATTERN){
+			obj.update(rElement.getName(), rElement.getEnabled());
+		}
+		else{
+			String patternName = TacticPattern.sepNames(rElement.getName())[0]; //New name
+			obj.update(patternName, rElement.getEnabled());
+		}
 		//need to iterate through all the items
 		Iterator treeI = treeUpdates.iterator();
 		if (!treeI.hasNext())
@@ -852,14 +903,14 @@ IPropertyChangeListener{
 		}
 		while (treeI.hasNext())
 		{
-			
-//			viewer.update((TreeParent) treeI.next(), null);
+
+			//			viewer.update((TreeParent) treeI.next(), null);
 			viewer.refresh((TreeParent) treeI.next());
 		}
-		
+
 		return obj;
 	}
-	
+
 	/**
 	 * this updates the RationaleTreeMap that uses the name of the rationale elements
 	 * to find all its occurrences in the tree
@@ -883,9 +934,9 @@ IPropertyChangeListener{
 			map.removeItem(oldkey, leaf);
 			map.addItem(newkey, leaf);
 		}
-		
+
 	}
-	
+
 	//we are now going to assume that the editing is done by the time
 	//we receive the event
 	/**
@@ -904,9 +955,9 @@ IPropertyChangeListener{
 		//if there's more than one we don't care, just get the first
 		TreeParent ourObj = (TreeParent) treeObjs.elementAt(0); 
 		updateTreeElement(ourObj, ele);
-		
+
 	}
-	
+
 	/**
 	 * This method takes the tree and expands a node when requested by the user. The
 	 * request comes in with a RationaleUpdateEvent
@@ -930,7 +981,7 @@ IPropertyChangeListener{
 			viewer.expandToLevel(treeEle, 4);
 		}
 	}
-	
+
 	/**
 	 * This method is used to pop-up a message to inform the user that an action has been completed.
 	 * It is used when saving the argument ontology but could easily be re-used elsewhere.
@@ -939,10 +990,14 @@ IPropertyChangeListener{
 	 */
 	private void showInformation(String message) {
 		MessageDialog.openInformation(
-			viewer.getControl().getShell(),
-			"RationaleExplorer",
-			message);
+				viewer.getControl().getShell(),
+				"RationaleExplorer",
+				message);
 	}
 	
-	
+	public static TacticLibrary getHandle(){
+		return handle;
+	}
+
+
 }

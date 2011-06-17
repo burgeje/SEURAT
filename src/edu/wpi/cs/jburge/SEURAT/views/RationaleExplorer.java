@@ -696,6 +696,7 @@ public class RationaleExplorer extends ViewPart implements ISelectionListener, I
 			public void run() {
 				rebuildTree(false);
 				PatternLibrary.getHandle().rebuildTree();
+				TacticLibrary.getHandle().rebuildTree();
 			}
 		};
 		changeDatabase.setText("Change Rationale DB");
@@ -2087,6 +2088,13 @@ public class RationaleExplorer extends ViewPart implements ISelectionListener, I
 //			System.out.println("name has changed");
 			//need to save the old and new names and make the changes
 			updateName(obj.getName(), rElement.getName(), rElement.getElementType());
+			
+			//Since an element in argument-ontology has been changed, need to update
+			//Tactic Library if it is opened also.
+			if (rElement.getElementType() == RationaleElementType.ONTENTRY && 
+					TacticLibrary.getHandle() != null){
+				TacticLibrary.getHandle().rebuildTree();
+			}
 		}
 		Vector<RationaleStatus> newStat = rElement.updateStatus();
 		//		System.out.println("new stat ln (editor) = " + newStat.size());

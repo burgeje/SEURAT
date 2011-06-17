@@ -776,6 +776,11 @@ IPropertyChangeListener {
 			//			System.out.println("name has changed");
 			//need to save the old and new names and make the changes
 			updateName(obj.getName(), rElement.getName(), rElement.getElementType());
+			
+			//Since pattern name has been changed, we need to refresh tactic library if it is opened.
+			if (TacticLibrary.getHandle() != null){
+				TacticLibrary.getHandle().rebuildTree();
+			}
 		}
 		Vector<RationaleStatus> newStat = rElement.updateStatus();
 		//		System.out.println("new stat ln (editor) = " + newStat.size());

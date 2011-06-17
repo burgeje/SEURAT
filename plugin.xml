@@ -321,9 +321,17 @@ isGoToNextNavigationTargetKey="ismyAppRecordGoToNextNavigationTarget"
                 class="SEURAT.editors.TacticEditor"
                 default="true"
                 extensions="seurat_editors_tacticeditor"
-                icon="/icons/rat.gif"
+                icon="/icons/tacticIcon.gif"
                 id="SEURAT.editors.TacticEditor"
                 name="Tactic Editor">
+          </editor>
+                    <editor
+                class="SEURAT.editors.TacticPatternEditor"
+                default="true"
+                extensions="seurat_tacticpattern_editor"
+                icon="/icons/PatternLib.GIF"
+                id="SEURAT.editors.TacticPatternEditor"
+                name="SEURAT tactic-pattern editor">
           </editor>
        </extension>	
        

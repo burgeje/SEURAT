@@ -1736,10 +1736,12 @@ public class RationaleDBCreate
 		return beginTable("tactic_pattern") + tablePart("ID INTEGER PRIMARY KEY")
 		+ tablePart("TACTIC_ID INTEGER NOT NULL REFERENCES TACTICS(ID)")
 		+ tablePart("PATTERN_ID INTEGER NOT NULL REFERENCES PATTERNS(ID)")
-		+ tablePart("STRUCT_CHANGE INTEGER NOT NULL CHECK (STRUCT_CHANGE >= 0 AND STRUCT_CHANGE <" + TacticPattern.changeCategories.length +")")
-		+ tablePart("beh_change integer not null check(beh_change>=0 AND beh_change <" + TacticPattern.changeCategories.length +")")
+		+ tablePart("STRUCT_CHANGE INTEGER NOT NULL CHECK (STRUCT_CHANGE >= 0 AND STRUCT_CHANGE <" + TacticPattern.CHANGECATEGORIES.length +")")
+		+ tablePart("num_changes INTEGER NOT NULL CHECK(num_changes >= 0)")
+		+ tablePart("beh_change integer not null check(beh_change>=0 AND beh_change <" + TacticPattern.CHANGECATEGORIES.length +")")
 		+ tablePart("changes integer not null check(changes >= 0)")
-		+ endTable("description varchar(255)");
+		+ tablePart("description varchar(255)")
+		+ endTable("UNIQUE(tactic_id, pattern_id)");
 	}
 	
 	/**

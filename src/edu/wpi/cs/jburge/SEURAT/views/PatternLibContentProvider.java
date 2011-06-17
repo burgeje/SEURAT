@@ -241,8 +241,8 @@ ITreeContentProvider{
 	private void addArchitecturePatterns(TreeParent parent, String parentName, RationaleElementType parentType){
 		
 		RationaleDB d = RationaleDB.getHandle();
-		Vector patternList = d.getArchitecturePatterns(parentName, parentType);
-		Enumeration patterns =patternList.elements();
+		Vector<TreeParent> patternList = d.getArchitecturePatterns();
+		Enumeration<TreeParent> patterns =patternList.elements();
 		while (patterns.hasMoreElements())
 		{
 			TreeParent child = (TreeParent) patterns.nextElement();
@@ -375,7 +375,7 @@ ITreeContentProvider{
 	private void addDesignPatterns(TreeParent parent, String parentName, RationaleElementType parentType){
 		
 		RationaleDB d = RationaleDB.getHandle();
-		Vector patternList = d.getDesignPatterns(parentName, parentType);
+		Vector patternList = d.getDesignPatterns();
 		Enumeration patterns =patternList.elements();
 		while (patterns.hasMoreElements())
 		{

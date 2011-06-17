@@ -3450,8 +3450,7 @@ public final class RationaleDB implements Serializable {
 	 * @param parentType
 	 * @return
 	 */
-	public Vector getArchitecturePatterns(String parentName,
-			RationaleElementType parentType) {
+	public Vector<TreeParent> getArchitecturePatterns() {
 
 
 		return getPatterns("Architecture");
@@ -3463,8 +3462,7 @@ public final class RationaleDB implements Serializable {
 	 * @param parentType
 	 * @return
 	 */
-	public Vector getDesignPatterns(String parentName,
-			RationaleElementType parentType) {
+	public Vector<TreeParent> getDesignPatterns() {
 		return getPatterns("Design");
 	}
 
@@ -3472,7 +3470,7 @@ public final class RationaleDB implements Serializable {
 	 * Get patterns of type idiom
 	 * @return
 	 */
-	public Vector getIdioms() {
+	public Vector<TreeParent> getIdioms() {
 		return getPatterns("Idiom");
 	}
 

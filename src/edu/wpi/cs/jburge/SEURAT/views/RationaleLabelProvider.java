@@ -52,10 +52,10 @@ public class RationaleLabelProvider extends LabelProvider {
 			if (element.getStatus() == RationaleErrorLevel.ERROR) {
 				if (element.getActive()) {
 					descriptor = SEURATPlugin
-							.getImageDescriptor("newReq_error.gif");
+					.getImageDescriptor("newReq_error.gif");
 				} else {
 					descriptor = SEURATPlugin
-							.getImageDescriptor("newReq_error_Disabled2.gif");
+					.getImageDescriptor("newReq_error_Disabled2.gif");
 
 				}
 			} else if (element.getStatus() == RationaleErrorLevel.WARNING) {
@@ -73,7 +73,7 @@ public class RationaleLabelProvider extends LabelProvider {
 
 				} else {
 					descriptor = SEURATPlugin
-							.getImageDescriptor("newReq_warning_Disabled2.gif");
+					.getImageDescriptor("newReq_warning_Disabled2.gif");
 				}
 			} else {
 				if (element.getActive()) {
@@ -86,7 +86,7 @@ public class RationaleLabelProvider extends LabelProvider {
 					{
 						descriptor = SEURATPlugin.getImageDescriptor("newReq.gif");						
 					}
-					
+
 				} else {
 					if (nfr)
 					{
@@ -103,10 +103,10 @@ public class RationaleLabelProvider extends LabelProvider {
 		} else if (element.getType() == RationaleElementType.DECISION) {
 			if (element.getStatus() == RationaleErrorLevel.ERROR) {
 				descriptor = SEURATPlugin
-						.getImageDescriptor("newDec_error.gif");
+				.getImageDescriptor("newDec_error.gif");
 			} else if (element.getStatus() == RationaleErrorLevel.WARNING) {
 				descriptor = SEURATPlugin
-						.getImageDescriptor("newDec_warning.gif");
+				.getImageDescriptor("newDec_warning.gif");
 			} else {
 				descriptor = SEURATPlugin.getImageDescriptor("newDec.gif");
 			}
@@ -114,21 +114,21 @@ public class RationaleLabelProvider extends LabelProvider {
 			if (element.getStatus() == RationaleErrorLevel.ERROR) {
 				if (element.getActive())
 					descriptor = SEURATPlugin
-							.getImageDescriptor("newAlt_Sel_error.gif");
+					.getImageDescriptor("newAlt_Sel_error.gif");
 				else
 					descriptor = SEURATPlugin
-							.getImageDescriptor("newAlt_error.gif");
+					.getImageDescriptor("newAlt_error.gif");
 			} else if (element.getStatus() == RationaleErrorLevel.WARNING) {
 				if (element.getActive())
 					descriptor = SEURATPlugin
-							.getImageDescriptor("newAlt_Sel_warning.gif");
+					.getImageDescriptor("newAlt_Sel_warning.gif");
 				else
 					descriptor = SEURATPlugin
-							.getImageDescriptor("newAlt_warning.gif");
+					.getImageDescriptor("newAlt_warning.gif");
 			} else {
 				if (element.getActive())
 					descriptor = SEURATPlugin
-							.getImageDescriptor("newAlt_Sel.gif");
+					.getImageDescriptor("newAlt_Sel.gif");
 				else
 					descriptor = SEURATPlugin.getImageDescriptor("newAlt.gif");
 
@@ -141,17 +141,17 @@ public class RationaleLabelProvider extends LabelProvider {
 			if (ourArg.isFor()) {
 				if (element.getStatus() == RationaleErrorLevel.ERROR) {
 					descriptor = SEURATPlugin
-							.getImageDescriptor("argFor_error.gif");
+					.getImageDescriptor("argFor_error.gif");
 				} else {
 					descriptor = SEURATPlugin.getImageDescriptor("argFor.gif");
 				}
 			} else if (ourArg.isAgainst()) {
 				if (element.getStatus() == RationaleErrorLevel.ERROR) {
 					descriptor = SEURATPlugin
-							.getImageDescriptor("argAgainst_error.gif");
+					.getImageDescriptor("argAgainst_error.gif");
 				} else {
 					descriptor = SEURATPlugin
-							.getImageDescriptor("argAgainst.gif");
+					.getImageDescriptor("argAgainst.gif");
 				}
 			}
 			// we will count arguments referring to other alternatives as
@@ -162,7 +162,7 @@ public class RationaleLabelProvider extends LabelProvider {
 			else {
 				if (element.getStatus() == RationaleErrorLevel.ERROR) {
 					descriptor = SEURATPlugin
-							.getImageDescriptor("newArg_error.gif");
+					.getImageDescriptor("newArg_error.gif");
 				} else {
 					descriptor = SEURATPlugin.getImageDescriptor("newArg.gif");
 				}
@@ -176,7 +176,7 @@ public class RationaleLabelProvider extends LabelProvider {
 				descriptor = SEURATPlugin.getImageDescriptor("newQuest.gif");
 			} else {
 				descriptor = SEURATPlugin
-						.getImageDescriptor("newQuest_Unanswered.gif");
+				.getImageDescriptor("newQuest_Unanswered.gif");
 			}
 
 		} else if (element.getType() == RationaleElementType.COOCCURRENCE) {
@@ -198,7 +198,7 @@ public class RationaleLabelProvider extends LabelProvider {
 				descriptor = SEURATPlugin.getImageDescriptor("newAssump.gif");
 			} else {
 				descriptor = SEURATPlugin
-						.getImageDescriptor("newAssump_Disabled.gif");
+				.getImageDescriptor("newAssump_Disabled.gif");
 			}
 
 		} else if (element.getType() == RationaleElementType.RATIONALE) {
@@ -244,7 +244,7 @@ public class RationaleLabelProvider extends LabelProvider {
 						descriptor = SEURATPlugin.getImageDescriptor("patternArchi_sel.gif");
 					else	
 						descriptor = SEURATPlugin.getImageDescriptor("patternArchi.gif");
-					
+
 				}				
 				//descriptor = SEURATPlugin.getImageDescriptor("patternArchi.GIF");
 			}else if(myAltPattern.getPatternInLibrary().getType().toString().compareToIgnoreCase("DESIGN")==0){
@@ -258,6 +258,15 @@ public class RationaleLabelProvider extends LabelProvider {
 		}
 		else if (element.getType() == RationaleElementType.PATTERNDECISION){
 			descriptor = SEURATPlugin.getImageDescriptor("Dec.gif");
+		}
+		else if (element.getType() == RationaleElementType.TACTIC){
+			descriptor = SEURATPlugin.getImageDescriptor("tacticIcon.gif");
+		}
+		else if (element.getType() == RationaleElementType.TACTICCATEGORY){
+			descriptor = SEURATPlugin.getImageDescriptor("tacticCategoryIcon.gif");
+		}
+		else if (element.getType() == RationaleElementType.TACTICPATTERN){
+			descriptor = SEURATPlugin.getImageDescriptor("patternLib.gif");
 		}
 		else {
 			// System.out.println("element.getType().toString()" + " not

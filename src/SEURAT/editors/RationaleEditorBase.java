@@ -404,8 +404,11 @@ public abstract class RationaleEditorBase extends EditorPart
 			throw new PartInitException("Invalid Input: Must be RationaleEditorInput");
 		RationaleEditorInput l_input = (RationaleEditorInput)input;
 		
-		if( !l_input.targetType(editorType()) )
+		if( !l_input.targetType(editorType()) ){
+			Class ourType = editorType();
 			throw new PartInitException("Invalid Rationale Element - Editor Interaction");
+		}
+			
 		
 		setSite(site);
 		this.setInput(input);
