@@ -579,7 +579,7 @@ public class RationaleDBUtil
 				db.assocPatternAndDecisionFromXML(pattern.getID(), pdID);
 			}
 		}
-		System.out.println("Import to database was successful.");
+		System.out.println("Import of pattern library was successful.");
 		
 		//At here, the database satisfies invariant and has been imported. But the elements are not correct.
 		//Easiest way to update the tree is to rebuild tree from database.

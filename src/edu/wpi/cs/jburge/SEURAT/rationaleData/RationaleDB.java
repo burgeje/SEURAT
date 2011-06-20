@@ -4475,7 +4475,9 @@ public final class RationaleDB implements Serializable {
 			stmt.close();
 
 			//connection with sub-decision must be done in utility after decision has been created...
-		} 
+		} catch (java.sql.SQLIntegrityConstraintViolationException e){
+			System.out.println("WARNING: Skipping duplicated entry " + pattern.getName());
+		}
 		catch (SQLException e){
 			e.printStackTrace();
 		}
@@ -4503,7 +4505,10 @@ public final class RationaleDB implements Serializable {
 				stmt.execute(expr);
 			}
 			stmt.close();
-		} catch (SQLException e){
+		} catch (java.sql.SQLIntegrityConstraintViolationException e){
+			System.out.println("WARNING: Skipping duplicated entry " + pd.getName());
+		}
+		catch (SQLException e){
 			e.printStackTrace();
 		} 
 	}
@@ -4530,7 +4535,12 @@ public final class RationaleDB implements Serializable {
 				stmt.execute(expr);
 			}
 			
-		} catch (SQLException e){
+		} catch (java.sql.SQLIntegrityConstraintViolationException e) {
+			if (e.getMessage().contains("duplicate"))
+				System.out.println("WARNING: Skipping duplicated entry " + t.getName());
+			else
+				System.out.println("WARNING: Skipping invalid entry " + t.getName());
+		}catch (SQLException e){
 			e.printStackTrace();
 		} 
 	}
@@ -4548,7 +4558,12 @@ public final class RationaleDB implements Serializable {
 			tp.getID() + ", " + tp.getTacticID() + ", " +  tp.getPatternID() + ", " + tp.getStruct_change() + ", " + tp.getNumChanges() + ", " + tp.getBeh_change() + ", "
 			+ tp.getOverallScore() + ", '" + RationaleDBUtil.escape(tp.getDescription()) + "')";
 			stmt.execute(expr);
-		} catch (SQLException e){
+		} catch (java.sql.SQLIntegrityConstraintViolationException e){
+			if (e.getMessage().contains("duplicate"))
+				System.out.println("WARNING: Skipping duplicated entry " + tp.getName());
+			else
+				System.out.println("WARNING: Skipping invalid entry " + tp.getName());
+		}catch (SQLException e){
 			e.printStackTrace();
 		} 
 	}

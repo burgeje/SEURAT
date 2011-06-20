@@ -426,7 +426,7 @@ public class TacticPattern extends RationaleElement implements Serializable {
 
 		Node nextNode = child.getNextSibling();
 		while (nextNode != null){
-			importHelper(child);
+			importHelper(nextNode);
 			nextNode = nextNode.getNextSibling();
 		}
 		
@@ -434,9 +434,10 @@ public class TacticPattern extends RationaleElement implements Serializable {
 
 	}
 	
-	public void importHelper(Node child){
-		if (child.getFirstChild() instanceof Text){
-			Text text = (Text) child.getFirstChild();
+	private void importHelper(Node child){
+		Node grandchild = child.getFirstChild();
+		if (grandchild instanceof Text){
+			Text text = (Text) grandchild;
 			String data = text.getData();
 			String name = child.getNodeName();
 			if (name.equals("description")){
