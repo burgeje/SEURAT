@@ -6,6 +6,11 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.Text;
+
 import SEURAT.events.RationaleElementUpdateEventGenerator;
 import SEURAT.events.RationaleUpdateEvent;
 
@@ -21,7 +26,7 @@ public class TacticPattern extends RationaleElement implements Serializable {
 	public static final int INVALID = -1;
 
 	public static final String[] CHANGECATEGORIES = {"Implemented In", "Replicates", "Add in pattern", "Add out of pattern", "Modify"};
-	
+
 	public static final int[] AUTOSCORECHANGEBASE = {0, 0, 1, 5, 2};
 	public static final int[] AUTOSCORECHANGEDELTA = {1, 1, 1, 1, 2};
 	public static final int[] AUTOSCOREMAXNUMCHANGES = {1, -1, -1, -1, -1};
@@ -42,8 +47,8 @@ public class TacticPattern extends RationaleElement implements Serializable {
 	public RationaleElementType getElementType(){
 		return RationaleElementType.TACTICPATTERN;
 	}
-	
-	
+
+
 
 	public int getPatternID() {
 		return patternID;
@@ -86,15 +91,15 @@ public class TacticPattern extends RationaleElement implements Serializable {
 	public void setOverallScore(int changes) {
 		this.overall = changes;
 	}
-	
+
 	public int getNumChanges(){
 		return num_changes;
 	}
-	
+
 	public void setNumChanges(int changes){
 		num_changes = changes;
 	}
-	
+
 	public String getTacticName(){
 		RationaleDB db = RationaleDB.getHandle();
 
@@ -105,12 +110,12 @@ public class TacticPattern extends RationaleElement implements Serializable {
 		Statement stmt = null;
 
 		Connection conn = db.getConnection();
-		
+
 		try {
 			stmt = conn.createStatement();
 			findQuery = "SELECT name FROM TACTICS WHERE id = " + tacticID;
 			rs = stmt.executeQuery(findQuery);
-			
+
 			if (rs.next()){
 				return RationaleDBUtil.decode(rs.getString("name"));
 			}
@@ -119,7 +124,7 @@ public class TacticPattern extends RationaleElement implements Serializable {
 		}
 		return "Tactic Not Found";
 	}
-	
+
 	public String getPatternName(){
 		RationaleDB db = RationaleDB.getHandle();
 
@@ -130,12 +135,12 @@ public class TacticPattern extends RationaleElement implements Serializable {
 		Statement stmt = null;
 
 		Connection conn = db.getConnection();
-		
+
 		try {
 			stmt = conn.createStatement();
 			findQuery = "SELECT name FROM PATTERNS WHERE id = " + patternID;
 			rs = stmt.executeQuery(findQuery);
-			
+
 			if (rs.next()){
 				return RationaleDBUtil.decode(rs.getString("name"));
 			}
@@ -144,7 +149,7 @@ public class TacticPattern extends RationaleElement implements Serializable {
 		}
 		return "Pattern Not Found";
 	}
-	
+
 	/**
 	 * Given name of the pattern and tactic, combine the names together into one name.
 	 * Used to store the element in memory to satisfy the unique name requirement.
@@ -155,7 +160,7 @@ public class TacticPattern extends RationaleElement implements Serializable {
 	public static String combineNames(String patternName, String tacticName){
 		return patternName + "," + tacticName;
 	}
-	
+
 	/**
 	 * Given the name of a tactic-pattern, separate them into patternName and tacticName
 	 * @param name
@@ -244,7 +249,7 @@ public class TacticPattern extends RationaleElement implements Serializable {
 				num_changes = rs.getInt("num_changes");
 				beh_change = rs.getInt("beh_change");
 				overall = rs.getInt("changes");
-				
+
 				findQuery = "SELECT name from PATTERNS where id = " + patternID;
 				rs = stmt.executeQuery(findQuery);
 				if(rs.next()){
@@ -296,7 +301,7 @@ public class TacticPattern extends RationaleElement implements Serializable {
 				id + ", " + tacticID + ", " + patternID + ", " + struct_change + "," + num_changes +
 				", " + beh_change + ", " + overall + ", '" + RationaleDBUtil.escape(description) + "')";
 				stmt.execute(dm);
-				
+
 				l_updateEvent = m_eventGenerator.MakeCreated();
 			}
 
@@ -338,7 +343,7 @@ public class TacticPattern extends RationaleElement implements Serializable {
 		else if (id != -1) return true;
 		return false;
 	}
-	
+
 	/**
 	 * Invoked when user clicks "delete tactic pattern" from tactic library.
 	 * @return
@@ -361,4 +366,116 @@ public class TacticPattern extends RationaleElement implements Serializable {
 			return false;
 		}
 	}
+
+	/**
+	 * Export this tactic-pattern to an XML element. Used during XML export.
+	 */
+	public Element toXML(Document ratDoc){
+		Element tpE = ratDoc.createElement("DR:tacticpattern");
+		tpE.setAttribute("rid", "tp" + getID());
+		tpE.setAttribute("name", name);
+
+		Element descE = ratDoc.createElement("description");
+		Text descText = ratDoc.createTextNode(description);
+		descE.appendChild(descText);
+		tpE.appendChild(descE);
+
+		Element tacticE = ratDoc.createElement("tactic");
+		Text tacticText = ratDoc.createTextNode("t" + tacticID);
+		tacticE.appendChild(tacticText);
+		tpE.appendChild(tacticE);
+
+		Element patternE = ratDoc.createElement("pattern");
+		Text patternText = ratDoc.createTextNode("p" + patternID);
+		patternE.appendChild(patternText);
+		tpE.appendChild(patternE);
+
+		Element structE = ratDoc.createElement("structure");
+		Text structText = ratDoc.createTextNode(CHANGECATEGORIES[struct_change]);
+		structE.appendChild(structText);
+		tpE.appendChild(structE);
+
+		Element behaviorE = ratDoc.createElement("behavior");
+		Text behaviorText = ratDoc.createTextNode(CHANGECATEGORIES[beh_change]);
+		behaviorE.appendChild(behaviorText);
+		tpE.appendChild(behaviorE);
+
+		Element numChangesE = ratDoc.createElement("modifications");
+		Text numChangesText = ratDoc.createTextNode("" + num_changes);
+		numChangesE.appendChild(numChangesText);
+		tpE.appendChild(numChangesE);
+
+		Element overallE = ratDoc.createElement("overall");
+		Text overallText = ratDoc.createTextNode("" + overall);
+		overallE.appendChild(overallText);
+		tpE.appendChild(overallE);
+
+		return tpE;
+	}
+
+	public void fromXML(Element tpE){
+		fromXML = true;
+
+		RationaleDB db = RationaleDB.getHandle();
+
+		id = Integer.parseInt(tpE.getAttribute("rid").substring(1));
+		name = tpE.getAttribute("name");
+
+		Node child = tpE.getFirstChild();
+		importHelper(child);
+
+		Node nextNode = child.getNextSibling();
+		while (nextNode != null){
+			importHelper(child);
+			nextNode = nextNode.getNextSibling();
+		}
+		
+		db.addTacticPatternFromXML(this);
+
+	}
+	
+	public void importHelper(Node child){
+		if (child.getFirstChild() instanceof Text){
+			Text text = (Text) child.getFirstChild();
+			String data = text.getData();
+			String name = text.getNodeName();
+			if (name.equals("description")){
+				description = data;
+				return;
+			}
+			if (name.equals("tactic")){
+				tacticID = Integer.parseInt(data.substring(1));
+				return;
+			}
+			if (name.equals("pattern")){
+				patternID = Integer.parseInt(data.substring(1));
+				return;
+			}
+			if (name.equals("structure")){
+				for (int i = 0; i < CHANGECATEGORIES.length; i++){
+					if (data.equals(CHANGECATEGORIES[i])){
+						struct_change = i;
+						return;
+					}
+				}
+			}
+			if (name.equals("behavior")){
+				for (int i = 0; i < CHANGECATEGORIES.length; i++){
+					if (data.equals(CHANGECATEGORIES[i])){
+						beh_change = i;
+						return;
+					}
+				}
+			}
+			if (name.equals("modifications")){
+				num_changes = Integer.parseInt(data);
+				return;
+			}
+			if(name.equals("overall")){
+				overall = Integer.parseInt(data);
+				return;
+			}
+		}
+	}
+
 }

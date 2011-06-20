@@ -13,7 +13,6 @@ import org.eclipse.swt.widgets.Display;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
 import org.w3c.dom.Text;
 
 import SEURAT.events.RationaleUpdateEvent;
@@ -262,7 +261,7 @@ public class Pattern extends RationaleElement {
 		Element patternE;
 		RationaleDB db = RationaleDB.getHandle();
 		
-		//Now, add pattern to doc
+		//Now, add pattern to doc (Why do I need this???)
 		String entryID = db.getRef(this);
 		if (entryID == null){
 			entryID = db.addPatternRef(this);
@@ -655,7 +654,7 @@ public class Pattern extends RationaleElement {
 	}
 	
 	/**
-	 * Because how inconvenient the XML element control is, I have to seperate it...
+	 * Because how inconvenient the XML element control is, I have to separate it...
 	 * @param child
 	 */
 	private void importHelper(Node child){

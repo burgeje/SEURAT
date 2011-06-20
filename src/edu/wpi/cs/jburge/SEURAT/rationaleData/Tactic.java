@@ -9,6 +9,11 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Vector;
 
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.Text;
+
 import SEURAT.events.RationaleElementUpdateEventGenerator;
 import SEURAT.events.RationaleUpdateEvent;
 
@@ -275,6 +280,117 @@ public class Tactic extends RationaleElement implements Serializable {
 		} catch (SQLException e) {
 			
 			e.printStackTrace();
+		}
+	}
+	
+	/**
+	 * Export this tactic to an XML element. Used during xml export.
+	 * @return
+	 */
+	public Element toXML(Document ratDoc){
+		Element tacticE;
+		
+		tacticE = ratDoc.createElement("DR:tactic");
+		tacticE.setAttribute("rid", "t" + id);
+		tacticE.setAttribute(name, name);
+		
+		Element descE = ratDoc.createElement("description");
+		Text descText = ratDoc.createTextNode(description);
+		descE.appendChild(descText);
+		tacticE.appendChild(descE);
+		
+		Element refPositiveE = ratDoc.createElement("refOntPos");
+		Text refPositiveText = ratDoc.createTextNode("r" + category.getID());
+		refPositiveE.appendChild(refPositiveText);
+		tacticE.appendChild(refPositiveE);
+		
+		Element behaviorE = ratDoc.createElement("behavior");
+		Text behaviorText = ratDoc.createTextNode(behaviorCategories[time_behavior]);
+		behaviorE.appendChild(behaviorText);
+		tacticE.appendChild(behaviorE);
+		
+		Iterator<TacticPattern> tpi = patterns.iterator();
+		while (tpi.hasNext()){
+			int curID = tpi.next().getID();
+			Element curE = ratDoc.createElement("refTacticPattern");
+			Text curText = ratDoc.createTextNode("tp" + curID);
+		}
+		
+		Iterator<OntEntry> negi = badEffects.iterator();
+		while (negi.hasNext()){
+			int curID = negi.next().getID();
+			Element curE = ratDoc.createElement("refOntNeg");
+			Text curText = ratDoc.createTextNode("r" + curID);
+		}
+		
+		return tacticE;	
+	}
+	
+	/**
+	 * Given an XML element object, retrieve data from XML and store it to the database.
+	 * <br>	 
+	 * <b> Must first import pattern and argument ontology before importing a tactic! (To not violate integrity constraints.)</b>
+	 * <br>
+	 * @param tacticE
+	 */
+	public void fromXML(Element tacticE){
+		fromXML = true;
+		
+		RationaleDB db = RationaleDB.getHandle();
+		
+		id = Integer.parseInt(tacticE.getAttribute("rid").substring(1));
+		name = tacticE.getAttribute("name");
+		
+		Node child = tacticE.getFirstChild();
+		importHelper(child);
+		
+		Node nextNode = child.getNextSibling();
+		while (nextNode != null){
+			importHelper(nextNode);
+			nextNode = nextNode.getNextSibling();
+		}
+		
+		db.addTacticFromXML(this);
+		
+	}
+	
+	/**
+	 * Because we can't get every node the same way, we have to have a helper method to avoid duplication of code.
+	 * @param child
+	 */
+	private void importHelper(Node child){
+		if (child.getFirstChild() instanceof Text){
+			Text text = (Text) child.getFirstChild();
+			String data = text.getData();
+			String name = text.getNodeName();
+			if (name.equals("description")){
+				description = data;
+				return;
+			}
+			if (name.equals("refOntPos")){
+				category = new OntEntry();
+				category.fromDatabase(Integer.parseInt(data.substring(1)));
+				return;
+			}
+			if (name.equals("behavior")){
+				for (int i = 0; i < behaviorCategories.length; i++){
+					if (data.equals(behaviorCategories[i])){
+						time_behavior = i;
+						return;
+					}
+				}
+			}
+			if (name.equals("refTacticPattern")){
+				TacticPattern tp = new TacticPattern();
+				tp.fromDatabase(Integer.parseInt(data.substring(2)));
+				patterns.add(tp);
+				return;
+			}
+			if (name.equals("refOntNeg")){
+				OntEntry cur = new OntEntry();
+				cur.fromDatabase(Integer.parseInt(data.substring(1)));
+				badEffects.add(cur);
+			}
 		}
 	}
 	

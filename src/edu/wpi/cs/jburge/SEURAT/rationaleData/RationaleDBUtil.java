@@ -170,6 +170,83 @@ public class RationaleDBUtil
 			else return "0";
 		}
 	}
+	
+	/**
+	 * Moved it from exportToXML method for readability issues.
+	 * @param ratDoc
+	 * @return
+	 * @throws ParserConfigurationException
+	 */
+	private static Element exportPatternLibrary(Document ratDoc) throws ParserConfigurationException{
+		RationaleDB db = RationaleDB.getHandle();
+		
+		//I should now get the pattern xml written...
+		Element patternLib = ratDoc.createElement("DR:patternLibrary");
+
+		//First, I should export the problem category database to XML in sequence...
+		Iterator<String[]> problemcategories = db.getProblemCategoryData().iterator();
+		while (problemcategories.hasNext()){
+			String[] content = problemcategories.next();
+			Element curE = ratDoc.createElement("DR:patternCategory");
+			curE.setAttribute("rid", "c" + content[0]);
+			curE.setAttribute("name", content[1]);
+			curE.setAttribute("type", content[2]);
+			patternLib.appendChild(curE);
+		}
+		//Need to keep track of pattern decisions from each patterns.
+		Vector<PatternDecision> patternDecisions = new Vector<PatternDecision>();
+		Vector<Integer> subDecIDs = new Vector<Integer>();
+		//Next, I should export the patterns
+		Iterator<edu.wpi.cs.jburge.SEURAT.rationaleData.Pattern> patterns = db.getPatternData().iterator();
+		while (patterns.hasNext()){
+			edu.wpi.cs.jburge.SEURAT.rationaleData.Pattern cur = patterns.next();
+			Element curE = cur.toXML(ratDoc);
+			patternLib.appendChild(curE);
+			//patternDecisions.addAll(cur.getSubDecisions());
+			
+			//There might be duplicated entries, so only add those to XML if there's no duplication.
+			Iterator<PatternDecision> subDec = cur.getSubDecisions().iterator();
+			while (subDec.hasNext()){
+				PatternDecision dec = subDec.next();
+				if (!subDecIDs.contains((dec.getID()))){
+					patternDecisions.add(dec);
+					subDecIDs.add(dec.getID());
+				}
+			}
+		}
+
+		//Then, I need to export the pattern decisions
+		Iterator<PatternDecision> pdi = patternDecisions.iterator();
+		while (pdi.hasNext()){
+			PatternDecision cur = pdi.next();
+			Element curE = cur.toXML(ratDoc);
+			patternLib.appendChild(curE);
+		}
+		
+		return patternLib;
+	}
+	
+	private static Element exportTacticLibrary(Document ratDoc) throws ParserConfigurationException{
+		RationaleDB db = RationaleDB.getHandle();
+		
+		Element tacticLib = ratDoc.createElement("DR:tacticLibrary");
+		
+		Iterator<Tactic> tactics = db.getTacticData().iterator();
+		while (tactics.hasNext()){
+			Tactic cur = tactics.next();
+			Element curE = cur.toXML(ratDoc);
+			tacticLib.appendChild(curE);
+			
+			Iterator<TacticPattern> tpi = cur.getPatterns().iterator();
+			while (tpi.hasNext()){
+				TacticPattern tp = tpi.next();
+				Element tpE = tp.toXML(ratDoc);
+				tacticLib.appendChild(tpE);
+			}
+		} 
+		
+		return tacticLib;
+	}
 
 	/**
 	 * This method handles the exporting of a database to XML. Currently
@@ -180,7 +257,6 @@ public class RationaleDBUtil
 	public static boolean exportToXML(String xmlFile){
 		DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 		Document ratDoc = null;
-		RationaleDB db = RationaleDB.getHandle();
 
 		try{
 			DocumentBuilder builder = factory.newDocumentBuilder();
@@ -211,51 +287,11 @@ public class RationaleDBUtil
 			ratDoc.appendChild(ratTop);
 			System.out.println("child appended");
 
-			//I should now get the pattern xml written...
-			Element patternLib = ratDoc.createElement("DR:patternLibrary");
-
-			//First, I should export the problem category database to XML in sequence...
-			Iterator<String[]> problemcategories = db.getProblemCategoryData().iterator();
-			while (problemcategories.hasNext()){
-				String[] content = problemcategories.next();
-				Element curE = ratDoc.createElement("DR:patternCategory");
-				curE.setAttribute("rid", "c" + content[0]);
-				curE.setAttribute("name", content[1]);
-				curE.setAttribute("type", content[2]);
-				patternLib.appendChild(curE);
-			}
-			//Need to keep track of pattern decisions from each patterns.
-			Vector<PatternDecision> patternDecisions = new Vector<PatternDecision>();
-			Vector<Integer> subDecIDs = new Vector<Integer>();
-			//Next, I should export the patterns
-			Iterator<edu.wpi.cs.jburge.SEURAT.rationaleData.Pattern> patterns = db.getPatternData().iterator();
-			while (patterns.hasNext()){
-				edu.wpi.cs.jburge.SEURAT.rationaleData.Pattern cur = patterns.next();
-				Element curE = cur.toXML(ratDoc);
-				patternLib.appendChild(curE);
-				//patternDecisions.addAll(cur.getSubDecisions());
-				
-				//There might be duplicated entries, so only add those to XML if there's no duplication.
-				Iterator<PatternDecision> subDec = cur.getSubDecisions().iterator();
-				while (subDec.hasNext()){
-					PatternDecision dec = subDec.next();
-					if (!subDecIDs.contains((dec.getID()))){
-						patternDecisions.add(dec);
-						subDecIDs.add(dec.getID());
-					}
-				}
-			}
-
-			//Then, I need to export the pattern decisions
-			Iterator<PatternDecision> pdi = patternDecisions.iterator();
-			while (pdi.hasNext()){
-				PatternDecision cur = pdi.next();
-				Element curE = cur.toXML(ratDoc);
-				patternLib.appendChild(curE);
-			}
-
-			//Finally, add patternLib to ratTop's child
+			Element patternLib = exportPatternLibrary(ratDoc);
 			ratTop.appendChild(patternLib);
+			
+			Element tacticLib = exportTacticLibrary(ratDoc);
+			ratTop.appendChild(tacticLib);
 
 		} catch (ParserConfigurationException e){
 			e.printStackTrace();
@@ -436,6 +472,10 @@ public class RationaleDBUtil
 					System.out.println("Found Pattern Library. Importing...");
 					xmlImportPatternLibrary(rat);
 				}
+				else if (ratname.equals("DR:tacticLibrary")){
+					System.out.println("Found Tactic Library. Importing...");
+					xmlImportTacticLibrary(rat);
+				}
 			}
 			
 			return true;
@@ -451,7 +491,38 @@ public class RationaleDBUtil
 	}
 	
 	/**
-	 * Given the top node DR:patternLibrary, import form the children.
+	 * Given the top node DR:tacticLibrary, import its children
+	 * @param tacticLib
+	 * @return
+	 */
+	public static boolean xmlImportTacticLibrary(Node tacticLib){
+		if (!tacticLib.getNodeName().equals("DR:tacticLibrary")){
+			System.err.println("tacticLibrary node is illegal");
+			return false;
+		}
+		
+		RationaleDB db = RationaleDB.getHandle();
+		NodeList libraryNodes = tacticLib.getChildNodes();
+		
+		for (int i = 0; i < libraryNodes.getLength(); i++){
+			Node libItem = libraryNodes.item(i);
+			String libName = libItem.getNodeName();
+			if (libName.equals("DR:tactic")){
+				Tactic tactic = new Tactic();
+				tactic.fromXML((Element) libItem);
+			}
+			else if (libName.equals("DR:tacticpattern")){
+				TacticPattern tp = new TacticPattern();
+				tp.fromXML((Element) libItem);
+			}
+		}
+		
+		System.out.println("Import of tactic library was successful");
+		return true;
+	}
+	
+	/**
+	 * Given the top node DR:patternLibrary, import from its children.
 	 * @param patternLib
 	 * @return true if import is successful. false otherwise.
 	 */

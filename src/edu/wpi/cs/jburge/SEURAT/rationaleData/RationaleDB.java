@@ -4489,7 +4489,7 @@ public final class RationaleDB implements Serializable {
 		try{
 			Statement stmt = conn.createStatement();
 			String expr = "INSERT INTO PATTERNDECISIONS (id, name, description, type, status, phase, ptype, subdecreq)"+
-			" values (" + pd.getID() + ", '" + pd.getName() + "', '" + pd.getDescription() + "', '" + 
+			" values (" + pd.getID() + ", '" + RationaleDBUtil.escape(pd.getName()) + "', '" + RationaleDBUtil.escape(pd.getDescription()) + "', '" + 
 			pd.getType().toString() + "', '" + pd.getStatus().toString() + "', '" + pd.getPhase().toString() +
 			"', 'Pattern', 'No')";
 			stmt.execute(expr);
@@ -4504,6 +4504,55 @@ public final class RationaleDB implements Serializable {
 			stmt.close();
 		} catch (SQLIntegrityConstraintViolationException e){
 			System.out.println("WARNING: Duplicated Entry. Skipping: " + pd.getName());
+		} catch (SQLException e){
+			e.printStackTrace();
+		} 
+	}
+	
+	/**
+	 * Given a tactic imported from XML, add it to the database.
+	 * @param t
+	 */
+	public void addTacticFromXML(Tactic t){
+		try{
+			Statement stmt = conn.createStatement();
+			String expr = "INSERT INTO TACTICS (id, name, quality, description, time_beh) " +
+			" VALUES (" +
+			t.getID() + ", " + t.getName() +  ", " + t.getCategory().getID() + ", " + t.getDescription() + ", " + t.getTime_behavior() + ")";
+			stmt.execute(expr);
+			
+			Iterator<OntEntry> effectsI = t.getBadEffects().iterator();
+			while (effectsI.hasNext()){
+				int effectID = RationaleDB.findAvailableID("TACTIC_NEGONTENTRIES");
+				OntEntry cur = effectsI.next();
+				expr = "INSERT INTO TACTIC_NEGONTENTRIES " +
+				" (id, tactic_id, ont_id) VALUES (" + effectID + ", " + t.getID() + ", " + 
+				cur.getID() + ")";
+				stmt.execute(expr);
+			}
+			
+		} catch (SQLIntegrityConstraintViolationException e){
+			System.out.println("WARNING: Integrity Violation, Skipping: " + t.getName());
+		} catch (SQLException e){
+			e.printStackTrace();
+		} 
+	}
+	
+	/**
+	 * Given a tactic-pattern imported from XML, add it to the database.
+	 * @param tp
+	 */
+	public void addTacticPatternFromXML(TacticPattern tp){
+		try{
+			Statement stmt = conn.createStatement();
+			String expr = "INSERT INTO TACTIC_PATTERN " +
+			"(id, tactic_id, pattern_id, struct_change, num_changes, beh_change, changes, description) " +
+			"values (" + 
+			tp.getID() + ", " + tp.getTacticID() + ", " +  tp.getPatternID() + ", " + tp.getStruct_change() + ", " + tp.getNumChanges() + ", " + tp.getBeh_change() + ", "
+			+ tp.getOverallScore() + ", " + tp.getDescription() + ")";
+			stmt.execute(expr);
+		} catch (SQLIntegrityConstraintViolationException e){
+			System.out.println("WARNING: Integrity Violation, Skipping: " + tp.getName());
 		} catch (SQLException e){
 			e.printStackTrace();
 		} 
@@ -4598,11 +4647,39 @@ public final class RationaleDB implements Serializable {
 				pattern.fromDatabase(id);
 				toReturn.add(pattern);
 			}
+			rs.close();
 			stmt.close();
 		} catch (SQLException e){
 			e.printStackTrace();
 		}
 
+		return toReturn;
+	}
+	
+	/**
+	 * This method returns all database info about tactics.
+	 * Used for XML export.
+	 * @return
+	 */
+	public Vector<Tactic> getTacticData(){
+		Vector<Tactic> toReturn = new Vector<Tactic>();
+		try{
+			Statement stmt = conn.createStatement();
+			ResultSet rs = null;
+			String query = "SELECT id FROM tactics";
+			rs = stmt.executeQuery(query);
+			
+			while (rs.next()){
+				Integer id = rs.getInt(1);
+				Tactic tactic = new Tactic();
+				tactic.fromDatabase(id);
+				toReturn.add(tactic);
+			}
+			rs.close();
+			stmt.close();
+		} catch (SQLException e){
+			e.printStackTrace();
+		}
 		return toReturn;
 	}
 
