@@ -543,6 +543,9 @@ IPropertyChangeListener {
 				rebuildTree();
 				if (RationaleExplorer.getHandle() != null)
 					RationaleExplorer.getHandle().rebuildTree(false);
+				if (TacticLibrary.getHandle() != null){
+					TacticLibrary.getHandle().rebuildTree();
+				}
 			}
 		};
 		

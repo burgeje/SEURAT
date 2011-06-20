@@ -418,7 +418,7 @@ public class TacticPattern extends RationaleElement implements Serializable {
 
 		RationaleDB db = RationaleDB.getHandle();
 
-		id = Integer.parseInt(tpE.getAttribute("rid").substring(1));
+		id = Integer.parseInt(tpE.getAttribute("rid").substring(2));
 		name = tpE.getAttribute("name");
 
 		Node child = tpE.getFirstChild();
@@ -438,7 +438,7 @@ public class TacticPattern extends RationaleElement implements Serializable {
 		if (child.getFirstChild() instanceof Text){
 			Text text = (Text) child.getFirstChild();
 			String data = text.getData();
-			String name = text.getNodeName();
+			String name = child.getNodeName();
 			if (name.equals("description")){
 				description = data;
 				return;

@@ -501,7 +501,6 @@ public class RationaleDBUtil
 			return false;
 		}
 		
-		RationaleDB db = RationaleDB.getHandle();
 		NodeList libraryNodes = tacticLib.getChildNodes();
 		
 		for (int i = 0; i < libraryNodes.getLength(); i++){

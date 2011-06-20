@@ -4475,7 +4475,8 @@ public final class RationaleDB implements Serializable {
 			stmt.close();
 
 			//connection with sub-decision must be done in utility after decision has been created...
-		} catch (SQLException e){
+		} 
+		catch (SQLException e){
 			e.printStackTrace();
 		}
 	}
@@ -4502,8 +4503,6 @@ public final class RationaleDB implements Serializable {
 				stmt.execute(expr);
 			}
 			stmt.close();
-		} catch (SQLIntegrityConstraintViolationException e){
-			System.out.println("WARNING: Duplicated Entry. Skipping: " + pd.getName());
 		} catch (SQLException e){
 			e.printStackTrace();
 		} 
@@ -4518,7 +4517,7 @@ public final class RationaleDB implements Serializable {
 			Statement stmt = conn.createStatement();
 			String expr = "INSERT INTO TACTICS (id, name, quality, description, time_beh) " +
 			" VALUES (" +
-			t.getID() + ", " + t.getName() +  ", " + t.getCategory().getID() + ", " + t.getDescription() + ", " + t.getTime_behavior() + ")";
+			t.getID() + ", '" + RationaleDBUtil.escape(t.getName()) +  "', " + t.getCategory().getID() + ", '" + RationaleDBUtil.escape(t.getDescription()) + "', " + t.getTime_behavior() + ")";
 			stmt.execute(expr);
 			
 			Iterator<OntEntry> effectsI = t.getBadEffects().iterator();
@@ -4531,8 +4530,6 @@ public final class RationaleDB implements Serializable {
 				stmt.execute(expr);
 			}
 			
-		} catch (SQLIntegrityConstraintViolationException e){
-			System.out.println("WARNING: Integrity Violation, Skipping: " + t.getName());
 		} catch (SQLException e){
 			e.printStackTrace();
 		} 
@@ -4549,10 +4546,8 @@ public final class RationaleDB implements Serializable {
 			"(id, tactic_id, pattern_id, struct_change, num_changes, beh_change, changes, description) " +
 			"values (" + 
 			tp.getID() + ", " + tp.getTacticID() + ", " +  tp.getPatternID() + ", " + tp.getStruct_change() + ", " + tp.getNumChanges() + ", " + tp.getBeh_change() + ", "
-			+ tp.getOverallScore() + ", " + tp.getDescription() + ")";
+			+ tp.getOverallScore() + ", '" + RationaleDBUtil.escape(tp.getDescription()) + "')";
 			stmt.execute(expr);
-		} catch (SQLIntegrityConstraintViolationException e){
-			System.out.println("WARNING: Integrity Violation, Skipping: " + tp.getName());
 		} catch (SQLException e){
 			e.printStackTrace();
 		} 
@@ -4589,6 +4584,9 @@ public final class RationaleDB implements Serializable {
 			new Integer(id).toString() + ", '" + category + "', '" + type + "')";
 			stmt.execute(expr);
 			stmt.close();
+		}
+		catch (SQLIntegrityConstraintViolationException e){
+			System.out.println("WARNING: Problem category already exists. Skipping.");
 		}
 		catch (SQLException e){
 			e.printStackTrace();

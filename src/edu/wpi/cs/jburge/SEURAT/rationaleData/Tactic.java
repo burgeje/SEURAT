@@ -292,7 +292,7 @@ public class Tactic extends RationaleElement implements Serializable {
 		
 		tacticE = ratDoc.createElement("DR:tactic");
 		tacticE.setAttribute("rid", "t" + id);
-		tacticE.setAttribute(name, name);
+		tacticE.setAttribute("name", name);
 		
 		Element descE = ratDoc.createElement("description");
 		Text descText = ratDoc.createTextNode(description);
@@ -362,7 +362,7 @@ public class Tactic extends RationaleElement implements Serializable {
 		if (child.getFirstChild() instanceof Text){
 			Text text = (Text) child.getFirstChild();
 			String data = text.getData();
-			String name = text.getNodeName();
+			String name = child.getNodeName();
 			if (name.equals("description")){
 				description = data;
 				return;
