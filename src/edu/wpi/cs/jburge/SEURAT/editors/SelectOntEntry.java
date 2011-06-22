@@ -164,7 +164,7 @@ public class SelectOntEntry {
 	 * @param node - the root node for the tree
 	 * @param parentName - the name of the parent at the root node.
 	 */
-	void populateTree(TreeItem node, String parentName )
+	public static void populateTree(TreeItem node, String parentName )
 	{
 		RationaleDB d = RationaleDB.getHandle();
 		Vector ontList = d.getOntologyElements(parentName);

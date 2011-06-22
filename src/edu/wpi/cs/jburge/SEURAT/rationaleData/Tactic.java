@@ -90,6 +90,12 @@ public class Tactic extends RationaleElement implements Serializable {
 		patterns.add(pattern);
 	}
 	
+	/**
+	 * It deletes an argument from bad-effect vector. Does not delete from DB for efficiency.
+	 * Must delete from DB manually after this one has been called!
+	 * @param entryName
+	 * @return
+	 */
 	public boolean deleteBadEffect(String entryName){
 		if (entryName == null) return false;
 		for (int i = 0; i < badEffects.size(); i++){

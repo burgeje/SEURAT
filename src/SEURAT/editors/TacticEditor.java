@@ -25,6 +25,7 @@ import edu.wpi.cs.jburge.SEURAT.editors.SelectOntEntry;
 import edu.wpi.cs.jburge.SEURAT.rationaleData.OntEntry;
 import edu.wpi.cs.jburge.SEURAT.rationaleData.RationaleDB;
 import edu.wpi.cs.jburge.SEURAT.rationaleData.RationaleElement;
+import edu.wpi.cs.jburge.SEURAT.rationaleData.RationaleElementType;
 import edu.wpi.cs.jburge.SEURAT.rationaleData.Tactic;
 import edu.wpi.cs.jburge.SEURAT.rationaleData.TacticPattern;
 import edu.wpi.cs.jburge.SEURAT.views.TacticLibrary;
@@ -104,7 +105,9 @@ public class TacticEditor extends RationaleEditorBase {
 			mbox.open();
 			return false;
 		}
-
+		Tactic t = new Tactic();
+		t.fromDatabase(ourTactic.getName());
+		ourTactic = t;
 		ourTactic.setName(nameField.getText());
 		ourTactic.setCategory(category);
 		ourTactic.setDescription(descArea.getText());
@@ -138,11 +141,11 @@ public class TacticEditor extends RationaleEditorBase {
 			e.printStackTrace();
 		}
 	}
-	
+
 	public void onUpdateTacticPattern(TacticPattern tp, RationaleUpdateEvent pEvent){
 		refreshTacticPattern(pEvent);
 	}
-	
+
 	public void onUpdateNegQA(OntEntry entry, RationaleUpdateEvent pEvent){
 		refreshNegQA(pEvent);
 	}
@@ -153,12 +156,14 @@ public class TacticEditor extends RationaleEditorBase {
 			patterns.removeAll();
 			Tactic tactic = new Tactic();
 			tactic.fromDatabase(ourTactic.getName());
+			ourTactic.getPatterns().removeAllElements();
 			Vector<TacticPattern> ptV = tactic.getPatterns();
 			Iterator<TacticPattern> ptI = ptV.iterator();
 			while (ptI.hasNext()){
 				TacticPattern pt = ptI.next();
 
 				patterns.add(pt.getPatternName());
+				ourTactic.getPatterns().add(pt);
 
 				try{
 					if (pEvent != null &&  pEvent.getElement() instanceof TacticPattern && 
@@ -181,6 +186,7 @@ public class TacticEditor extends RationaleEditorBase {
 		RationaleDB l_db = RationaleDB.getHandle();
 		if (ourTactic == null || negQAs == null) return;
 		negQAs.removeAll();
+		ourTactic.getBadEffects().removeAllElements();
 		Tactic tactic = new Tactic();
 		tactic.fromDatabase(ourTactic.getName());
 		Iterator<OntEntry> negI = tactic.getBadEffects().iterator();
@@ -188,6 +194,7 @@ public class TacticEditor extends RationaleEditorBase {
 			OntEntry cur = negI.next();
 
 			negQAs.add(cur.getName());
+			ourTactic.getBadEffects().add(cur);
 
 			try{
 				if ( pEvent != null && pEvent.getElement() instanceof OntEntry && 
@@ -203,6 +210,7 @@ public class TacticEditor extends RationaleEditorBase {
 				System.err.println("Unable to subscribe to negative QA under the selected tactic!");
 			}
 		}
+		return;
 	}
 
 	@Override
@@ -291,6 +299,10 @@ public class TacticEditor extends RationaleEditorBase {
 		if (isCreating()){
 			ourTactic.setTime_behavior(0);
 			ourTactic.setCategory(null);
+			if (getTreeParent().getType() == RationaleElementType.TACTICCATEGORY){
+				ourTactic.setCategory(new OntEntry());
+				ourTactic.getCategory().fromDatabase(getTreeParent().getName());
+			}
 		}
 
 		new Label(parent, SWT.NONE).setText("Name:");
@@ -306,7 +318,7 @@ public class TacticEditor extends RationaleEditorBase {
 
 		new Label(parent, SWT.NONE).setText("Improves:");
 		catDesc = new Label(parent, SWT.WRAP);
-		if (!isCreating()){
+		if (ourTactic.getCategory() != null && ourTactic.getCategory().getID() >= 0){
 			catDesc.setText(ourTactic.getCategory().getName());
 		}
 		else{
@@ -329,6 +341,15 @@ public class TacticEditor extends RationaleEditorBase {
 				SelectOntEntry ar = new SelectOntEntry(ourParent.getDisplay(), true);
 				newOnt = ar.getSelOntEntry();
 				if (newOnt != null){
+					if (newOnt.getName().equals(TacticPattern.CHANGEONTNAME)){
+						String l_message = "The positive quality attribute must not be the tactic impact atrribute!";
+						MessageBox mbox = new MessageBox(getSite().getShell(), SWT.ICON_ERROR);
+						mbox.setMessage(l_message);
+						mbox.setText("Tactic Category Is Invalid");
+						mbox.open();
+						return;
+					}
+
 					ourTactic.setCategory(newOnt);
 					catDesc.setText(newOnt.toString());
 					selSaveListener.widgetSelected(event);
@@ -338,7 +359,7 @@ public class TacticEditor extends RationaleEditorBase {
 
 		new Label(parent, SWT.NONE).setText("Description:");
 		descArea = new Text(parent, SWT.MULTI | SWT.WRAP | SWT.BORDER | SWT.V_SCROLL);
-		descArea.setText(ourTactic.getName());
+		descArea.setText(ourTactic.getDescription());
 		descArea.addModifyListener(getNeedsSaveListener());
 		gridData = new GridData(GridData.HORIZONTAL_ALIGN_FILL);
 		DisplayUtilities.setTextDimensions(descArea, gridData, 25, 5);

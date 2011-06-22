@@ -167,6 +167,7 @@ IPropertyChangeListener{
 	 * Menu item to generate new candidate patterns
 	 */
 	private Action generateCandidatePatterns;
+	private Action generateCandidateTactics;
 
 	/**
 	 * Menu item to add a new alternative-constraint relationship
@@ -483,6 +484,7 @@ IPropertyChangeListener{
 				// manager.add(associateConstraint);
 				manager.add(showHistory);
 				manager.add(generateCandidatePatterns);
+				manager.add(generateCandidateTactics);
 
 			}
 			else if (ourElement.getType() == RationaleElementType.ASSUMPTION)
@@ -934,14 +936,12 @@ IPropertyChangeListener{
 		generateRatReportFromHere.setToolTipText("Generates a rationale report from this node down.");
 
 		//Generate candidate patterns
-		//TODO Still have not yet finished!
 		generateCandidatePatterns = new Action(){
 			public void run() {
 				Object selection = viewer.getSelection();
 				//GenerateCandidatePatternsDisplay gcpDisplay = new GenerateCandidatePatternsDisplay(viewer.getControl().getShell().getDisplay(), selection);
 				//refreshBranch((TreeParent)selection);
 				//ArrayList<Alternative> newAlternatives = gcpDisplay.getNewlyAddedAlternative();
-				//TODO Have not finished this yet!
 				GenerateCandidatePatternsComposite gcpWizard = new GenerateCandidatePatternsComposite(viewer.getControl().getShell().getDisplay(), selection);
 				ArrayList<Alternative> newAlternatives = gcpWizard.getNewlyAddedAlternative();
 				if(newAlternatives != null && newAlternatives.size() != 0){
@@ -963,7 +963,34 @@ IPropertyChangeListener{
 			}
 		};
 		generateCandidatePatterns.setText("Generate Candidate Patterns");
-		generateCandidatePatterns.setToolTipText("Generates candidate patterns that cover the NRFs");
+		generateCandidatePatterns.setToolTipText("Generates candidate patterns that cover the NFRs");
+		
+		//Generate candidate tactics
+		generateCandidateTactics = new Action(){
+			public void run(){
+				Object selection = viewer.getSelection();
+				GenerateCandidateTacticsComposite gctWizard = new GenerateCandidateTacticsComposite(viewer.getControl().getShell().getDisplay(), selection);
+				ArrayList<Alternative> newAlternatives = gctWizard.getNewlyAddedAlternative();
+				if(newAlternatives != null && newAlternatives.size() != 0){
+					IStructuredSelection isel = (IStructuredSelection) selection;
+					TreeParent tp = (TreeParent)isel.getFirstElement();
+					//Decision parentDecision = (Decision) getElement(tp, false);
+					for(int k=0; k<newAlternatives.size(); k++){	
+						//refreshBranch(createUpdate(tp, newAlternatives.get(k)));
+						createUpdate(tp, newAlternatives.get(k));
+						//createNewElement(parentDecision, newAlternatives.get(k), tp);
+						refreshBranch(tp);
+					}
+					rebuildTree(false);
+					RationaleTreeMap map = RationaleTreeMap.getHandle();
+					Vector treeObjs = map.getKeys(map.makeKey(tp.getName(), RationaleElementType.DECISION));
+					viewer.expandToLevel(treeObjs.elementAt(0),2);
+					viewer.reveal(tp);
+				}		
+			}
+		};
+		generateCandidateTactics.setText("Generate Candidate Tactics");
+		generateCandidateTactics.setToolTipText("Generates candidate tactics that cover the NFRs");
 
 		generateRatReport = new Action(){
 			public void run(){

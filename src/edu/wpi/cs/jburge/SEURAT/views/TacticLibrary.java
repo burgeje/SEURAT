@@ -323,6 +323,9 @@ IPropertyChangeListener{
 					manager.add(deleteNegOntology);
 				}
 			}
+			else if (ourElement.getType() == RationaleElementType.TACTICCATEGORY){
+				manager.add(addTactic);
+			}
 			else if (ourElement.getType() == RationaleElementType.RATIONALE){
 				if (ourElement.getName().contains("Tactic Library"))
 					manager.add(addTactic);
@@ -399,6 +402,10 @@ IPropertyChangeListener{
 							//Get the tactic first loaded first...
 							Tactic tactic = new Tactic();
 							tactic.fromDatabase(ourElement.getName());
+							if (newOnt.getName().equals(TacticPattern.CHANGEONTNAME)){
+								showInformation("Selected ontology is not valid because it is a tactic impact attribute");
+								return;
+							}
 							if (tactic.getID() >= 0){
 								tactic.addBadEffect(newOnt);
 								tactic.toDatabase();
@@ -409,6 +416,7 @@ IPropertyChangeListener{
 							}
 							else {
 								System.err.println("Cannot retrieve tactic info while associating with negative ontology");
+								return;
 							}
 						}
 					}
@@ -439,6 +447,7 @@ IPropertyChangeListener{
 							System.err.println("Cannot find/delete a negative quality attribute for tactic library!");
 						}
 						else{
+							tactic.toDatabase();
 							//Remove from the tree...
 							TacticLibContentProvider provider = (TacticLibContentProvider) viewer.getContentProvider();
 							provider.removeElement(ourElement);
@@ -590,6 +599,9 @@ IPropertyChangeListener{
 			if (name.indexOf("Tactic Library") == 0){
 				ourElement = new Tactic();
 			}
+		}
+		else if (type == RationaleElementType.TACTICCATEGORY){
+			ourElement = new Tactic();
 		}
 		if (!newElement && !name.equals("imaginary root"))
 		{
@@ -804,25 +816,6 @@ IPropertyChangeListener{
 	}
 
 	/**
-	 * This is the editing code that is called in response to a menu item from
-	 * the tree OR on receipt of an event from the task list.
-	 * @param obj - the selected tree element being edited
-	 * @param rElement - the rationale Element being edited
-	 * @param theDisplay - the parent display
-	 */
-	private void editElement (TreeParent obj, RationaleElement rElement, Display theDisplay)
-	{
-		//		boolean canceled = rElement.display();
-		boolean canceled = rElement.display(viewer.getControl().getShell().getDisplay());
-		//		System.out.println("canceled? = " + canceled);
-		if (!canceled)
-		{
-			updateTreeElement(obj, rElement);
-		}
-
-	}
-
-	/**
 	 * Update method for editing an existing element.  This has the same function as the
 	 * editElement method, but is designed to be called by the new editors instead (there is
 	 * no display passed from the new editors).
@@ -906,6 +899,16 @@ IPropertyChangeListener{
 
 			//			viewer.update((TreeParent) treeI.next(), null);
 			viewer.refresh((TreeParent) treeI.next());
+		}
+		
+		if (rElement.getElementType() == RationaleElementType.TACTIC && rElement instanceof Tactic){
+			Tactic t = (Tactic) rElement;
+			if (!t.getCategory().getName().equals(obj.getParent().getName())){
+				rebuildTree();
+				viewer.reveal(obj.getParent());
+				viewer.reveal(obj);
+				viewer.expandToLevel(2);
+			}
 		}
 
 		return obj;
@@ -991,7 +994,7 @@ IPropertyChangeListener{
 	private void showInformation(String message) {
 		MessageDialog.openInformation(
 				viewer.getControl().getShell(),
-				"RationaleExplorer",
+				"TacticExplorer",
 				message);
 	}
 	

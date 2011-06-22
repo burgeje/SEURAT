@@ -26,7 +26,7 @@ public class TacticPattern extends RationaleElement implements Serializable {
 	public static final int INVALID = -1;
 
 	public static final String[] CHANGECATEGORIES = {"Implemented In", "Replicates", "Add in pattern", "Add out of pattern", "Modify"};
-
+	public static final String CHANGEONTNAME = "Tactic Impact";
 	public static final int[] AUTOSCORECHANGEBASE = {0, 0, 1, 5, 2};
 	public static final int[] AUTOSCORECHANGEDELTA = {1, 1, 1, 1, 2};
 	public static final int[] AUTOSCOREMAXNUMCHANGES = {1, -1, -1, -1, -1};

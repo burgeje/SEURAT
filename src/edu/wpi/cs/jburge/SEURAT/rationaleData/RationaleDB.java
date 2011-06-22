@@ -2135,6 +2135,28 @@ public final class RationaleDB implements Serializable {
 		}
 		return onts;
 	}
+	
+	/**
+	 * Given the name of a element of argument ontology, retrieve all of its leaves.
+	 * @param parentName the name to retrieve leaves from.
+	 * @return
+	 */
+	public Vector<OntEntry> getOntologyLeaves(String parentName){
+		Vector<OntEntry> list = new Vector<OntEntry>();
+		
+		Vector<OntEntry> children = getOntologyElements(parentName);
+		if (children.size() <= 0){
+			OntEntry entry = new OntEntry();
+			entry.fromDatabase(parentName);
+			list.add(entry);
+			return list;
+		}
+		Iterator<OntEntry> childrenI = children.iterator();
+		while (childrenI.hasNext()){
+			list.addAll(getOntologyLeaves(childrenI.next().getName()));
+		}
+		return list;
+	}
 
 	/**
 	 * Return a list of child element entries given the parent for treeview display
@@ -2571,15 +2593,16 @@ public final class RationaleDB implements Serializable {
 		ResultSet rs = null;
 		try {
 			stmt = conn.createStatement();
-			query = "SELECT name FROM tactics ORDER BY name ASC ";
+			query = "SELECT name FROM tactics";
 			
 			if (category != null && category.length() > 0){
 				OntEntry entry = new OntEntry();
 				entry.fromDatabase(category);
 				int categoryID = entry.getID();
 				if (categoryID > 0)
-					query += "WHERE quality = " + categoryID;
+					query += " WHERE quality = " + categoryID;
 			}
+			query += " ORDER BY name ASC";
 			rs = stmt.executeQuery(query);
 			
 			while (rs.next()){

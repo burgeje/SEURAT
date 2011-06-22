@@ -34,6 +34,7 @@ import edu.wpi.cs.jburge.SEURAT.editors.SelectCandidatePatterns;
 import edu.wpi.cs.jburge.SEURAT.inference.AlternativePatternInferences;
 import edu.wpi.cs.jburge.SEURAT.rationaleData.Alternative;
 import edu.wpi.cs.jburge.SEURAT.rationaleData.Decision;
+import edu.wpi.cs.jburge.SEURAT.rationaleData.OntEntry;
 import edu.wpi.cs.jburge.SEURAT.rationaleData.Pattern;
 import edu.wpi.cs.jburge.SEURAT.rationaleData.PatternElementType;
 import edu.wpi.cs.jburge.SEURAT.rationaleData.RationaleDB;
@@ -50,7 +51,13 @@ public class GenerateCandidatePatternsComposite {
 	private WizardDialog ourWizard;
 	private String ourDecision;
 	private GCPWizard ourGCPWizard;
+	private OntEntry ourCategory;
 	
+	/**
+	 * Constructor for the class, opens the wizard.
+	 * @param display
+	 * @param selection Must be a decision!
+	 */
 	public GenerateCandidatePatternsComposite(Display display, Object selection){
 		TreeParent decisionParent = (TreeParent) ((IStructuredSelection) selection).getFirstElement();
 		ourDecision = decisionParent.getName();
