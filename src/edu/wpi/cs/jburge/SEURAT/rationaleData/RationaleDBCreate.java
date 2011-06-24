@@ -1737,11 +1737,11 @@ public class RationaleDBCreate
 		+ tablePart("TACTIC_ID INTEGER NOT NULL REFERENCES TACTICS(ID)")
 		+ tablePart("PATTERN_ID INTEGER NOT NULL REFERENCES PATTERNS(ID)")
 		+ tablePart("STRUCT_CHANGE INTEGER NOT NULL CHECK (STRUCT_CHANGE >= 0 AND STRUCT_CHANGE <" + TacticPattern.CHANGECATEGORIES.length +")")
-		+ tablePart("num_changes INTEGER NOT NULL CHECK(num_changes >= 0)")
-		+ tablePart("beh_change integer not null check(beh_change>=0 AND beh_change <" + TacticPattern.CHANGECATEGORIES.length +")")
-		+ tablePart("changes integer not null check(changes >= 0)")
-		+ tablePart("description varchar(255)")
-		+ endTable("UNIQUE(tactic_id, pattern_id)");
+		+ tablePart("NUM_CHANGES INTEGER NOT NULL CHECK(num_changes >= 0)")
+		+ tablePart("BEH_CHANGE integer not null check(beh_change>=0 AND beh_change <" + TacticPattern.CHANGECATEGORIES.length +")")
+		+ tablePart("CHANGES integer not null check(changes >= 0)")
+		+ tablePart("DESCRIPTION varchar(255)")
+		+ endTable("UNIQUE(TACTIC_ID, PATTERN_ID)");
 	}
 	
 	/**
@@ -1749,7 +1749,7 @@ public class RationaleDBCreate
 	 * @return String containing the statement
 	 */
 	public static final String CREATE_TACTIC_NEGONTENTRIES(){
-		return beginTable("TACTIC_NEGONTENTRIES") + tablePart("ID INTEGER PRIMARY KEY")
+		return beginTable("tactic_negontentries") + tablePart("ID INTEGER PRIMARY KEY")
 		+ tablePart("TACTIC_ID INTEGER NOT NULL REFERENCES TACTICS(ID)")
 		+ endTable("ONT_ID INTEGER NOT NULL REFERENCES ONTENTRIES(ID)");
 	}

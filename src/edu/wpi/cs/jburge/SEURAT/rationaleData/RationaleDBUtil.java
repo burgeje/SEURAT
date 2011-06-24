@@ -548,7 +548,6 @@ public class RationaleDBUtil
 				try{
 					int id = Integer.parseInt(rid.substring(1));
 					db.addProblemCategory(id, name, type);
-					System.out.println("Added category " + name);
 				} catch (RuntimeException e){
 					System.err.println("Invalid rid for pattern category... Skipping...");
 				}
@@ -564,7 +563,6 @@ public class RationaleDBUtil
 				PatternDecision pd = new PatternDecision();
 				pd.fromXML((Element) libItem);
 				patternDecisions.add(pd);
-				System.out.println("Added pattern decision " + pd.getName());
 			}
 			
 

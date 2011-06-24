@@ -35,7 +35,7 @@ public class Tactic extends RationaleElement implements Serializable {
 	private boolean fromXML = false;
 	
 	
-	public static final String[] behaviorCategories = {"undefined", "Add new timing, explicit", "Add new timing, implicit", "Change existing timing, explicit", "Change existing timing, implicit"};
+	public static final String[] behaviorCategories = {"undefined", "Add new timing", "Change existing timing"};
 	
 	private RationaleElementUpdateEventGenerator<Tactic> m_eventGenerator = 
 		new RationaleElementUpdateEventGenerator<Tactic>(this);
@@ -258,7 +258,8 @@ public class Tactic extends RationaleElement implements Serializable {
 				l_updateEvent = m_eventGenerator.MakeUpdated();
 			}
 			else {
-				id = RationaleDB.findAvailableID("TACTICS");
+				if (!fromXML)
+					id = RationaleDB.findAvailableID("TACTICS");
 				dm = "INSERT INTO TACTICS" + 
 				" (id, name, quality, description, time_beh)"
 				+ " VALUES ("
@@ -294,6 +295,7 @@ public class Tactic extends RationaleElement implements Serializable {
 	 * @return
 	 */
 	public Element toXML(Document ratDoc){
+		if (id != -1) fromDatabase(id);
 		Element tacticE;
 		
 		tacticE = ratDoc.createElement("DR:tactic");

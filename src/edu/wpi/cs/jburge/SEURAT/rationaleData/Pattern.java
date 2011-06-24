@@ -373,7 +373,7 @@ public class Pattern extends RationaleElement {
 			stmt = conn.createStatement();
 			
 			findQuery = "SELECT name  FROM " +
-			"patterns where id = " +
+			"PATTERNS where id = " +
 			new Integer(patternID).toString();
 
 			rs = stmt.executeQuery(findQuery);
@@ -477,7 +477,7 @@ public class Pattern extends RationaleElement {
 				}
 				
 				// Now, get the associated ontology entries
-				findQuery = "SELECT * FROM pattern_ontentries WHERE patternID = " + this.id;
+				findQuery = "SELECT * FROM PATTERN_ONTENTRIES WHERE patternID = " + this.id;
 				rs = stmt.executeQuery(findQuery);
 				while (rs.next()){
 					if(rs.getString("direction") != null){
@@ -495,7 +495,7 @@ public class Pattern extends RationaleElement {
 					}
 				}
 				
-				findQuery = "SELECT * FROM patterndecisions WHERE parent = " + this.id;
+				findQuery = "SELECT * FROM PATTERNDECISIONS WHERE parent = " + this.id;
 				rs = stmt.executeQuery(findQuery);
 				while (rs.next()){
 					PatternDecision decision = new PatternDecision();
@@ -580,7 +580,8 @@ public class Pattern extends RationaleElement {
 				
 				l_updateEvent = m_eventGenerator.MakeUpdated();
 			}else{
-				id = RationaleDB.findAvailableID("patterns");
+				if (!fromXML)
+					id = RationaleDB.findAvailableID("patterns");
 				//new pattern
 				PreparedStatement ps = conn.prepareStatement("INSERT INTO patterns " +
 						"(id, name, type, description, problem, context, solution, implementation, example, url) " +

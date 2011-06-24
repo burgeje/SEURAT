@@ -195,13 +195,15 @@ public class TacticPattern extends RationaleElement implements Serializable {
 
 		try {
 			stmt = conn.createStatement();
-			findQuery = "SELECT * FROM PATTERNS p WHERE p.name = '" + patternName +
-			"' AND EXISTS (SELECT * FROM TACTICS t WHERE t.name = '" + tacticName + "')";
+			findQuery = "SELECT p.id, t.id FROM PATTERNS p, TACTICS t WHERE p.name = '" + patternName +
+			"' AND t.name = '" + tacticName + "'";
 			rs = stmt.executeQuery(findQuery);
 
 			if (rs.next()){
-				patternID = rs.getInt("id");
-				findQuery = "SELECT * FROM TACTIC_PATTERN WHERE pattern_id = " + patternID;
+				patternID = rs.getInt(1);
+				tacticID = rs.getInt(2);
+				findQuery = "SELECT * FROM TACTIC_PATTERN WHERE pattern_id = " + patternID + 
+				" AND tactic_id = " + tacticID;
 				rs = stmt.executeQuery(findQuery);
 
 				if (rs.next()){
@@ -294,7 +296,8 @@ public class TacticPattern extends RationaleElement implements Serializable {
 				l_updateEvent = m_eventGenerator.MakeUpdated();
 			}
 			else{
-				id = RationaleDB.findAvailableID("TACTIC_PATTERN");
+				if (!fromXML)
+					id = RationaleDB.findAvailableID("TACTIC_PATTERN");
 				dm = "INSERT INTO TACTIC_PATTERN " +
 				"(id, tactic_id, pattern_id, struct_change, num_changes, beh_change, changes, description) " +
 				"values (" +

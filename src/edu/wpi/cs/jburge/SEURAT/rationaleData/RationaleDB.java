@@ -2499,7 +2499,7 @@ public final class RationaleDB implements Serializable {
 		ResultSet rs = null;
 		try{
 			stmt = conn.createStatement();
-			String query = "SELECT problemcategoryID from pattern_problemcategory WHERE patternID = " + patternID + "";
+			String query = "SELECT problemcategoryID from PATTERN_PROBLEMCATEGORY WHERE patternID = " + patternID + "";
 			rs = stmt.executeQuery(query);
 			if (rs.next()){
 				toReturn = rs.getInt("problemcategoryID");
@@ -2556,7 +2556,7 @@ public final class RationaleDB implements Serializable {
 
 		try {
 			stmt = conn.createStatement();
-			query = "SELECT name FROM patterns WHERE type = '"
+			query = "SELECT name FROM PATTERNS WHERE type = '"
 				+ patternType + "'";
 			rs = stmt.executeQuery(query);
 			//			while(rs.next()){
@@ -2593,7 +2593,7 @@ public final class RationaleDB implements Serializable {
 		ResultSet rs = null;
 		try {
 			stmt = conn.createStatement();
-			query = "SELECT name FROM tactics";
+			query = "SELECT name FROM TACTICS";
 			
 			if (category != null && category.length() > 0){
 				OntEntry entry = new OntEntry();
@@ -2630,7 +2630,7 @@ public final class RationaleDB implements Serializable {
 
 		try {
 			stmt = conn.createStatement();
-			query = "SELECT name FROM patterns WHERE type = '"
+			query = "SELECT name FROM PATTERNS WHERE type = '"
 				+ type + "'";
 			rs = stmt.executeQuery(query);
 			while(rs.next()){
@@ -3714,7 +3714,7 @@ public final class RationaleDB implements Serializable {
 			for(int k=0; k<patternNames.size(); k++){
 				Pattern p = new Pattern();
 				p.fromDatabase(patternNames.get(k));				
-				insertCanPattern = "INSERT INTO pattern_decision (patternID, decisionID, parentType) VALUES (" + p.getID() + "," + pd.getID() + ", 'Decision')";
+				insertCanPattern = "INSERT INTO PATTERN_DECISION (patternID, decisionID, parentType) VALUES (" + p.getID() + "," + pd.getID() + ", 'Decision')";
 				//System.out.println(insertCanPattern);
 				stmt.execute(insertCanPattern);
 			}
@@ -4702,7 +4702,7 @@ public final class RationaleDB implements Serializable {
 		try{
 			Statement stmt = conn.createStatement();
 			ResultSet rs = null;
-			String query = "SELECT id FROM tactics";
+			String query = "SELECT id FROM TACTICS";
 			rs = stmt.executeQuery(query);
 			
 			while (rs.next()){
@@ -5357,15 +5357,15 @@ public final class RationaleDB implements Serializable {
 	 * It seems the XML Import/Export has broken the ID auto_increment. I need this for every
 	 * insertion of all entities.
 	 * This method returns the next available ID after the max of ID's given dbName.
-	 * @param dbName The table name to find the max ID.
+	 * @param tableName The table name to find the max ID.
 	 */
-	public static int findAvailableID(String dbName){
+	public static int findAvailableID(String tableName){
 		Statement stmt = null;
 		ResultSet r = null;
-		String query = "SELECT max(id) FROM " + dbName;
+		String query = "SELECT max(id) FROM " + tableName;
 		try{
 			stmt = conn.createStatement();
-			r = stmt.executeQuery(query);
+			r = stmt.executeQuery(query.toUpperCase());
 			if (r.next()){
 				return r.getInt(1) + 1;
 			}

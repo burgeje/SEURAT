@@ -1555,7 +1555,6 @@ public class Alternative extends RationaleElement implements Serializable {
 						arg.toDatabase(id, RationaleElementType.ALTERNATIVE);
 					}
 				}
-
 			}
 
 			if (nfrs.get(i).getOntology().equals(t.getCategory())){
@@ -1572,8 +1571,11 @@ public class Alternative extends RationaleElement implements Serializable {
 				arg.setImportance(Importance.ESSENTIAL);
 				arg.setParent(this);
 				arg.toDatabase(id, RationaleElementType.ALTERNATIVE);
+				isCategoryMatched = true;
 			}
 		}
+		
+
 
 		//Add arguments/claims
 		if (!isCategoryMatched){
@@ -1610,7 +1612,7 @@ public class Alternative extends RationaleElement implements Serializable {
 			while(RationaleDBUtil.isExist(claimName, "Claims")){
 				claimName = claimName + "~";
 			}
-			c.setDirection(Direction.NOT);
+			c.setDirection(Direction.IS);
 			arg.setType(ArgType.DENIES);
 			c.setName(claimName);
 			c.setImportance(Importance.DEFAULT);
@@ -1639,7 +1641,7 @@ public class Alternative extends RationaleElement implements Serializable {
 				String claimName = "Tactic Impact";
 				c.fromDatabase(claimName);
 				if (c.getID() < 0){
-					c.setDirection(Direction.NOT);
+					c.setDirection(Direction.IS);
 					c.setName(claimName);
 					c.setImportance(Importance.DEFAULT);
 					OntEntry claimOnt = new OntEntry();
@@ -1666,7 +1668,7 @@ public class Alternative extends RationaleElement implements Serializable {
 				arg.setName(claimName);
 				arg.setPlausibility(Plausibility.HIGH);
 				arg.setDescription("");
-				arg.setAmount(5);
+				arg.setAmount(score);
 				arg.setImportance(Importance.DEFAULT);
 				arg.setParent(this);	
 				arg.toDatabase(id, RationaleElementType.ALTERNATIVE);
