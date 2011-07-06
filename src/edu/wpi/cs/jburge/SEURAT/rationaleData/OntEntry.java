@@ -151,6 +151,7 @@ public class OntEntry extends RationaleElement implements Serializable
 	
 	public Importance getImportance()
 	{
+		if (importance.equals(Importance.DEFAULT)) return Importance.MODERATE;
 		return importance;
 	}
 	

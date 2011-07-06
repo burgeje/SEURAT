@@ -1612,7 +1612,7 @@ public class Alternative extends RationaleElement implements Serializable {
 			while(RationaleDBUtil.isExist(claimName, "Claims")){
 				claimName = claimName + "~";
 			}
-			c.setDirection(Direction.IS);
+			c.setDirection(Direction.NOT);
 			arg.setType(ArgType.DENIES);
 			c.setName(claimName);
 			c.setImportance(Importance.DEFAULT);
@@ -1638,10 +1638,10 @@ public class Alternative extends RationaleElement implements Serializable {
 			if (score > 0){
 				Argument arg = new Argument();
 				Claim c = new Claim();
-				String claimName = "Tactic Impact";
+				String claimName = "Tactic Compatible";
 				c.fromDatabase(claimName);
 				if (c.getID() < 0){
-					c.setDirection(Direction.IS);
+					c.setDirection(Direction.NOT);
 					c.setName(claimName);
 					c.setImportance(Importance.DEFAULT);
 					OntEntry claimOnt = new OntEntry();
@@ -1652,7 +1652,7 @@ public class Alternative extends RationaleElement implements Serializable {
 						ontParent.fromDatabase(1);
 						claimOnt.setName(TacticPattern.CHANGEONTNAME);
 						claimOnt.setEnabled(true);
-						claimOnt.setImportance(Importance.DEFAULT);
+						claimOnt.setImportance(Importance.LOW);
 						claimOnt.toDatabase(ontParent.getID());
 					}
 					c.setOntology(claimOnt);
@@ -1676,7 +1676,7 @@ public class Alternative extends RationaleElement implements Serializable {
 		}
 		//Evaluate
 		fromDatabase(name);
-		evaluate();
+		evaluate(true);
 		fromDatabase(name);
 		return true;
 	}
