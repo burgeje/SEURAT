@@ -941,13 +941,13 @@ public class Pattern extends RationaleElement {
 		switch (type){
 		case UMLRelation.AGGREGATION:
 			end1Aggregation = AggregationKind.COMPOSITE_LITERAL;
-			end1IsNavigable = false;
+			end1IsNavigable = true;
 			end2IsNavigable = false;
 			end2Aggregation = AggregationKind.NONE_LITERAL;
 			break;
 		case UMLRelation.DELEGATION:
-			end1IsNavigable = false;
-			end2IsNavigable = true;
+			end1IsNavigable = true;
+			end2IsNavigable = false;
 			end1Aggregation = AggregationKind.NONE_LITERAL;
 			end2Aggregation = AggregationKind.NONE_LITERAL;
 			break;
