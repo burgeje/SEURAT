@@ -1708,11 +1708,27 @@ public final class RationaleDB implements Serializable {
 			stmt.execute(query);
 			query = "DELETE FROM PATTERNS where id = " + patternID;
 			stmt.execute(query);
+			
+			//Delete pattern participants
+			deletePatternParticipants(patternName);
 
 		} catch (SQLException e){
 			e.printStackTrace();
 		}
 
+	}
+	
+	/**
+	 * Given the name of the pattern, delete all of its pattern participants.
+	 * Used when deleting pattern or refreshing data in participant editor.
+	 * @param patternName
+	 */
+	public void deletePatternParticipants(String patternName){
+		Vector<PatternParticipant> participants = getParticipantsFromPatternName(patternName);
+		Iterator<PatternParticipant> participantsI = participants.iterator();
+		while (participantsI.hasNext()){
+			participantsI.next().deleteFromDB();
+		}
 	}
 	
 	/**
@@ -5373,6 +5389,43 @@ public final class RationaleDB implements Serializable {
 			e.printStackTrace();
 		}
 		return 1;
+	}
+	
+	/**
+	 * Given pattern name, return a vector of pattern participant
+	 * @param patternName the name of the pattern
+	 * @return empty vector if the no such pattern exist. Otherwise return as specified.
+	 */
+	public Vector<PatternParticipant> getParticipantsFromPatternName(String patternName){
+		Pattern pattern = new Pattern();
+		pattern.fromDatabase(patternName);
+		if (pattern.getID() >= 0)
+			return getParticipantsFromPatternID(pattern.getID());
+		return new Vector<PatternParticipant>();
+	}
+	
+	/**
+	 * Given pattern's ID, return a vector of pattern participant
+	 * @param patternID
+	 * @return a vector of pattern participant.
+	 */
+	public Vector<PatternParticipant> getParticipantsFromPatternID(int patternID){
+		Vector<PatternParticipant> toReturn = new Vector<PatternParticipant>();
+		Statement stmt = null;
+		ResultSet rs = null;
+		String query = "SELECT id FROM PATTERNPARTICIPANTS WHERE pattern_id = " + patternID;
+		try{
+			stmt = conn.createStatement();
+			rs = stmt.executeQuery(query);
+			while (rs.next()){
+				PatternParticipant pp = new PatternParticipant();
+				pp.fromDatabase(rs.getInt("id"));
+				toReturn.add(pp);
+			}
+		} catch (SQLException e){
+			e.printStackTrace();
+		}
+		return toReturn;
 	}
 
 }

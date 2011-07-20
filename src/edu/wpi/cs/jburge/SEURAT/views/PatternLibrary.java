@@ -4,9 +4,8 @@ import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.Vector;
 
-import instrumentation.DataLog;
-
 import org.eclipse.core.resources.ResourcesPlugin;
+import org.eclipse.emf.common.util.URI;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
@@ -28,6 +27,12 @@ import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MessageBox;
 import org.eclipse.swt.widgets.Shell;
+import org.eclipse.swt.widgets.Dialog;
+import org.eclipse.swt.widgets.Listener;
+import org.eclipse.swt.widgets.Event;
+import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Text;
+import org.eclipse.swt.widgets.Button;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.ISelectionListener;
 import org.eclipse.ui.IWorkbenchPart;
@@ -54,6 +59,7 @@ import edu.wpi.cs.jburge.SEURAT.rationaleData.Designer;
 import edu.wpi.cs.jburge.SEURAT.rationaleData.OntEntry;
 import edu.wpi.cs.jburge.SEURAT.rationaleData.Pattern;
 import edu.wpi.cs.jburge.SEURAT.rationaleData.PatternDecision;
+import edu.wpi.cs.jburge.SEURAT.rationaleData.PatternParticipant;
 import edu.wpi.cs.jburge.SEURAT.rationaleData.Question;
 import edu.wpi.cs.jburge.SEURAT.rationaleData.RationaleDB;
 import edu.wpi.cs.jburge.SEURAT.rationaleData.RationaleDBUtil;
@@ -81,6 +87,8 @@ IPropertyChangeListener {
 	private Action addPosiOntEntry;
 	private Action addNegaOntEntry;
 	private Action addPatternEditor;
+	private Action editPatternParticipants;
+	private Action exportPatternParticipants;
 	private Action showPatternEditor;
 	private Action addPatternDecision;
 	private Action addCandidatePattern;
@@ -363,6 +371,10 @@ IPropertyChangeListener {
 		addPatternEditor = new OpenRationaleEditorAction(PatternEditor.class, this, true, RationaleElementType.PATTERN);
 		addPatternEditor.setText("Add pattern");
 		addPatternEditor.setToolTipText("Add a new pattern");
+		
+		editPatternParticipants = new OpenRationaleEditorAction(PatternParticipantEditor.class, this, false, RationaleElementType.PATTERN);
+		editPatternParticipants.setText("Edit Pattern Participants");
+		editPatternParticipants.setToolTipText("Edit participants of the selected pattern");
 
 		//delete element in P.L.
 		deleteElement = new Action() {
@@ -424,6 +436,7 @@ IPropertyChangeListener {
 						refreshBranch(parent);
 					}
 				}
+				
 			}
 		};
 		deletePattern.setText("Delete Pattern and ALL elements in the pattern.");
@@ -584,8 +597,128 @@ IPropertyChangeListener {
 		
 		exportXML.setText("Export XML");
 		exportXML.setToolTipText("Exports the database to an XML file and store it to a database");
+		
+		exportPatternParticipants = new Action(){
+			public void run(){
+				Shell shell = new Shell();
+				FileDialog path = new FileDialog(shell, SWT.SAVE);
+				String[] ext = {"*.xmi", "*.uml"};
+				String[] name = {"XMI (*.xmi)", "UML XMI (*.uml)"};
+				path.setFilterExtensions(ext);
+				path.setFilterNames(name);
+				path.setFileName(RationaleDB.getOntName());
+				shell.pack();
+				
+				String filePath = path.open();
+				if (filePath == null) return; //Return if user cancelled.
+				
+				ISelection selection = viewer.getSelection();
+				Object obj = ((IStructuredSelection)selection).getFirstElement();
+
+				if (obj instanceof TreeParent){
+					TreeParent ourElement = (TreeParent) obj;
+					if (ourElement.getType() == RationaleElementType.PATTERN){
+						Pattern pat = new Pattern();
+						pat.fromDatabase(ourElement.getName());
+						
+						URI uri = URI.createFileURI(filePath);
+						
+						RationaleDB db = RationaleDB.getHandle();
+						Vector<PatternParticipant> parts = 
+								db.getParticipantsFromPatternName(ourElement.getName());
+						Vector<Integer> numInstances = new Vector<Integer>();
+						for (int i = 0; i < parts.size(); i++){
+							numInstances.add(new NumberInputDialog(shell, "Participant Instances", 
+									"# of Instances of " + parts.get(i).getName() + ": ").open());
+						}
+						pat.newXMIClass(uri, numInstances);
+					}
+				}
+				
+			}
+		};
+		exportPatternParticipants.setText("Export to XMI (UML)");
+		exportPatternParticipants.setToolTipText("This exports the pattern participants to a diagram.");
 
 	}
+	
+
+	private class NumberInputDialog extends Dialog {
+		  Integer value;
+		  String title, prompt;
+
+		  /**
+		   * @param parent
+		   */
+		  public NumberInputDialog(Shell parent, String title, String prompt) {
+		    super(parent);
+		    this.title = title;
+		    this.prompt = prompt;
+		  }
+
+		  /**
+		   * Makes the dialog visible.
+		   * 
+		   * @return
+		   */
+		  public Integer open() {
+		    Shell parent = getParent();
+		    final Shell shell =
+		      new Shell(parent, SWT.TITLE | SWT.BORDER | SWT.APPLICATION_MODAL);
+		    shell.setText(title);
+
+		    shell.setLayout(new org.eclipse.swt.layout.GridLayout(2, true));
+
+		    Label label = new Label(shell, SWT.NULL);
+		    label.setText(prompt);
+
+		    final Text text = new Text(shell, SWT.SINGLE | SWT.BORDER);
+
+		    final Button buttonOK = new Button(shell, SWT.PUSH);
+		    buttonOK.setText("Ok");
+		    buttonOK.setLayoutData(new org.eclipse.swt.layout.GridData(org.eclipse.swt.layout.GridData.HORIZONTAL_ALIGN_END));
+
+		    text.addListener(SWT.Modify, new Listener() {
+		      public void handleEvent(Event event) {
+		        try {
+		          value = new Integer(text.getText());
+		          if (value >= 0)
+		        	  buttonOK.setEnabled(true);
+		          else buttonOK.setEnabled(false);
+		        } catch (Exception e) {
+		          buttonOK.setEnabled(false);
+		        }
+		      }
+		    });
+
+		    buttonOK.addListener(SWT.Selection, new Listener() {
+		      public void handleEvent(Event event) {
+		        shell.dispose();
+		      }
+		    });
+
+		    shell.addListener(SWT.Traverse, new Listener() {
+		      public void handleEvent(Event event) {
+		        if(event.detail == SWT.TRAVERSE_ESCAPE)
+		          event.doit = false;
+		      }
+		    });
+
+		    text.setText("");
+		    shell.pack();
+		    shell.open();
+
+		    Display display = parent.getDisplay();
+		    while (!shell.isDisposed()) {
+		      if (!display.readAndDispatch())
+		        display.sleep();
+		    }
+
+		    return value;
+		  }
+	}
+	
+
 	
 	/**
 	 * This method is used to pop-up a message to inform the user that an action has been completed.
@@ -632,6 +765,8 @@ IPropertyChangeListener {
 					manager.add(addPosiOntEntry);
 					manager.add(addNegaOntEntry);
 					manager.add(addPatternDecision);
+					manager.add(editPatternParticipants);
+					manager.add(exportPatternParticipants);
 					//manager.add(new Separator());
 					//manager.add(search);
 			} else if (ourElement.getType() == RationaleElementType.RATIONALE){
@@ -675,6 +810,8 @@ IPropertyChangeListener {
 		}
 		//System.out.println("Refresh done!");
 	}
+	
+
 
 	private void editElement (TreeParent obj, RationaleElement rElement, Display theDisplay)
 	{

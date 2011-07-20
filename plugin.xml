@@ -333,6 +333,14 @@ isGoToNextNavigationTargetKey="ismyAppRecordGoToNextNavigationTarget"
                 id="SEURAT.editors.TacticPatternEditor"
                 name="SEURAT tactic-pattern editor">
           </editor>
+          <editor
+                class="SEURAT.editors.PatternParticipantEditor"
+                default="true"
+                extensions="seurat_patternparticipant_editor"
+                icon="/icons/PatternLib.GIF"
+                id="SEURAT.editors.PatternParticipantEditor"
+                name="SEURAT pattern participant editor">
+          </editor>
        </extension>	
        
 	<extension point="org.eclipse.help.toc">

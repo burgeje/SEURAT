@@ -1126,7 +1126,11 @@ public class RationaleDBCreate
 				CREATE_PATTERN_PROBLEMCATEGORY_RELATIONSHIP(),
 				CREATE_TACTICS(),
 				CREATE_TACTIC_PATTERN(),
-				CREATE_TACTIC_NEGONTENTRIES()
+				CREATE_TACTIC_NEGONTENTRIES(),
+				CREATE_PATTERNPARTICIPANTS(),
+				CREATE_PARTPART(),
+				CREATE_OPERATIONS(),
+				CREATE_OPERATION_PARTICIPANT()
 		};
 	};
 
@@ -1752,6 +1756,37 @@ public class RationaleDBCreate
 		return beginTable("tactic_negontentries") + tablePart("ID INTEGER PRIMARY KEY")
 		+ tablePart("TACTIC_ID INTEGER NOT NULL REFERENCES TACTICS(ID)")
 		+ endTable("ONT_ID INTEGER NOT NULL REFERENCES ONTENTRIES(ID)");
+	}
+	
+	public static final String CREATE_PATTERNPARTICIPANTS(){
+		return beginTable("patternparticipants") + tablePart("ID INTEGER PRIMARY KEY")
+				+ tablePart("pattern_id INTEGER REFERENCES PATTERNS(id) NOT NULL")
+				+ tablePart("name VARCHAR(255) NOT NULL")
+				+ tablePart("minParticipants INTEGER NOT NULL")
+				+ tablePart("maxParticipants INTEGER NOT NULL") 
+				+ endTable("UNIQUE(pattern_id, name)");
+	}
+	
+	public static final String CREATE_PARTPART(){
+		return beginTable("part_part") + tablePart("ID INTEGER PRIMARY KEY")
+				+ tablePart("part_id INTEGER REFERENCES PATTERNPARTICIPANTS(id) NOT NULL")
+				+ tablePart("ref_id INTEGER REFERENCES PATTERNPARTICIPANTS(id) NOT NULL")
+				+ tablePart("type INTEGER NOT NULL CHECK(type>=0)")
+				+ endTable("UNIQUE(part_id, ref_id)");
+	}
+	
+	public static final String CREATE_OPERATIONS(){
+		return beginTable("operations") + tablePart("ID INTEGER PRIMARY KEY")
+				+ tablePart("part_id INTEGER REFERENCES PATTERNPARTICIPANTS(id) NOT NULL")
+				+ tablePart("name VARCHAR(255) NOT NULL") 
+				+ endTable("UNIQUE(part_id, name)");
+	}
+	
+	public static final String CREATE_OPERATION_PARTICIPANT(){
+		return beginTable("operation_participant") + tablePart("ID INTEGER PRIMARY KEY")
+				+ tablePart("oper_id INTEGER REFERENCES OPERATIONS(id) NOT NULL")
+				+ tablePart("part_id INTEGER REFERENCES PATTERNPARTICIPANTS(id)")
+				+ endTable("type INTEGER");
 	}
 	
 	public static String[] getPatternQueries(){
