@@ -223,6 +223,21 @@ public class RationaleDBUtil
 			patternLib.appendChild(curE);
 		}
 		
+		//Finally, export pattern participants and operations...
+		Iterator<PatternParticipant> pi = db.getParticipantsFromPatternID(-1).iterator();
+		while (pi.hasNext()){
+			PatternParticipant cur = pi.next();
+			Element curE = cur.toXML(ratDoc);
+			patternLib.appendChild(curE);
+		}
+		
+		Iterator<ParticipantOperation> oi = db.getAllParticipantOperations().iterator();
+		while (oi.hasNext()){
+			ParticipantOperation cur = oi.next();
+			Element curE = cur.toXML(ratDoc);
+			patternLib.appendChild(curE);
+		}
+		
 		return patternLib;
 	}
 	
@@ -535,6 +550,8 @@ public class RationaleDBUtil
 		Vector<edu.wpi.cs.jburge.SEURAT.rationaleData.Pattern> patterns = 
 			new Vector<edu.wpi.cs.jburge.SEURAT.rationaleData.Pattern>();
 		Vector<PatternDecision> patternDecisions = new Vector<PatternDecision>();
+		Vector<PatternParticipant> pp = new Vector<PatternParticipant>();
+		Vector<ParticipantOperation> po = new Vector<ParticipantOperation>();
 		
 		for (int i = 0; i < libraryNodes.getLength(); i++){
 			Node libItem = libraryNodes.item(i);
@@ -564,7 +581,16 @@ public class RationaleDBUtil
 				pd.fromXML((Element) libItem);
 				patternDecisions.add(pd);
 			}
-			
+			else if (libName.equals("DR:patternparticipant")){
+				PatternParticipant p = new PatternParticipant();
+				p.fromXML((Element) libItem);
+				pp.add(p);
+			}
+			else if (libName.equals("DR:participantoperation")){
+				ParticipantOperation o = new ParticipantOperation();
+				o.fromXML((Element) libItem);
+				po.add(o);
+			}
 
 		}
 		System.out.println("Associating pattern to child decisions...");
@@ -577,6 +603,15 @@ public class RationaleDBUtil
 				db.assocPatternAndDecisionFromXML(pattern.getID(), pdID);
 			}
 		}
+		
+		//Storing participants and participants' operations to database...
+		for (int i = 0; i < pp.size(); i++){
+			pp.get(i).toDatabase();
+		}
+		for (int i = 0; i < po.size(); i++){
+			po.get(i).toDatabase();
+		}
+		
 		System.out.println("Import of pattern library was successful.");
 		
 		//At here, the database satisfies invariant and has been imported. But the elements are not correct.

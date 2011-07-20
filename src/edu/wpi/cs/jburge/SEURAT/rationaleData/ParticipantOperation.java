@@ -5,6 +5,10 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.HashMap;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.Text;
 
 public class ParticipantOperation extends RationaleElement{
 
@@ -19,7 +23,6 @@ public class ParticipantOperation extends RationaleElement{
 	private int partAssoc;
 	private int partID;
 	private int assocType;
-	private boolean fromXML;
 
 	public int getAssociatedParticipant() {
 		return partAssoc;
@@ -42,7 +45,6 @@ public class ParticipantOperation extends RationaleElement{
 		partAssoc = -1;
 		partID = -1;
 		assocType = -1;
-		fromXML = false;
 	}
 
 	public void fromDatabase(int opID){
@@ -185,11 +187,28 @@ public class ParticipantOperation extends RationaleElement{
 		return false;
 	}
 
-	public void fromXML(){
-		//TODO
+	public void fromXML(Element opE){
+		fromXML = true;
+		
+		String rid = opE.getAttribute("rid");
+		id = new Integer(rid.substring(2));
+		
+		name = opE.getAttribute("name");
+		partID = new Integer(opE.getAttribute("partOf").substring(2));
+		partAssoc = new Integer(opE.getAttribute("referencedID").substring(2));
+		assocType = new Integer(opE.getAttribute("referencedType"));
+		
+		//Do not save to the database yet... Do this later in RationaleDBUtil to avoid
+		//integrity constraint violation.
 	}
 
-	public void toXML(){
-		//TODO
+	public Element toXML(Document ratDoc){
+		Element opE = ratDoc.createElement("DR:participantoperation");
+		opE.setAttribute("rid", "po" + id);
+		opE.setAttribute("name", name);
+		opE.setAttribute("partOf", "pp" + partID);
+		opE.setAttribute("referencedID", "pp" + partAssoc);
+		opE.setAttribute("referencedType", "" + assocType);
+		return opE;
 	}
 }

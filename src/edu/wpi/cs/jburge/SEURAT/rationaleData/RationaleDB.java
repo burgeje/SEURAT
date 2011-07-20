@@ -5406,14 +5406,15 @@ public final class RationaleDB implements Serializable {
 	
 	/**
 	 * Given pattern's ID, return a vector of pattern participant
-	 * @param patternID
+	 * @param patternID -1 if to get all participants, otherwise provide a valid patternID.
 	 * @return a vector of pattern participant.
 	 */
 	public Vector<PatternParticipant> getParticipantsFromPatternID(int patternID){
 		Vector<PatternParticipant> toReturn = new Vector<PatternParticipant>();
 		Statement stmt = null;
 		ResultSet rs = null;
-		String query = "SELECT id FROM PATTERNPARTICIPANTS WHERE pattern_id = " + patternID;
+		String query = "SELECT id FROM PATTERNPARTICIPANTS";
+		if (patternID >= 0) query += " WHERE pattern_id = " + patternID;
 		try{
 			stmt = conn.createStatement();
 			rs = stmt.executeQuery(query);
@@ -5423,6 +5424,24 @@ public final class RationaleDB implements Serializable {
 				toReturn.add(pp);
 			}
 		} catch (SQLException e){
+			e.printStackTrace();
+		}
+		return toReturn;
+	}
+	
+	public Vector<ParticipantOperation> getAllParticipantOperations(){
+		Vector<ParticipantOperation> toReturn = new Vector<ParticipantOperation>();
+		try {
+			Statement stmt = conn.createStatement();
+			String query = "SELECT id FROM OPERATIONS";
+			ResultSet rs = stmt.executeQuery(query);
+			while (rs.next()){
+				ParticipantOperation op = new ParticipantOperation();
+				op.fromDatabase(rs.getInt("id"));
+				toReturn.add(op);
+			}
+			
+		} catch (SQLException e) {
 			e.printStackTrace();
 		}
 		return toReturn;

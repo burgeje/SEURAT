@@ -782,11 +782,6 @@ public class Pattern extends RationaleElement {
 		return found;
 	}
 
-	public void exportDiagram(int diagramType, URI path){
-		//TODO
-
-	}
-
 	/**
 	 * This is used when reading from an existing XMI file. This allows the user to choose
 	 * which package to add the diagram to.
