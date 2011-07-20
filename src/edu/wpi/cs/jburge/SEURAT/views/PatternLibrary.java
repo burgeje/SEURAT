@@ -81,7 +81,6 @@ IPropertyChangeListener {
 
 	private static PatternLibrary pl;
 
-	private Action search;
 	private Action editElement;
 	private Action deleteElement;
 	private Action addPosiOntEntry;
@@ -89,6 +88,7 @@ IPropertyChangeListener {
 	private Action addPatternEditor;
 	private Action editPatternParticipants;
 	private Action exportPatternParticipants;
+	private Action exportExistingUML;
 	private Action showPatternEditor;
 	private Action addPatternDecision;
 	private Action addCandidatePattern;
@@ -639,6 +639,50 @@ IPropertyChangeListener {
 		};
 		exportPatternParticipants.setText("Export to XMI (UML)");
 		exportPatternParticipants.setToolTipText("This exports the pattern participants to a diagram.");
+		
+		//Definitely needs a wizard!
+		exportExistingUML = new Action(){
+			public void run(){
+				Shell shell = new Shell();
+				FileDialog path = new FileDialog(shell, SWT.OPEN);
+				String[] ext = {"*.xmi", "*.uml"};
+				String[] name = {"XMI (*.xmi)", "UML XMI (*.uml)"};
+				path.setFilterExtensions(ext);
+				path.setFilterNames(name);
+				path.setFileName(RationaleDB.getOntName());
+				path.setOverwrite(false); //Do not prompt for overwrite.
+				shell.pack();
+				
+				String filePath = path.open();
+				if (filePath == null) return; //Return if user cancelled.
+				
+				ISelection selection = viewer.getSelection();
+				Object obj = ((IStructuredSelection)selection).getFirstElement();
+
+				if (obj instanceof TreeParent){
+					TreeParent ourElement = (TreeParent) obj;
+					if (ourElement.getType() == RationaleElementType.PATTERN){
+						Pattern pat = new Pattern();
+						pat.fromDatabase(ourElement.getName());
+						
+						URI uri = URI.createFileURI(filePath);
+						
+						RationaleDB db = RationaleDB.getHandle();
+						Vector<PatternParticipant> parts = 
+								db.getParticipantsFromPatternName(ourElement.getName());
+						Vector<Integer> numInstances = new Vector<Integer>();
+						for (int i = 0; i < parts.size(); i++){
+							numInstances.add(new NumberInputDialog(shell, "Participant Instances", 
+									"# of Instances of " + parts.get(i).getName() + ": ").open());
+						}
+						pat.addXMIClassToModel(uri, numInstances);
+					}
+				}
+				
+			}
+		};
+		exportExistingUML.setText("Export to an existing XMI (UML) file");
+		exportExistingUML.setToolTipText("This exports the pattern participants to an existing UML file");
 
 	}
 	
@@ -767,6 +811,7 @@ IPropertyChangeListener {
 					manager.add(addPatternDecision);
 					manager.add(editPatternParticipants);
 					manager.add(exportPatternParticipants);
+					manager.add(exportExistingUML);
 					//manager.add(new Separator());
 					//manager.add(search);
 			} else if (ourElement.getType() == RationaleElementType.RATIONALE){
@@ -1151,19 +1196,19 @@ IPropertyChangeListener {
 
 
 	public void propertyChange(PropertyChangeEvent event) {
-		// TODO Auto-generated method stub
+		
 
 	}
 
 	@Override
 	public void updateRationaleStatus(RationaleUpdateEvent e) {
-		// TODO Auto-generated method stub
+		// 
 
 	}
 
 	@Override
 	public void addNewElement(RationaleUpdateEvent e) {
-		// TODO Auto-generated method stub
+		
 
 	}
 

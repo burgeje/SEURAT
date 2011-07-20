@@ -815,13 +815,24 @@ public class Pattern extends RationaleElement {
 	 * INVARIANT: numInstances.size() == db.getParticipants...().size()
 	 * @return True when successful. False when unsuccesful.
 	 */
-	public boolean addXMIClassToPackage(int packageIndex, org.eclipse.emf.common.util.URI path, Vector<Integer> numInstances){
+	public boolean addXMIClassToModel(org.eclipse.emf.common.util.URI path, Vector<Integer> numInstances){
 		Resource resource = new ResourceSetImpl().getResource(path, true);
 		EList<EObject> contents = resource.getContents();
-		if (!(contents.get(packageIndex) instanceof Package)){
-			throw new IllegalArgumentException("Package Index Invalid!");
+		//Find the model...
+		Model model = null;
+		for (int i = 0; i < contents.size(); i++){
+			if (contents.get(i) instanceof Model){
+				model = (Model) contents.get(i);
+			}
 		}
-		Package package_ = (Package) contents.get(packageIndex);
+		
+		//If model is not found, fails the save.
+		if (model == null) {
+			System.err.println("Cannot Obtain Model Data");
+			return false;
+		}
+		
+		Package package_ = model.createNestedPackage(name);
 		addXMIClass(package_, numInstances);
 
 		//Save to disk
@@ -831,6 +842,7 @@ public class Pattern extends RationaleElement {
 		} catch (IOException e){
 			e.printStackTrace();
 		}
+		//Error saving to disk
 		return false;
 	}
 
