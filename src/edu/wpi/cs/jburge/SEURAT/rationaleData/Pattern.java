@@ -7,25 +7,34 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Vector;
+import java.util.regex.Matcher;
 
 import org.eclipse.emf.common.util.EList;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.ecore.resource.impl.ResourceSetImpl;
+import org.eclipse.emf.ecore.util.EcoreUtil;
+import org.eclipse.emf.ecore.xmi.XMIResource;
+import org.eclipse.emf.ecore.xmi.XMLResource;
+import org.eclipse.emf.ecore.xmi.impl.XMIResourceFactoryImpl;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.uml2.uml.AggregationKind;
 import org.eclipse.uml2.uml.LiteralUnlimitedNatural;
 import org.eclipse.uml2.uml.Model;
+import org.eclipse.uml2.uml.Property;
 import org.eclipse.uml2.uml.Type;
 import org.eclipse.uml2.uml.UMLFactory;
 import org.eclipse.uml2.uml.Package;
 import org.eclipse.uml2.uml.Class;
 import org.eclipse.uml2.uml.Generalization;
 import org.eclipse.uml2.uml.Operation;
+import org.eclipse.uml2.uml.UMLPackage;
 import org.eclipse.uml2.uml.resource.UMLResource;
 import org.eclipse.uml2.uml.resource.XMI2UMLResource;
 import org.w3c.dom.Document;
@@ -98,6 +107,11 @@ public class Pattern extends RationaleElement {
 	 */
 	private Vector<Integer> subDecID;
 
+	/**
+	 * This is used when associating with UML.
+	 */
+	private Vector<PatternElement> patternElements;
+
 	private RationaleElementUpdateEventGenerator<Pattern> m_eventGenerator = 
 			new RationaleElementUpdateEventGenerator<Pattern>(this);
 
@@ -118,6 +132,7 @@ public class Pattern extends RationaleElement {
 		posOntID = new Vector<Integer>();
 		negOntID = new Vector<Integer>();
 		subDecID = new Vector<Integer>();
+		patternElements = null;
 	} 
 
 	public Iterator<Integer> iteratorPosOntID(){
@@ -267,6 +282,10 @@ public class Pattern extends RationaleElement {
 
 	public void setUrl(String url) {
 		this.url = url;
+	}
+
+	public Vector<PatternElement> getPatternElements(){
+		return patternElements;
 	}
 
 	/**
@@ -810,35 +829,30 @@ public class Pattern extends RationaleElement {
 	 * INVARIANT: numInstances.size() == db.getParticipants...().size()
 	 * @return True when successful. False when unsuccesful.
 	 */
-	public boolean addXMIClassToModel(org.eclipse.emf.common.util.URI path, Vector<Integer> numInstances){
-		Resource resource = new ResourceSetImpl().getResource(path, true);
-		EList<EObject> contents = resource.getContents();
+	public String addXMIClassToModel(org.eclipse.emf.common.util.URI path, Vector<Integer> numInstances){
+		XMIResource resource = (XMIResource) new ResourceSetImpl().getResource(path, true);
 		//Find the model...
-		Model model = null;
-		for (int i = 0; i < contents.size(); i++){
-			if (contents.get(i) instanceof Model){
-				model = (Model) contents.get(i);
-			}
-		}
-		
+		Model model = (Model) EcoreUtil.getObjectByType(resource.getContents(), UMLPackage.Literals.MODEL);
+
 		//If model is not found, fails the save.
 		if (model == null) {
 			System.err.println("Cannot Obtain Model Data");
-			return false;
+			return null;
 		}
-		
+
 		Package package_ = model.createNestedPackage(name);
-		addXMIClass(package_, numInstances);
+		addXMIClass(package_, numInstances, resource);
 
 		//Save to disk
 		try{
 			resource.save(null);
-			return true;
+			String packageID = resource.getID(package_);
+			return packageID;
 		} catch (IOException e){
 			e.printStackTrace();
 		}
 		//Error saving to disk
-		return false;
+		return null;
 	}
 
 	/**
@@ -851,24 +865,26 @@ public class Pattern extends RationaleElement {
 	 * INVARIANT: numInstances.size() == db.getParticipants...().size()
 	 * @return True when successful. False when unsuccessful.
 	 */
-	public boolean newXMIClass(org.eclipse.emf.common.util.URI path, Vector<Integer> numInstances){
+	public String newXMIClass(org.eclipse.emf.common.util.URI path, Vector<Integer> numInstances){
+		XMIResourceFactoryImpl resourceFactoryImpl = new XMIResourceFactoryImpl();
+		XMIResource resource = (XMIResource) resourceFactoryImpl.createResource(path);
+
 		Model model = UMLFactory.eINSTANCE.createModel();
 		model.setName(name);
 
 		Package package_ = model.createNestedPackage(name);
-		addXMIClass(package_, numInstances);
-
-		//Save to disk
-		Resource resource = new ResourceSetImpl().createResource(path.appendFileExtension(UMLResource.FILE_EXTENSION));
+		addXMIClass(package_, numInstances, resource);
 		resource.getContents().add(model);
 
+		//Save to disk
 		try{
 			resource.save(null);
-			return true;
+			String packageID = resource.getID(package_);
+			return packageID;
 		} catch (IOException e){
 			e.printStackTrace();
 		}
-		return false;
+		return null;
 	}
 
 	/**
@@ -876,7 +892,10 @@ public class Pattern extends RationaleElement {
 	 * @param package_
 	 * @param numInstances
 	 */
-	private void addXMIClass(Package package_, Vector<Integer> numInstances){
+	private void addXMIClass(Package package_, Vector<Integer> numInstances, XMIResource resource){
+		patternElements = new Vector<PatternElement>();
+		resource.setID(package_, EcoreUtil.generateUUID());
+
 		//Create classes
 		RationaleDB db = RationaleDB.getHandle();
 		Vector<PatternParticipant> parts = db.getParticipantsFromPatternID(id);
@@ -886,7 +905,10 @@ public class Pattern extends RationaleElement {
 		for (int i = 0; i < parts.size(); i++){
 			classes[i] = new org.eclipse.uml2.uml.Class[numInstances.get(i)];
 			for (int j = 0; j < classes[i].length; j++){
+				//Add class to package.
 				classes[i][j] = package_.createOwnedClass(parts.get(i).getName() + (j + 1), false);
+				resource.setID(classes[i][j], EcoreUtil.generateUUID());
+				patternElements.add(new PatternElement(parts.get(i).getID(), -1, -1, resource.getID(classes[i][j])));
 			}
 		}
 
@@ -900,9 +922,15 @@ public class Pattern extends RationaleElement {
 					for (int k = 0; k < classes[i].length; k++){
 						for (int l = 0; l < classes[j].length; l++){
 							if (type == UMLRelation.GENERALIZATION){
-								classes[i][k].createGeneralization(classes[j][l]);
+								String genID = EcoreUtil.generateUUID();
+								resource.setID(classes[i][k].createGeneralization(classes[j][l]), genID);
+								patternElements.add(new PatternElement(parts.get(i).getID(), parts.get(j).getID(), UMLRelation.GENERALIZATION, genID));
+
 							} else {
-								createXMIAssociation(type, classes[i][k], classes[j][l]);
+								String assocID = EcoreUtil.generateUUID();
+								resource.setID(createXMIAssociation(type, classes[i][k], classes[j][l]), 
+										assocID);
+								patternElements.add(new PatternElement(parts.get(i).getID(), parts.get(j).getID(), type, assocID));
 							}
 						}
 					}
@@ -928,6 +956,22 @@ public class Pattern extends RationaleElement {
 				}
 			}
 		}
+
+		//Sort the vector so that the classes will be on the front of the vector.
+		Collections.sort(patternElements, new Comparator<PatternElement>(){
+			@Override
+			public int compare(PatternElement o1, PatternElement o2) {
+				if (o1.getPart2ID() < o2.getPart2ID()){
+					return -1;
+				}
+				if (o1.getPart2ID() == o2.getPart2ID()){
+					return 0;
+				}
+				return 1;
+			}
+
+		});
+
 	}
 
 

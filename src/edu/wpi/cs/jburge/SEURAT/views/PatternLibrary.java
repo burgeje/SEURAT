@@ -42,6 +42,7 @@ import org.eclipse.ui.part.ViewPart;
 import SEURAT.editors.*;
 
 import edu.wpi.cs.jburge.SEURAT.SEURATPlugin;
+import edu.wpi.cs.jburge.SEURAT.actions.AssociateUMLAction;
 import edu.wpi.cs.jburge.SEURAT.editors.SelectCandidatePatterns;
 import edu.wpi.cs.jburge.SEURAT.editors.SelectOntEntry;
 import edu.wpi.cs.jburge.SEURAT.inference.UpdateManager;
@@ -598,89 +599,12 @@ IPropertyChangeListener {
 		exportXML.setText("Export XML");
 		exportXML.setToolTipText("Exports the database to an XML file and store it to a database");
 		
-		exportPatternParticipants = new Action(){
-			public void run(){
-				Shell shell = new Shell();
-				FileDialog path = new FileDialog(shell, SWT.SAVE);
-				String[] ext = {"*.xmi", "*.uml"};
-				String[] name = {"XMI (*.xmi)", "UML XMI (*.uml)"};
-				path.setFilterExtensions(ext);
-				path.setFilterNames(name);
-				path.setFileName(RationaleDB.getOntName());
-				shell.pack();
-				
-				String filePath = path.open();
-				if (filePath == null) return; //Return if user cancelled.
-				
-				ISelection selection = viewer.getSelection();
-				Object obj = ((IStructuredSelection)selection).getFirstElement();
-
-				if (obj instanceof TreeParent){
-					TreeParent ourElement = (TreeParent) obj;
-					if (ourElement.getType() == RationaleElementType.PATTERN){
-						Pattern pat = new Pattern();
-						pat.fromDatabase(ourElement.getName());
-						
-						URI uri = URI.createFileURI(filePath);
-						
-						RationaleDB db = RationaleDB.getHandle();
-						Vector<PatternParticipant> parts = 
-								db.getParticipantsFromPatternName(ourElement.getName());
-						Vector<Integer> numInstances = new Vector<Integer>();
-						for (int i = 0; i < parts.size(); i++){
-							numInstances.add(new NumberInputDialog(shell, "Participant Instances", 
-									"# of Instances of " + parts.get(i).getName() + ": ").open());
-						}
-						pat.newXMIClass(uri, numInstances);
-					}
-				}
-				
-			}
-		};
+		exportPatternParticipants = new AssociateUMLAction(false, false, viewer);
 		exportPatternParticipants.setText("Export to XMI (UML)");
 		exportPatternParticipants.setToolTipText("This exports the pattern participants to a diagram.");
 		
 		//Definitely needs a wizard!
-		exportExistingUML = new Action(){
-			public void run(){
-				Shell shell = new Shell();
-				FileDialog path = new FileDialog(shell, SWT.OPEN);
-				String[] ext = {"*.xmi", "*.uml"};
-				String[] name = {"XMI (*.xmi)", "UML XMI (*.uml)"};
-				path.setFilterExtensions(ext);
-				path.setFilterNames(name);
-				path.setFileName(RationaleDB.getOntName());
-				path.setOverwrite(false); //Do not prompt for overwrite.
-				shell.pack();
-				
-				String filePath = path.open();
-				if (filePath == null) return; //Return if user cancelled.
-				
-				ISelection selection = viewer.getSelection();
-				Object obj = ((IStructuredSelection)selection).getFirstElement();
-
-				if (obj instanceof TreeParent){
-					TreeParent ourElement = (TreeParent) obj;
-					if (ourElement.getType() == RationaleElementType.PATTERN){
-						Pattern pat = new Pattern();
-						pat.fromDatabase(ourElement.getName());
-						
-						URI uri = URI.createFileURI(filePath);
-						
-						RationaleDB db = RationaleDB.getHandle();
-						Vector<PatternParticipant> parts = 
-								db.getParticipantsFromPatternName(ourElement.getName());
-						Vector<Integer> numInstances = new Vector<Integer>();
-						for (int i = 0; i < parts.size(); i++){
-							numInstances.add(new NumberInputDialog(shell, "Participant Instances", 
-									"# of Instances of " + parts.get(i).getName() + ": ").open());
-						}
-						pat.addXMIClassToModel(uri, numInstances);
-					}
-				}
-				
-			}
-		};
+		exportExistingUML = new AssociateUMLAction(false, true, viewer);
 		exportExistingUML.setText("Export to an existing XMI (UML) file");
 		exportExistingUML.setToolTipText("This exports the pattern participants to an existing UML file");
 

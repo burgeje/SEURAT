@@ -22,6 +22,7 @@ import SEURAT.events.RationaleUpdateEvent;
 
 import edu.wpi.cs.jburge.SEURAT.editors.DisplayUtilities;
 import edu.wpi.cs.jburge.SEURAT.editors.SelectOntEntry;
+import edu.wpi.cs.jburge.SEURAT.rationaleData.Argument;
 import edu.wpi.cs.jburge.SEURAT.rationaleData.OntEntry;
 import edu.wpi.cs.jburge.SEURAT.rationaleData.RationaleDB;
 import edu.wpi.cs.jburge.SEURAT.rationaleData.RationaleElement;

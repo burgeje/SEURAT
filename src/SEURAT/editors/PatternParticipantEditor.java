@@ -646,6 +646,15 @@ public class PatternParticipantEditor extends RationaleEditorBase{
 			save.setText("Save");
 			save.addSelectionListener(new SelectionAdapter() {
 				public void widgetSelected(SelectionEvent event){
+					//Check whether name ends with numerical values.
+					if (name.getText().matches("[0-9]$")){
+						String message = "Name cannot end with a numerical value!";
+						MessageBox mbox = new MessageBox(getSite().getShell(), SWT.ICON_ERROR);
+						mbox.setMessage(message);
+						mbox.setText("Participant Name is Invalid");
+						mbox.open();
+						return;
+					}
 					//Check whether the input is valid...
 					if (participant.getID() < 0){
 						//New participant

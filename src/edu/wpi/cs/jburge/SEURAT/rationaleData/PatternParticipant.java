@@ -355,12 +355,13 @@ public class PatternParticipant extends RationaleElement{
 	 */
 	public void fromXML(Element participantE){
 		fromXML = true;
-		RationaleDB db = RationaleDB.getHandle();
 
 		String rid = participantE.getAttribute("rid");
 		id = Integer.parseInt(rid.substring(2));
 		patternID = Integer.parseInt(participantE.getAttribute("pid").substring(1));
 		name = participantE.getAttribute("name");
+		min = Integer.parseInt(participantE.getAttribute("min"));
+		max = Integer.parseInt(participantE.getAttribute("max"));
 
 		Node child = participantE.getFirstChild();
 		if (child != null){
@@ -397,6 +398,8 @@ public class PatternParticipant extends RationaleElement{
 		participantE.setAttribute("rid", "pp" + id);
 		participantE.setAttribute("pid", "p" + patternID);
 		participantE.setAttribute("name", name);
+		participantE.setAttribute("min", "" + min);
+		participantE.setAttribute("max", "" + max);
 
 		Integer[] assocIDs = (Integer[]) participants.keySet().toArray(new Integer[0]);
 		for (int i = 0; i < assocIDs.length; i++){

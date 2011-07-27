@@ -1842,4 +1842,43 @@ public class Alternative extends RationaleElement implements Serializable {
 
 		return isCompleted;
 	}
+	
+	public boolean isUMLAssociated(){
+		if (!inDatabase()) return false;
+		RationaleDB db = RationaleDB.getHandle();
+		Connection conn = db.getConnection();
+		
+		try{
+			Statement stmt = conn.createStatement();
+			String query = "SELECT * FROM DIAGRAM_ALTERNATIVE WHERE alt_id = " + id;
+			ResultSet rs = stmt.executeQuery(query);
+			if (rs.next()){
+				return true;
+			}
+		} catch (SQLException e){
+			e.printStackTrace();
+		}
+		return false;
+	}
+	
+	/**
+	 * Removes the association from the database.
+	 */
+	public void disAssociateUML(){
+		RationaleDB db = RationaleDB.getHandle();
+		Connection conn = db.getConnection();
+		try{
+			Statement stmt = conn.createStatement();
+			String dm = "DELETE FROM DIAGRAM_PATTERNELEMENTS WHERE "
+					+ "alt_id = " + id;
+			stmt.execute(dm);
+			dm = "DELETE FROM DIAGRAM_ALTERNATIVE WHERE alt_id = " + id;
+			stmt.execute(dm);
+		} catch (SQLException e){
+			e.printStackTrace();
+		}
+		
+		RationaleUpdateEvent l_updateEvent = m_eventGenerator.MakeUpdated();
+		m_eventGenerator.Broadcast(l_updateEvent);
+	}
 }

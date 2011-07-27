@@ -69,7 +69,7 @@ public class AssociateArtifactAction extends Action {
 	public AssociateArtifactAction(TreeViewer view)
 	{
 		this.viewer = view;
-		this.setText("Associate");
+		this.setText("Associate Artifact");
 		this.setToolTipText("Associate Artifact");
 //		this.setImageDescriptor(PlatformUI.getWorkbench().getSharedImages().
 //		getImageDescriptor(ISharedImages.IMG_OBJS_INFO_TSK));

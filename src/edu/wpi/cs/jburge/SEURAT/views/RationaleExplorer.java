@@ -8,6 +8,9 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.StringReader;
 import java.io.StringWriter;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.*;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -229,6 +232,11 @@ IPropertyChangeListener{
 	 * Menu item to save the argument ontology to XML
 	 */
 	private Action exportOntology;
+
+	private Action associateUML;
+	private Action disassociateUML;
+	private Action testUMLAssociation;
+
 	/**
 	 * Points to our display
 	 */
@@ -432,7 +440,7 @@ IPropertyChangeListener{
 			{
 				manager.add(editElement);
 				manager.add(moveElement);
-				manager.add(deleteElement);
+
 				manager.add(associate);
 				manager.add(addQuestionEditor);
 				manager.add(addArgumentEditor);
@@ -443,6 +451,21 @@ IPropertyChangeListener{
 				//				manager.add(addAltConstRel);
 				manager.add(showHistory);
 				//				manager.add(changeElementType);
+				//Test whether we should display UML association menus
+				Alternative alt = new Alternative();
+				alt.fromDatabase(ourElement.getName());
+				if (alt.isUMLAssociated()){
+					manager.add(testUMLAssociation);
+					manager.add(disassociateUML);
+				} else {
+					//We can only delete the element if the alternative is not UML associated
+					manager.add(deleteElement);
+					if (alt.getStatus() == AlternativeStatus.ADOPTED){
+						if (alt.getPatternID() >= 0){
+							manager.add(associateUML);
+						}
+					}
+				}
 
 			}
 			else if (ourElement.getType() == RationaleElementType.REQUIREMENT)
@@ -964,7 +987,7 @@ IPropertyChangeListener{
 		};
 		generateCandidatePatterns.setText("Generate Candidate Patterns");
 		generateCandidatePatterns.setToolTipText("Generates candidate patterns that cover the NFRs");
-		
+
 		//Generate candidate tactics
 		generateCandidateTactics = new Action(){
 			public void run(){
@@ -1036,7 +1059,7 @@ IPropertyChangeListener{
 		requirementsTraceabilityMatrix = new Action() {
 			public void run() {
 				@SuppressWarnings("unused") TraceabilityMatrixDisplay entityF = 
-					new TraceabilityMatrixDisplay(viewer.getControl().getShell());
+						new TraceabilityMatrixDisplay(viewer.getControl().getShell());
 			}
 		}; //end of action definition
 		requirementsTraceabilityMatrix.setText("Generate Traceability Matrix");
@@ -1047,7 +1070,7 @@ IPropertyChangeListener{
 		showGraphicalRationale = new Action() {
 			public void run() {
 				@SuppressWarnings("unused") GraphicalRationalePop graphrat = 
-					new GraphicalRationalePop(viewer.getControl().getShell());
+						new GraphicalRationalePop(viewer.getControl().getShell());
 			}
 		}; 
 		showGraphicalRationale.setText("Show Graphical Rationale");
@@ -1473,13 +1496,38 @@ IPropertyChangeListener{
 					showInformation("The argument ontology has been successfully saved to XML.");
 				} else {
 					showInformation("The argument ontology could not be saved to XML.  If you have manually" +
-					" modified your argument-ontology.xml file you may need to delete it and try again.");
+							" modified your argument-ontology.xml file you may need to delete it and try again.");
 				}
 			}
 		};
-
 		exportOntology.setText("Export Ontology to XML");
 		exportOntology.setToolTipText("Export the Argument-Ontology to XML");
+
+		associateUML = new AssociateUMLAction(true, true, viewer);
+		associateUML.setText("Associate UML");
+		associateUML.setToolTipText("Associates the selected alternative with a UML model");
+		
+		testUMLAssociation = new VerifyUMLAssociationAction(viewer);
+
+		disassociateUML = new Action(){
+			public void run(){
+				ISelection selection = viewer.getSelection();
+				Object obj = ((IStructuredSelection)selection).getFirstElement();
+				if (obj instanceof TreeParent)
+				{
+					TreeParent ourElement = (TreeParent) obj;
+					if (ourElement.getType() == RationaleElementType.ALTERNATIVE){
+						Alternative alt = new Alternative();
+						alt.fromDatabase(ourElement.getName());
+						alt.disAssociateUML();
+					}
+				}
+			}
+		};
+		disassociateUML.setText("Disassociate UML");
+		disassociateUML.setToolTipText("Disassociate the alternative from the UML model.");
+
+		//TODO test UML actions
 	}
 
 	/**
@@ -2296,8 +2344,8 @@ IPropertyChangeListener{
 			}
 
 			String assQ = "Associate '" +
-			alternativeName + "' with " +
-			navigatorSelection.getElementName() + "?";				
+					alternativeName + "' with " +
+					navigatorSelection.getElementName() + "?";				
 
 			boolean selOk = showQuestion(assQ);
 			if (selOk)
@@ -2364,7 +2412,7 @@ IPropertyChangeListener{
 						{
 							//							***						   System.out.println("Compilation Unit");
 							ICompilationUnit myCompilationUnit = (ICompilationUnit)
-							myJavaElement;
+									myJavaElement;
 
 							IType[] myTypes = myCompilationUnit.getTypes();
 							boolean found = false;
@@ -2439,7 +2487,7 @@ IPropertyChangeListener{
 								IMarker ratM = ourRes.createMarker("SEURAT.ratmarker");
 								String dbname = RationaleDB.getDbName();
 								String markD = "Alt: '" +
-								alternativeName + "'   Rationale DB: '" + dbname + "'";
+										alternativeName + "'   Rationale DB: '" + dbname + "'";
 								ratM.setAttribute(IMarker.MESSAGE, markD);
 								ratM.setAttribute(IMarker.CHAR_START, cstart);
 								ratM.setAttribute(IMarker.CHAR_END, cstart+1);

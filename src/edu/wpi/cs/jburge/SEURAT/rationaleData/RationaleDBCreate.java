@@ -1130,7 +1130,9 @@ public class RationaleDBCreate
 				CREATE_PATTERNPARTICIPANTS(),
 				CREATE_PARTPART(),
 				CREATE_OPERATIONS(),
-				CREATE_OPERATION_PARTICIPANT()
+				CREATE_OPERATION_PARTICIPANT(),
+				CREATE_DIAGRAM_ALTERNATIVE(),
+				CREATE_DIAGRAM_PATTERNELEMENTS()
 		};
 	};
 
@@ -1787,6 +1789,23 @@ public class RationaleDBCreate
 				+ tablePart("oper_id INTEGER REFERENCES OPERATIONS(id) NOT NULL")
 				+ tablePart("part_id INTEGER REFERENCES PATTERNPARTICIPANTS(id)")
 				+ endTable("type INTEGER");
+	}
+	
+	public static final String CREATE_DIAGRAM_ALTERNATIVE(){
+		return beginTable("diagram_alternative") + tablePart("ID INTEGER PRIMARY KEY")
+				+ tablePart("alt_id INTEGER REFERENCES ALTERNATIVES(id) NOT NULL UNIQUE")
+				+ tablePart("pattern_id INTEGER REFERENCES PATTERNS(id) NOT NULL")
+				+ tablePart("package_xmi_id VARCHAR(255) NOT NULL")
+				+ endTable("file_path VARCHAR(255) NOT NULL");
+	}
+	
+	public static final String CREATE_DIAGRAM_PATTERNELEMENTS(){
+		return beginTable("diagram_patternelements") + tablePart("ID INTEGER PRIMARY KEY")
+				+ tablePart("alt_id INTEGER REFERENCES ALTERNATIVES(id) NOT NULL")
+				+ tablePart("part_id INTEGER REFERENCES PATTERNPARTICIPANTS(id) NOT NULL")
+				+ tablePart("xmi_id VARCHAR(255) NOT NULL UNIQUE")
+				+ tablePart("part2_id INTEGER REFERENCES PATTERNPARTICIPANTS(id)")
+				+ endTable("assoc_type INTEGER");
 	}
 	
 	public static String[] getPatternQueries(){
