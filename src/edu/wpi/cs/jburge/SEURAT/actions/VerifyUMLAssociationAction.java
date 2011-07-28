@@ -32,6 +32,11 @@ import edu.wpi.cs.jburge.SEURAT.rationaleData.RationaleDBUtil;
 import edu.wpi.cs.jburge.SEURAT.rationaleData.RationaleElementType;
 import edu.wpi.cs.jburge.SEURAT.views.TreeParent;
 
+/**
+ * This class allows the user to verify whether the model still contains the alternative.
+ * @author yechen
+ *
+ */
 public class VerifyUMLAssociationAction extends Action{
 	public static final int CLASSNOTFOUND = 1;
 	public static final int ASSOCIATIONVIOLATED = 2;
@@ -65,6 +70,18 @@ public class VerifyUMLAssociationAction extends Action{
 		return dateRun;
 	}
 
+	public int getErrorNo(){
+		return errorno;
+	}
+
+	public String getClassViolator1(){
+		return classViolator1;
+	}
+
+	/**
+	 * Used when the user attempts a manual verification.
+	 * @param viewer
+	 */
 	public VerifyUMLAssociationAction(TreeViewer viewer){
 		this.viewer = viewer;
 		setText("Verify UML Association");
@@ -87,6 +104,8 @@ public class VerifyUMLAssociationAction extends Action{
 	}
 
 	public void run(){
+		hasRun = false;
+		errorno = 0;
 		if (viewer != null){
 			ISelection selection = viewer.getSelection();
 			Object obj = ((IStructuredSelection)selection).getFirstElement();
@@ -112,6 +131,7 @@ public class VerifyUMLAssociationAction extends Action{
 			isViolated = checkViolation();
 		} catch (Exception e){
 			System.out.println("ERROR while checking violation: " + e.getMessage());
+			isViolated = true;
 		}
 		hasRun = true;
 		if (viewer != null){

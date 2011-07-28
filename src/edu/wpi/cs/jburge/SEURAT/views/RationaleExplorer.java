@@ -1506,8 +1506,23 @@ IPropertyChangeListener{
 		associateUML = new AssociateUMLAction(true, true, viewer);
 		associateUML.setText("Associate UML");
 		associateUML.setToolTipText("Associates the selected alternative with a UML model");
-		
-		testUMLAssociation = new VerifyUMLAssociationAction(viewer);
+
+		testUMLAssociation = new Action(){
+			public void run(){
+				Object obj = ((IStructuredSelection)viewer.getSelection()).getFirstElement();
+				if (obj instanceof TreeParent)
+				{
+					TreeParent ourElement = (TreeParent) obj;
+					if (ourElement.getType() == RationaleElementType.ALTERNATIVE){
+						Alternative alt = new Alternative();
+						alt.fromDatabase(ourElement.getName());
+						updateTreeElement(ourElement, alt);
+					}
+				}
+			}
+		};
+		testUMLAssociation.setText("Verify UML");
+		testUMLAssociation.setToolTipText("Manually test whether the UML still contains this alternative.");
 
 		disassociateUML = new Action(){
 			public void run(){
@@ -1520,14 +1535,13 @@ IPropertyChangeListener{
 						Alternative alt = new Alternative();
 						alt.fromDatabase(ourElement.getName());
 						alt.disAssociateUML();
+						updateTreeElement(ourElement, alt);
 					}
 				}
 			}
 		};
 		disassociateUML.setText("Disassociate UML");
 		disassociateUML.setToolTipText("Disassociate the alternative from the UML model.");
-
-		//TODO test UML actions
 	}
 
 	/**

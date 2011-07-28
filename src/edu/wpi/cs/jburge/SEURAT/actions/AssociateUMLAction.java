@@ -31,6 +31,11 @@ import edu.wpi.cs.jburge.SEURAT.rationaleData.RationaleDBUtil;
 import edu.wpi.cs.jburge.SEURAT.rationaleData.RationaleElementType;
 import edu.wpi.cs.jburge.SEURAT.views.TreeParent;
 
+/**
+ * This class allows the users to associate an alternative pattern with a UML model.
+ * @author yechen
+ *
+ */
 public class AssociateUMLAction extends Action{
 
 	private boolean associate;
@@ -64,6 +69,9 @@ public class AssociateUMLAction extends Action{
 		}
 	}
 
+	/**
+	 * Checks whether all data are ok. If so, call the write to database.
+	 */
 	private void associateUML(){
 		if (filePath == null) return;
 		Object obj = ((IStructuredSelection)selection).getFirstElement();
@@ -82,17 +90,20 @@ public class AssociateUMLAction extends Action{
 				displayErrorMsg("The selected item is not in Alternative table.");
 				return;
 			}
-			
+
 			if (existInDB()){
 				displayErrorMsg("Disassociate the alternative before associating it with another UML");
 				return;
 			}
-			
+
 			writeToDB();
-			
+
 		}
 	}
-	
+
+	/**
+	 * Associate the UML with the SEURAT database.
+	 */
 	private void writeToDB(){
 		RationaleDB db = RationaleDB.getHandle();
 		Connection conn = db.getConnection();
@@ -100,15 +111,15 @@ public class AssociateUMLAction extends Action{
 			Statement stmt = conn.createStatement();
 			String dm = "DELETE FROM DIAGRAM_PATTERNELEMENTS WHERE alt_id = " + altID;
 			stmt.execute(dm); //Flush the old associations if the deletion crashed last time.
-			
+
 			dm = "INSERT INTO DIAGRAM_ALTERNATIVE "
 					+ "(id, alt_id, pattern_id, package_xmi_id, file_path)"
 					+ " VALUES(" + RationaleDB.findAvailableID("DIAGRAM_PATTERNELEMENTS")
 					+ ", " + altID + ", " + pat.getID() + ", '" + RationaleDBUtil.escape(packageXMIID) 
 					+ "', '" + RationaleDBUtil.escape(filePath) + "')";
 			stmt.execute(dm);
-			
-			
+
+
 			//Get patternElements from Pattern object, then assign altID!
 			Vector<PatternElement> pe = pat.getPatternElements();
 			for (int i = 0; i < pe.size(); i++){
@@ -120,7 +131,11 @@ public class AssociateUMLAction extends Action{
 			e.printStackTrace();
 		}
 	}
-	
+
+	/**
+	 * Check whether an association of the same alternative exists in the db already.
+	 * @return
+	 */
 	private boolean existInDB(){
 		RationaleDB db = RationaleDB.getHandle();
 		Connection conn = db.getConnection();
@@ -135,7 +150,7 @@ public class AssociateUMLAction extends Action{
 		}
 		return false;
 	}
-	
+
 	private void displayErrorMsg(String message){
 		MessageBox mbox = new MessageBox(new Shell(), SWT.ICON_ERROR);
 		mbox.setMessage(message);
@@ -143,6 +158,9 @@ public class AssociateUMLAction extends Action{
 		mbox.open();
 	}
 
+	/**
+	 * Export UML of a pattern to an existing UML model
+	 */
 	private void exportExisting(){
 		Shell shell = new Shell();
 		FileDialog path = new FileDialog(shell, SWT.OPEN);
@@ -183,10 +201,17 @@ public class AssociateUMLAction extends Action{
 				numInstances.add(new NumberInputDialog(shell, "Participant Instances", 
 						"# of Instances of " + parts.get(i).getName() + ": ").open());
 			}
-			packageXMIID = pat.addXMIClassToModel(uri, numInstances);
+			try{
+				packageXMIID = pat.addXMIClassToModel(uri, numInstances);
+			} catch (Exception e){
+				displayErrorMsg("Unable to write to the target file.");
+			}
 		}
 	}
 
+	/**
+	 * Export UML of a pattern to a new UML model.
+	 */
 	private void exportNew(){
 		Shell shell = new Shell();
 		FileDialog path = new FileDialog(shell, SWT.SAVE);
@@ -227,11 +252,20 @@ public class AssociateUMLAction extends Action{
 				numInstances.add(new NumberInputDialog(shell, "Participant Instances", 
 						"# of Instances of " + parts.get(i).getName() + ": ").open());
 			}
-			packageXMIID = pat.newXMIClass(uri, numInstances);
+			try{
+				packageXMIID = pat.newXMIClass(uri, numInstances);
+			} catch (Exception e){
+				displayErrorMsg("Unable to write to the target file.");
+			}
 		}
 	}
 
 
+	/**
+	 * Allows the users to enter number of instances of a particular participant.
+	 * @author yechen
+	 *
+	 */
 	private class NumberInputDialog extends Dialog {
 		Integer value;
 		String title, prompt;

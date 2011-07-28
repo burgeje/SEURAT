@@ -111,7 +111,18 @@ public class RationaleLabelProvider extends LabelProvider {
 				descriptor = SEURATPlugin.getImageDescriptor("newDec.gif");
 			}
 		} else if (element.getType() == RationaleElementType.ALTERNATIVE) {
-			if (element.getStatus() == RationaleErrorLevel.ERROR) {
+			Alternative alt = new Alternative();
+			alt.fromDatabase(element.getName());
+			if (alt.getID() > 0 && alt.isUMLAssociated()){
+				if (element.getStatus() == RationaleErrorLevel.ERROR){
+					descriptor = SEURATPlugin.getImageDescriptor("newAlt_UML_error.gif");
+				} else if (element.getStatus() == RationaleErrorLevel.WARNING){
+					descriptor = SEURATPlugin.getImageDescriptor("newAlt_UML_warning.gif");
+				} else {
+					descriptor = SEURATPlugin.getImageDescriptor("newAlt_UML.gif");
+				}
+			}
+			else if (element.getStatus() == RationaleErrorLevel.ERROR) {
 				if (element.getActive())
 					descriptor = SEURATPlugin
 					.getImageDescriptor("newAlt_Sel_error.gif");
@@ -131,7 +142,6 @@ public class RationaleLabelProvider extends LabelProvider {
 					.getImageDescriptor("newAlt_Sel.gif");
 				else
 					descriptor = SEURATPlugin.getImageDescriptor("newAlt.gif");
-
 			}
 		} else if (element.getType() == RationaleElementType.ARGUMENT) {
 			// arguments require a bit more processing since we want to
