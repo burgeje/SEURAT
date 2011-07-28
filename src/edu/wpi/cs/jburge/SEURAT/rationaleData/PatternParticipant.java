@@ -437,6 +437,31 @@ public class PatternParticipant extends RationaleElement{
 		}
 		return toReturn;
 	}
+	
+	/**
+	 * Get the map on both ways.
+	 * @return
+	 */
+	public HashMap<Integer, Integer> getAllParticipants(){
+		HashMap<Integer, Integer> toReturn = new HashMap<Integer, Integer>();
+		RationaleDB db = RationaleDB.getHandle();
+		Connection conn = db.getConnection();
+		try{
+			Statement stmt = conn.createStatement();
+			String query = "SELECT * FROM PART_PART WHERE " +
+					"ref_id = " + id;
+			ResultSet rs = stmt.executeQuery(query);
+			while (rs.next()){
+				int assocID = rs.getInt("part_id");
+				int type = rs.getInt("type");
+				toReturn.put(new Integer(assocID), new Integer(0 - type));
+			}
+		} catch (SQLException e){
+			e.printStackTrace();
+		}
+		toReturn.putAll(participants);
+		return toReturn;
+	}
 
 	/**
 	 * Since pattern participant names can overlap each other (such as Client), it is unwise to make name of the participants as a candidate key.

@@ -116,7 +116,7 @@ public class AlternativeInferences {
 				RationaleErrorLevel errLevel = RationaleErrorLevel.ERROR;
 				if (verifier.getErrorNo() == VerifyUMLAssociationAction.CLASSNOTFOUND){
 					problem += "No instance(class) of participant " 
-							+ verifier.getClassViolator1() + " exists in the diagram.)";
+							+ verifier.getClassViolator1() + " exists in the diagram.";
 				}
 				else if (verifier.getErrorNo() == VerifyUMLAssociationAction.ASSOCIATIONVIOLATED){
 					problem += "One of the critical relations connected to " + verifier.getClassViolator1() + " has been servered";

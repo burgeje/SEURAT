@@ -2,6 +2,7 @@ package edu.wpi.cs.jburge.SEURAT.actions;
 
 import java.text.DateFormat;
 import java.util.Calendar;
+import java.util.HashMap;
 import java.util.Vector;
 
 import org.eclipse.emf.common.util.EList;
@@ -190,6 +191,12 @@ public class VerifyUMLAssociationAction extends Action{
 		for (int i = 0; i < patternElements.size(); i++){
 			if (patternElements.get(i).getPart2ID() > 0 ){
 				associations.add(patternElements.get(i));
+				//Add inverse relationship
+				PatternElement inv = new PatternElement(patternElements.get(i).getPart2ID(), 
+						patternElements.get(i).getPart1ID(), (0 - patternElements.get(i).getAssocType()), 
+						patternElements.get(i).getXMIID());
+				inv.setAltID(alt.getID());
+				associations.add(inv);
 			}
 		}
 		elementsVisited = new boolean[patternElements.size()];
@@ -199,10 +206,12 @@ public class VerifyUMLAssociationAction extends Action{
 		for (int i = 0; i < patternElements.size(); i++){
 			//If the element is a "class" and not an association, and the element has not been visited before.
 			if (patternElements.get(i).getPart2ID() <= 0 && !elementsVisited[i]){
+				classViolator1 = null;
 				if (!isAssociated(i)) {
 					PatternParticipant p = new PatternParticipant();
 					p.fromDatabase(patternElements.get(i).getPart1ID());
-					classViolator1 = p.getName();
+					if (classViolator1 == null)
+						classViolator1 = p.getName();
 					return true;
 				}
 			}
@@ -228,12 +237,19 @@ public class VerifyUMLAssociationAction extends Action{
 		p.fromDatabase(patternElements.get(elementIndex).getPart1ID());
 		classViolator2 = p.getName();
 		_ASSERT(p.getID() >= 0);
-		Integer[] assocIDs = (Integer[]) p.getParticipants().keySet().toArray(new Integer[0]);
+		HashMap<Integer, Integer> allParticipants = p.getAllParticipants();
+		Integer[] assocIDs = (Integer[]) allParticipants.keySet().toArray(new Integer[0]);
 		for (int i = 0; i < assocIDs.length; i++){
+			int curType = allParticipants.get(assocIDs[i]);
+			if (curType < 0) {
+				PatternParticipant targetParticipant = new PatternParticipant();
+				targetParticipant.fromDatabase(assocIDs[i]);
+				classViolator1 = targetParticipant.getName();
+			}
 			boolean isExist = false;
 			for (int j = 0; j < associations.size(); j++){
 				if (assocIDs[i] == associations.get(j).getPart2ID()){
-					if (p.getParticipants().get(assocIDs[i]) == associations.get(j).getAssocType()){
+					if (curType == associations.get(j).getAssocType()){
 						//Found the association and association type is correct
 						int targetIndex = classIndexOf(assocIDs[i]);
 						_ASSERT(targetIndex >= 0);

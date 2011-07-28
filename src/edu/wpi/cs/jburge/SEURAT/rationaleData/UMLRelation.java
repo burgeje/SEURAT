@@ -20,15 +20,21 @@ public final class UMLRelation {
 	 */
 	public static final int AGGREGATION = 1;
 	
+	public static final int INV_AGGREGATION = -1;
+	
 	/**
 	 * Delegation is used on operations or participants
 	 * One operation deferring the implementation of another operation in some other participant.
 	 */
 	public static final int DELEGATION = 2;
 	
+	public static final int INV_DELEGATION = -2;
+	
 	/**
 	 * Source (is a) --|> Target
 	 */
 	public static final int GENERALIZATION = 3;
+	
+	public static final int INV_GENERALIZATION = -3;
 	
 }
