@@ -181,7 +181,11 @@ public class VerifyUMLAssociationAction extends Action{
 		loadData();
 		if (participants.isEmpty()) return false;
 		truncateData();
-		if (patternElements.isEmpty()) return true;
+		if (patternElements.isEmpty()) {
+			errorno = CLASSNOTFOUND;
+			classViolator1 = participants.get(0).getName();
+			return true;
+		}
 
 		//Check for existence of every participant
 		if (!areClassesExistInModel()) return true;
