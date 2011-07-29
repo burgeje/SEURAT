@@ -170,6 +170,7 @@ public class AlternativeEditor extends RationaleEditorBase {
 					refreshForm(pEvent);
 					if (statusBox != null && !isCreating()){
 						if (getAlternative().isUMLAssociated()){
+							statusBox.select(0); //Select "Adopted"
 							statusBox.setEnabled(false);
 						}
 						else {
@@ -691,6 +692,7 @@ public class AlternativeEditor extends RationaleEditorBase {
 		gridData.horizontalAlignment = GridData.FILL;
 		statusBox.setLayoutData(gridData);
 		if (!isCreating() && getAlternative().isUMLAssociated()){
+			statusBox.select(0); //Select "Adopted".
 			statusBox.setEnabled(false);
 		}
 		else statusBox.setEnabled(true);

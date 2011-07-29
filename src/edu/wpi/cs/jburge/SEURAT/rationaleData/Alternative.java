@@ -1861,6 +1861,11 @@ public class Alternative extends RationaleElement implements Serializable {
 		return false;
 	}
 	
+	public void broadcastUpdate(){
+		RationaleUpdateEvent l_updateEvent = m_eventGenerator.MakeUpdated();
+		m_eventGenerator.Broadcast(l_updateEvent);
+	}
+	
 	/**
 	 * Removes the association from the database.
 	 */
@@ -1878,7 +1883,6 @@ public class Alternative extends RationaleElement implements Serializable {
 			e.printStackTrace();
 		}
 		
-		RationaleUpdateEvent l_updateEvent = m_eventGenerator.MakeUpdated();
-		m_eventGenerator.Broadcast(l_updateEvent);
+		broadcastUpdate();
 	}
 }

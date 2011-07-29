@@ -97,7 +97,10 @@ public class AssociateUMLAction extends Action{
 			}
 
 			writeToDB();
-
+			//Broadcast to the editors.
+			Alternative alt = new Alternative();
+			alt.fromDatabase(altID);
+			alt.broadcastUpdate();
 		}
 	}
 
