@@ -2304,13 +2304,17 @@ IPropertyChangeListener{
 	public void showRationaleNode(RationaleUpdateEvent e)
 	{
 		RationaleElement ele = e.getRationaleElement();
-		//get the tree parent corresponding to the element...
+		showRationaleNode(ele.getName(), ele.getElementType());
+	}
+	
+	/**
+	 * This is used to reveal an element in the explorer given the name and type of the element.
+	 * @param elementName element name of the element to reveal
+	 * @param elementType element type of the element to reveal
+	 */
+	public void showRationaleNode(String elementName, RationaleElementType elementType){
 		RationaleTreeMap map = RationaleTreeMap.getHandle();
-		Vector treeObjs = map.getKeys(map.makeKey(ele.getName(), ele.getElementType()));
-		/* We used to just look at the top element
-		viewer.reveal(treeObjs.elementAt(0));
-		viewer.expandToLevel(treeObjs.elementAt(0), 4); */
-		//expand *all* the occurences!
+		Vector<TreeObject> treeObjs = map.getKeys(map.makeKey(elementName, elementType));
 		Iterator<TreeObject> treeIterator = treeObjs.iterator();
 		while( treeIterator.hasNext() )
 		{
@@ -2318,8 +2322,6 @@ IPropertyChangeListener{
 			viewer.reveal(treeEle);
 			viewer.expandToLevel(treeEle, 4);
 		}
-
-
 	}
 
 	/**
@@ -4126,7 +4128,7 @@ IPropertyChangeListener{
 	 * Get the handle for RationaleExplorer, usually used to refresh the tree for XML import.
 	 * @return
 	 */
-	static RationaleExplorer getHandle(){
+	public static RationaleExplorer getHandle(){
 		return exp;
 	}
 }

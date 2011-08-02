@@ -959,7 +959,6 @@ public class Pattern extends RationaleElement {
 
 		//Sort the vector so that the classes will be on the front of the vector.
 		Collections.sort(patternElements, new Comparator<PatternElement>(){
-			@Override
 			public int compare(PatternElement o1, PatternElement o2) {
 				if (o1.getPart2ID() < o2.getPart2ID()){
 					return -1;

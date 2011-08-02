@@ -228,13 +228,11 @@ ITreeContentProvider{
 		return toAdd;
 	}
 
-	@Override
 	public void dispose() {
 		// TODO Auto-generated method stub
 
 	}
 
-	@Override
 	public void inputChanged(Viewer viewer, Object oldInput, Object newInput) {
 		this.viewer = (TreeViewer)viewer;
 		if (!(oldInput instanceof TreeParent))
@@ -270,7 +268,6 @@ ITreeContentProvider{
 		}
 	}
 
-	@Override
 	public Object[] getChildren(Object parentElement) {
 		if (parentElement instanceof TreeParent) {
 			return ((TreeParent)parentElement).getChildren();
@@ -278,7 +275,6 @@ ITreeContentProvider{
 		return new Object[0];
 	}
 
-	@Override
 	public Object getParent(Object element) {
 		if (element instanceof TreeObject) {
 			return ((TreeObject)element).getParent();
@@ -286,26 +282,22 @@ ITreeContentProvider{
 		return null;
 	}
 
-	@Override
 	public boolean hasChildren(Object element) {
 		if (element instanceof TreeParent)
 			return ((TreeParent)element).hasChildren();
 		return false;
 	}
 
-	@Override
 	public void add(DeltaEvent event) {
 		Object ourObj = ((TreeParent)event.receiver()).getParent();
 		viewer.refresh(ourObj, false);
 	}
 
-	@Override
 	public void remove(DeltaEvent event) {
 		add(event);
 
 	}
 
-	@Override
 	public Object[] getElements(Object inputElement) {
 		if (inputElement.equals(ResourcesPlugin.getWorkspace())) {
 			if (invisibleRoot==null)

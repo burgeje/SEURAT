@@ -175,7 +175,6 @@ public class GenerateCandidateTacticsComposite {
 				super("Select Category");
 			}
 
-			@Override
 			public void createControl(Composite parent) {
 				selectedCategories = new Vector<OntEntry>();
 				Composite composite = new Composite(parent, SWT.NONE);
@@ -218,7 +217,6 @@ public class GenerateCandidateTacticsComposite {
 				super("Select Pattern");
 			}
 
-			@Override
 			public void createControl(Composite parent) {
 				Composite composite = new Composite(parent, SWT.NONE);
 				composite.setLayout(new GridLayout(1, false));
@@ -324,7 +322,6 @@ public class GenerateCandidateTacticsComposite {
 
 			private class ButtonsListener implements SelectionListener{
 
-				@Override
 				public void widgetSelected(SelectionEvent e) {
 					if (e.widget == moveToSelected){
 						String[] selectedItems = availableList.getSelection();
@@ -344,7 +341,6 @@ public class GenerateCandidateTacticsComposite {
 					}
 				}
 
-				@Override
 				public void widgetDefaultSelected(SelectionEvent e) {
 
 				}
@@ -355,7 +351,6 @@ public class GenerateCandidateTacticsComposite {
 				super ("Select Tactic");
 			}
 
-			@Override
 			public void createControl(Composite parent) {
 				Composite composite = new Composite(parent, SWT.NONE);
 				composite.setLayout(new GridLayout(1, false));
@@ -417,7 +412,6 @@ public class GenerateCandidateTacticsComposite {
 				super("Preview Selections");
 			}
 
-			@Override
 			public void createControl(Composite parent) {
 				Composite composite = new Composite(parent, SWT.NONE);
 				composite.setLayout(new GridLayout(1, false));
