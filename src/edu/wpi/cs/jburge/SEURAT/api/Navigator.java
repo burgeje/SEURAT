@@ -10,6 +10,7 @@ import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 
 import edu.wpi.cs.jburge.SEURAT.rationaleData.Alternative;
+import edu.wpi.cs.jburge.SEURAT.rationaleData.PatternElement;
 import edu.wpi.cs.jburge.SEURAT.rationaleData.RationaleDB;
 import edu.wpi.cs.jburge.SEURAT.rationaleData.RationaleDBUtil;
 import edu.wpi.cs.jburge.SEURAT.rationaleData.RationaleElementType;
@@ -25,7 +26,7 @@ public class Navigator {
 	public static final int EXPLORER_RATIONALE = 1;
 	public static final int EXPLOERR_TACTIC = 3;
 	public static final int EXPLORER_PATTERN = 2;
-	
+
 	public static void navigateTo(int explorerType, String elementName, RationaleElementType elementType){
 		//Show View
 		switch (explorerType){
@@ -38,32 +39,44 @@ public class Navigator {
 				e.printStackTrace();
 			}
 			break;
-			
+
 			//TODO
 		}
 
-		
+
 	}
-	
+
 	public static boolean navigateTo(String xmiID){
-		RationaleDB db = RationaleDB.getHandle();
-		Connection conn = db.getConnection();
-		
-		try{
-			Statement stmt = conn.createStatement();
-			String query = "SELECT alt_id FROM DIAGRAM_PATTERNELEMENTS WHERE xmi_id = '"
-				+ RationaleDBUtil.escape(xmiID) + "'";
-			ResultSet rs = stmt.executeQuery(query);
-			if (rs.next()){
-				int altID = rs.getInt("alt_id");
-				Alternative alt = new Alternative();
-				alt.fromDatabase(altID);
-				navigateTo(EXPLORER_RATIONALE, alt.getName(), RationaleElementType.ALTERNATIVE);
-				return true;
+		PatternElement patternElement = new PatternElement();
+		patternElement.fromDatabase(xmiID);
+		if (patternElement.getID() <= 0) {
+			//Is this a package?
+			RationaleDB db = RationaleDB.getHandle();
+			Connection conn = db.getConnection();
+			
+			try{
+				Statement stmt = conn.createStatement();
+				String query = "SELECT * FROM DIAGRAM_ALTERNATIVE WHERE package_xmi_id = '"
+					+ RationaleDBUtil.escape(xmiID) + "'";
+				ResultSet rs = stmt.executeQuery(query);
+				if (rs.next()){
+					Alternative alt = new Alternative();
+					alt.fromDatabase(rs.getInt("alt_id"));
+					if (alt.getID() < 0) return false;
+					navigateTo(EXPLORER_RATIONALE, alt.getName(), RationaleElementType.ALTERNATIVE);
+					return true;
+				}
+			}catch(SQLException e){
+				e.printStackTrace();
 			}
-		} catch (SQLException e){
-			e.printStackTrace();
+			return false;
 		}
-		return false;
+		Alternative alt = new Alternative();
+		alt.fromDatabase(patternElement.getAltID());
+		if (alt.getID() < 0) {
+			return false;
+		}
+		navigateTo(EXPLORER_RATIONALE, alt.getName(), RationaleElementType.ALTERNATIVE);
+		return true;
 	}
 }

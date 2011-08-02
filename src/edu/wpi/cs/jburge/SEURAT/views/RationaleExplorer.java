@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.sql.Connection;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.*;
@@ -27,6 +28,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Shell;
+import org.eclipse.ui.ide.IDE;
 import org.eclipse.ui.part.*;
 import org.eclipse.jface.viewers.*;
 import org.eclipse.jface.window.Window;
@@ -67,14 +69,18 @@ import org.eclipse.core.resources.IFile;
 import edu.wpi.cs.jburge.SEURAT.SEURATResourcePropertiesManager;
 import org.eclipse.core.resources.IWorkspaceRunnable;
 import org.eclipse.core.resources.IMarker;
+import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.Path;
 import org.eclipse.jface.action.Action;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
+import org.eclipse.core.filesystem.EFS;
+import org.eclipse.core.filesystem.IFileStore;
 
 
 import edu.wpi.cs.jburge.SEURAT.rationaleData.Argument;
@@ -236,6 +242,7 @@ IPropertyChangeListener{
 	private Action associateUML;
 	private Action disassociateUML;
 	private Action testUMLAssociation;
+	private Action navigateToUML;
 
 	/**
 	 * Points to our display
@@ -456,6 +463,7 @@ IPropertyChangeListener{
 				alt.fromDatabase(ourElement.getName());
 				if (alt.isUMLAssociated()){
 					manager.add(testUMLAssociation);
+					manager.add(navigateToUML);
 					manager.add(disassociateUML);
 				} else {
 					//We can only delete the element if the alternative is not UML associated
@@ -1059,7 +1067,7 @@ IPropertyChangeListener{
 		requirementsTraceabilityMatrix = new Action() {
 			public void run() {
 				@SuppressWarnings("unused") TraceabilityMatrixDisplay entityF = 
-						new TraceabilityMatrixDisplay(viewer.getControl().getShell());
+					new TraceabilityMatrixDisplay(viewer.getControl().getShell());
 			}
 		}; //end of action definition
 		requirementsTraceabilityMatrix.setText("Generate Traceability Matrix");
@@ -1070,7 +1078,7 @@ IPropertyChangeListener{
 		showGraphicalRationale = new Action() {
 			public void run() {
 				@SuppressWarnings("unused") GraphicalRationalePop graphrat = 
-						new GraphicalRationalePop(viewer.getControl().getShell());
+					new GraphicalRationalePop(viewer.getControl().getShell());
 			}
 		}; 
 		showGraphicalRationale.setText("Show Graphical Rationale");
@@ -1496,7 +1504,7 @@ IPropertyChangeListener{
 					showInformation("The argument ontology has been successfully saved to XML.");
 				} else {
 					showInformation("The argument ontology could not be saved to XML.  If you have manually" +
-							" modified your argument-ontology.xml file you may need to delete it and try again.");
+					" modified your argument-ontology.xml file you may need to delete it and try again.");
 				}
 			}
 		};
@@ -1542,6 +1550,45 @@ IPropertyChangeListener{
 		};
 		disassociateUML.setText("Disassociate UML");
 		disassociateUML.setToolTipText("Disassociate the alternative from the UML model.");
+
+		navigateToUML = new Action(){
+			public void run(){
+				ISelection selection = viewer.getSelection();
+				Object obj = ((IStructuredSelection)selection).getFirstElement();
+				if (obj instanceof TreeParent)
+				{
+					TreeParent ourElement = (TreeParent) obj;
+					if (ourElement.getType() == RationaleElementType.ALTERNATIVE){
+						Alternative alt = new Alternative();
+						alt.fromDatabase(ourElement.getName());
+						IWorkbenchPage page = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage();
+						RationaleDB db = RationaleDB.getHandle();
+						Connection conn = db.getConnection();
+						try{
+							Statement stmt = conn.createStatement();
+							String query = "SELECT * FROM DIAGRAM_ALTERNATIVE WHERE alt_id = " + alt.getID();
+							ResultSet rs = stmt.executeQuery(query);
+							if (rs.next()){
+								String filePath = RationaleDBUtil.decode(rs.getString("file_path"));
+								File fileToOpen = new File(filePath);
+								if (fileToOpen.exists() && fileToOpen.isFile()){
+									IFileStore fileStore = EFS.getLocalFileSystem().getStore(fileToOpen.toURI());
+									try{
+										IDE.openEditorOnFileStore(page, fileStore);
+									} catch( PartInitException e){
+										showMessage("Editor for UML Model cannot be opened. Is UML2 editor installed?");
+									}
+								}
+							}
+						} catch (SQLException e){
+							showMessage("Database Error.");
+							e.printStackTrace();
+						}
+					}
+				}
+			}
+		};
+		navigateToUML.setText("Go to UML Model");
 	}
 
 	/**
@@ -1573,12 +1620,12 @@ IPropertyChangeListener{
 	 * shows a message to the user
 	 * @param message
 	 */
-	/*	private void showMessage(String message) {
-	 MessageDialog.openInformation(
-	 viewer.getControl().getShell(),
-	 "RationaleExplorer",
-	 message);
-	 } */
+	private void showMessage(String message) {
+		MessageDialog.openInformation(
+				viewer.getControl().getShell(),
+				"RationaleExplorer",
+				message);
+	} 
 
 	/**
 	 * Passing the focus request to the viewer's control.
@@ -2306,7 +2353,7 @@ IPropertyChangeListener{
 		RationaleElement ele = e.getRationaleElement();
 		showRationaleNode(ele.getName(), ele.getElementType());
 	}
-	
+
 	/**
 	 * This is used to reveal an element in the explorer given the name and type of the element.
 	 * @param elementName element name of the element to reveal
@@ -2360,8 +2407,8 @@ IPropertyChangeListener{
 			}
 
 			String assQ = "Associate '" +
-					alternativeName + "' with " +
-					navigatorSelection.getElementName() + "?";				
+			alternativeName + "' with " +
+			navigatorSelection.getElementName() + "?";				
 
 			boolean selOk = showQuestion(assQ);
 			if (selOk)
@@ -2428,7 +2475,7 @@ IPropertyChangeListener{
 						{
 							//							***						   System.out.println("Compilation Unit");
 							ICompilationUnit myCompilationUnit = (ICompilationUnit)
-									myJavaElement;
+							myJavaElement;
 
 							IType[] myTypes = myCompilationUnit.getTypes();
 							boolean found = false;
@@ -2503,7 +2550,7 @@ IPropertyChangeListener{
 								IMarker ratM = ourRes.createMarker("SEURAT.ratmarker");
 								String dbname = RationaleDB.getDbName();
 								String markD = "Alt: '" +
-										alternativeName + "'   Rationale DB: '" + dbname + "'";
+								alternativeName + "'   Rationale DB: '" + dbname + "'";
 								ratM.setAttribute(IMarker.MESSAGE, markD);
 								ratM.setAttribute(IMarker.CHAR_START, cstart);
 								ratM.setAttribute(IMarker.CHAR_END, cstart+1);

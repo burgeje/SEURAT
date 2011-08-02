@@ -48,6 +48,13 @@ public class PatternElement extends RationaleElement {
 	public String getXMIID() {
 		return xmiID;
 	}
+	
+	public PatternElement(){
+		part1ID = -1;
+		part2ID = -1;
+		assocType = -1;
+		xmiID = "";
+	}
 
 	public PatternElement(int part1ID, int part2ID, int assocType, String xmiID){
 		this.part1ID = part1ID;
