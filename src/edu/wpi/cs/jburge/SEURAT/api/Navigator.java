@@ -27,6 +27,13 @@ public class Navigator {
 	public static final int EXPLOERR_TACTIC = 3;
 	public static final int EXPLORER_PATTERN = 2;
 
+	/**
+	 * Given the explorer id(definied as constants), element name and element type, navigate to
+	 * the element in the explorer.
+	 * @param explorerType
+	 * @param elementName
+	 * @param elementType
+	 */
 	public static void navigateTo(int explorerType, String elementName, RationaleElementType elementType){
 		//Show View
 		switch (explorerType){
@@ -46,6 +53,11 @@ public class Navigator {
 
 	}
 
+	/**
+	 * Given the xmi-id of a pattern element, navigate to it in the rationale explorer.
+	 * @param xmiID
+	 * @return
+	 */
 	public static boolean navigateTo(String xmiID){
 		PatternElement patternElement = new PatternElement();
 		patternElement.fromDatabase(xmiID);

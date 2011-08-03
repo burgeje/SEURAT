@@ -1579,6 +1579,12 @@ IPropertyChangeListener{
 										showMessage("Editor for UML Model cannot be opened. Is UML2 editor installed?");
 									}
 								}
+								else {
+									showMessage("The target " + filePath +" is not a file/does not exist.");
+								}
+							}
+							else {
+								showMessage("Cannot find the UML association in the database. Please disassociate the UML.");
 							}
 						} catch (SQLException e){
 							showMessage("Database Error.");
