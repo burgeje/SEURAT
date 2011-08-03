@@ -2230,7 +2230,7 @@ IPropertyChangeListener{
 	 * @param obj - the tree element that was just edited
 	 * @param rElement - the corresponding rationale element
 	 */
-	private TreeParent updateTreeElement (TreeParent obj, RationaleElement rElement)
+	public TreeParent updateTreeElement (TreeParent obj, RationaleElement rElement)
 	{
 		RationaleDB db = RationaleDB.getHandle();
 		//need to check to see if the name has changed

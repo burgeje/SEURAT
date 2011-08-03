@@ -8,10 +8,9 @@ import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.FileDialog;
-import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MessageBox;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Dialog;
@@ -29,6 +28,7 @@ import edu.wpi.cs.jburge.SEURAT.rationaleData.PatternParticipant;
 import edu.wpi.cs.jburge.SEURAT.rationaleData.RationaleDB;
 import edu.wpi.cs.jburge.SEURAT.rationaleData.RationaleDBUtil;
 import edu.wpi.cs.jburge.SEURAT.rationaleData.RationaleElementType;
+import edu.wpi.cs.jburge.SEURAT.views.RationaleExplorer;
 import edu.wpi.cs.jburge.SEURAT.views.TreeParent;
 
 /**
@@ -101,6 +101,10 @@ public class AssociateUMLAction extends Action{
 			Alternative alt = new Alternative();
 			alt.fromDatabase(altID);
 			alt.broadcastUpdate();
+			RationaleExplorer exp = RationaleExplorer.getHandle();
+			if (exp != null && selection != null && ourElement != null){
+				exp.updateTreeElement(ourElement, alt);
+			}
 		}
 	}
 
@@ -299,6 +303,9 @@ public class AssociateUMLAction extends Action{
 			label.setText(prompt);
 
 			final Text text = new Text(shell, SWT.SINGLE | SWT.BORDER);
+			GridData gridData = new GridData(GridData.HORIZONTAL_ALIGN_FILL);
+			gridData.minimumWidth = 20;
+			text.setLayoutData(gridData);
 
 			final Button buttonOK = new Button(shell, SWT.PUSH);
 			buttonOK.setText("Ok");
