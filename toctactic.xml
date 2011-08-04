@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<toc label="Tactics" link_to="toc.xml#tactics">
+   <topic href="html/tactics/overview.htm" label="Overview">
+   </topic>
+   <topic href="html/tactics/upgrade.htm" label="Database Upgrade Instructions">
+   </topic>
+   <topic href="html/tactics/explorer.htm" label="Tactic Explorer">
+   </topic>
+   <topic href="html/tactics/wizard.htm" label="Generating Tactics">
+   </topic>
+</toc>
