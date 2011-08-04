@@ -30,4 +30,14 @@
       <topic href="html/architecture/RatExplorer/Generate Candidate Patterns.htm" label="Generate Candidate Patterns">
       </topic>
    </topic>
+   <topic href="html/architecture/uml/overview.htm" label="UML Association">
+      <topic href="html/architecture/uml/requirements.htm" label="Requirements">
+      </topic>
+      <topic href="html/architecture/uml/definitions.html" label="Definitions">
+      </topic>
+      <topic href="html/architecture/uml/usingassociations.htm" label="Using UML Association Features">
+      </topic>
+      <topic href="html/architecture/uml/upgrade.htm" label="Database Upgrade Instructions">
+      </topic>
+   </topic>
 </toc>

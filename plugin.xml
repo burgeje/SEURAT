@@ -353,6 +353,7 @@ isGoToNextNavigationTargetKey="ismyAppRecordGoToNextNavigationTarget"
      	<toc file="toctasks.xml"/>
    		<toc file="tocsamples.xml"/>
      	<toc file="tocarchitecture.xml"/>
+     	<toc file="toctactic.xml"/>
 	</extension>
        
 	<extension point="org.eclipse.search.searchPages">
