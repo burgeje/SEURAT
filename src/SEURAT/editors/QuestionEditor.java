@@ -39,7 +39,7 @@ public class QuestionEditor extends RationaleEditorBase {
 			RationaleElement parent, RationaleElement target, boolean new1) {
 		return new QuestionEditor.Input(explorer, tree, parent, target, new1);
 	}
-	
+
 	/**
 	 * This class provides caching features used when updating
 	 * properties of a question remotely.
@@ -67,7 +67,7 @@ public class QuestionEditor extends RationaleEditorBase {
 		 */
 		String answer;
 	}
-	
+
 	/**
 	 * The question's name
 	 */
@@ -81,31 +81,31 @@ public class QuestionEditor extends RationaleEditorBase {
 	 * The answer to the question
 	 */
 	private Text answer;
-	
+
 	/**
 	 * The procedure to follow in order to find an answer. This could be a test or simulation
 	 * that needs to be run or it can be instructions on who to ask for an answer.
 	 */
 	private Text procedure;
-	
+
 	/**
 	 * The status of the question (answered or unanswered)
 	 */
 	private Combo statusBox;
-	
+
 	/**
 	 * Member variable used for storing last known good
 	 * values for editable fields in the editor
 	 */
 	private DataCache dataCache = new DataCache();
-	
+
 	/* (non-Javadoc)
 	 * @see SEURAT.editors.RationaleEditorBase#editorType()
 	 */
 	public Class editorType() {
 		return Question.class;
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see SEURAT.editors.RationaleEditorBase#getRationaleElement()
 	 */
@@ -137,10 +137,10 @@ public class QuestionEditor extends RationaleEditorBase {
 					closeEditor();
 				}
 				else
-				if( pEvent.getModified() )
-				{
-					refreshForm(pEvent);
-				}
+					if( pEvent.getModified() )
+					{
+						refreshForm(pEvent);
+					}
 			}			
 		}
 		catch( Exception eError )
@@ -148,7 +148,7 @@ public class QuestionEditor extends RationaleEditorBase {
 			System.out.println("Exception in QuestionEditor: onUpdate");
 		}
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see SEURAT.editors.RationaleEditorBase#updateFormCache()
 	 */
@@ -156,16 +156,16 @@ public class QuestionEditor extends RationaleEditorBase {
 	protected void updateFormCache() {
 		if( nameField != null )
 			dataCache.name = nameField.getText();
-		
+
 		if( descArea != null )
 			dataCache.description = descArea.getText();
-		
+
 		if( procedure != null )
 			dataCache.procedure = procedure.getText();
-		
+
 		if( answer != null )
 			dataCache.answer = answer.getText();
-		
+
 		if( statusBox != null )
 			dataCache.status = statusBox.getSelectionIndex();
 	}
@@ -176,10 +176,10 @@ public class QuestionEditor extends RationaleEditorBase {
 	@Override
 	protected void onRefreshForm(RationaleUpdateEvent pEvent) {
 		boolean l_dirty = isDirty();
-		
+
 		// Something Has Changed, Reload This Element From The DB
-		getQuestion().fromDatabase(pEvent.getElement().getName());
-		
+		getQuestion().fromDatabase(getQuestion().getID());
+
 		if( nameField.getText().equals(dataCache.name) )
 		{
 			nameField.setText(getQuestion().getName());
@@ -187,7 +187,7 @@ public class QuestionEditor extends RationaleEditorBase {
 		}
 		else
 			l_dirty = true;
-		
+
 		if( descArea.getText().equals(dataCache.description) )
 		{
 			descArea.setText(getQuestion().getDescription());
@@ -195,7 +195,7 @@ public class QuestionEditor extends RationaleEditorBase {
 		}
 		else
 			l_dirty = true;
-		
+
 		if( procedure.getText().equals(dataCache.procedure) )
 		{
 			procedure.setText(getQuestion().getProcedure());
@@ -203,7 +203,7 @@ public class QuestionEditor extends RationaleEditorBase {
 		}
 		else
 			l_dirty = true;
-		
+
 		if( answer.getText().equals(dataCache.answer) )
 		{
 			answer.setText(getQuestion().getAnswer());
@@ -211,19 +211,19 @@ public class QuestionEditor extends RationaleEditorBase {
 		}
 		else
 			l_dirty = true;
-		
+
 		if( statusBox.getSelectionIndex() == dataCache.status )
 		{
 			Enumeration iterator;
 			int index;
-			
+
 			for( index=0, iterator=QuestionStatus.elements();
-					iterator.hasMoreElements();
-					index++)
+			iterator.hasMoreElements();
+			index++)
 			{
 				QuestionStatus stype = (QuestionStatus) iterator.nextElement();
-//				Don't add status elements - they are put there in setupForm
-//				statusBox.add( stype.toString() );
+				//				Don't add status elements - they are put there in setupForm
+				//				statusBox.add( stype.toString() );
 				if (stype.toString().compareTo(getQuestion().getStatus().toString()) == 0)
 				{
 					statusBox.select(index);
@@ -233,10 +233,10 @@ public class QuestionEditor extends RationaleEditorBase {
 		}
 		else
 			l_dirty = true;
-		
+
 		setDirty(l_dirty);
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see SEURAT.editors.RationaleEditorBase#setupForm(org.eclipse.swt.widgets.Composite)
 	 */
@@ -246,7 +246,7 @@ public class QuestionEditor extends RationaleEditorBase {
 		gridLayout.marginHeight = 5;
 		gridLayout.makeColumnsEqualWidth = true;
 		parent.setLayout(gridLayout);
-		
+
 		if (isCreating())
 		{
 			getQuestion().setStatus(QuestionStatus.UNANSWERED);
@@ -257,9 +257,9 @@ public class QuestionEditor extends RationaleEditorBase {
 		 QuestionInferences inf = new QuestionInferences();
 		 Vector newStat = inf.updateQuestion(ourQuest);
 		 } */
-		
+
 		new Label(parent, SWT.NONE).setText("Name:");
-		
+
 		nameField =  new Text(parent, SWT.SINGLE | SWT.BORDER);
 		nameField.setText(getQuestion().getName());
 		GridData gridData = new GridData(GridData.HORIZONTAL_ALIGN_FILL | GridData.VERTICAL_ALIGN_BEGINNING);
@@ -269,9 +269,9 @@ public class QuestionEditor extends RationaleEditorBase {
 		gridData.horizontalAlignment = GridData.FILL;
 		nameField.addModifyListener(getNeedsSaveListener());
 		nameField.setLayoutData(gridData);
-		
+
 		new Label(parent, SWT.NONE).setText("Description:");
-		
+
 		descArea = new Text(parent, SWT.MULTI | SWT.WRAP | SWT.BORDER | SWT.V_SCROLL);
 		descArea.setText(getQuestion().getDescription());
 		descArea.addModifyListener(getNeedsSaveListener());
@@ -284,7 +284,7 @@ public class QuestionEditor extends RationaleEditorBase {
 		gridData.verticalAlignment = GridData.FILL;
 		gridData.horizontalAlignment = GridData.FILL;
 		descArea.setLayoutData(gridData);
-		
+
 		new Label(parent, SWT.NONE).setText("Status:");
 		statusBox = new Combo(parent, SWT.DROP_DOWN | SWT.READ_ONLY);
 		statusBox.addModifyListener(getNeedsSaveListener());
@@ -297,18 +297,18 @@ public class QuestionEditor extends RationaleEditorBase {
 			statusBox.add( stype.toString() );
 			if (stype.toString().compareTo(getQuestion().getStatus().toString()) == 0)
 			{
-//				System.out.println(ourQuest.getStatus().toString());
+				//				System.out.println(ourQuest.getStatus().toString());
 				statusBox.select(j);
-//				System.out.println(j);
+				//				System.out.println(j);
 			}
 			j++;
 		}
-		
+
 		new Label(parent, SWT.NONE).setText(" ");
 		new Label(parent, SWT.NONE).setText(" ");
-		
+
 		new Label(parent, SWT.NONE).setText("Procedure:");
-		
+
 		procedure = new Text(parent, SWT.MULTI | SWT.WRAP | SWT.BORDER | SWT.V_SCROLL);
 		procedure.setText(getQuestion().getProcedure());
 		procedure.addModifyListener(getNeedsSaveListener());
@@ -321,9 +321,9 @@ public class QuestionEditor extends RationaleEditorBase {
 		gridData.verticalAlignment = GridData.FILL;
 		gridData.horizontalAlignment = GridData.FILL;
 		procedure.setLayoutData(gridData);  
-		
+
 		new Label(parent, SWT.NONE).setText("Answer:");
-		
+
 		answer = new Text(parent, SWT.MULTI | SWT.WRAP | SWT.BORDER | SWT.V_SCROLL);
 		answer.setText(getQuestion().getAnswer());
 		gridData = new GridData(GridData.HORIZONTAL_ALIGN_FILL);
@@ -345,10 +345,10 @@ public class QuestionEditor extends RationaleEditorBase {
 		{
 			System.out.println("Question Editor: Updates Not Available!");
 		}
-		
+
 		updateFormCache();
 	}
-		
+
 	/* (non-Javadoc)
 	 * @see SEURAT.editors.RationaleEditorBase#saveData()
 	 */
@@ -358,7 +358,10 @@ public class QuestionEditor extends RationaleEditorBase {
 				(getQuestion().getName() == nameField.getText() || checker.check(false)))
 		{
 			// Set the question's parent data correctly
-			getQuestion().setParent(getParentElement());
+			RationaleElement parentElement = getParentElement();
+			if (isCreating()){
+				getQuestion().setParent(parentElement);
+			}
 			getQuestion().setName(nameField.getText());
 			getQuestion().setDescription(descArea.getText());
 			getQuestion().setProcedure(procedure.getText());
@@ -382,16 +385,17 @@ public class QuestionEditor extends RationaleEditorBase {
 				}
 			}			
 			//comment before this made no sense...
-			getQuestion().setID(getQuestion().toDatabase(getQuestion().getParent(), getQuestion().getPtype()));
+			Question quest = getQuestion();
+			getQuestion().setID(quest.toDatabase(quest.getParent(), quest.getPtype()));
 			return true;
 		}
 		else
 		{
 			String l_message = "";
 			l_message += "The question name you have specified is either already"
-					+ " in use or empty. Please make sure that you have specified"
-					+ " a question name and the question name does not already exist"
-					+ " in the database.";
+				+ " in use or empty. Please make sure that you have specified"
+				+ " a question name and the question name does not already exist"
+				+ " in the database.";
 			MessageBox mbox = new MessageBox(getSite().getShell(), SWT.ICON_ERROR);
 			mbox.setMessage(l_message);
 			mbox.setText("Question Name Is Invalid");
@@ -399,7 +403,7 @@ public class QuestionEditor extends RationaleEditorBase {
 		}
 		return false;
 	}
-	
+
 	/**
 	 * Wrap a question in a logical file
 	 */
@@ -420,7 +424,7 @@ public class QuestionEditor extends RationaleEditorBase {
 		 * @return The question wrapped in the logical file.
 		 */
 		public Question getData() { return (Question)getAdapter(Question.class); }
-		
+
 		/* (non-Javadoc)
 		 * @see SEURAT.editors.RationaleEditorInput#getName()
 		 */

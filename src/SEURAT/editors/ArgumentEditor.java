@@ -322,8 +322,7 @@ public class ArgumentEditor extends RationaleEditorBase {
 	{
 		boolean l_dirty = isDirty();
 		
-		if( pEvent != null )
-			getArgument().fromDatabase(pEvent.getElement().getName());
+		getArgument().fromDatabase(getArgument().getID());
 		
 		if( nameField.getText().equals(dataCache.name))
 		{

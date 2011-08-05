@@ -1762,7 +1762,7 @@ public class RationaleDBCreate
 	
 	public static final String CREATE_PATTERNPARTICIPANTS(){
 		return beginTable("patternparticipants") + tablePart("ID INTEGER PRIMARY KEY")
-				+ tablePart("pattern_id INTEGER REFERENCES PATTERNS(id) NOT NULL")
+				+ tablePart("pattern_id INTEGER NOT NULL REFERENCES PATTERNS(id)")
 				+ tablePart("name VARCHAR(255) NOT NULL")
 				+ tablePart("minParticipants INTEGER NOT NULL")
 				+ tablePart("maxParticipants INTEGER NOT NULL") 
@@ -1771,38 +1771,38 @@ public class RationaleDBCreate
 	
 	public static final String CREATE_PARTPART(){
 		return beginTable("part_part") + tablePart("ID INTEGER PRIMARY KEY")
-				+ tablePart("part_id INTEGER REFERENCES PATTERNPARTICIPANTS(id) NOT NULL")
-				+ tablePart("ref_id INTEGER REFERENCES PATTERNPARTICIPANTS(id) NOT NULL")
+				+ tablePart("part_id INTEGER NOT NULL REFERENCES PATTERNPARTICIPANTS(id)")
+				+ tablePart("ref_id INTEGER NOT NULL REFERENCES PATTERNPARTICIPANTS(id)")
 				+ tablePart("type INTEGER NOT NULL CHECK(type>=0)")
 				+ endTable("UNIQUE(part_id, ref_id)");
 	}
 	
 	public static final String CREATE_OPERATIONS(){
 		return beginTable("operations") + tablePart("ID INTEGER PRIMARY KEY")
-				+ tablePart("part_id INTEGER REFERENCES PATTERNPARTICIPANTS(id) NOT NULL")
+				+ tablePart("part_id INTEGER NOT NULL REFERENCES PATTERNPARTICIPANTS(id)")
 				+ tablePart("name VARCHAR(255) NOT NULL") 
 				+ endTable("UNIQUE(part_id, name)");
 	}
 	
 	public static final String CREATE_OPERATION_PARTICIPANT(){
 		return beginTable("operation_participant") + tablePart("ID INTEGER PRIMARY KEY")
-				+ tablePart("oper_id INTEGER REFERENCES OPERATIONS(id) NOT NULL")
+				+ tablePart("oper_id INTEGER NOT NULL REFERENCES OPERATIONS(id)")
 				+ tablePart("part_id INTEGER REFERENCES PATTERNPARTICIPANTS(id)")
 				+ endTable("type INTEGER");
 	}
 	
 	public static final String CREATE_DIAGRAM_ALTERNATIVE(){
 		return beginTable("diagram_alternative") + tablePart("ID INTEGER PRIMARY KEY")
-				+ tablePart("alt_id INTEGER REFERENCES ALTERNATIVES(id) NOT NULL UNIQUE")
-				+ tablePart("pattern_id INTEGER REFERENCES PATTERNS(id) NOT NULL")
+				+ tablePart("alt_id INTEGER NOT NULL UNIQUE REFERENCES ALTERNATIVES(id)")
+				+ tablePart("pattern_id INTEGER NOT NULL REFERENCES PATTERNS(id)")
 				+ tablePart("package_xmi_id VARCHAR(255) NOT NULL")
 				+ endTable("file_path VARCHAR(255) NOT NULL");
 	}
 	
 	public static final String CREATE_DIAGRAM_PATTERNELEMENTS(){
 		return beginTable("diagram_patternelements") + tablePart("ID INTEGER PRIMARY KEY")
-				+ tablePart("alt_id INTEGER REFERENCES ALTERNATIVES(id) NOT NULL")
-				+ tablePart("part_id INTEGER REFERENCES PATTERNPARTICIPANTS(id) NOT NULL")
+				+ tablePart("alt_id INTEGER NOT NULL REFERENCES ALTERNATIVES(id)")
+				+ tablePart("part_id INTEGER NOT NULL REFERENCES PATTERNPARTICIPANTS(id)")
 				+ tablePart("xmi_id VARCHAR(255) NOT NULL UNIQUE")
 				+ tablePart("part2_id INTEGER REFERENCES PATTERNPARTICIPANTS(id)")
 				+ endTable("assoc_type INTEGER");

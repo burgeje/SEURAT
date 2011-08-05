@@ -4598,11 +4598,19 @@ public final class RationaleDB implements Serializable {
 			+ tp.getOverallScore() + ", '" + RationaleDBUtil.escape(tp.getDescription()) + "')";
 			stmt.execute(expr);
 		} catch (java.sql.SQLIntegrityConstraintViolationException e){
-			if (e.getMessage().contains("duplicate"))
+			//"duplicate" for derby engine, "Duplicate" for MySQL engine.
+			if (e.getMessage().contains("duplicate") || e.getMessage().contains("Duplicate"))
 				System.out.println("WARNING: Skipping duplicated entry " + tp.getName());
 			else
 				System.out.println("WARNING: Skipping invalid entry " + tp.getName());
-		}catch (SQLException e){
+		} catch (com.mysql.jdbc.exceptions.MySQLIntegrityConstraintViolationException e){
+			//"duplicate" for derby engine, "Duplicate" for MySQL engine.
+			if (e.getMessage().contains("duplicate") || e.getMessage().contains("Duplicate"))
+				System.out.println("WARNING: Skipping duplicated entry " + tp.getName());
+			else
+				System.out.println("WARNING: Skipping invalid entry " + tp.getName());
+		}
+		catch (SQLException e){
 			e.printStackTrace();
 		} 
 	}
