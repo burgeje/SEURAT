@@ -3,7 +3,7 @@ xmlns:o="urn:schemas-microsoft-com:office:office"
 xmlns:w="urn:schemas-microsoft-com:office:word"
 xmlns:x="urn:schemas-microsoft-com:office:excel"
 xmlns:m="http://schemas.microsoft.com/office/2004/12/omml"
-xmlns="http://www.w3.org/TR/REC-html40">
+xmlns:mv="http://macVmlSchemaUri" xmlns="http://www.w3.org/TR/REC-html40">
 
 <head>
 <meta name=Title content="">
@@ -17,10 +17,10 @@ xmlns="http://www.w3.org/TR/REC-html40">
  <o:DocumentProperties>
   <o:Author>Yechen Qiao</o:Author>
   <o:LastAuthor>Yechen Qiao</o:LastAuthor>
-  <o:Revision>2</o:Revision>
-  <o:TotalTime>5</o:TotalTime>
+  <o:Revision>3</o:Revision>
+  <o:TotalTime>6</o:TotalTime>
   <o:Created>2011-08-04T19:00:00Z</o:Created>
-  <o:LastSaved>2011-08-04T19:09:00Z</o:LastSaved>
+  <o:LastSaved>2011-08-05T20:33:00Z</o:LastSaved>
   <o:Pages>1</o:Pages>
   <o:Words>291</o:Words>
   <o:Characters>1662</o:Characters>
@@ -348,15 +348,19 @@ xmlns="http://www.w3.org/TR/REC-html40">
 	mso-font-signature:-536859905 -1073711037 9 0 511 0;}
 @font-face
 	{font-family:"\FF2D\FF33 \660E\671D";
-	mso-font-charset:78;
-	mso-generic-font-family:auto;
-	mso-font-pitch:variable;
+	panose-1:0 0 0 0 0 0 0 0 0 0;
+	mso-font-charset:128;
+	mso-generic-font-family:roman;
+	mso-font-format:other;
+	mso-font-pitch:fixed;
 	mso-font-signature:1 134676480 16 0 131072 0;}
 @font-face
 	{font-family:"\FF2D\FF33 \660E\671D";
-	mso-font-charset:78;
-	mso-generic-font-family:auto;
-	mso-font-pitch:variable;
+	panose-1:0 0 0 0 0 0 0 0 0 0;
+	mso-font-charset:128;
+	mso-generic-font-family:roman;
+	mso-font-format:other;
+	mso-font-pitch:fixed;
 	mso-font-signature:1 134676480 16 0 131072 0;}
 @font-face
 	{font-family:Cambria;
@@ -394,6 +398,9 @@ span.GramE
 .MsoChpDefault
 	{mso-style-type:export-only;
 	mso-default-props:yes;
+	font-size:10.0pt;
+	mso-ansi-font-size:10.0pt;
+	mso-bidi-font-size:10.0pt;
 	font-family:Cambria;
 	mso-ascii-font-family:Cambria;
 	mso-ascii-theme-font:minor-latin;
@@ -403,9 +410,6 @@ span.GramE
 	mso-hansi-theme-font:minor-latin;
 	mso-bidi-font-family:"Times New Roman";
 	mso-bidi-theme-font:minor-bidi;}
-.MsoPapDefault
-	{mso-style-type:export-only;
-	margin-bottom:10.0pt;}
 @page WordSection1
 	{size:8.5in 11.0in;
 	margin:1.0in 1.25in 1.0in 1.25in;
@@ -494,19 +498,22 @@ table.MsoNormalTable
 	mso-style-priority:99;
 	mso-style-parent:"";
 	mso-padding-alt:0in 5.4pt 0in 5.4pt;
-	mso-para-margin-top:0in;
-	mso-para-margin-right:0in;
-	mso-para-margin-bottom:10.0pt;
-	mso-para-margin-left:0in;
+	mso-para-margin:0in;
+	mso-para-margin-bottom:.0001pt;
 	mso-pagination:widow-orphan;
-	font-size:12.0pt;
+	font-size:10.0pt;
 	font-family:Cambria;
 	mso-ascii-font-family:Cambria;
 	mso-ascii-theme-font:minor-latin;
 	mso-hansi-font-family:Cambria;
 	mso-hansi-theme-font:minor-latin;}
 </style>
-<![endif]-->
+<![endif]--><!--[if gte mso 9]><xml>
+ <o:shapedefaults v:ext="edit" spidmax="1027"/>
+</xml><![endif]--><!--[if gte mso 9]><xml>
+ <o:shapelayout v:ext="edit">
+  <o:idmap v:ext="edit" data="1"/>
+ </o:shapelayout></xml><![endif]-->
 </head>
 
 <body bgcolor=white lang=EN-US style='tab-interval:.5in'>
@@ -528,7 +535,7 @@ table stores the pattern participant information. This includes:<o:p></o:p></spa
 <p class=MsoNormal><span style='font-size:16.0pt;font-family:"Courier New"'>CREATE
 TABLE <span class=GramE>PATTERNPARTICIPANTS(</span><br>
 id INTEGER PRIMARY KEY, <br>
-<span class=SpellE>pattern_id</span> INTEGER REFERENCES PATTERNS(id) NOT NULL,<br>
+<span class=SpellE>pattern_id</span> INTEGER NOT NULL REFERENCES PATTERNS(id),<br>
 name VARCHAR(255) #Name of the participant,<br>
 min INTEGER #Minimum number of participants to implement in a class diagram,<br>
 max INTEGER #Maximum number of participants to implement in a class diagram,<br>
@@ -542,10 +549,10 @@ Participant-Participant relationships<o:p></o:p></span></p>
 <p class=MsoNormal><span style='font-size:16.0pt;font-family:"Courier New"'>CREATE
 TABLE PART_<span class=GramE>PART(</span><br>
 id INTEGER PRIMARY KEY #Unique identification,<br>
-<span class=SpellE>part_id</span> INTEGER REFERENCES PATTERNPARTICIPANTS(id)
-NOT NULL,<br>
-<span class=SpellE>ref_id</span> INTEGER REFERENCES PATTERNPARTICIPANTS(id) NOT
-NULL,<br>
+<span class=SpellE>part_id</span> INTEGER NOT NULL REFERENCES
+PATTERNPARTICIPANTS(id),<br>
+<span class=SpellE>ref_id</span> INTEGER NOT NULL REFERENCES
+PATTERNPARTICIPANTS(id),<br>
 type INTEGER NOT NULL CHECK (type &gt;= 0),<br>
 UNIQUE(<span class=SpellE>part_id</span>, <span class=SpellE>ref_id</span>))<o:p></o:p></span></p>
 
@@ -556,21 +563,21 @@ the pattern participants<o:p></o:p></span></p>
 
 <p class=MsoNormal><span style='font-size:16.0pt;font-family:"Courier New"'>CREATE
 TABLE <span class=GramE>OPERATIONS(</span><br>
-id INTEGER PRIMARY <span class=SpellE>KEY,</span><br>
-<span class=SpellE>part_id</span> INTEGER REFERENCES PATTERNPARTICIPANTS(id)
-NOT NULL,<br>
+id INTEGER PRIMARY KEY,<br>
+<span class=SpellE>part_id</span> INTEGER NOT NULL REFERENCES PATTERNPARTICIPANTS(id),<br>
 name VARCHAR(255),<br>
 UNIQUE(<span class=SpellE>part_id</span>, name));<o:p></o:p></span></p>
 
 <p class=MsoNormal><span style='font-size:16.0pt'><o:p>&nbsp;</o:p></span></p>
 
 <p class=MsoNormal><span style='font-size:16.0pt'>OPERATION_PARTICIPANT:
-Referenced participants of operation, not including the “is part of” relationship.<o:p></o:p></span></p>
+Referenced participants of operation, not including the “is part of”
+relationship.<o:p></o:p></span></p>
 
 <p class=MsoNormal><span style='font-size:16.0pt;font-family:"Courier New"'>CREATE
 TABLE OPERATION_<span class=GramE>PARTICIPANT(</span><br>
 id INTEGER PRIMARY KEY,<br>
-<span class=SpellE>oper_id</span> INTEGER REFERENCES OPERATIONS(id) NOT NULL,<br>
+<span class=SpellE>oper_id</span> INTEGER NOT NULL REFERENCES OPERATIONS(id),<br>
 <span class=SpellE>part_id</span> INTEGER REFERENCES PATTERNPARTICIPANTS(id),<br>
 type INTEGER);<o:p></o:p></span></p>
 
@@ -581,8 +588,8 @@ type INTEGER);<o:p></o:p></span></p>
 <p class=MsoNormal><span style='font-size:16.0pt;font-family:"Courier New"'>CREATE
 TABLE DIAGRAM_<span class=GramE>ALTERNATIVE(</span><br>
 id integer primary key,<br>
-<span class=SpellE>alt_id</span> integer references alternatives(id) not null,<br>
-<span class=SpellE>pattern_id</span> integer references patterns(id) not null,<br>
+<span class=SpellE>alt_id</span> integer not null references alternatives(id),<br>
+<span class=SpellE>pattern_id</span> integer not null references patterns(id),<br>
 <span class=SpellE>package_xmi_id</span> <span class=SpellE>varchar</span>(255)
 not null,<br>
 <span class=SpellE>file_path</span> <span class=SpellE>varchar</span>(255) not
@@ -595,9 +602,9 @@ null);<o:p></o:p></span></p>
 <p class=MsoNormal><span style='font-size:16.0pt;font-family:"Courier New"'>CREATE
 TABLE DIAGRAM_<span class=GramE>PATTERNELEMENTS(</span><br>
 id integer primary key,<br>
-<span class=SpellE>alt_id</span> integer references alternatives(id) not null,<br>
-<span class=SpellE>part_id</span> integer references <span class=SpellE>patternparticipants</span>(id)
-not null,<br>
+<span class=SpellE>alt_id</span> integer not null references alternatives(id),<br>
+<span class=SpellE>part_id</span> integer not null references <span
+class=SpellE>patternparticipants</span>(id),<br>
 <span class=SpellE>xmi_id</span> <span class=SpellE>varchar</span>(255) not
 null unique,<br>
 part2_id integer references <span class=SpellE>patternparticipants</span>(id),<br>
