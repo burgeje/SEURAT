@@ -24,23 +24,23 @@
       <import plugin="org.eclipse.ui.ide"/>
       <import plugin="org.eclipse.search"/>
    </requires>
-   <extension-point id="seurat_api" name="edu.wpi.cs.jburge.SEURAT.api.Navigator" schema="schema/api.exsd"/>
+   <extension-point id="seurat_api" name="%extension-point.name" schema="schema/api.exsd"/>
 
    <extension
          point="org.eclipse.ui.views">
       <category
-            name="SEURAT"
+            name="%category.name"
             id="edu.wpi.cs.jburge.SEURAT">
       </category>
            <view
-            name="RationaleExplorer"
+            name="%view.name"
             icon="icons/Rat.gif"
             category="edu.wpi.cs.jburge.SEURAT"
             class="edu.wpi.cs.jburge.SEURAT.views.RationaleExplorer"
             id="edu.wpi.cs.jburge.SEURAT.views.RationaleExplorer">
       </view>
           <view
-            name="CandidateRationaleExplorer"
+            name="%view.name.0"
             icon="icons/Rat.gif"
             category="edu.wpi.cs.jburge.SEURAT"
             class="edu.wpi.cs.jburge.SEURAT.views.CandidateRationaleExplorer"
@@ -63,7 +63,7 @@
       </view>
       -->
       <view
-            name="Rationale Task List"
+            name="%view.name.1"
             icon="icons/Rat.gif"
             category="edu.wpi.cs.jburge.SEURAT"
             class="edu.wpi.cs.jburge.SEURAT.views.RationaleTaskView"
@@ -74,7 +74,7 @@
             class="edu.wpi.cs.jburge.SEURAT.views.PatternLibrary"
             icon="icons/rat.GIF"
             id="edu.wpi.cs.jburge.SEURAT.patternlibrary"
-            name="Pattern Library"
+            name="%view.name.2"
             restorable="true">
       </view>   
             <view
@@ -82,7 +82,7 @@
             class="edu.wpi.cs.jburge.SEURAT.views.TacticLibrary"
             icon="icons/rat.GIF"
             id="edu.wpi.cs.jburge.SEURAT.tacticlibrary"
-            name="Tactic Library"
+            name="%view.name.3"
             restorable="true">
       </view> 
    </extension>
@@ -90,7 +90,7 @@
    <extension
          id="SEURAT.ratmarker"
          point="org.eclipse.core.resources.markers"
-         name="Rationale Marker">
+         name="%extension.name">
       <persistent value="false"/>
       <super type="org.eclipse.core.resources.bookmark"/>
       <super type="org.eclipse.core.resources.problemmarker"/>
@@ -126,7 +126,7 @@
 
 
 isGoToPreviousNavigationTargetKey="ismyAppGoToPreviousNavigationTarget"
-            label="Rationale Marker"
+            label="%specification.label"
 
 
 showInNextPrevDropdownToolbarActionKey="showmyAppInNextPrevDropdownToolbarAction"
@@ -149,7 +149,7 @@ isGoToNextNavigationTargetKey="ismyAppRecordGoToNextNavigationTarget"
             class="edu.wpi.cs.jburge.SEURAT.decorators.SEURATLightWeightDecorator"
             id="edu.wpi.cs.jburge.SEURAT.decorators.ratdecorator">
          <description>
-            The SEURAT decorator indicating rationale presence
+            %decorator.description
          </description>
       </decorator>
    </extension>
@@ -161,7 +161,7 @@ isGoToNextNavigationTargetKey="ismyAppRecordGoToNextNavigationTarget"
    		 	objectClass="org.eclipse.jdt.core.IJavaProject">
    		 	<action
    		 		id="edu.wpi.cs.jburge.SEURAT.actions.OpenRationale"
-	      		label="Open Rationale"
+	      		label="%action.label"
 	       		class="edu.wpi.cs.jburge.SEURAT.actions.OpenRationale"	
            		definitionId="edu.wpi.cs.jburge.SEURAT.actions.OpenRationale"
 	       		enablesFor="1">
@@ -172,7 +172,7 @@ isGoToNextNavigationTargetKey="ismyAppRecordGoToNextNavigationTarget"
    		 	objectClass="org.eclipse.core.resources.IProject">
    		 	<action
    		 		id="edu.wpi.cs.jburge.SEURAT.actions.OpenRationale"
-	      		label="Open Rationale"
+	      		label="%action.label.0"
 	       		class="edu.wpi.cs.jburge.SEURAT.actions.OpenRationale"	
            		definitionId="edu.wpi.cs.jburge.SEURAT.actions.OpenRationale"
 	       		enablesFor="1">
@@ -182,7 +182,7 @@ isGoToNextNavigationTargetKey="ismyAppRecordGoToNextNavigationTarget"
    			id="edu.wpi.cs.jburge.SEURAT.action.contribution.popup.bookmark"
    			targetID="org.eclipse.ui.views.BookmarkNavigator">
    			<action
-   			   label="Remove Association"
+   			   label="%action.label.1"
    			   class="edu.wpi.cs.jburge.SEURAT.actions.RemoveBookmarkAssociation"
    			   menubarPath="additions"
    			   enablesFor="+"
@@ -193,7 +193,7 @@ isGoToNextNavigationTargetKey="ismyAppRecordGoToNextNavigationTarget"
    			id="edu.wpi.cs.jburge.SEURAT.action.contribution.popup.explorer"
    			targetID="org.eclipse.jdt.ui.PackageExplorer">
    			<action
-   			   label="Remove Association"
+   			   label="%action.label.2"
    			   class="edu.wpi.cs.jburge.SEURAT.actions.RemoveRationaleAssociation"
    			   menubarPath="additions"
    			   enablesFor="+"
@@ -204,7 +204,7 @@ isGoToNextNavigationTargetKey="ismyAppRecordGoToNextNavigationTarget"
    			id="edu.wpi.cs.jburge.SEURAT.action.contribution.popup.explorer"
    			targetID="org.eclipse.jdt.ui.PackageExplorer">
    			<action
-   			   label="Associate"
+   			   label="%action.label.3"
    			   class="edu.wpi.cs.jburge.SEURAT.actions.AssociateAlternative"
    			   menubarPath="additions"
    			   enablesFor="+"
@@ -218,16 +218,16 @@ isGoToNextNavigationTargetKey="ismyAppRecordGoToNextNavigationTarget"
           <page
                 class="SEURAT.preferences.SEURATPreferencePage"
                 id="SEURAT.preferences.SEURATPreferencePage"
-                name="SEURAT"/>
+                name="%page.name"/>
           <page 
           		class="SEURAT.preferences.SEURATDerbyPreferencePage"
           		id="SEURAT.preferences.SEURATDerbyPreferencePage"
-          		name="Derby Database Settings"
+          		name="%page.name.0"
           		category="SEURAT.preferences.SEURATPreferencePage"/>
           <page
           		class="SEURAT.preferences.SEURATMysqlPreferencePage"
           		id="SEURAT.preferences.SEURATMysqlPreferencePage"
-          		name="Mysql Database Settings"
+          		name="%page.name.1"
           		category="SEURAT.preferences.SEURATPreferencePage"/>
        </extension>
  
@@ -244,7 +244,7 @@ isGoToNextNavigationTargetKey="ismyAppRecordGoToNextNavigationTarget"
                 extensions="seurat_requirement_editor"
                 icon="icons/newReq.gif"
                 id="SEURAT.editors.RequirementEditor"
-                name="SEURAT Requirement Editor">
+                name="%editor.name">
           </editor>
           <editor
                 class="SEURAT.editors.DecisionEditor"
@@ -252,7 +252,7 @@ isGoToNextNavigationTargetKey="ismyAppRecordGoToNextNavigationTarget"
                 extensions="seurat_decision_editor"
                 icon="icons/newDec.gif"
                 id="SEURAT.editors.DecisionEditor"
-                name="SEURAT Decision Editor">
+                name="%editor.name.0">
           </editor>
           <editor
                 class="SEURAT.editors.AlternativeEditor"
@@ -260,7 +260,7 @@ isGoToNextNavigationTargetKey="ismyAppRecordGoToNextNavigationTarget"
                 extensions="seurat_alternative_editor"
                 icon="icons/newAlt.gif"
                 id="SEURAT.editors.AlternativeEditor"
-                name="SEURAT Alternative Editor">
+                name="%editor.name.1">
           </editor>
           <editor
                 class="SEURAT.editors.ArgumentEditor"
@@ -268,7 +268,7 @@ isGoToNextNavigationTargetKey="ismyAppRecordGoToNextNavigationTarget"
                 extensions="seurat_argument_editor"
                 icon="icons/newArg.gif"
                 id="SEURAT.editors.ArgumentEditor"
-                name="SEURAT Argument Editor">
+                name="%editor.name.2">
           </editor>
           <editor
                 class="SEURAT.editors.TradeoffEditor"
@@ -276,7 +276,7 @@ isGoToNextNavigationTargetKey="ismyAppRecordGoToNextNavigationTarget"
                 extensions="seurat_tradeoff_editor"
                 icon="icons/Trade.gif"
                 id="SEURAT.editors.TradeoffEditor"
-                name="SEURAT Tradeoff Editor">
+                name="%editor.name.3">
           </editor>
           <editor
                 class="edu.wpi.cs.jburge.SEURAT.views.GraphicalRationale"
@@ -284,7 +284,7 @@ isGoToNextNavigationTargetKey="ismyAppRecordGoToNextNavigationTarget"
                 extensions="seurat_graphical_rationale"
                 icon="icons/newReq.gif"
                 id="SEURAT.views.GraphicalRationale"
-                name="SEURAT Graphical Rationale">
+                name="%editor.name.4">
           </editor>
           <editor
                 class="SEURAT.editors.QuestionEditor"
@@ -292,7 +292,7 @@ isGoToNextNavigationTargetKey="ismyAppRecordGoToNextNavigationTarget"
                 extensions="seurat_question_editor"
                 icon="icons/newQuest.gif"
                 id="SEURAT.editors.QuestionEditor"
-                name="SEURAT Question Editor">
+                name="%editor.name.5">
           </editor>
           <editor
                 class="SEURAT.editors.CandidateRationaleEditor"
@@ -300,7 +300,7 @@ isGoToNextNavigationTargetKey="ismyAppRecordGoToNextNavigationTarget"
                 extensions="seurat_candidate_rationale_editor"
                 icon="icons/Rat.gif"
                 id="SEURAT.editors.CandidateRationaleEditor"
-                name="SEURAT Candidate Rationale Editor">
+                name="%editor.name.6">
           </editor>
           <editor
                 class="SEURAT.editors.PatternEditor"
@@ -308,7 +308,7 @@ isGoToNextNavigationTargetKey="ismyAppRecordGoToNextNavigationTarget"
                 extensions="seurat_pattern_editor"
                 icon="/icons/PatternLib.GIF"
                 id="SEURAT.editors.PatternEditor"
-                name="SEURAT pattern editor">
+                name="%editor.name.7">
           </editor>
           <editor
                 class="SEURAT.editors.PatternDecisionEditor"
@@ -316,7 +316,7 @@ isGoToNextNavigationTargetKey="ismyAppRecordGoToNextNavigationTarget"
                 extensions="seurat_editors_paterndecisioneditor"
                 icon="/icons/Dec.gif"
                 id="SEURAT.editors.PatternDecisionEditor"
-                name="Pattern Decision Editor">
+                name="%editor.name.8">
           </editor>
                     <editor
                 class="SEURAT.editors.TacticEditor"
@@ -324,7 +324,7 @@ isGoToNextNavigationTargetKey="ismyAppRecordGoToNextNavigationTarget"
                 extensions="seurat_editors_tacticeditor"
                 icon="/icons/tacticIcon.gif"
                 id="SEURAT.editors.TacticEditor"
-                name="Tactic Editor">
+                name="%editor.name.9">
           </editor>
                     <editor
                 class="SEURAT.editors.TacticPatternEditor"
@@ -332,7 +332,7 @@ isGoToNextNavigationTargetKey="ismyAppRecordGoToNextNavigationTarget"
                 extensions="seurat_tacticpattern_editor"
                 icon="/icons/PatternLib.GIF"
                 id="SEURAT.editors.TacticPatternEditor"
-                name="SEURAT tactic-pattern editor">
+                name="%editor.name.10">
           </editor>
           <editor
                 class="SEURAT.editors.PatternParticipantEditor"
@@ -340,7 +340,7 @@ isGoToNextNavigationTargetKey="ismyAppRecordGoToNextNavigationTarget"
                 extensions="seurat_patternparticipant_editor"
                 icon="/icons/PatternLib.GIF"
                 id="SEURAT.editors.PatternParticipantEditor"
-                name="SEURAT pattern participant editor">
+                name="%editor.name.11">
           </editor>
        </extension>	
        
@@ -359,7 +359,7 @@ isGoToNextNavigationTargetKey="ismyAppRecordGoToNextNavigationTarget"
 	<extension point="org.eclipse.search.searchPages">
 		<page id="SEURAT.search.searchPage"
 			icon="icons/ratSearch.gif"
-			label="SEURAT Search Page"
+			label="%page.label"
 			sizeHint="460,160"
 			extensions="seurat_requirement_editor:90, seurat_decision_editor:90, seurat_alternative_editor:90, seurat_argument_editor:90, seurat_tradeoff_editor:90, seurat_question_editor:90"
 			showScopeSection="false"
@@ -399,12 +399,12 @@ isGoToNextNavigationTargetKey="ismyAppRecordGoToNextNavigationTarget"
 		<!-- Add A Button To The Search Menu That Opens The SEURAT Search Window -->   
 	<extension point = "org.eclipse.ui.actionSets">
 	   <actionSet id="SEURAT.search.OpenSeuratSearchAction"
-		   label="Open SEURAT Search"
+		   label="%actionSet.label"
 		   visible="true">
 		   <action id="SEURAT.search.OpenSeuratSearchAction"
 			   menubarPath="org.eclipse.search.menu/dialogGroup"
-			   label="SEURAT Search"
-			   tooltip="Open The SEURAT Search Window"
+			   label="%action.label.4"
+			   tooltip="%action.tooltip"
 			   icon="icons/ratSearch.gif"
 			   class="SEURAT.search.OpenSeuratSearchAction"
 			   >
