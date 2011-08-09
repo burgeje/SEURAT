@@ -189,7 +189,8 @@ IPropertyChangeListener{
 			{
 				//				System.out.println("found Java Element");
 				navigatorSelection = (IJavaElement) ((IStructuredSelection) selection).getFirstElement();
-				associate.setSelection(navigatorSelection);
+				if (navigatorSelection != null)
+					associate.setSelection(navigatorSelection);
 			}
 			else
 			{

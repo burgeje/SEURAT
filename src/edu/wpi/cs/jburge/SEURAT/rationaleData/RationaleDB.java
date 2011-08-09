@@ -2,6 +2,7 @@ package edu.wpi.cs.jburge.SEURAT.rationaleData;
 
 import java.util.*;
 import java.io.*; //needed to be serializable
+import java.net.MalformedURLException;
 import java.net.URL;
 
 import javax.xml.transform.*;
@@ -21,6 +22,8 @@ import java.sql.ResultSet;
 import java.sql.PreparedStatement;
 
 import org.eclipse.core.resources.ResourcesPlugin;
+import org.eclipse.core.runtime.FileLocator;
+import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.MessageBox;
@@ -121,8 +124,7 @@ public final class RationaleDB implements Serializable {
 	 */
 	//private static String ratDBCreateFile = SEURATPlugin.getDefault().getStateLocation()
 	//.addTrailingSeparator().toOSString() + "ratDBCreate.xml";
-	private static String ratDBCreateFile = SEURATPlugin.getDefault().getBundle().getLocation() +
-	"ratDBCreate.xml";
+	private static URL ratDBPath = SEURATPlugin.getDefault().getBundle().getEntry("/");
 	/**
 	 * The default database name
 	 */
@@ -384,12 +386,19 @@ public final class RationaleDB implements Serializable {
 
 		// Now import the pattern library
 		boolean importXMLSuccess = false;
-		if (new File(ratDBCreateFile.substring(ratDBCreateFile.indexOf('/'))).exists()){
-			String xmlFile = ratDBCreateFile.substring(ratDBCreateFile.indexOf('/'));
-			importXMLSuccess = RationaleDBUtil.importFromXML(xmlFile);
+		URL ratDBCreateURL;
+		String ratDBFilePath = "";
+		try {
+			ratDBCreateURL = FileLocator.resolve(new URL(ratDBPath, "ratDBCreate.xml"));
+			ratDBFilePath = ratDBCreateURL.getPath();
+		} catch (Exception e1) {
+			e1.printStackTrace();
+		}
+		if (new File(ratDBFilePath).exists()){
+			importXMLSuccess = RationaleDBUtil.importFromXML(ratDBFilePath);
 		}
 		if (!importXMLSuccess){		
-			System.err.println("Unable fo find " + ratDBCreateFile);
+			System.err.println("Unable fo find " + ratDBFilePath);
 			System.err.println("Loading from hard-coded defaults");
 			RationaleDBCreate.resetCurrentID();
 			// Import hard-coded data, first the ontology, then the pattern library...
@@ -4127,7 +4136,14 @@ public final class RationaleDB implements Serializable {
 	 * @return the filename
 	 */
 	public static String getOntName() {
-		return ratDBCreateFile;
+		try {
+			URL ratDBCreateURL = FileLocator.resolve(new URL(ratDBPath, "ratDBCreate.xml"));
+			String ratDBFilePath = ratDBCreateURL.getPath();
+			return ratDBFilePath;
+		} catch (Exception e1) {
+			e1.printStackTrace();
+		}
+		return "";
 	}
 
 	/**
