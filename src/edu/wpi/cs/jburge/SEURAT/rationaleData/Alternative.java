@@ -1680,20 +1680,38 @@ public class Alternative extends RationaleElement implements Serializable {
 		fromDatabase(name);
 		return true;
 	}
+	
+	/**
+	 * This method provides backward compatability with Wang's original code.
+	 * @param decision
+	 * @param matchingMethod
+	 * @return
+	 */
+	public boolean generateFromPattern(Decision decision, int matchingMethod){
+		return generateFromPattern(decision, matchingMethod, new ArrayList<Pattern>());
+	}
 
 	/**
-	 * This is the old generate from pattern helper from Wang's code.
-	 * It creates requirement and arguments from the pattern that are selected under the decision.
-	 * Minimal changes are done so far. Some changes have been made to provide support to my GUI.
+	 * This method creates requirement and arguments from the pattern that is selected under the decision.
+	 * <br>
+	 * This method is RECURSIVE. After generation of all arguments, it will generate the children of the pattern decision.
+	 * After that, it will generate all sub-decisions of the current alternative.
+	 * <br>
+	 * Let D_1, D_2, ..., D_j be the decisions of the pattern. Let p_i_j be the j's pattern for decision D_i.
+	 * BASE CASE 1: For each m: A := |{p_m_n: for each n, p_m_n NOT IN visited}| = 0
+	 * Recursion: For each element p_m_n in A, it will call generateFromPattern for parent decision D_m.
 	 * @param decision
 	 * @param matchingMethod 0 = exact matching, 1 = contribution matching, 2 = not matching
 	 * @return
 	 */
-	public boolean generateFromPattern(Decision decision, int matchingMethod){
+	public boolean generateFromPattern(Decision decision, int matchingMethod, ArrayList<Pattern> visited){
 		boolean isCompleted = false;
 		if(getPatternID() != -1){
+			//Find the pattern, and mark this pattern as "Visited".
 			Pattern pattern = new Pattern();
 			pattern.fromDatabase(this.getPatternID());
+			visited.add(pattern);
+			
 			setDescription("This alternative is generated on the basis of pattern " + pattern.getName());
 			setStatus(AlternativeStatus.ATISSUE);
 			setParent(decision);
@@ -1833,6 +1851,38 @@ public class Alternative extends RationaleElement implements Serializable {
 					}
 				}
 			}
+			
+			//Generate Sub-decisions...
+			Iterator<PatternDecision> subdecI = pattern.getSubDecisions().iterator();
+			while (subdecI.hasNext()){
+				PatternDecision curDec = subdecI.next();
+				Decision subDec = new Decision();
+				subDec.setParent(this);
+				subDec.setPtype(RationaleElementType.ALTERNATIVE);
+				subDec.setName(curDec.getName());
+				subDec.setDescription(curDec.getDescription());
+				subDec.setDesigner(curDec.getDesigner());
+				subDec.setPhase(curDec.getPhase());
+				subDec.setEnabled(curDec.getEnabled());
+				subDec.setStatus(curDec.getStatus());
+				subDec.setType(curDec.getType());
+				this.addSubDecision(subDec);
+				subDec.toDatabase(getID(), RationaleElementType.ALTERNATIVE);
+				
+				Iterator<Pattern> subpatternI = curDec.getCandidatePatterns().iterator();
+				while (subpatternI.hasNext()){
+					Pattern curSubPattern = subpatternI.next();
+					
+					if (!visited.contains(curSubPattern)){
+						//Does not contain the pattern. This means we will create a new alternative.
+						Alternative subAlt = new Alternative();
+						subAlt.setPatternID(curSubPattern.getID());
+						subAlt.setName(curSubPattern.getName());
+						subAlt.generateFromPattern(subDec, matchingMethod, visited);
+					}
+				}
+			}
+			
 
 			isCompleted = true;
 			this.fromDatabase(this.name);
