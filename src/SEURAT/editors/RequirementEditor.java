@@ -517,7 +517,7 @@ public class RequirementEditor extends RationaleEditorBase {
 		new Label(parent, SWT.NONE).setText("Type:");
 		
 		
-		typeBox = new Combo(parent, SWT.NONE);
+		typeBox = new Combo(parent, SWT.DROP_DOWN | SWT.READ_ONLY);
 		typeBox.addModifyListener(getNeedsSaveListener());
 		Enumeration typeEnum = ReqType.elements();
 //		System.out.println("got enum");
@@ -575,7 +575,7 @@ public class RequirementEditor extends RationaleEditorBase {
 		});
 		
 		new Label(parent, SWT.NONE).setText("Status:");
-		statusBox = new Combo(parent, SWT.NONE);
+		statusBox = new Combo(parent, SWT.DROP_DOWN | SWT.READ_ONLY);
 		statusBox.addModifyListener(getNeedsSaveListener());
 		Enumeration statEnum = ReqStatus.elements();
 		int j=0;
@@ -613,7 +613,7 @@ public class RequirementEditor extends RationaleEditorBase {
 		
 	new Label(parent, SWT.NONE).setText("Importance:");
 		
-		importanceBox = new Combo(parent, SWT.NONE);
+		importanceBox = new Combo(parent, SWT.DROP_DOWN | SWT.READ_ONLY);
 		Enumeration impEnum = Importance.elements();
 		int l=0;
 		Importance itype;

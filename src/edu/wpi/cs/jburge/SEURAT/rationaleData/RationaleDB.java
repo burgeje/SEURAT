@@ -2,6 +2,7 @@ package edu.wpi.cs.jburge.SEURAT.rationaleData;
 
 import java.util.*;
 import java.io.*; //needed to be serializable
+import java.net.MalformedURLException;
 import java.net.URL;
 
 import javax.xml.transform.*;
@@ -21,6 +22,8 @@ import java.sql.ResultSet;
 import java.sql.PreparedStatement;
 
 import org.eclipse.core.resources.ResourcesPlugin;
+import org.eclipse.core.runtime.FileLocator;
+import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.MessageBox;
@@ -121,8 +124,7 @@ public final class RationaleDB implements Serializable {
 	 */
 	//private static String ratDBCreateFile = SEURATPlugin.getDefault().getStateLocation()
 	//.addTrailingSeparator().toOSString() + "ratDBCreate.xml";
-	private static String ratDBCreateFile = SEURATPlugin.getDefault().getBundle().getLocation() +
-	"ratDBCreate.xml";
+	private static URL ratDBPath = SEURATPlugin.getDefault().getBundle().getEntry("/");
 	/**
 	 * The default database name
 	 */
@@ -384,12 +386,19 @@ public final class RationaleDB implements Serializable {
 
 		// Now import the pattern library
 		boolean importXMLSuccess = false;
-		if (new File(ratDBCreateFile.substring(ratDBCreateFile.indexOf('/'))).exists()){
-			String xmlFile = ratDBCreateFile.substring(ratDBCreateFile.indexOf('/'));
-			importXMLSuccess = RationaleDBUtil.importFromXML(xmlFile);
+		URL ratDBCreateURL;
+		String ratDBFilePath = "";
+		try {
+			ratDBCreateURL = FileLocator.resolve(new URL(ratDBPath, "ratDBCreate.xml"));
+			ratDBFilePath = ratDBCreateURL.getPath();
+		} catch (Exception e1) {
+			e1.printStackTrace();
+		}
+		if (new File(ratDBFilePath).exists()){
+			importXMLSuccess = RationaleDBUtil.importFromXML(ratDBFilePath);
 		}
 		if (!importXMLSuccess){		
-			System.err.println("Unable fo find " + ratDBCreateFile);
+			System.err.println("Unable fo find " + ratDBFilePath);
 			System.err.println("Loading from hard-coded defaults");
 			RationaleDBCreate.resetCurrentID();
 			// Import hard-coded data, first the ontology, then the pattern library...
@@ -500,6 +509,7 @@ public final class RationaleDB implements Serializable {
 	private static PreparedStatement m_patternFromDB = null;
 
 	private static PreparedStatement m_altPatternFromDB = null;
+	
 
 	/**
 	 * Accessor Method For The Ontology Entries FromDatabase Pseudo
@@ -583,6 +593,7 @@ public final class RationaleDB implements Serializable {
 			//int doNothing;
 			//doNothing = 0;
 		}
+		
 	}
 
 	/**
@@ -1706,11 +1717,61 @@ public final class RationaleDB implements Serializable {
 			stmt.execute(query);
 			query = "DELETE FROM PATTERNS where id = " + patternID;
 			stmt.execute(query);
+			
+			//Delete pattern participants
+			deletePatternParticipants(patternName);
 
 		} catch (SQLException e){
 			e.printStackTrace();
 		}
 
+	}
+	
+	/**
+	 * Given the name of the pattern, delete all of its pattern participants.
+	 * Used when deleting pattern or refreshing data in participant editor.
+	 * @param patternName
+	 */
+	public void deletePatternParticipants(String patternName){
+		Vector<PatternParticipant> participants = getParticipantsFromPatternName(patternName);
+		Iterator<PatternParticipant> participantsI = participants.iterator();
+		while (participantsI.hasNext()){
+			participantsI.next().deleteFromDB();
+		}
+	}
+	
+	/**
+	 * Delete a tactic from database. Before deleting, must delete all references to the tactic first.
+	 * @param tacticName
+	 */
+	public void removeTactic(String tacticName){
+		Statement stmt = null;
+		ResultSet rs = null;
+		String query = "";
+		int tacticID = -1;
+		
+		//First, get the ID of the tactic.
+		query = "SELECT id from TACTICS where name = '" + tacticName + "'";
+		try {
+			stmt = conn.createStatement();
+			rs = stmt.executeQuery(query);
+			if (rs.next()){
+				tacticID = rs.getInt("id");
+			}
+			else {
+				System.err.println("Cannot find the ID of the tactic");
+				return;
+			}
+			
+			query = "DELETE FROM TACTIC_PATTERN WHERE tactic_id = " + tacticID;
+			stmt.execute(query);
+			query = "DELETE FROM TACTIC_NEGONTENTRIES WHERE tactic_id = " + tacticID;
+			stmt.execute(query);
+			query = "DELETE FROM TACTICS where id = " + tacticID;
+			stmt.execute(query);
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
 	}
 
 	/**
@@ -2099,6 +2160,28 @@ public final class RationaleDB implements Serializable {
 		}
 		return onts;
 	}
+	
+	/**
+	 * Given the name of a element of argument ontology, retrieve all of its leaves.
+	 * @param parentName the name to retrieve leaves from.
+	 * @return
+	 */
+	public Vector<OntEntry> getOntologyLeaves(String parentName){
+		Vector<OntEntry> list = new Vector<OntEntry>();
+		
+		Vector<OntEntry> children = getOntologyElements(parentName);
+		if (children.size() <= 0){
+			OntEntry entry = new OntEntry();
+			entry.fromDatabase(parentName);
+			list.add(entry);
+			return list;
+		}
+		Iterator<OntEntry> childrenI = children.iterator();
+		while (childrenI.hasNext()){
+			list.addAll(getOntologyLeaves(childrenI.next().getName()));
+		}
+		return list;
+	}
 
 	/**
 	 * Return a list of child element entries given the parent for treeview display
@@ -2441,7 +2524,7 @@ public final class RationaleDB implements Serializable {
 		ResultSet rs = null;
 		try{
 			stmt = conn.createStatement();
-			String query = "SELECT problemcategoryID from pattern_problemcategory WHERE patternID = " + patternID + "";
+			String query = "SELECT problemcategoryID from PATTERN_PROBLEMCATEGORY WHERE patternID = " + patternID + "";
 			rs = stmt.executeQuery(query);
 			if (rs.next()){
 				toReturn = rs.getInt("problemcategoryID");
@@ -2495,11 +2578,10 @@ public final class RationaleDB implements Serializable {
 		String query = "";
 		Statement stmt = null;
 		ResultSet rs = null;
-		Pattern pattern = new Pattern();
 
 		try {
 			stmt = conn.createStatement();
-			query = "SELECT name FROM patterns WHERE type = '"
+			query = "SELECT name FROM PATTERNS WHERE type = '"
 				+ patternType + "'";
 			rs = stmt.executeQuery(query);
 			//			while(rs.next()){
@@ -2513,11 +2595,51 @@ public final class RationaleDB implements Serializable {
 						.getString("name")), RationaleElementType.PATTERN);
 				patternList.addElement(element);
 			}
+			
+			rs.close();
+			stmt.close();
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		}		
+		}
 		return patternList;
+	}
+	
+	/**
+	 * Given positive quality attribute, get tactics helps the quality attribute.
+	 * 
+	 * @param category positive quality attribute. If null, then get all tactics from DB.
+	 * @return A vector of TreeParent, having element type TACTIC
+	 */
+	public Vector<TreeParent> getTactics(String category){
+		Vector<TreeParent> tacticList = new Vector<TreeParent>();
+		String query = "";
+		Statement stmt = null;
+		ResultSet rs = null;
+		try {
+			stmt = conn.createStatement();
+			query = "SELECT name FROM TACTICS";
+			
+			if (category != null && category.length() > 0){
+				OntEntry entry = new OntEntry();
+				entry.fromDatabase(category);
+				int categoryID = entry.getID();
+				if (categoryID > 0)
+					query += " WHERE quality = " + categoryID;
+			}
+			query += " ORDER BY name ASC";
+			rs = stmt.executeQuery(query);
+			
+			while (rs.next()){
+				TreeParent element = new TreeParent(RationaleDBUtil.decode(rs.getString("name")), 
+						RationaleElementType.TACTIC);
+				tacticList.add(element);
+			}
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return tacticList;
 	}
 
 	/**
@@ -2533,7 +2655,7 @@ public final class RationaleDB implements Serializable {
 
 		try {
 			stmt = conn.createStatement();
-			query = "SELECT name FROM patterns WHERE type = '"
+			query = "SELECT name FROM PATTERNS WHERE type = '"
 				+ type + "'";
 			rs = stmt.executeQuery(query);
 			while(rs.next()){
@@ -3376,8 +3498,7 @@ public final class RationaleDB implements Serializable {
 	 * @param parentType
 	 * @return
 	 */
-	public Vector getArchitecturePatterns(String parentName,
-			RationaleElementType parentType) {
+	public Vector<TreeParent> getArchitecturePatterns() {
 
 
 		return getPatterns("Architecture");
@@ -3389,8 +3510,7 @@ public final class RationaleDB implements Serializable {
 	 * @param parentType
 	 * @return
 	 */
-	public Vector getDesignPatterns(String parentName,
-			RationaleElementType parentType) {
+	public Vector<TreeParent> getDesignPatterns() {
 		return getPatterns("Design");
 	}
 
@@ -3398,7 +3518,7 @@ public final class RationaleDB implements Serializable {
 	 * Get patterns of type idiom
 	 * @return
 	 */
-	public Vector getIdioms() {
+	public Vector<TreeParent> getIdioms() {
 		return getPatterns("Idiom");
 	}
 
@@ -3619,7 +3739,7 @@ public final class RationaleDB implements Serializable {
 			for(int k=0; k<patternNames.size(); k++){
 				Pattern p = new Pattern();
 				p.fromDatabase(patternNames.get(k));				
-				insertCanPattern = "INSERT INTO pattern_decision (patternID, decisionID, parentType) VALUES (" + p.getID() + "," + pd.getID() + ", 'Decision')";
+				insertCanPattern = "INSERT INTO PATTERN_DECISION (patternID, decisionID, parentType) VALUES (" + p.getID() + "," + pd.getID() + ", 'Decision')";
 				//System.out.println(insertCanPattern);
 				stmt.execute(insertCanPattern);
 			}
@@ -4016,7 +4136,14 @@ public final class RationaleDB implements Serializable {
 	 * @return the filename
 	 */
 	public static String getOntName() {
-		return ratDBCreateFile;
+		try {
+			URL ratDBCreateURL = FileLocator.resolve(new URL(ratDBPath, "ratDBCreate.xml"));
+			String ratDBFilePath = ratDBCreateURL.getPath();
+			return ratDBFilePath;
+		} catch (Exception e1) {
+			e1.printStackTrace();
+		}
+		return "";
 	}
 
 	/**
@@ -4403,7 +4530,10 @@ public final class RationaleDB implements Serializable {
 			stmt.close();
 
 			//connection with sub-decision must be done in utility after decision has been created...
-		} catch (SQLException e){
+		} catch (java.sql.SQLIntegrityConstraintViolationException e){
+			System.out.println("WARNING: Skipping duplicated entry " + pattern.getName());
+		}
+		catch (SQLException e){
 			e.printStackTrace();
 		}
 	}
@@ -4417,7 +4547,7 @@ public final class RationaleDB implements Serializable {
 		try{
 			Statement stmt = conn.createStatement();
 			String expr = "INSERT INTO PATTERNDECISIONS (id, name, description, type, status, phase, ptype, subdecreq)"+
-			" values (" + pd.getID() + ", '" + pd.getName() + "', '" + pd.getDescription() + "', '" + 
+			" values (" + pd.getID() + ", '" + RationaleDBUtil.escape(pd.getName()) + "', '" + RationaleDBUtil.escape(pd.getDescription()) + "', '" + 
 			pd.getType().toString() + "', '" + pd.getStatus().toString() + "', '" + pd.getPhase().toString() +
 			"', 'Pattern', 'No')";
 			stmt.execute(expr);
@@ -4430,9 +4560,73 @@ public final class RationaleDB implements Serializable {
 				stmt.execute(expr);
 			}
 			stmt.close();
-		} catch (SQLIntegrityConstraintViolationException e){
-			System.out.println("WARNING: Duplicated Entry. Skipping: " + pd.getName());
-		} catch (SQLException e){
+		} catch (java.sql.SQLIntegrityConstraintViolationException e){
+			System.out.println("WARNING: Skipping duplicated entry " + pd.getName());
+		}
+		catch (SQLException e){
+			e.printStackTrace();
+		} 
+	}
+	
+	/**
+	 * Given a tactic imported from XML, add it to the database.
+	 * @param t
+	 */
+	public void addTacticFromXML(Tactic t){
+		try{
+			Statement stmt = conn.createStatement();
+			String expr = "INSERT INTO TACTICS (id, name, quality, description, time_beh) " +
+			" VALUES (" +
+			t.getID() + ", '" + RationaleDBUtil.escape(t.getName()) +  "', " + t.getCategory().getID() + ", '" + RationaleDBUtil.escape(t.getDescription()) + "', " + t.getTime_behavior() + ")";
+			stmt.execute(expr);
+			
+			Iterator<OntEntry> effectsI = t.getBadEffects().iterator();
+			while (effectsI.hasNext()){
+				int effectID = RationaleDB.findAvailableID("TACTIC_NEGONTENTRIES");
+				OntEntry cur = effectsI.next();
+				expr = "INSERT INTO TACTIC_NEGONTENTRIES " +
+				" (id, tactic_id, ont_id) VALUES (" + effectID + ", " + t.getID() + ", " + 
+				cur.getID() + ")";
+				stmt.execute(expr);
+			}
+			
+		} catch (java.sql.SQLIntegrityConstraintViolationException e) {
+			if (e.getMessage().contains("duplicate"))
+				System.out.println("WARNING: Skipping duplicated entry " + t.getName());
+			else
+				System.out.println("WARNING: Skipping invalid entry " + t.getName());
+		}catch (SQLException e){
+			e.printStackTrace();
+		} 
+	}
+	
+	/**
+	 * Given a tactic-pattern imported from XML, add it to the database.
+	 * @param tp
+	 */
+	public void addTacticPatternFromXML(TacticPattern tp){
+		try{
+			Statement stmt = conn.createStatement();
+			String expr = "INSERT INTO TACTIC_PATTERN " +
+			"(id, tactic_id, pattern_id, struct_change, num_changes, beh_change, changes, description) " +
+			"values (" + 
+			tp.getID() + ", " + tp.getTacticID() + ", " +  tp.getPatternID() + ", " + tp.getStruct_change() + ", " + tp.getNumChanges() + ", " + tp.getBeh_change() + ", "
+			+ tp.getOverallScore() + ", '" + RationaleDBUtil.escape(tp.getDescription()) + "')";
+			stmt.execute(expr);
+		} catch (java.sql.SQLIntegrityConstraintViolationException e){
+			//"duplicate" for derby engine, "Duplicate" for MySQL engine.
+			if (e.getMessage().contains("duplicate") || e.getMessage().contains("Duplicate"))
+				System.out.println("WARNING: Skipping duplicated entry " + tp.getName());
+			else
+				System.out.println("WARNING: Skipping invalid entry " + tp.getName());
+		} catch (com.mysql.jdbc.exceptions.MySQLIntegrityConstraintViolationException e){
+			//"duplicate" for derby engine, "Duplicate" for MySQL engine.
+			if (e.getMessage().contains("duplicate") || e.getMessage().contains("Duplicate"))
+				System.out.println("WARNING: Skipping duplicated entry " + tp.getName());
+			else
+				System.out.println("WARNING: Skipping invalid entry " + tp.getName());
+		}
+		catch (SQLException e){
 			e.printStackTrace();
 		} 
 	}
@@ -4468,6 +4662,9 @@ public final class RationaleDB implements Serializable {
 			new Integer(id).toString() + ", '" + category + "', '" + type + "')";
 			stmt.execute(expr);
 			stmt.close();
+		}
+		catch (SQLIntegrityConstraintViolationException e){
+			System.out.println("WARNING: Problem category already exists. Skipping.");
 		}
 		catch (SQLException e){
 			e.printStackTrace();
@@ -4526,11 +4723,39 @@ public final class RationaleDB implements Serializable {
 				pattern.fromDatabase(id);
 				toReturn.add(pattern);
 			}
+			rs.close();
 			stmt.close();
 		} catch (SQLException e){
 			e.printStackTrace();
 		}
 
+		return toReturn;
+	}
+	
+	/**
+	 * This method returns all database info about tactics.
+	 * Used for XML export.
+	 * @return
+	 */
+	public Vector<Tactic> getTacticData(){
+		Vector<Tactic> toReturn = new Vector<Tactic>();
+		try{
+			Statement stmt = conn.createStatement();
+			ResultSet rs = null;
+			String query = "SELECT id FROM TACTICS";
+			rs = stmt.executeQuery(query);
+			
+			while (rs.next()){
+				Integer id = rs.getInt(1);
+				Tactic tactic = new Tactic();
+				tactic.fromDatabase(id);
+				toReturn.add(tactic);
+			}
+			rs.close();
+			stmt.close();
+		} catch (SQLException e){
+			e.printStackTrace();
+		}
 		return toReturn;
 	}
 
@@ -5172,15 +5397,15 @@ public final class RationaleDB implements Serializable {
 	 * It seems the XML Import/Export has broken the ID auto_increment. I need this for every
 	 * insertion of all entities.
 	 * This method returns the next available ID after the max of ID's given dbName.
-	 * @param dbName The database name to find the max ID.
+	 * @param tableName The table name to find the max ID.
 	 */
-	public static int findAvailableID(String dbName){
+	public static int findAvailableID(String tableName){
 		Statement stmt = null;
 		ResultSet r = null;
-		String query = "SELECT max(id) FROM " + dbName;
+		String query = "SELECT max(id) FROM " + tableName;
 		try{
 			stmt = conn.createStatement();
-			r = stmt.executeQuery(query);
+			r = stmt.executeQuery(query.toUpperCase());
 			if (r.next()){
 				return r.getInt(1) + 1;
 			}
@@ -5188,6 +5413,62 @@ public final class RationaleDB implements Serializable {
 			e.printStackTrace();
 		}
 		return 1;
+	}
+	
+	/**
+	 * Given pattern name, return a vector of pattern participant
+	 * @param patternName the name of the pattern
+	 * @return empty vector if the no such pattern exist. Otherwise return as specified.
+	 */
+	public Vector<PatternParticipant> getParticipantsFromPatternName(String patternName){
+		Pattern pattern = new Pattern();
+		pattern.fromDatabase(patternName);
+		if (pattern.getID() >= 0)
+			return getParticipantsFromPatternID(pattern.getID());
+		return new Vector<PatternParticipant>();
+	}
+	
+	/**
+	 * Given pattern's ID, return a vector of pattern participant
+	 * @param patternID -1 if to get all participants, otherwise provide a valid patternID.
+	 * @return a vector of pattern participant.
+	 */
+	public Vector<PatternParticipant> getParticipantsFromPatternID(int patternID){
+		Vector<PatternParticipant> toReturn = new Vector<PatternParticipant>();
+		Statement stmt = null;
+		ResultSet rs = null;
+		String query = "SELECT id FROM PATTERNPARTICIPANTS";
+		if (patternID >= 0) query += " WHERE pattern_id = " + patternID;
+		try{
+			stmt = conn.createStatement();
+			rs = stmt.executeQuery(query);
+			while (rs.next()){
+				PatternParticipant pp = new PatternParticipant();
+				pp.fromDatabase(rs.getInt("id"));
+				toReturn.add(pp);
+			}
+		} catch (SQLException e){
+			e.printStackTrace();
+		}
+		return toReturn;
+	}
+	
+	public Vector<ParticipantOperation> getAllParticipantOperations(){
+		Vector<ParticipantOperation> toReturn = new Vector<ParticipantOperation>();
+		try {
+			Statement stmt = conn.createStatement();
+			String query = "SELECT id FROM OPERATIONS";
+			ResultSet rs = stmt.executeQuery(query);
+			while (rs.next()){
+				ParticipantOperation op = new ParticipantOperation();
+				op.fromDatabase(rs.getInt("id"));
+				toReturn.add(op);
+			}
+			
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		return toReturn;
 	}
 
 }

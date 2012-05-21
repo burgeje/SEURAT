@@ -306,7 +306,7 @@ public class PatternDecision extends RationaleElement{
 				else
 					updateD = "D.designer = " + designer.getID();
 
-				updateQuery = "UPDATE patterndecisions D " +
+				updateQuery = "UPDATE PATTERNDECISIONS D " +
 				"SET D.parent = " + new Integer(parent).toString() +
 				", D.ptype = '" + ptype.toString() + 
 				"', D.phase = '" + devPhase.toString() +
@@ -324,7 +324,8 @@ public class PatternDecision extends RationaleElement{
 			}
 			else 
 			{
-				int id = RationaleDB.findAvailableID("PatternDecisions");
+				if (!fromXML)
+					id = RationaleDB.findAvailableID("PATTERNDECISIONS");
 				
 				String parentSt;
 				String parentTSt;
@@ -346,7 +347,7 @@ public class PatternDecision extends RationaleElement{
 				else
 					updateD = new Integer(designer.getID()).toString();
 
-				updateQuery = "INSERT INTO PatternDecisions "+
+				updateQuery = "INSERT INTO PATTERNDECISIONS "+
 				"(id, name, description, type, status, phase, subdecreq, parent, ptype, designer) " +
 				"VALUES (" + id + ", '" +
 				RationaleDBUtil.escape(this.name) + "', '" +
@@ -388,7 +389,7 @@ public class PatternDecision extends RationaleElement{
 			//in either case, we want to update any sub-requirements in case
 			//they are new!
 			//now, we need to get our ID
-			updateQuery = "SELECT id FROM patterndecisions where name='" +
+			updateQuery = "SELECT id FROM PATTERNDECISIONS where name='" +
 			RationaleDBUtil.escape(this.name) + "'";
 			rs = stmt.executeQuery(updateQuery); 
 
@@ -446,7 +447,7 @@ public class PatternDecision extends RationaleElement{
 				"constr = " + new Integer(kid.getID()).toString() +
 				" and decision = " + new Integer(ourid).toString();
 
-				rs = stmt.executeQuery(updateQuery);
+				rs = stmt.executeQuery(updateQuery.toUpperCase());
 				if (rs.next())
 				{
 					rs.close();
@@ -457,7 +458,7 @@ public class PatternDecision extends RationaleElement{
 					"VALUES (" +
 					new Integer(kid.getID()).toString() + ", " +
 					new Integer(ourid).toString() + ")";
-					System.out.println(insertRel);
+					System.out.println(insertRel.toUpperCase());
 					stmt.execute(insertRel);
 				}
 				kid.toDatabase(ourid);
@@ -496,7 +497,7 @@ public class PatternDecision extends RationaleElement{
 			stmt = conn.createStatement();
 
 			findQuery = "SELECT name  FROM " +
-			"patterndecisions where id = " +
+			"PATTERNDECISIONS where id = " +
 			new Integer(decID).toString();
 //			***			System.out.println(findQuery);
 			rs = stmt.executeQuery(findQuery);
@@ -545,7 +546,7 @@ public class PatternDecision extends RationaleElement{
 		try {
 			stmt = conn.createStatement();
 			findQuery = "SELECT *  FROM " +
-			"patterndecisions where name = '" +
+			"PATTERNDECISIONS where name = '" +
 			name + "'";
 //			***			System.out.println(findQuery);
 			rs = stmt.executeQuery(findQuery);
@@ -847,7 +848,7 @@ public class PatternDecision extends RationaleElement{
 
 			try {
 				stmt = conn.createStatement(); 
-				findQuery = "SELECT id, parent FROM patterndecisions where name='" +
+				findQuery = "SELECT id, parent FROM PATTERNDECISIONS where name='" +
 				this.name + "'";
 				System.out.println(findQuery);
 				rs = stmt.executeQuery(findQuery); 

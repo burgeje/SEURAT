@@ -151,6 +151,7 @@ public class OntEntry extends RationaleElement implements Serializable
 	
 	public Importance getImportance()
 	{
+		if (importance.equals(Importance.DEFAULT)) return Importance.MODERATE;
 		return importance;
 	}
 	
@@ -280,7 +281,7 @@ public class OntEntry extends RationaleElement implements Serializable
 			{
 				
 				//now, update it with the new information
-				String updateOnt = "UPDATE OntEntries " +
+				String updateOnt = "UPDATE ONTENTRIES " +
 				"SET name = '" +
 				RationaleDBUtil.escape(this.name) + "', " +
 				"description = '" +
@@ -296,10 +297,11 @@ public class OntEntry extends RationaleElement implements Serializable
 			}
 			else 
 			{
-				id = RationaleDB.findAvailableID("OntEntries");
+				if (!fromXML)
+					id = RationaleDB.findAvailableID("ONTENTRIES");
 				//now, we have determined that the ontolgy entry is new
 				
-				String newArgSt = "INSERT INTO OntEntries " +
+				String newArgSt = "INSERT INTO ONTENTRIES " +
 				"(id, name, description, importance) " +
 				"VALUES (" + id + ", '" +
 				RationaleDBUtil.escape(this.name) + "', '" +
@@ -311,7 +313,7 @@ public class OntEntry extends RationaleElement implements Serializable
 				l_updateEvent = m_eventGenerator.MakeCreated();				
 			}
 			//now, we need to get our ID
-			String findQuery2 = "SELECT id FROM OntEntries where name='" +
+			String findQuery2 = "SELECT id FROM ONTENTRIES where name='" +
 			this.name + "'";
 			rs = stmt.executeQuery(findQuery2); 
 //			***			System.out.println(findQuery2);
@@ -331,7 +333,7 @@ public class OntEntry extends RationaleElement implements Serializable
 			//if the parent ID is not zero, then update the parent-child relationship
 			if (pid > 0)
 			{
-				String findQuery3 = "SELECT * from OntRelationships WHERE " +
+				String findQuery3 = "SELECT * from ONTRELATIONSHIPS WHERE " +
 				"parent = " + new Integer(pid).toString() +
 				" and child = " + new Integer(ourid).toString();
 //				***				   System.out.println(findQuery3);
@@ -342,7 +344,7 @@ public class OntEntry extends RationaleElement implements Serializable
 				}
 				else
 				{
-					String insertRel = "INSERT INTO OntRelationships (parent, child) " +
+					String insertRel = "INSERT INTO ONTRELATIONSHIPS (parent, child) " +
 					"VALUES (" +
 					new Integer(pid).toString() + ", " +
 					new Integer(ourid).toString() + ")";
@@ -395,7 +397,7 @@ public class OntEntry extends RationaleElement implements Serializable
 			
 			try {
 				stmt = conn.createStatement(); 
-				findQuery = "SELECT id FROM OntEntries where name='" +
+				findQuery = "SELECT id FROM ONTENTRIES where name='" +
 				this.name + "'";
 				//System.out.println(findQuery);
 				rs = stmt.executeQuery(findQuery); 
@@ -444,7 +446,7 @@ public class OntEntry extends RationaleElement implements Serializable
 			stmt = conn.createStatement();
 			
 			findQuery = "SELECT *  FROM " +
-			"OntEntries where id = " +
+			"ONTENTRIES where id = " +
 			new Integer(id).toString();
 //			***			System.out.println(findQuery);
 			rs = stmt.executeQuery(findQuery);
@@ -555,6 +557,7 @@ public class OntEntry extends RationaleElement implements Serializable
 		
 		//add idref ***from the XML***
 		String idref = ontE.getAttribute("id");
+		id = Integer.parseInt(idref.substring(1));
 		
 		
 		//get our name

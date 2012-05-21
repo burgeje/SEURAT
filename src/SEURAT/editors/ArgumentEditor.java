@@ -322,8 +322,7 @@ public class ArgumentEditor extends RationaleEditorBase {
 	{
 		boolean l_dirty = isDirty();
 		
-		if( pEvent != null )
-			getArgument().fromDatabase(pEvent.getElement().getName());
+		getArgument().fromDatabase(getArgument().getID());
 		
 		if( nameField.getText().equals(dataCache.name))
 		{
@@ -689,7 +688,7 @@ public class ArgumentEditor extends RationaleEditorBase {
 		
 		new Label(parent, SWT.NONE).setText("Type:");
 		
-		typeChoice = new Combo(parent, SWT.NONE);
+		typeChoice = new Combo(parent, SWT.DROP_DOWN | SWT.READ_ONLY);
 		refreshChoices();
 		if ((isCreating()) && (getArgument().getPtype() != RationaleElementType.ARGUMENT))
 		{
@@ -715,7 +714,7 @@ public class ArgumentEditor extends RationaleEditorBase {
 		
 		new Label(parent, SWT.NONE).setText("Plausibility:");
 		
-		plausibilityBox = new Combo(parent, SWT.NONE);
+		plausibilityBox = new Combo(parent, SWT.DROP_DOWN | SWT.READ_ONLY);
 		Enumeration plausEnum = Plausibility.elements();
 		int j=0;
 		Plausibility stype;
@@ -738,7 +737,7 @@ public class ArgumentEditor extends RationaleEditorBase {
 		
 		new Label(parent, SWT.NONE).setText("Amount:");
 		
-		amountBox = new Combo(parent, SWT.NONE);
+		amountBox = new Combo(parent, SWT.DROP_DOWN | SWT.READ_ONLY);
 		int k;
 		for (k = 1;k < 11; k++)
 		{
@@ -748,6 +747,7 @@ public class ArgumentEditor extends RationaleEditorBase {
 				amountBox.select(k-1);
 			}
 		}
+		
 		gridData = new GridData(GridData.HORIZONTAL_ALIGN_FILL);
 		gridData.grabExcessHorizontalSpace = true;
 		gridData.horizontalAlignment = GridData.FILL;
@@ -756,7 +756,7 @@ public class ArgumentEditor extends RationaleEditorBase {
 		
 		new Label(parent, SWT.NONE).setText("Importance:");
 		
-		importanceBox = new Combo(parent, SWT.NONE);
+		importanceBox = new Combo(parent, SWT.DROP_DOWN | SWT.READ_ONLY);
 		Enumeration impEnum = Importance.elements();
 		int l=0;
 		Importance itype;
@@ -809,7 +809,7 @@ public class ArgumentEditor extends RationaleEditorBase {
 		//	another type...
 		new Label(parent, SWT.NONE).setText("Argument Type:");
 		
-		typeBox = new Combo(parent, SWT.NONE);
+		typeBox = new Combo(parent, SWT.DROP_DOWN | SWT.READ_ONLY);
 		typeBox.add("Alternative");
 		typeBox.add("Assumption");
 		typeBox.add("Claim");

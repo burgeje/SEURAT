@@ -465,7 +465,7 @@ public class PatternDecisionEditor extends RationaleEditorBase {
 		
 		new Label(parent, SWT.NONE).setText("Type:");
 		
-		typeBox = new Combo(parent, SWT.NONE);
+		typeBox = new Combo(parent, SWT.DROP_DOWN | SWT.READ_ONLY);
 		Enumeration typeEnum = DecisionType.elements();
 //		System.out.println("got enum");
 		int i = 0;
@@ -491,7 +491,7 @@ public class PatternDecisionEditor extends RationaleEditorBase {
 		
 		new Label(parent, SWT.NONE).setText("Status:");
 		
-		statusBox = new Combo(parent, SWT.NONE);
+		statusBox = new Combo(parent, SWT.DROP_DOWN | SWT.READ_ONLY);
 		Enumeration statEnum = DecisionStatus.elements();
 		int j=0;
 		DecisionStatus stype;
@@ -515,7 +515,7 @@ public class PatternDecisionEditor extends RationaleEditorBase {
 		
 		new Label(parent, SWT.NONE).setText("DevelopmentPhase:");
 		
-		phaseBox = new Combo(parent, SWT.NONE);
+		phaseBox = new Combo(parent, SWT.DROP_DOWN | SWT.READ_ONLY);
 		Enumeration phaseEnum = Phase.elements();
 		int k=0;
 		Phase ptype;

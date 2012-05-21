@@ -134,7 +134,7 @@ public class EditClaim extends NewRationaleElementGUI implements Serializable {
 		new Label(shell, SWT.NONE).setText("Direction:");
 		
 		
-		directionBox = new Combo(shell, SWT.NONE);
+		directionBox = new Combo(shell, SWT.DROP_DOWN | SWT.READ_ONLY);
 		Enumeration directionEnum = Direction.elements();
 		int j=0;
 		Direction stype;
@@ -154,7 +154,7 @@ public class EditClaim extends NewRationaleElementGUI implements Serializable {
 		directionBox.setLayoutData(gridData);
 		
 		new Label(shell, SWT.NONE).setText("Importance:");
-		importanceBox = new Combo(shell, SWT.NONE);
+		importanceBox = new Combo(shell, SWT.DROP_DOWN | SWT.READ_ONLY);
 		Enumeration impEnum = Importance.elements();
 		int l=0;
 		Importance itype;

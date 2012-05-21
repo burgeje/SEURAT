@@ -309,7 +309,7 @@ public class TradeoffEditor extends RationaleEditorBase {
 		
 		new Label(parent, SWT.NONE).setText("Symmetric:");
 		
-		symmetryBox = new Combo(parent, SWT.NONE);
+		symmetryBox = new Combo(parent, SWT.DROP_DOWN | SWT.READ_ONLY);
 		symmetryBox.addModifyListener(getNeedsSaveListener());
 		symmetryBox.add("No");
 		symmetryBox.add("Yes");

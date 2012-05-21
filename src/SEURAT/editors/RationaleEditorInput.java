@@ -6,6 +6,7 @@ import org.eclipse.ui.IPersistableElement;
 
 import edu.wpi.cs.jburge.SEURAT.rationaleData.*;
 import edu.wpi.cs.jburge.SEURAT.views.PatternLibrary;
+import edu.wpi.cs.jburge.SEURAT.views.TacticLibrary;
 import edu.wpi.cs.jburge.SEURAT.views.TreeParent;
 import edu.wpi.cs.jburge.SEURAT.views.RationaleExplorer;
 
@@ -20,6 +21,12 @@ public abstract class RationaleEditorInput implements IEditorInput {
 	 * The pattern library which opened this editor
 	 */	
 	private PatternLibrary patternLib;
+	
+	/**
+	 * The tactic library which opened this editor
+	 */
+	private TacticLibrary tacticLib;
+	
 	/**
 	 * The rationale explorer which opened this editor
 	 */
@@ -79,6 +86,20 @@ public abstract class RationaleEditorInput implements IEditorInput {
 		creating = pNew;
 	}
 	
+	public RationaleEditorInput(
+			TacticLibrary tacticLib,
+			TreeParent pTree,
+			RationaleElement pParent, 
+			RationaleElement pTarget, 
+			boolean pNew) 
+	{
+		this.tacticLib = tacticLib;
+		parentTree = pTree;
+		parentElement = pParent;
+		targetElement = pTarget;
+		creating = pNew;
+	}
+	
 	/**
 	 * check whether the class object is of the same type
 	 * as the type being wrapped by the logical file.
@@ -123,6 +144,9 @@ public abstract class RationaleEditorInput implements IEditorInput {
 		}
 		if( adapter == PatternLibrary.class){
 			return patternLib;
+		}
+		if( adapter == TacticLibrary.class){
+			return tacticLib;
 		}
 		
 		return null;

@@ -288,6 +288,23 @@ public class Question extends RationaleElement implements Serializable
 		return ourid;	
 		
 	}	
+	
+	public void fromDatabase(int id){
+		RationaleDB db = RationaleDB.getHandle();
+		Connection conn = db.getConnection();
+		try {
+			Statement stmt = conn.createStatement();
+			String query = "SELECT name from Questions where id = " + id;
+			ResultSet rs = stmt.executeQuery(query);
+			if (rs.next()){
+				this.id = id;
+				fromDatabase(RationaleDBUtil.decode(rs.getString("name")));
+			}
+		} catch (SQLException e){
+			e.printStackTrace();
+		}
+		
+	}
 	/**
 	 * Read in our question from the database
 	 * @param name - the question name (the question itself)

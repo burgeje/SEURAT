@@ -93,7 +93,7 @@ public class TreeParent extends TreeObject {
 		return (TreeObject [])children.toArray(new TreeObject[children.size()]);
 	}
 	
-	public Iterator getIterator()
+	public Iterator<TreeObject> getIterator()
 	{
 		return children.iterator();
 	}

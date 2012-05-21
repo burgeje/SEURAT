@@ -221,6 +221,17 @@ public class Utilities {
 				descriptor = SEURATPlugin.getImageDescriptor("newDec.gif");
 			}
 		} else if (pType == RationaleElementType.ALTERNATIVE) {
+			Alternative alt = new Alternative();
+			alt.fromDatabase(pElement.getName());
+			if (alt.getID() > 0 && alt.isUMLAssociated()){
+				if (pError == RationaleErrorLevel.ERROR){
+					descriptor = SEURATPlugin.getImageDescriptor("newAlt_UML_error.gif");
+				} else if (pError == RationaleErrorLevel.WARNING){
+					descriptor = SEURATPlugin.getImageDescriptor("newAlt_UML_warning.gif");
+				} else {
+					descriptor = SEURATPlugin.getImageDescriptor("newAlt_UML.gif");
+				}
+			}
 			if( pError == null )
 			{
 				pError = RationaleDB.getHandle().getActiveStatus(pName, pType);

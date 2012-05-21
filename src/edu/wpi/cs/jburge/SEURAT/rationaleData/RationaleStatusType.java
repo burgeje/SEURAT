@@ -169,4 +169,7 @@ public final class RationaleStatusType implements Serializable
 	public static final RationaleStatusType ARGUMENT_INCOMPLETE = new 
 	RationaleStatusType("Argument_Incomplete");
 	
+	public static final RationaleStatusType UML_VIOLATION = 
+			new RationaleStatusType("UML_Violation");
+	
 }

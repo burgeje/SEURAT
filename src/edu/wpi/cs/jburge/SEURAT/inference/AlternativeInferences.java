@@ -10,6 +10,7 @@ import java.sql.*;
 import java.util.Iterator;
 import java.util.Vector;
 
+import edu.wpi.cs.jburge.SEURAT.actions.VerifyUMLAssociationAction;
 import edu.wpi.cs.jburge.SEURAT.rationaleData.*;
 
 /**
@@ -18,8 +19,8 @@ import edu.wpi.cs.jburge.SEURAT.rationaleData.*;
  * @author jburge
  */
 public class AlternativeInferences {
-	
-	
+
+
 	/**
 	 * Constant indicating that two arguments disagree with each other
 	 */
@@ -32,12 +33,12 @@ public class AlternativeInferences {
 	 * Constant indicating that two arguments contradict each other
 	 */
 	static int DIFFERENT = 3;
-	
+
 	public AlternativeInferences() {
 		super();
 		// TODO Auto-generated constructor stub
 	}
-	
+
 	/**
 	 * Updates the rationale status when an alternative is deleted. This 
 	 * will affect any decisions that the alternative was a solution for
@@ -45,27 +46,27 @@ public class AlternativeInferences {
 	 * @return - a vector giving the status updates that need to be displayed
 	 */
 	public Vector<RationaleStatus> updateOnDelete(Alternative alt) {
-		
+
 		Vector<RationaleStatus> newStatus = new Vector<RationaleStatus>();
 		DecisionInferences inf = new DecisionInferences();
-		
+
 		RationaleDB db = RationaleDB.getHandle();
 		Connection conn = db.getConnection();
-		
+
 		Statement stmt = null; 
 		ResultSet rs = null; 
 		String findQuery = "";
 		//boolean error = false;
 		try {
 			stmt = conn.createStatement();
-			
-			
+
+
 			if (alt.getPtype() == RationaleElementType.DECISION)
 			{
 				findQuery = "SELECT name  FROM " +
-				"decisions where " +
-				"id = " + alt.getParent();
-//				***				 System.out.println(findQuery);
+						"decisions where " +
+						"id = " + alt.getParent();
+				//				***				 System.out.println(findQuery);
 				rs = stmt.executeQuery(findQuery);
 				while (rs.next())
 				{
@@ -78,7 +79,7 @@ public class AlternativeInferences {
 					}
 				}
 			} 	
-			
+
 		} catch (SQLException ex) {
 			RationaleDB.reportError(ex, "AlternativeInferences.UpdateOnDelete",
 					findQuery);
@@ -88,10 +89,10 @@ public class AlternativeInferences {
 		}
 		UpdateManager manager = UpdateManager.getHandle();
 		manager.addUpdate(alt.getID(), alt.getName(), RationaleElementType.ALTERNATIVE);
-		
+
 		return newStatus;
 	}
-	
+
 	/**
 	 * Performs updates needed when something has happened that might affect the
 	 * status of an alternative. This could mean an argument has changed, or some other
@@ -103,11 +104,43 @@ public class AlternativeInferences {
 		String findQuery = ""; 
 		Vector<RationaleStatus> newStatus  = new Vector<RationaleStatus>();
 		alt.evaluate(); //this is actually done when it is re-written...
-//		System.out.println("Saving alternative after update");
+		//		System.out.println("Saving alternative after update");
 		//alt.toDatabase(alt.getParent(), alt.getPtype());
-		
+
+		//lets check to see whether the UML is persistant.
+		if (alt.getID() > 0 && alt.isUMLAssociated()){
+			VerifyUMLAssociationAction verifier = new VerifyUMLAssociationAction(alt.getName());
+			verifier.run();
+			if (verifier.isViolated()){
+				String problem = "UML Association has been violated. ";
+				RationaleErrorLevel errLevel = RationaleErrorLevel.ERROR;
+				if (verifier.getErrorNo() == VerifyUMLAssociationAction.CLASSNOTFOUND){
+					problem += "No instance(class) of participant " 
+							+ verifier.getClassViolator1() + " exists in the diagram.";
+				}
+				else if (verifier.getErrorNo() == VerifyUMLAssociationAction.ASSOCIATIONVIOLATED){
+					problem += "One of the critical relations connected to " + verifier.getClassViolator1() + " has been servered";
+				}
+				else if (verifier.getErrorNo() == 0){
+					problem += "Cannot read or parse the UML model. Check whether the file is still accessibile and intact.";
+					errLevel = RationaleErrorLevel.WARNING;
+				}
+				RationaleStatus stat = new RationaleStatus(errLevel, problem, 
+						RationaleElementType.ALTERNATIVE, verifier.getExecDate(), alt.getID(), 
+						RationaleStatusType.UML_VIOLATION);
+				newStatus.add(stat);
+			}
+			if (alt.getStatus() != AlternativeStatus.ADOPTED){
+				String problem = "Alternative is not adopted but it is associated with an UML!";
+				RationaleStatus stat = new RationaleStatus(RationaleErrorLevel.ERROR, problem, 
+						RationaleElementType.ALTERNATIVE, verifier.getExecDate(), alt.getID(), 
+						RationaleStatusType.UML_VIOLATION);
+				newStatus.add(stat);
+			}
+		}
+
 		//lets check to see if we have any unanswered questions
-//		check to see if the selected alternative has any questions!
+		//		check to see if the selected alternative has any questions!
 		Iterator ourQuestions = alt.getQuestions().iterator();
 		while (ourQuestions.hasNext())
 		{
@@ -119,27 +152,27 @@ public class AlternativeInferences {
 						RationaleElementType.ALTERNATIVE, new java.util.Date(), alt.getID(),
 						RationaleStatusType.UNANSWERED_ALT_QUEST);
 				newStatus.add(stat);					
-//				***			System.out.println(problem);
+				//				***			System.out.println(problem);
 			}
 		}	
 		DecisionInferences inf = new DecisionInferences();
-		
+
 		RationaleDB db = RationaleDB.getHandle();
 		Connection conn = db.getConnection();
-		
+
 		Statement stmt = null; 
 		ResultSet rs = null; 
 		//boolean error = false;
 		try {
 			stmt = conn.createStatement();
-			
-			
+
+
 			if (alt.getPtype() == RationaleElementType.DECISION)
 			{
 				findQuery = "SELECT name  FROM " +
-				"decisions where " +
-				"id = " + alt.getParent();
-//				***				 System.out.println(findQuery);
+						"decisions where " +
+						"id = " + alt.getParent();
+				//				***				 System.out.println(findQuery);
 				rs = stmt.executeQuery(findQuery);
 				while (rs.next())
 				{
@@ -152,28 +185,28 @@ public class AlternativeInferences {
 					}
 				}
 			}
-			
+
 			//are we pre-supposed by anyone? opposed-by anyone? if we are,
 			//maybe they need to be updated.
-			
+
 			Vector<RationaleStatus> relResults = null;
 			Iterator relI = db.getDependentAlternatives(alt).iterator();
 			while (relI.hasNext())
 			{
-//				System.out.println("found some dependencies");
+				//				System.out.println("found some dependencies");
 				Alternative relAlt = (Alternative) relI.next();
 				//even if not selected, we will want to update the evaluation
-//				if (relAlt.getStatus() == AlternativeStatus.ADOPTED)
-//				{
+				//				if (relAlt.getStatus() == AlternativeStatus.ADOPTED)
+				//				{
 				AlternativeInferences altInf = new AlternativeInferences();
 				relResults = altInf.updateAlternative(relAlt);
-//				}
+				//				}
 			}
 			if (relResults != null)
 			{
 				newStatus.addAll(relResults);
 			}			 		
-			
+
 			//need to check to see if there are any arguments that don't have a 
 			//claim/requirement/assumption/etc. (recently reported)
 			Iterator argAll = alt.getAllArguments().iterator();
@@ -183,14 +216,14 @@ public class AlternativeInferences {
 				if (argB.getCategory() == ArgCategory.NONE)
 				{
 					String problem = "An incomplete argument " + 
-					                 "has been detected for Alt: " + alt.getName() + "'"; 
+							"has been detected for Alt: " + alt.getName() + "'"; 
 					RationaleStatus stat = new RationaleStatus(RationaleErrorLevel.ERROR, problem, 
 							RationaleElementType.ARGUMENT, new java.util.Date(), argB.getID(),
 							RationaleStatusType.ARGUMENT_INCOMPLETE);
 					newStatus.add(stat);					
 				}
 			}
-			
+
 			//need to check for contradictory arguments
 			//first, for the same argument on opposing sides
 			Iterator argAI = alt.getArgumentsAgainst().iterator();
@@ -202,17 +235,17 @@ public class AlternativeInferences {
 				{
 					Argument argF = (Argument) argFI.next();
 					int agreement = compareArguments(argA, argF);
-					
+
 					if (agreement != DIFFERENT)
 					{
 						String problem = "The same, or opposite argument, both supports and "+
-						" opposes alt '" + alt.getName() + "'"; 
+								" opposes alt '" + alt.getName() + "'"; 
 						RationaleStatus stat = new RationaleStatus(RationaleErrorLevel.ERROR, problem, 
 								RationaleElementType.ALTERNATIVE, new java.util.Date(), alt.getID(),
 								RationaleStatusType.CONTRADICTORY_ARGUMENTS);
 						newStatus.add(stat);
 					}
-					
+
 					// Not entirely clear on why this is commented out - this must have
 					// caused false errors.
 					/*		 			if (agreement == AGREE)
@@ -224,7 +257,7 @@ public class AlternativeInferences {
 					  RationaleElementType.ALTERNATIVE, new java.util.Date(), alt.getID(),
 					  RationaleStatusType.CONTRADICTORY_ARGUMENTS);
 					  newStatus.add(stat);					
-					  
+
 					  }
 					  else if ((agreement == DISAGREE) && 
 					  (argF.getCategory() == ArgCategory.REQUIREMENT))
@@ -236,10 +269,10 @@ public class AlternativeInferences {
 					   RationaleStatusType.CONTRADICTORY_ARGUMENTS);
 					   newStatus.add(stat);
 					   } */
-					
+
 				} 
 			}
-			
+
 			//now check for opposing arguments on the same side...
 			Iterator argI1 = alt.getArgumentsFor().iterator();
 			Iterator argI2 = alt.getArgumentsFor().iterator();
@@ -264,14 +297,14 @@ public class AlternativeInferences {
 				else if (agreement == AGREE)
 				{
 					String problem = "Duplicate arguments found regarding " +
-					" alt '" + alt.getName() + "'"; 
+							" alt '" + alt.getName() + "'"; 
 					RationaleStatus stat = new RationaleStatus(RationaleErrorLevel.WARNING, problem, 
 							RationaleElementType.ALTERNATIVE, new java.util.Date(), alt.getID(),
 							RationaleStatusType.DUPLICATE_ARGUMENTS);
 					newStatus.add(stat);
 				}
-				
-				
+
+
 			}
 			//need to clear out any requirement violations if we are
 			//not selected (decision infs. won't catch this)
@@ -287,18 +320,18 @@ public class AlternativeInferences {
 					{
 						Requirement req = rarg.getRequirement();
 						if ((req.getStatus() != ReqStatus.REJECTED) && 
-//								(req.getStatus() != ReqStatus.DEFERRED) &&
+								//								(req.getStatus() != ReqStatus.DEFERRED) &&
 								(req.getStatus() != ReqStatus.RETRACTED) &&
 								(req.getEnabled()))
 						{
 							RequirementInferences reqInf = new RequirementInferences();
 							newStatus.addAll(reqInf.updateRequirement(req));
 						}
-						
+
 					}
 				}
 			}
-			
+
 		} catch (SQLException ex) {
 			// handle any errors 
 			RationaleDB.reportError(ex, "AlternativeInferences.updateAlternative",
@@ -309,10 +342,10 @@ public class AlternativeInferences {
 		}
 		UpdateManager manager = UpdateManager.getHandle();
 		manager.addUpdate(alt.getID(), alt.getName(), RationaleElementType.ALTERNATIVE);
-		
+
 		return newStatus;
 	}
-	
+
 	/**
 	 * Compares two arguments (for the same alternative) to find out if they
 	 * are different, identical, or contradictory (for example - if an alternative
@@ -372,7 +405,7 @@ public class AlternativeInferences {
 				else
 				{
 					result = DISAGREE;
-//					System.out.println("requirement arguments disagree");
+					//					System.out.println("requirement arguments disagree");
 				}
 			}
 		}
@@ -404,5 +437,5 @@ public class AlternativeInferences {
 		}
 		return result;
 	}
-	
+
 }

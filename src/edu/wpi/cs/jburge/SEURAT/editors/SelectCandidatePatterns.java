@@ -175,7 +175,6 @@ public class SelectCandidatePatterns {
 					new Map.Entry[patterns_values.size()]);
 			Arrays.sort(sortingArr, new Comparator<Map.Entry<Pattern, Double>>(){
 
-				@Override
 				public int compare(Entry<Pattern, Double> o1,
 						Entry<Pattern, Double> o2) {
 					//Sort in DESCENDING ORDER, so this is a reversed compareTo!

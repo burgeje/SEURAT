@@ -8,6 +8,7 @@ import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
@@ -167,6 +168,15 @@ public class AlternativeEditor extends RationaleEditorBase {
 				if( pEvent.getModified() )
 				{
 					refreshForm(pEvent);
+					if (statusBox != null && !isCreating()){
+						if (getAlternative().isUMLAssociated()){
+							statusBox.select(0); //Select "Adopted"
+							statusBox.setEnabled(false);
+						}
+						else {
+							statusBox.setEnabled(true);
+						}
+					}
 				}
 			}			
 		}
@@ -658,7 +668,7 @@ public class AlternativeEditor extends RationaleEditorBase {
 		descArea.setLayoutData(gridData);
 		
 		new Label(parent, SWT.NONE).setText("Status:");
-		statusBox = new Combo(parent, SWT.NONE);
+		statusBox = new Combo(parent, SWT.DROP_DOWN | SWT.READ_ONLY);
 		statusBox.addModifyListener(getNeedsSaveListener());
 		Enumeration statEnum = AlternativeStatus.elements();
 		int j=0;
@@ -681,11 +691,16 @@ public class AlternativeEditor extends RationaleEditorBase {
 		gridData.grabExcessHorizontalSpace = true;
 		gridData.horizontalAlignment = GridData.FILL;
 		statusBox.setLayoutData(gridData);
+		if (!isCreating() && getAlternative().isUMLAssociated()){
+			statusBox.select(0); //Select "Adopted".
+			statusBox.setEnabled(false);
+		}
+		else statusBox.setEnabled(true);
 		
 		new Label(parent, SWT.NONE).setText("Design Type:");
 		
 		RationaleDB db = RationaleDB.getHandle();
-		contingencyBox = new Combo(parent, SWT.NONE);
+		contingencyBox = new Combo(parent, SWT.DROP_DOWN | SWT.READ_ONLY);
 		contingencyBox.addModifyListener(getNeedsSaveListener());
 		Vector ourConts = db.getNameList(RationaleElementType.CONTINGENCY);
 		contingencyBox.select(0);

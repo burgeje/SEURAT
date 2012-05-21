@@ -1123,7 +1123,16 @@ public class RationaleDBCreate
 				CREATE_PATTERNDECISIONS(),
 				CREATE_PATTERN_ONTENTRIES(),
 				CREATE_PATTERNPROBLEMCATEGORIES(),
-				CREATE_PATTERN_PROBLEMCATEGORY_RELATIONSHIP()
+				CREATE_PATTERN_PROBLEMCATEGORY_RELATIONSHIP(),
+				CREATE_TACTICS(),
+				CREATE_TACTIC_PATTERN(),
+				CREATE_TACTIC_NEGONTENTRIES(),
+				CREATE_PATTERNPARTICIPANTS(),
+				CREATE_PARTPART(),
+				CREATE_OPERATIONS(),
+				CREATE_OPERATION_PARTICIPANT(),
+				CREATE_DIAGRAM_ALTERNATIVE(),
+				CREATE_DIAGRAM_PATTERNELEMENTS()
 		};
 	};
 
@@ -1134,10 +1143,7 @@ public class RationaleDBCreate
 	public static String[] getQueries()
 	{
 		int l_index = 0;
-		String l_retval[] = new String
-		[
-		 CREATE_TABLES().length 
-		 ];
+		String l_retval[] = new String[CREATE_TABLES().length ];
 
 		for( String l_s : CREATE_TABLES() )
 		{
@@ -1714,6 +1720,94 @@ public class RationaleDBCreate
 		+ tablePart("ontID INTEGER default NULL")
 		+ endTable("direction varchar(50) default NULL");
 	}
+	
+	/**
+	 * Returns the tactics table statement
+	 * @return String containing the statement
+	 */
+	public static final String CREATE_TACTICS(){
+		return beginTable("tactics") + tablePart("ID INTEGER NOT NULL")
+		+ tablePart("NAME VARCHAR(255) NOT NULL UNIQUE")
+		+ tablePart("QUALITY INTEGER NOT NULL REFERENCES ONTENTRIES(ID)")
+		+ tablePart("DESCRIPTION VARCHAR(255)")
+		+ tablePart("TIME_BEH INTEGER DEFAULT 0 check (time_beh >= 0 AND time_beh < " + Tactic.behaviorCategories.length + ")")
+		+ endTable("PRIMARY KEY (ID)");
+	}
+	
+	/**
+	 * Returns the tactic_pattern relationship table statement
+	 * @return String containing the statement
+	 */
+	public static final String CREATE_TACTIC_PATTERN(){
+		return beginTable("tactic_pattern") + tablePart("ID INTEGER PRIMARY KEY")
+		+ tablePart("TACTIC_ID INTEGER NOT NULL REFERENCES TACTICS(ID)")
+		+ tablePart("PATTERN_ID INTEGER NOT NULL REFERENCES PATTERNS(ID)")
+		+ tablePart("STRUCT_CHANGE INTEGER NOT NULL CHECK (STRUCT_CHANGE >= 0 AND STRUCT_CHANGE <" + TacticPattern.CHANGECATEGORIES.length +")")
+		+ tablePart("NUM_CHANGES INTEGER NOT NULL CHECK(num_changes >= 0)")
+		+ tablePart("BEH_CHANGE integer not null check(beh_change>=0 AND beh_change <" + TacticPattern.CHANGECATEGORIES.length +")")
+		+ tablePart("CHANGES integer not null check(changes >= 0)")
+		+ tablePart("DESCRIPTION varchar(255)")
+		+ endTable("UNIQUE(TACTIC_ID, PATTERN_ID)");
+	}
+	
+	/**
+	 * Returns the tactic_negative-quality-attribute relationship table statement
+	 * @return String containing the statement
+	 */
+	public static final String CREATE_TACTIC_NEGONTENTRIES(){
+		return beginTable("tactic_negontentries") + tablePart("ID INTEGER PRIMARY KEY")
+		+ tablePart("TACTIC_ID INTEGER NOT NULL REFERENCES TACTICS(ID)")
+		+ endTable("ONT_ID INTEGER NOT NULL REFERENCES ONTENTRIES(ID)");
+	}
+	
+	public static final String CREATE_PATTERNPARTICIPANTS(){
+		return beginTable("patternparticipants") + tablePart("ID INTEGER PRIMARY KEY")
+				+ tablePart("pattern_id INTEGER NOT NULL REFERENCES PATTERNS(id)")
+				+ tablePart("name VARCHAR(255) NOT NULL")
+				+ tablePart("minParticipants INTEGER NOT NULL")
+				+ tablePart("maxParticipants INTEGER NOT NULL") 
+				+ endTable("UNIQUE(pattern_id, name)");
+	}
+	
+	public static final String CREATE_PARTPART(){
+		return beginTable("part_part") + tablePart("ID INTEGER PRIMARY KEY")
+				+ tablePart("part_id INTEGER NOT NULL REFERENCES PATTERNPARTICIPANTS(id)")
+				+ tablePart("ref_id INTEGER NOT NULL REFERENCES PATTERNPARTICIPANTS(id)")
+				+ tablePart("type INTEGER NOT NULL CHECK(type>=0)")
+				+ endTable("UNIQUE(part_id, ref_id)");
+	}
+	
+	public static final String CREATE_OPERATIONS(){
+		return beginTable("operations") + tablePart("ID INTEGER PRIMARY KEY")
+				+ tablePart("part_id INTEGER NOT NULL REFERENCES PATTERNPARTICIPANTS(id)")
+				+ tablePart("name VARCHAR(255) NOT NULL") 
+				+ endTable("UNIQUE(part_id, name)");
+	}
+	
+	public static final String CREATE_OPERATION_PARTICIPANT(){
+		return beginTable("operation_participant") + tablePart("ID INTEGER PRIMARY KEY")
+				+ tablePart("oper_id INTEGER NOT NULL REFERENCES OPERATIONS(id)")
+				+ tablePart("part_id INTEGER REFERENCES PATTERNPARTICIPANTS(id)")
+				+ endTable("type INTEGER");
+	}
+	
+	public static final String CREATE_DIAGRAM_ALTERNATIVE(){
+		return beginTable("diagram_alternative") + tablePart("ID INTEGER PRIMARY KEY")
+				+ tablePart("alt_id INTEGER NOT NULL UNIQUE REFERENCES ALTERNATIVES(id)")
+				+ tablePart("pattern_id INTEGER NOT NULL REFERENCES PATTERNS(id)")
+				+ tablePart("package_xmi_id VARCHAR(255) NOT NULL")
+				+ endTable("file_path VARCHAR(255) NOT NULL");
+	}
+	
+	public static final String CREATE_DIAGRAM_PATTERNELEMENTS(){
+		return beginTable("diagram_patternelements") + tablePart("ID INTEGER PRIMARY KEY")
+				+ tablePart("alt_id INTEGER NOT NULL REFERENCES ALTERNATIVES(id)")
+				+ tablePart("part_id INTEGER NOT NULL REFERENCES PATTERNPARTICIPANTS(id)")
+				+ tablePart("xmi_id VARCHAR(255) NOT NULL UNIQUE")
+				+ tablePart("part2_id INTEGER REFERENCES PATTERNPARTICIPANTS(id)")
+				+ endTable("assoc_type INTEGER");
+	}
+	
 	public static String[] getPatternQueries(){
 		return INSERT_PATTERNS();
 	}

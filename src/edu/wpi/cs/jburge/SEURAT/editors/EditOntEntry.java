@@ -104,7 +104,7 @@ public class EditOntEntry extends NewRationaleElementGUI implements Serializable
 		descArea.setLayoutData(gridData);
 		
 		new Label(shell, SWT.NONE).setText("Importance:");
-		importanceBox = new Combo(shell, SWT.NONE);
+		importanceBox = new Combo(shell, SWT.DROP_DOWN | SWT.READ_ONLY);
 		Enumeration impEnum = Importance.elements();
 		int l=0;
 		Importance itype;

@@ -201,6 +201,21 @@ public final class RationaleElementType implements Serializable {
 	 */
 	public static final RationaleElementType ALTERNATIVEPATTERN = new 
 	RationaleElementType("AlternativePattern");
+	
+	/**
+	 * This is a tactic in the tactic library
+	 */
+	public static final RationaleElementType TACTIC = new RationaleElementType("Tactic");
+	
+	/**
+	 * This is some data representing tactic_pattern relationship in the tactic library.
+	 */
+	public static final RationaleElementType TACTICPATTERN = new RationaleElementType("TacticPattern");
+	
+	/**
+	 * This is a tactic category, which should be the positive quality attribute for the tactic.
+	 */
+	public static final RationaleElementType TACTICCATEGORY = new RationaleElementType("TacticCategory");
 }
 
 
