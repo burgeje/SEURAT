@@ -1,16 +1,13 @@
 package edu.wpi.cs.jburge.SEURAT.reports;
-import java.awt.Color;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Enumeration;
 import java.util.HashMap;
-import java.util.Hashtable;
 import java.util.Iterator;
-import java.util.TreeMap;
 import java.util.Vector;
 
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.SWTException;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridData;
@@ -20,24 +17,18 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.List;
-import org.eclipse.swt.widgets.MessageBox;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Tree;
 import org.eclipse.swt.widgets.TreeItem;
 
-import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.wizard.IWizardPage;
 import org.eclipse.jface.wizard.Wizard;
 import org.eclipse.jface.wizard.WizardDialog;
 import org.eclipse.jface.wizard.WizardPage;
 
-import edu.wpi.cs.jburge.SEURAT.decorators.SEURATLightWeightDecorator;
-import edu.wpi.cs.jburge.SEURAT.editors.SelectCandidatePatterns;
-import edu.wpi.cs.jburge.SEURAT.inference.AlternativePatternInferences;
 import edu.wpi.cs.jburge.SEURAT.rationaleData.Alternative;
 import edu.wpi.cs.jburge.SEURAT.rationaleData.Decision;
-import edu.wpi.cs.jburge.SEURAT.rationaleData.OntEntry;
 import edu.wpi.cs.jburge.SEURAT.rationaleData.Pattern;
 import edu.wpi.cs.jburge.SEURAT.rationaleData.PatternElementType;
 import edu.wpi.cs.jburge.SEURAT.rationaleData.PatternEvalScore;
@@ -224,6 +215,25 @@ public class GenerateCandidatePatternsComposite {
 			selectedPatternsList.removeAll();
 			patternDetails.removeAll();
 			for (String s: candidates.keySet()){
+				availablePatternsList.add(s);
+			}
+			
+			//Sort available pattern list
+			Vector<String> toSort = new Vector<String>();
+			for (String s: availablePatternsList.getItems()){
+				toSort.add(s);
+			}
+			Collections.sort(toSort, new Comparator<String>() {
+
+				@Override
+				public int compare(String o1, String o2) {
+					PatternEvalScore s1 = candidates.get(o1), s2 = candidates.get(o2);
+					return s2.compareTo(s1);
+				}
+			});
+			
+			availablePatternsList.removeAll();
+			for (String s: toSort){
 				availablePatternsList.add(s);
 			}
 		}
@@ -436,7 +446,7 @@ public class GenerateCandidatePatternsComposite {
 				//now set up the gui framework
 				composite.setLayout(new GridLayout(1, false));
 				new Label(composite, SWT.LEFT | SWT.WRAP).setText("Please select the" +
-						"problems you would like to evaluate.");
+						" problem categories you would like to evaluate.");
 				//This is the panel for the dual-selection list
 				Composite selectionComp = new Composite(composite, SWT.NONE);
 				selectionComp.setLayout(new GridLayout(5, true));
@@ -539,7 +549,7 @@ public class GenerateCandidatePatternsComposite {
 				new Label(selectionComp, SWT.NONE);
 				new Label(selectionComp, SWT.RIGHT | SWT.WRAP).setText("Selected Patterns");
 				
-				availablePatternsList = new List(selectionComp, SWT.MULTI | SWT.BORDER | SWT.V_SCROLL);
+				availablePatternsList = new List(selectionComp, SWT.MULTI | SWT.BORDER | SWT.V_SCROLL | SWT.H_SCROLL);
 				gridData = new GridData(GridData.HORIZONTAL_ALIGN_FILL | GridData.VERTICAL_ALIGN_FILL);
 				gridData.grabExcessHorizontalSpace = true;
 				gridData.horizontalSpan=2;
@@ -557,7 +567,7 @@ public class GenerateCandidatePatternsComposite {
 				moveToSelected.addSelectionListener(listen);
 				moveToAvailable.addSelectionListener(listen);
 				
-				selectedPatternsList = new List(selectionComp, SWT.MULTI | SWT.BORDER | SWT.V_SCROLL);
+				selectedPatternsList = new List(selectionComp, SWT.MULTI | SWT.BORDER | SWT.V_SCROLL | SWT.H_SCROLL);
 				gridData = new GridData(GridData.HORIZONTAL_ALIGN_FILL | GridData.VERTICAL_ALIGN_FILL);
 				gridData.grabExcessHorizontalSpace = true;
 				gridData.horizontalSpan=2;
@@ -603,10 +613,50 @@ public class GenerateCandidatePatternsComposite {
 						}
 					}
 					
+					//Sort available pattern list
+					Vector<String> toSort = new Vector<String>();
+					for (String s: availablePatternsList.getItems()){
+						toSort.add(s);
+					}
+					Collections.sort(toSort, new Comparator<String>() {
+
+						@Override
+						public int compare(String o1, String o2) {
+							PatternEvalScore s1 = candidates.get(o1), s2 = candidates.get(o2);
+							return s2.compareTo(s1);
+						}
+					});
+					
+					availablePatternsList.removeAll();
+					for (String s: toSort){
+						availablePatternsList.add(s);
+					}
+					
+					//Sort selected pattern list
+					toSort = new Vector<String>();
+					for (String s: selectedPatternsList.getItems()){
+						toSort.add(s);
+					}
+					Collections.sort(toSort, new Comparator<String>() {
+
+						@Override
+						public int compare(String o1, String o2) {
+							PatternEvalScore s1 = candidates.get(o1), s2 = candidates.get(o2);
+							return s2.compareTo(s1);
+						}
+					});
+					
+					selectedPatternsList.removeAll();
+					for (String s: toSort){
+						selectedPatternsList.add(s);
+					}
+					
+					//Fill in the tree
 					patternDetails.removeAll();
 					for (String s: selectedPatternsList.getItems()){
 						constructPatternEvalSubtree(patternDetails, candidates.get(s));
 					}
+					
 					
 				}
 
