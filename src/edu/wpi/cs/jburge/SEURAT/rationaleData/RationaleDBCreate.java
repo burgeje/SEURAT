@@ -699,6 +699,7 @@ public class RationaleDBCreate
 		+ tablePart("designType INTEGER  default NULL")
 		+ tablePart("designer INTEGER  default NULL")
 		+ tablePart("patternid INTEGER default -1")
+		+ tablePart("tacticid INTEGER default -1")
 		+ endTable("PRIMARY KEY  (id)");
 	}
 

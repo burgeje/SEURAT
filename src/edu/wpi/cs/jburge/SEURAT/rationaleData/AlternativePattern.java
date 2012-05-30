@@ -508,7 +508,7 @@ public class AlternativePattern extends RationaleElement {
 					OntEntry o = new OntEntry();
 					o.fromDatabase(q.getOntology().getName());
 					RationaleDB d = RationaleDB.getHandle();
-					Vector ontList = d.getOntologyElements(o.getName());
+					Vector ontList = d.getOntologyDescendents(o.getName());
 					Enumeration ontChildren = ontList.elements();
 					while (ontChildren.hasMoreElements()){
 						OntEntry ont = (OntEntry)ontChildren.nextElement();
@@ -530,6 +530,30 @@ public class AlternativePattern extends RationaleElement {
 							}	
 						}
 					}					
+				}
+				
+				// Weak contribution
+				for (OntEntry o: patternInLibrary.getOntEntries()){
+					int level = db.findRelativeOntLevel(o, q.getOntology());
+					if (level > 0){
+						int divisor = db.getOntologiesAtLevel(o, level).size();
+						if(q.getImportance().toString().compareTo(Importance.DEFAULT.toString()) == 0){
+							if(patternInLibrary.getPosiOnts().contains(o)){
+								result += ((double) 1) / divisor;
+							}
+							else{
+								result -= ((double) 1) / divisor;
+							}
+						}
+						else{
+							if(patternInLibrary.getPosiOnts().contains(q.getOntology())){
+								result += q.getImportance().getValue() / divisor;
+							}
+							else {
+								result -= q.getImportance().getValue() / divisor;
+							}
+						}
+					}
 				}
 			}
 		}

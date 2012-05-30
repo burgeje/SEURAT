@@ -1014,4 +1014,82 @@ public class Pattern extends RationaleElement {
 				type2, end2IsNavigable, end2Aggregation, end2Name, end2LowerBound, end2UpperBound);
 		return association;
 	}
+	
+	/**
+	 * Get the pattern evaluation score.
+	 * @return
+	 */
+	public PatternEvalScore getPatternScore(){
+		PatternEvalScore ret = new PatternEvalScore(this);
+		Vector<Requirement> exact = ret.getExactSati(), contrib = ret.getContribSati(), possible = ret.getPossibleSati();
+		
+		RationaleDB db = RationaleDB.getHandle();
+		Vector<Requirement> nfrs = db.getNFRs();
+		
+		//Satisfactions
+		for (OntEntry pOnt: getPosiOnts()){
+			for (Requirement req: nfrs){
+				OntEntry rOnt = req.getOntology();
+				//Exact
+				if (rOnt.getName().equals(pOnt.getName())){
+					exact.add(req);
+					continue;
+				}
+				
+				//Contribution
+				Vector<OntEntry> ontList = db.getOntologyDescendents(rOnt.getName());
+				for (OntEntry dOnt: ontList){
+					if (dOnt.getName().equals(pOnt.getName())){
+						contrib.add(req);
+						continue;
+					}
+				}
+				
+				//Possible
+				ontList = db.getOntologyDescendents(pOnt.getName());
+				for (OntEntry dOnt: ontList){
+					if (dOnt.getName().equals(rOnt.getName())){
+						possible.add(req);
+						continue;
+					}
+				}
+			}
+		}
+		
+		exact = ret.getExactViol();
+		contrib = ret.getContribViol();
+		possible = ret.getPossibleViol();
+		
+		//Violations
+		for (OntEntry pOnt: getNegaOnts()){
+			for (Requirement req: nfrs){
+				OntEntry rOnt = req.getOntology();
+				//Exact
+				if (rOnt.getName().equals(pOnt.getName())){
+					exact.add(req);
+					continue;
+				}
+				
+				//Contribution
+				Vector<OntEntry> ontList = db.getOntologyDescendents(rOnt.getName());
+				for (OntEntry dOnt: ontList){
+					if (dOnt.getName().equals(pOnt.getName())){
+						contrib.add(req);
+						continue;
+					}
+				}
+				
+				//Possible
+				ontList = db.getOntologyDescendents(pOnt.getName());
+				for (OntEntry dOnt: ontList){
+					if (dOnt.getName().equals(rOnt.getName())){
+						possible.add(req);
+						continue;
+					}
+				}
+			}
+		}
+		
+		return ret;
+	}
 }

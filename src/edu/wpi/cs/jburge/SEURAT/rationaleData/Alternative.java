@@ -94,7 +94,7 @@ public class Alternative extends RationaleElement implements Serializable {
 	/**
 	 * If this alternative is generated from pattern, patterID is the id for that pattern. If not, patternID = -1;
 	 */
-	int patternID;
+	int patternID, tacticID;
 
 	private RationaleElementUpdateEventGenerator<Alternative> m_eventGenerator = new RationaleElementUpdateEventGenerator<Alternative>(
 			this);
@@ -114,6 +114,7 @@ public class Alternative extends RationaleElement implements Serializable {
 		artifacts = new Vector<String>();
 		arguments = new Vector<Argument>();
 		patternID = -1;
+		tacticID = -1;
 	}
 
 	public Element toXML(Document ratDoc) {
@@ -288,6 +289,10 @@ public class Alternative extends RationaleElement implements Serializable {
 		this.patternID = patternID;
 	}
 
+	public int getTacticID(){
+		return tacticID;
+	}
+
 	/**
 	 * Generic function to get a list of sub-elements of a particular type -
 	 * decisions, arguments, or questions.
@@ -392,9 +397,9 @@ public class Alternative extends RationaleElement implements Serializable {
 				// the function inDatabase()
 				if (inDatabase()) {
 					String updateParent = "UPDATE alternatives "
-						+ "SET evaluation = "
-						+ new Double(evaluation).toString() + " WHERE "
-						+ "id = " + this.id + " ";
+							+ "SET evaluation = "
+							+ new Double(evaluation).toString() + " WHERE "
+							+ "id = " + this.id + " ";
 					stmt.execute(updateParent);
 
 					// Broadcast Notification That Score Has Been Recomputed
@@ -534,18 +539,19 @@ public class Alternative extends RationaleElement implements Serializable {
 
 			if (inDatabase(parentID, ptype)) {
 				String updateParent = "UPDATE alternatives R "
-					+ "SET R.parent = " + new Integer(parentID).toString()
-					+ ", R.ptype = '" + ptype.toString() + "', R.name = '"
-					+ RationaleDBUtil.escape(this.name)
-					+ "', R.description = '"
-					+ RationaleDBUtil.escape(this.description)
-					+ "', R.status = '" + status.toString()
-					+ "', R.evaluation = "
-					+ new Double(evaluation).toString()
-					+ ", R.designType = " + updateC
-					+ ", R.patternID = " + new Integer(this.patternID).toString()
-					+ " WHERE " + "R.id = "
-					+ this.id + " ";
+						+ "SET R.parent = " + new Integer(parentID).toString()
+						+ ", R.ptype = '" + ptype.toString() + "', R.name = '"
+						+ RationaleDBUtil.escape(this.name)
+						+ "', R.description = '"
+						+ RationaleDBUtil.escape(this.description)
+						+ "', R.status = '" + status.toString()
+						+ "', R.evaluation = "
+						+ new Double(evaluation).toString()
+						+ ", R.designType = " + updateC
+						+ ", R.patternid = " + new Integer(this.patternID).toString()
+						+ ", R.tacticid = " + new Integer(this.tacticID).toString()
+						+ " WHERE " + "R.id = "
+						+ this.id + " ";
 				// System.out.println(updateParent);
 				stmt.execute(updateParent);
 
@@ -569,13 +575,14 @@ public class Alternative extends RationaleElement implements Serializable {
 					updateD = new Integer(designer.getID()).toString();
 
 				String newAltSt = "INSERT INTO Alternatives "
-					+ "(name, description, status, ptype, parent, evaluation, designer, designType, patternID) "
-					+ "VALUES ('" + RationaleDBUtil.escape(this.name)
-					+ "', '" + RationaleDBUtil.escape(this.description)
-					+ "', '" + this.status.toString() + "', '"
-					+ ptype.toString() + "', " + parentSt + ", "
-					+ new Double(evaluation).toString() + ", " + updateD
-					+ "," + updateC + ", " + new Integer(this.patternID).toString() + ")";
+						+ "(name, description, status, ptype, parent, evaluation, designer, designType, patternid, tacticid) "
+						+ "VALUES ('" + RationaleDBUtil.escape(this.name)
+						+ "', '" + RationaleDBUtil.escape(this.description)
+						+ "', '" + this.status.toString() + "', '"
+						+ ptype.toString() + "', " + parentSt + ", "
+						+ new Double(evaluation).toString() + ", " + updateD
+						+ "," + updateC + ", " + new Integer(this.patternID).toString() 
+						+ "," + new Integer(this.tacticID).toString() + ")";
 				// *** System.out.println(newAltSt);
 				stmt.execute(newAltSt);
 
@@ -586,7 +593,7 @@ public class Alternative extends RationaleElement implements Serializable {
 			// they are new!
 			// now, we need to get our ID
 			String findQuery2 = "SELECT id FROM alternatives where name='"
-				+ RationaleDBUtil.escape(this.name) + "'";
+					+ RationaleDBUtil.escape(this.name) + "'";
 			rs = stmt.executeQuery(findQuery2);
 
 			if (rs.next()) {
@@ -679,7 +686,7 @@ public class Alternative extends RationaleElement implements Serializable {
 			// they are new!
 			// now, we need to get our ID
 			String findQuery2 = "SELECT id FROM alternatives where name='"
-				+ RationaleDBUtil.escape(this.name) + "'";
+					+ RationaleDBUtil.escape(this.name) + "'";
 			rs = stmt.executeQuery(findQuery2);
 
 			if (rs.next()) {
@@ -755,7 +762,7 @@ public class Alternative extends RationaleElement implements Serializable {
 			stmt = conn.createStatement();
 
 			findQuery = "SELECT *  FROM " + "alternatives where id = "
-			+ new Integer(id).toString();
+					+ new Integer(id).toString();
 			// *** System.out.println(findQuery);
 			rs = stmt.executeQuery(findQuery);
 
@@ -795,7 +802,7 @@ public class Alternative extends RationaleElement implements Serializable {
 		try {
 			stmt = conn.createStatement();
 			findQuery = "SELECT *  FROM " + "alternatives where name = '"
-			+ name + "'";
+					+ name + "'";
 			// *** System.out.println(findQuery);
 			rs = stmt.executeQuery(findQuery);
 
@@ -809,7 +816,8 @@ public class Alternative extends RationaleElement implements Serializable {
 				status = (AlternativeStatus) AlternativeStatus.fromString(rs
 						.getString("status"));
 				evaluation = rs.getFloat("evaluation");
-				patternID = rs.getInt("patternID");
+				patternID = rs.getInt("patternid");
+				tacticID = rs.getInt("tacticid");
 
 				try {
 					int desID = rs.getInt("designer");
@@ -839,12 +847,12 @@ public class Alternative extends RationaleElement implements Serializable {
 				// Now, we need to get the lists of arguments for and against
 				// first For
 				String findFor = "SELECT id FROM "
-					+ RationaleDBUtil.escapeTableName("arguments")
-					+ " where ptype = 'Alternative' and " + "parent = "
-					+ new Integer(this.id).toString() + " and "
-					+ "(type = 'Supports' or " + "type = 'Addresses' or "
-					+ "type = 'Satisfies' or "
-					+ "type = 'Pre-supposed-by')";
+						+ RationaleDBUtil.escapeTableName("arguments")
+						+ " where ptype = 'Alternative' and " + "parent = "
+						+ new Integer(this.id).toString() + " and "
+						+ "(type = 'Supports' or " + "type = 'Addresses' or "
+						+ "type = 'Satisfies' or "
+						+ "type = 'Pre-supposed-by' or " + "type = 'Facilitates'" + ")";
 				// *** System.out.println(findFor);
 				rs = stmt.executeQuery(findFor);
 				Vector<Integer> aFor = new Vector<Integer>();
@@ -857,11 +865,11 @@ public class Alternative extends RationaleElement implements Serializable {
 
 				// Now, the arguments against
 				String findAgainst = "SELECT id FROM "
-					+ RationaleDBUtil.escapeTableName("arguments")
-					+ " where ptype = 'Alternative' and " + "parent = "
-					+ new Integer(this.id).toString() + " and "
-					+ "(type = 'Denies' or " + "type = 'Violates' or "
-					+ "type = 'Opposed-by')";
+						+ RationaleDBUtil.escapeTableName("arguments")
+						+ " where ptype = 'Alternative' and " + "parent = "
+						+ new Integer(this.id).toString() + " and "
+						+ "(type = 'Denies' or " + "type = 'Violates' or "
+						+ "type = 'Opposed-by' or " + "type = 'Complicates')";
 				// *** System.out.println(findAgainst);
 				rs = stmt.executeQuery(findAgainst);
 
@@ -873,10 +881,10 @@ public class Alternative extends RationaleElement implements Serializable {
 				// Now, any other useful relationships
 				// Now, the arguments against
 				String findRel = "SELECT id FROM "
-					+ RationaleDBUtil.escapeTableName("arguments")
-					+ " where ptype = 'Alternative' and " + "parent = "
-					+ new Integer(this.id).toString() + " and "
-					+ "(type = 'Opposed' or " + "type = 'Pre-supposes')";
+						+ RationaleDBUtil.escapeTableName("arguments")
+						+ " where ptype = 'Alternative' and " + "parent = "
+						+ new Integer(this.id).toString() + " and "
+						+ "(type = 'Opposed' or " + "type = 'Pre-supposes')";
 				// *** System.out.println(findRel);
 				rs = stmt.executeQuery(findRel);
 
@@ -887,9 +895,9 @@ public class Alternative extends RationaleElement implements Serializable {
 
 				// ..Treat non-affiliated arguments as relationships (for now)
 				String findUnafil = "SELECT id FROM Arguments where "
-					+ "ptype = 'Alternative' and " + "parent = "
-					+ new Integer(this.id).toString() + " and "
-					+ "(type = 'NONE' )";
+						+ "ptype = 'Alternative' and " + "parent = "
+						+ new Integer(this.id).toString() + " and "
+						+ "(type = 'NONE' )";
 				// ** System.out.println(findUnafil);
 				rs = stmt.executeQuery(findUnafil);
 
@@ -935,9 +943,9 @@ public class Alternative extends RationaleElement implements Serializable {
 
 				Vector<String> decNames = new Vector<String>();
 				String findQuery2 = "SELECT name from DECISIONS where "
-					+ "ptype = '"
-					+ RationaleElementType.ALTERNATIVE.toString()
-					+ "' and parent = " + new Integer(id).toString();
+						+ "ptype = '"
+						+ RationaleElementType.ALTERNATIVE.toString()
+						+ "' and parent = " + new Integer(id).toString();
 				// *** System.out.println(findQuery2);
 				rs = stmt.executeQuery(findQuery2);
 				while (rs.next()) {
@@ -956,9 +964,9 @@ public class Alternative extends RationaleElement implements Serializable {
 				// need to do questions too
 				Vector<String> questNames = new Vector<String>();
 				String findQuery3 = "SELECT name from QUESTIONS where "
-					+ "ptype = '"
-					+ RationaleElementType.ALTERNATIVE.toString()
-					+ "' and parent = " + new Integer(id).toString();
+						+ "ptype = '"
+						+ RationaleElementType.ALTERNATIVE.toString()
+						+ "' and parent = " + new Integer(id).toString();
 				// *** System.out.println(findQuery3);
 				rs = stmt.executeQuery(findQuery3);
 				while (rs.next()) {
@@ -976,7 +984,7 @@ public class Alternative extends RationaleElement implements Serializable {
 
 				// Last, but not least, look for any associations
 				String findQuery4 = "SELECT artName from ASSOCIATIONS where "
-					+ "alternative = " + Integer.toString(id);
+						+ "alternative = " + Integer.toString(id);
 				rs = stmt.executeQuery(findQuery4);
 
 				// Cleanup before loading artifacts
@@ -987,7 +995,7 @@ public class Alternative extends RationaleElement implements Serializable {
 
 				// no, not last - need history too
 				String findQuery5 = "SELECT * from HISTORY where ptype = 'Alternative' and "
-					+ "parent = " + Integer.toString(id);
+						+ "parent = " + Integer.toString(id);
 				// *** System.out.println(findQuery5);
 				rs = stmt.executeQuery(findQuery5);
 
@@ -1007,7 +1015,7 @@ public class Alternative extends RationaleElement implements Serializable {
 		} catch (SQLException ex) {
 			// handle any errors
 			RationaleDB.reportError(ex, "Alternative.fromDatabase(String)",
-			"Error in a query");
+					"Error in a query");
 		} finally {
 			RationaleDB.releaseResources(stmt, rs);
 		}
@@ -1031,7 +1039,7 @@ public class Alternative extends RationaleElement implements Serializable {
 		// System.out.println("this after = " + this.getStatus().toString());
 		// System.out.println(ar.getCanceled());
 		String msg = "Edited alternative " + this.getName() + " "
-		+ ar.getCanceled();
+				+ ar.getCanceled();
 		DataLog d = DataLog.getHandle();
 		d.writeData(msg);
 		return ar.getCanceled(); // can I do this?
@@ -1085,14 +1093,14 @@ public class Alternative extends RationaleElement implements Serializable {
 				|| (this.questions.size() > 0)
 				|| (this.subDecisions.size() > 0)) {
 			MessageDialog.openError(new Shell(), "Delete Error",
-			"Can't delete when there are sub-elements.");
+					"Can't delete when there are sub-elements.");
 
 			return true;
 		}
 
 		if (this.artifacts.size() > 0) {
 			MessageDialog.openError(new Shell(), "Delete Error",
-			"Can't delete when code is associated!");
+					"Can't delete when code is associated!");
 			return true;
 		}
 		RationaleDB db = RationaleDB.getHandle();
@@ -1100,7 +1108,7 @@ public class Alternative extends RationaleElement implements Serializable {
 		// are there any dependencies on this item?
 		if (db.getDependentAlternatives(this).size() > 0) {
 			MessageDialog.openError(new Shell(), "Delete Error",
-			"Can't delete when there are depencencies.");
+					"Can't delete when there are depencencies.");
 			return true;
 		}
 
@@ -1273,7 +1281,7 @@ public class Alternative extends RationaleElement implements Serializable {
 			try {
 				stmt = conn.createStatement();
 				findQuery = "SELECT id, parent FROM alternatives where name='"
-					+ this.name + "'";
+						+ this.name + "'";
 				System.out.println(findQuery);
 				rs = stmt.executeQuery(findQuery);
 
@@ -1368,14 +1376,14 @@ public class Alternative extends RationaleElement implements Serializable {
 			}
 
 			String update = "INSERT INTO decisions (name, description, type, status, subdecreq, phase, ptype, parent) VALUES (" 
-				+ "'" + theNewDecisionName + "',"
-				+ "'" + patternDecision.getDescription() + "',"
-				+ "'" + patternDecision.getType().toString() + "',"
-				+ "'" + patternDecision.getStatus().toString() + "',"
-				+ "'No',"
-				+ "'" + patternDecision.getPhase().toString() + "',"
-				+ "'Alternative',"
-				+ this.id + ")";
+					+ "'" + theNewDecisionName + "',"
+					+ "'" + patternDecision.getDescription() + "',"
+					+ "'" + patternDecision.getType().toString() + "',"
+					+ "'" + patternDecision.getStatus().toString() + "',"
+					+ "'No',"
+					+ "'" + patternDecision.getPhase().toString() + "',"
+					+ "'Alternative',"
+					+ this.id + ")";
 			//					"(SELECT name, description, type, status, phase, subdecreq, ptype, parent, subsys, designer" +
 			//					" FROM patterndecisions WHERE name = '" + name + "')";			
 			try {
@@ -1407,8 +1415,8 @@ public class Alternative extends RationaleElement implements Serializable {
 				//					pd.fromDatabase(name);
 				System.out.println("Get here!!!!!");
 				String findQuery = "SELECT patternID FROM pattern_decision WHERE decisionID = "
-					+ patternDecision.getID()
-					+ " and parentType = 'Decision'";
+						+ patternDecision.getID()
+						+ " and parentType = 'Decision'";
 				System.out.println(findQuery);
 				rs = stmt.executeQuery(findQuery);
 				Vector<String> names = new Vector<String>();
@@ -1429,7 +1437,7 @@ public class Alternative extends RationaleElement implements Serializable {
 					alt.setPatternID(thePattern.getID());
 					Decision newCreatedDecision = new Decision();
 					newCreatedDecision.fromDatabase(theNewDecisionName);
-					alt.generateFromPattern(newCreatedDecision, 1);
+					alt.generateFromPattern(newCreatedDecision);
 
 					//						String insertPattern = "INSERT INTO alternativepatterns (name, status, evaluation, ptype, parent) VALUES ('" + 
 					//						(String)names.get(j) + "', 'At_Issue', 0, 'Decision', " + decisionID + ")";
@@ -1447,95 +1455,46 @@ public class Alternative extends RationaleElement implements Serializable {
 		return addedDecisions;
 	}
 
-	/**
-	 * Given an alternative, find its parent's alternative.
-	 * Decision
-	 *  --> Alternative (return)
-	 *    --> Decision
-	 *       --> Alternative (alt)
-	 * @param alt The alternative to start searching
-	 * @return null if not found or cannot be retrieved, object of interest otherwise
-	 */
-	private Alternative getParentAlternative(Alternative alt){
-		Alternative toReturn = null;
-		Decision parentDecision = new Decision();
-		parentDecision.fromDatabase(alt.getParent());
-		if (parentDecision.getID() < 0 || 
-				parentDecision.getPtype() != RationaleElementType.ALTERNATIVE) return null;
-		toReturn = new Alternative();
-		toReturn.fromDatabase(parentDecision.getParent());
-		if (toReturn.getID() < 0) return null;
-		return toReturn;
-	}
-
-	/**
-	 * Find the worst tactic-pattern fit score.
-	 * This might needs to be changed if tactic-tactic relationship is entered into the system.
-	 * @param decision
-	 * @param t
-	 * @param recursiveParent
-	 * @return
-	 */
-	private int findWorstTacticPatternScore(Decision decision, Tactic t, boolean recursiveParent){
-		if (decision.getPtype() != RationaleElementType.ALTERNATIVE){
-			//If this tactic is on the top of the decision tree, no compatibility issue can be found.
-			return 0;
-		}
-		Alternative parentAlternative = (Alternative) decision.getParentElement();
-		Pattern p = new Pattern();
-		p.fromDatabase(parentAlternative.getPatternID());
+	private int findTacticPatternScore(Tactic t, Pattern p){
 		TacticPattern tp = new TacticPattern();
 		tp.fromDatabase(TacticPattern.combineNames(p.getName(), t.getName()));
 		if (tp.getID() < 0) return 0;
-		//TODO: Tactic-tactic relationship....
-		int currScore = tp.getOverallScore();
-
-		while (recursiveParent){
-			parentAlternative = getParentAlternative(parentAlternative);
-			if (parentAlternative == null) break;
-			p.fromDatabase(parentAlternative.getPatternID());
-			tp.fromDatabase(TacticPattern.combineNames(p.getName(), t.getName()));
-			if (tp.getID() < 0) break;
-			//TODO: Tactic-tactic relationship
-			currScore = tp.getOverallScore();
-		}
-
-		return currScore;
-
+		if (tp.getStruct_change() == 0 || tp.getStruct_change() == 1) return -1;
+		return tp.getOverallScore();
 	}
 
+
 	/**
-	 * Generate sub-arguments for the given tactic ID under given decision
-	 * @param decision
+	 * Generate tactics in Rationale Explorer given the tactic ID, and a vector of patterns to be considered.
+	 * @param dec
 	 * @param tacticID
-	 * @param recursiveParent true if wishes to scan for parent pattern
+	 * @param parent
 	 * @return
 	 */
-	public boolean generateFromTactic(Decision decision, int tacticID, boolean considerParentPattern, boolean recursiveParent){
-		Tactic t = new Tactic();
-		t.fromDatabase(tacticID);
-		if (t.getID() < 0) return false;
+	public void generateFromTactic(Decision decision, Tactic t, Vector<Alternative> patternAlts){
 		setDescription("This alternative is generated on the basis of tactic " + t.getName());
 		setStatus(AlternativeStatus.ATISSUE);
 		setParent(decision);
 
 		toDatabase(decision.getID(), RationaleElementType.DECISION);
 		fromDatabase(getName());
+
 		RationaleDB db = RationaleDB.getHandle();
 		Vector<Requirement> nfrs = db.getNFRs();
+		boolean hasNoComplication = false;
 		boolean isCategoryMatched = false;
 		boolean[] isNegQAMatched = new boolean[t.getBadEffects().size()];
 		for (int i = 0; i < isNegQAMatched.length; i++){
 			isNegQAMatched[i] = false;
 		}
-
+		int score = -2;
 		for (int i = 0; i < nfrs.size(); i++){
 			//Contribution matching on negative side of the tactic.
 			Iterator<OntEntry> badI = t.getBadEffects().iterator();
 			while (badI.hasNext()){
 				OntEntry cur = badI.next();
 
-				Iterator<OntEntry> curChildrenI = db.getOntologyElements(cur.getName()).iterator();
+				Iterator<OntEntry> curChildrenI = db.getOntologyDescendents(cur.getName()).iterator();
 				while (curChildrenI.hasNext()){
 					OntEntry curChild = curChildrenI.next();
 					if (curChild.equals(nfrs.get(i).getOntology())){
@@ -1574,7 +1533,7 @@ public class Alternative extends RationaleElement implements Serializable {
 				isCategoryMatched = true;
 			}
 		}
-		
+
 
 
 		//Add arguments/claims
@@ -1632,63 +1591,71 @@ public class Alternative extends RationaleElement implements Serializable {
 			arg.setParent(this);	
 			arg.toDatabase(id, RationaleElementType.ALTERNATIVE);
 		}
-		//Add impact score.
-		if (considerParentPattern){
-			int score = findWorstTacticPatternScore(decision, t, recursiveParent);
-			if (score > 0){
-				Argument arg = new Argument();
-				Claim c = new Claim();
-				String claimName = "Tactic Compatible";
-				c.fromDatabase(claimName);
-				if (c.getID() < 0){
-					c.setDirection(Direction.NOT);
-					c.setName(claimName);
-					c.setImportance(Importance.DEFAULT);
-					OntEntry claimOnt = new OntEntry();
-					claimOnt.fromDatabase(TacticPattern.CHANGEONTNAME);
-					if (claimOnt.getID() < 0){
-						//Create a new quality attribute
-						OntEntry ontParent = new OntEntry();
-						ontParent.fromDatabase(1);
-						claimOnt.setName(TacticPattern.CHANGEONTNAME);
-						claimOnt.setEnabled(true);
-						claimOnt.setImportance(Importance.LOW);
-						claimOnt.toDatabase(ontParent.getID());
-					}
-					c.setOntology(claimOnt);
-					c.setEnabled(true);
-					c.toDatabase();
-				}
-				arg.setClaim(c);
-				arg.setType(ArgType.DENIES);
 
-				while(RationaleDBUtil.isExist(claimName, "Arguments")){
-					claimName = claimName + "~";
+		//Check pattern compatibility
+		for (Alternative pa: patternAlts){
+			hasNoComplication = false;
+			if (pa.getPatternID() < 0) continue;
+			Pattern p = new Pattern();
+			p.fromDatabase(pa.getPatternID());
+			score = findTacticPatternScore(t, p);
+			if (score < 0){
+				hasNoComplication = true;
+			}
+			if (!hasNoComplication){
+				//Add impact score.
+				if (score > 0){
+					Argument arg = new Argument();
+					String argName = "Complication Caused by Pattern " + p.getName();
+					arg.setType(ArgType.COMPLICATES);
+					arg.setAlternative(pa);
+
+					while(RationaleDBUtil.isExist(argName, "Arguments")){
+						argName = argName + "~";
+					}
+					arg.setName(argName);
+					arg.setPlausibility(Plausibility.HIGH);
+					arg.setDescription("");
+					arg.setAmount(score);
+					arg.setImportance(Importance.DEFAULT);
+					arg.setParent(this);	
+					arg.toDatabase(id, RationaleElementType.ALTERNATIVE);
 				}
-				arg.setName(claimName);
+			}
+			else if (score == -1){
+				Argument arg = new Argument();
+				String argName = "Compatible with " + p.getName();
+				arg.setType(ArgType.FACILITATES);
+				arg.setAlternative(pa);
+
+				while(RationaleDBUtil.isExist(argName, "Arguments")){
+					argName = argName + "~";
+				}
+				arg.setName(argName);
 				arg.setPlausibility(Plausibility.HIGH);
 				arg.setDescription("");
-				arg.setAmount(score);
+				arg.setAmount(5);
 				arg.setImportance(Importance.DEFAULT);
 				arg.setParent(this);	
 				arg.toDatabase(id, RationaleElementType.ALTERNATIVE);
 			}
 		}
+
 		//Evaluate
 		fromDatabase(name);
 		evaluate(true);
 		fromDatabase(name);
-		return true;
 	}
-	
+
+
 	/**
 	 * This method provides backward compatability with Wang's original code.
 	 * @param decision
 	 * @param matchingMethod
 	 * @return
 	 */
-	public boolean generateFromPattern(Decision decision, int matchingMethod){
-		return generateFromPattern(decision, matchingMethod, new ArrayList<Pattern>());
+	public boolean generateFromPattern(Decision decision){
+		return generateFromPattern(decision, new ArrayList<Pattern>());
 	}
 
 	/**
@@ -1701,17 +1668,16 @@ public class Alternative extends RationaleElement implements Serializable {
 	 * BASE CASE 1: For each m: A := |{p_m_n: for each n, p_m_n NOT IN visited}| = 0
 	 * Recursion: For each element p_m_n in A, it will call generateFromPattern for parent decision D_m.
 	 * @param decision
-	 * @param matchingMethod 0 = exact matching, 1 = contribution matching, 2 = not matching
 	 * @return
 	 */
-	public boolean generateFromPattern(Decision decision, int matchingMethod, ArrayList<Pattern> visited){
+	public boolean generateFromPattern(Decision decision, ArrayList<Pattern> visited){
 		boolean isCompleted = false;
 		if(getPatternID() != -1){
 			//Find the pattern, and mark this pattern as "Visited".
 			Pattern pattern = new Pattern();
 			pattern.fromDatabase(this.getPatternID());
 			visited.add(pattern);
-			
+
 			setDescription("This alternative is generated on the basis of pattern " + pattern.getName());
 			setStatus(AlternativeStatus.ATISSUE);
 			setParent(decision);
@@ -1725,30 +1691,41 @@ public class Alternative extends RationaleElement implements Serializable {
 				for(int i=0; i<pattern.getOntEntries().size(); i++){
 					OntEntry oe = pattern.getOntEntries().get(i);
 					//whether satisfied by this pattern
-					//matchingMethod == 2 is the "not" matching method.
-					if(matchingMethod != 2){
-						boolean isMatched = false;
+						boolean isMatched = false, isWeaklyMatched = false;
 						ArrayList<Requirement> matchedRequirements = new ArrayList<Requirement>();
+						HashMap<Requirement, Integer> weaklyMatchedRequirements = new HashMap<Requirement, Integer>();
 						for (int k=0; k<nfrs.size(); k++){
-							//matchingMethod == 0 is exact matching method
-							if(matchingMethod == 0){
-								if(nfrs.get(k).getOntology().getName().equals(oe.getName())){
-									isMatched = true;
-									matchedRequirements.add(nfrs.get(k));
-								}
-							}
 							//matchingMethod == 1 is the contribution matching method
-							else if(matchingMethod == 1){
-								Vector<OntEntry> ontList = db.getOntologyElements(oe.getName());
+							
+								Requirement q = nfrs.get(k);
+								Vector<OntEntry> ontList = db.getOntologyDescendents(q.getOntology().getName());
 								Enumeration<OntEntry> ontChildren = ontList.elements();
 								while (ontChildren.hasMoreElements()){
 									OntEntry ont = (OntEntry)ontChildren.nextElement();
-									if(ont.getName().compareTo(nfrs.get(k).getOntology().getName()) == 0){
+									if(ont.getName().compareTo(oe.getName()) == 0){
 										isMatched = true;
-										matchedRequirements.add(nfrs.get(k));
+										matchedRequirements.add(q);
 									}
 								}
-							}
+								//Try weak match. i.e.: An NFR having quality attribute that is a child of pattern's quality attribute.
+								if (!isMatched){
+									int level = db.findRelativeOntLevel(oe, q.getOntology());
+									if (level > 0){
+										int divisor = db.getOntologiesAtLevel(oe, level).size();
+										isWeaklyMatched = true;
+										//Score for inferencing = claim score + certainty of the requirement satisifcation * 5
+										//This is done to make the score somewhere between 5 and 10.
+										double score = (((double) 5) / divisor + 5);
+										int finalScore = (int) score;
+										if (score - (int) (score) > 0.5) {
+											finalScore++;
+										}
+										if (finalScore > 10) finalScore = 10;
+										weaklyMatchedRequirements.put(q, finalScore);
+									}
+
+								}
+							
 						}
 						if(isMatched && matchedRequirements.size() != 0){
 							for(Requirement matchedR: matchedRequirements){
@@ -1767,15 +1744,42 @@ public class Alternative extends RationaleElement implements Serializable {
 								}
 								argu.setName(arguName);
 								argu.setRequirement(matchedR);
-								argu.setPlausibility(Plausibility.CERTAIN);
+								argu.setPlausibility(Plausibility.HIGH);
 								argu.setDescription("");
-								argu.setAmount(10);
+								argu.setAmount(5);
 								argu.setImportance(Importance.ESSENTIAL);
 								argu.setParent(this);
 
 								argu.toDatabase(this.getID(), RationaleElementType.ALTERNATIVE);
 							}									
-						}else{
+						}
+						else if (isWeaklyMatched && weaklyMatchedRequirements.size() > 0){
+							for(Requirement matchedR: weaklyMatchedRequirements.keySet()){
+								Argument argu = new Argument();
+								String arguName = "";
+								if(pattern.getPosiOnts().contains(oe)){
+									arguName = "Possible Requirement Satisfaction - " + oe.getName();
+									argu.setType(ArgType.SATISFIES);
+
+								}else{
+									arguName = "Possible Requirement Violation - " + oe.getName();
+									argu.setType(ArgType.VIOLATES);
+								}
+								while(RationaleDBUtil.isExist(arguName, "Arguments")){
+									arguName = arguName + "~";
+								}
+								argu.setName(arguName);
+								argu.setRequirement(matchedR);
+								argu.setPlausibility(Plausibility.LOW);
+								argu.setDescription("");
+								argu.setAmount(5);
+								argu.setImportance(Importance.ESSENTIAL);
+								argu.setParent(this);
+
+								argu.toDatabase(this.getID(), RationaleElementType.ALTERNATIVE);
+							}
+						}
+						else{
 							Argument argu = new Argument();
 							Claim claim = new Claim();
 							String claimName = "";
@@ -1806,52 +1810,15 @@ public class Alternative extends RationaleElement implements Serializable {
 							argu.setPlausibility(Plausibility.HIGH);
 							argu.setDescription("");
 							argu.setAmount(5);
-							argu.setImportance(Importance.DEFAULT);
+							argu.setImportance(Importance.MODERATE);
 							argu.setParent(this);
 
 							argu.toDatabase(this.getID(), RationaleElementType.ALTERNATIVE);
 						}
-					}else{
-						//no matching, arguments only
-						Argument argu = new Argument();
-						Claim claim = new Claim();
-						String claimName = "";
-						if(pattern.getPosiOnts().contains(oe)){
-							claimName = "Positive Quality Attribute - " + oe.getName();
-							claim.setDirection(Direction.IS);
-							argu.setType(ArgType.SUPPORTS);
-						}else{
-							claimName = "Negative Quality Attribute - " + oe.getName();
-							claim.setDirection(Direction.NOT);
-							argu.setType(ArgType.DENIES);
-						}								
-						while(RationaleDBUtil.isExist(claimName, "Claims")){
-							claimName = claimName + "~";
-						}
-						claim.setName(claimName);
-
-						claim.setImportance(Importance.ESSENTIAL);
-						claim.setOntology(oe);
-						claim.setEnabled(true);
-						claim.toDatabase();
-
-						argu.setClaim(claim);
-
-						while(RationaleDBUtil.isExist(claimName, "Arguments")){
-							claimName = claimName + "~";
-						}
-						argu.setName(claimName);
-						argu.setPlausibility(Plausibility.HIGH);
-						argu.setDescription("");
-						argu.setAmount(5);
-						argu.setImportance(Importance.ESSENTIAL);
-						argu.setParent(this);
-
-						argu.toDatabase(this.getID(), RationaleElementType.ALTERNATIVE);
-					}
+					
 				}
 			}
-			
+
 			//Generate Sub-decisions...
 			Iterator<PatternDecision> subdecI = pattern.getSubDecisions().iterator();
 			while (subdecI.hasNext()){
@@ -1868,21 +1835,21 @@ public class Alternative extends RationaleElement implements Serializable {
 				subDec.setType(curDec.getType());
 				this.addSubDecision(subDec);
 				subDec.toDatabase(getID(), RationaleElementType.ALTERNATIVE);
-				
+
 				Iterator<Pattern> subpatternI = curDec.getCandidatePatterns().iterator();
 				while (subpatternI.hasNext()){
 					Pattern curSubPattern = subpatternI.next();
-					
+
 					if (!visited.contains(curSubPattern)){
 						//Does not contain the pattern. This means we will create a new alternative.
 						Alternative subAlt = new Alternative();
 						subAlt.setPatternID(curSubPattern.getID());
 						subAlt.setName(curSubPattern.getName());
-						subAlt.generateFromPattern(subDec, matchingMethod, visited);
+						subAlt.generateFromPattern(subDec, visited);
 					}
 				}
 			}
-			
+
 
 			isCompleted = true;
 			this.fromDatabase(this.name);
@@ -1892,12 +1859,12 @@ public class Alternative extends RationaleElement implements Serializable {
 
 		return isCompleted;
 	}
-	
+
 	public boolean isUMLAssociated(){
 		if (!inDatabase()) return false;
 		RationaleDB db = RationaleDB.getHandle();
 		Connection conn = db.getConnection();
-		
+
 		try{
 			Statement stmt = conn.createStatement();
 			String query = "SELECT * FROM DIAGRAM_ALTERNATIVE WHERE alt_id = " + id;
@@ -1910,12 +1877,12 @@ public class Alternative extends RationaleElement implements Serializable {
 		}
 		return false;
 	}
-	
+
 	public void broadcastUpdate(){
 		RationaleUpdateEvent l_updateEvent = m_eventGenerator.MakeUpdated();
 		m_eventGenerator.Broadcast(l_updateEvent);
 	}
-	
+
 	/**
 	 * Removes the association from the database.
 	 */
@@ -1932,7 +1899,7 @@ public class Alternative extends RationaleElement implements Serializable {
 		} catch (SQLException e){
 			e.printStackTrace();
 		}
-		
+
 		broadcastUpdate();
 	}
 }

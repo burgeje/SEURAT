@@ -1,4 +1,5 @@
 package edu.wpi.cs.jburge.SEURAT.reports;
+import java.awt.Color;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
@@ -21,6 +22,8 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.List;
 import org.eclipse.swt.widgets.MessageBox;
 import org.eclipse.swt.widgets.Shell;
+import org.eclipse.swt.widgets.Tree;
+import org.eclipse.swt.widgets.TreeItem;
 
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.viewers.IStructuredSelection;
@@ -37,8 +40,10 @@ import edu.wpi.cs.jburge.SEURAT.rationaleData.Decision;
 import edu.wpi.cs.jburge.SEURAT.rationaleData.OntEntry;
 import edu.wpi.cs.jburge.SEURAT.rationaleData.Pattern;
 import edu.wpi.cs.jburge.SEURAT.rationaleData.PatternElementType;
+import edu.wpi.cs.jburge.SEURAT.rationaleData.PatternEvalScore;
 import edu.wpi.cs.jburge.SEURAT.rationaleData.RationaleDB;
 import edu.wpi.cs.jburge.SEURAT.rationaleData.RationaleDBUtil;
+import edu.wpi.cs.jburge.SEURAT.rationaleData.Requirement;
 import edu.wpi.cs.jburge.SEURAT.views.TreeParent;
 /**
  * This class presents the wizard GUI to the users to generate candidate patterns.
@@ -51,7 +56,6 @@ public class GenerateCandidatePatternsComposite {
 	private WizardDialog ourWizard;
 	private String ourDecision;
 	private GCPWizard ourGCPWizard;
-	private OntEntry ourCategory;
 	
 	/**
 	 * Constructor for the class, opens the wizard.
@@ -78,6 +82,69 @@ public class GenerateCandidatePatternsComposite {
 	public ArrayList<Alternative> getNewlyAddedAlternative() {
 		return ourGCPWizard.getNewAlternatives();
 	}
+	
+	/**
+	 * Given a parent swt widget component, construct a visual tree representation
+	 * of a PatternEvalScore model.
+	 * Note: The layout of the tree is not set by this method. It can be customized later.
+	 * @param parent The parent widget component
+	 * @param eval The model to construct from
+	 * @return Tree representation of eval
+	 */
+	public TreeItem constructPatternEvalSubtree(Tree parent, PatternEvalScore eval){
+		TreeItem ret = new TreeItem(parent, SWT.NONE);
+		ret.setText(eval.getPattern().getName());
+		
+		int numSati = eval.getNumSatisfactions();
+		int numViol = eval.getNumViolations();
+		if (numViol > 0) ret.setForeground(ourDisplay.getSystemColor(SWT.COLOR_RED));
+		ret.setText(ret.getText() + "(Satisfactions: " + numSati + ", Violations: " + numViol + ")");
+		
+		TreeItem satiRoot = new TreeItem(ret, SWT.NONE);
+		satiRoot.setText("Satisfactions (" + numSati + ")");
+		TreeItem satiCat = new TreeItem(satiRoot, SWT.NONE);
+		satiCat.setText("Exact (" + eval.getExactSati().size() + ")");
+		for (Requirement req : eval.getExactSati()){
+			TreeItem cur = new TreeItem(satiCat, SWT.NONE);
+			cur.setText(req.getName() + ": " + req.getOntology());
+		}
+		satiCat = new TreeItem(satiRoot, SWT.NONE);
+		satiCat.setText("Contributing (" + eval.getContribSati().size() + ")");
+		for (Requirement req : eval.getContribSati()){
+			TreeItem cur = new TreeItem(satiCat, SWT.NONE);
+			cur.setText(req.getName() + ": " + req.getOntology());
+		}
+		satiCat = new TreeItem(satiRoot, SWT.NONE);
+		satiCat.setText("Potential (" + eval.getPossibleSati().size() + ")");
+		for (Requirement req : eval.getPossibleSati()){
+			TreeItem cur = new TreeItem(satiCat, SWT.NONE);
+			cur.setText(req.getName() + ": " + req.getOntology());
+		}
+		
+		TreeItem violRoot = new TreeItem(ret, SWT.NONE);
+		violRoot.setText("Violations (" + numViol + ")");
+		TreeItem violCat = new TreeItem(violRoot, SWT.NONE);
+		violCat.setText("Exact (" + eval.getExactViol().size() + ")");
+		for (Requirement req : eval.getExactViol()){
+			TreeItem cur = new TreeItem(violCat, SWT.NONE);
+			cur.setText(req.getName() + ": " + req.getOntology());
+		}
+		violCat = new TreeItem(violRoot, SWT.NONE);
+		violCat.setText("Contributing (" + eval.getContribViol().size() + ")");
+		for (Requirement req : eval.getContribViol()){
+			TreeItem cur = new TreeItem(violCat, SWT.NONE);
+			cur.setText(req.getName() + ": " + req.getOntology());
+		}
+		violCat = new TreeItem(violRoot, SWT.NONE);
+		violCat.setText("Potential (" + eval.getPossibleViol().size() + ")");
+		for (Requirement req : eval.getPossibleViol()){
+			TreeItem cur = new TreeItem(violCat, SWT.NONE);
+			cur.setText(req.getName() + ": " + req.getOntology());
+		}
+		
+		
+		return ret;
+	}
 
 	/**
 	 * The wizard control of generate candidate pattern wizard GUI.
@@ -88,7 +155,6 @@ public class GenerateCandidatePatternsComposite {
 	 */
 	private class GCPWizard extends Wizard{
 		
-		private int matchingMethod; //0 for exact matching, 1 for contribution matching.
 		//This is set by its private class MethodPage.
 		private boolean scopes[]; //scopes controls whether archiecture/design/idiom should
 		//be included in the category selection page (next page of scope)
@@ -103,9 +169,13 @@ public class GenerateCandidatePatternsComposite {
 		
 		//Due to limitations of the wizard page redraw, we must have the dynamic lists
 		//declared here to provide update to those lists...
-		private List selectedList, availableList, previewSelectedList;
+		private List selectedList, availableList;
+		private List availablePatternsList, selectedPatternsList;
+		private Tree patternDetails;
+		
 		private HashMap<String, Integer> categories;
 		private HashMap<String, Integer> selectedCategories;
+		private HashMap<String, PatternEvalScore> candidates;
 		private PreviewPage previewPage; //used to detect whether we can finish it.
 		
 		/**
@@ -122,7 +192,7 @@ public class GenerateCandidatePatternsComposite {
 		 * category selection page.
 		 * The method is moved here because it has to be called by other page classes.
 		 */
-		public void updateData(){
+		public void updateCategories(){
 			categories = new HashMap<String, Integer>();
 			RationaleDB db = RationaleDB.getHandle();
 			for (int i = 0; i < scopes.length; i++){
@@ -139,17 +209,25 @@ public class GenerateCandidatePatternsComposite {
 			}
 		}
 		
-		/**
-		 * This method updates previewSelectedList for the preview page.
-		 * It has to be called after clicking "next" in the category selection page.
-		 */
-		public void updatePreviewList(){
-			previewSelectedList.removeAll();
-			Iterator<String> selectedValues = selectedCategories.keySet().iterator();
-			while (selectedValues.hasNext()){
-				previewSelectedList.add(selectedValues.next());
+		public void updatePatternLists(){
+			candidates = new HashMap<String, PatternEvalScore>();
+			RationaleDB db = RationaleDB.getHandle();
+			for (String cat: selectedCategories.keySet()){
+				ArrayList<Pattern> patterns = db.getPatternByCategory(cat);
+				for (Pattern p: patterns){
+					PatternEvalScore s = new PatternEvalScore(p);
+					s.contributionMatching();
+					candidates.put(s.toString(), s);
+				}
+			}
+			availablePatternsList.removeAll();
+			selectedPatternsList.removeAll();
+			patternDetails.removeAll();
+			for (String s: candidates.keySet()){
+				availablePatternsList.add(s);
 			}
 		}
+
 		
 		/**
 		 * Constructor of this wizard.
@@ -164,10 +242,10 @@ public class GenerateCandidatePatternsComposite {
 			scopeMap.put(2, PatternElementType.IDIOM.toString());
 			categories = new HashMap<String, Integer>();
 			selectedCategories = new HashMap<String, Integer>();
+			candidates = new HashMap<String, PatternEvalScore>();
 			
 			
 			//Add wizard pages.
-			addPage(new MethodPage());
 			addPage(new ScopePage());
 			addPage(new CategorySelectionPage());
 			previewPage = new PreviewPage();
@@ -188,27 +266,15 @@ public class GenerateCandidatePatternsComposite {
 			while (interestedCategories.hasNext()){
 				matchingPatterns.addAll(db.getPatternByCategoryID(interestedCategories.next()));
 			}
-			
-			//Create a hash table between pattern and their scores
-			Hashtable<Pattern, Double> scoreTable =  null;
-			if (matchingMethod == 0)
-				scoreTable = new AlternativePatternInferences().exactMatching(matchingPatterns);
-			else if (matchingMethod == 1)
-				scoreTable = new AlternativePatternInferences().contributionMatching(matchingPatterns);
-			
-			if (scoreTable == null) {
-				MessageBox errorMsg = new MessageBox(this.getContainer().getShell(), SWT.ICON_ERROR | SWT.OK);
-				errorMsg.setText("Error when generating score");
-				errorMsg.setMessage("The selected matching method is invalid or has not yet been implemented.");
-				return false;
-			}
+
 			
 			this.getContainer().getShell().setVisible(false);
-			SelectCandidatePatterns selectPatternsGUI = new SelectCandidatePatterns(scoreTable, ourDisplay);
-			if (!selectPatternsGUI.getCanceled()){
-				Vector<String> selectedPatterns = selectPatternsGUI.getSelections();
-				saveSelectedPatterns(selectedPatterns);
+			Vector<String> selected = new Vector<String>();
+			for (String fName: selectedPatternsList.getItems()){
+				String pName = candidates.get(fName).getPattern().getName();
+				selected.add(pName);
 			}
+			saveSelectedPatterns(selected);
 			return true;
 			
 		}
@@ -232,7 +298,7 @@ public class GenerateCandidatePatternsComposite {
 				Alternative alter = new Alternative();
 				alter.setName(patternName);
 				alter.setPatternID(pattern.getID());
-				alter.generateFromPattern(decision, matchingMethod);		
+				alter.generateFromPattern(decision);
 				
 				newAlternatives.add(alter);
 			}
@@ -248,69 +314,6 @@ public class GenerateCandidatePatternsComposite {
 				return false;
 			}
 			return true;
-		}
-		
-		/**
-		 * This is the first page of the wizard.
-		 * It allows the user to select whether to use exact matching or to use
-		 * contribution matching.
-		 * @author yechen
-		 *
-		 */
-		private class MethodPage extends WizardPage{
-			private Button[] methods;
-			public void createControl(Composite parent) {
-				Composite composite = new Composite(parent, SWT.NONE); //looks like JPanel
-				composite.setLayout(new GridLayout(1, false));
-				//We can use this if we have a banner...
-				//this.setImageDescriptor(ImageDescriptor.createFromFile(SEURATLightWeightDecorator.class, "smallRat.gif"));
-				
-				Composite contentComp = new Composite(composite, SWT.NONE);
-				contentComp.setLayout(new GridLayout(1, false));
-				
-				new Label (contentComp, SWT.LEFT | SWT.WRAP).setText("Welcome to Generate Candidate Pattern Wizard!"); 
-				new Label (contentComp, SWT.LEFT | SWT.WRAP).setText("This wizard will help you select the patterns you want to evaluate based on your rationale.");
-				
-				new Label (contentComp, SWT.LEFT).setText("");
-				new Label (contentComp, SWT.LEFT | SWT.WRAP).setText("How would you like to calculate the patterns?");
-				
-				Composite buttonComp = new Composite(composite, SWT.NONE);
-				buttonComp.setLayout(new GridLayout (1, true));
-				
-				methods = new Button[2];
-				
-				methods[0] = new Button(buttonComp, SWT.RADIO);
-				methods[0].setSelection(true);
-				methods[0].setText("Exact Matching");
-				
-				methods[1] = new Button(buttonComp, SWT.RADIO);
-				methods[1].setText("Contribution Matching");
-				setControl(composite);
-			}
-
-			public MethodPage(){
-				super("Select Matching Method");
-			}
-			
-			/**
-			 * This method is not intended to jump to pages!
-			 * Instead, this method is used to change the matchingMethod 'global'
-			 * variable according to current radio selection...
-			 * This method should support future expansion of radio buttons.
-			 */
-			public IWizardPage getNextPage(){
-				
-				//Since methods are radio buttons, there is only one of them can be true
-				//If true, then break out to avoid useless computations.
-				for (int i = 0; i < methods.length; i++){
-					if (methods[i].getSelection()){
-						matchingMethod = i;
-						break;
-					}
-				}
-				return super.getNextPage();
-			}
-			//Note: public IWizardPage getNextPage() can control which page it jumps to...
 		}
 		
 		/**
@@ -378,7 +381,7 @@ public class GenerateCandidatePatternsComposite {
 			
 			private void initNextPage(){
 				IWizardPage nextPage = super.getNextPage();
-				updateData();
+				updateCategories();
 				nextPage.getControl().redraw();
 				nextPage.getControl().update();
 			}
@@ -486,8 +489,10 @@ public class GenerateCandidatePatternsComposite {
 				for (int i = 0; i < selectedItems.length; i++){
 					selectedCategories.put(selectedItems[i], categories.get(selectedItems[i]));
 				}
-				updatePreviewList();
+				updatePatternLists();
 				return super.getNextPage();
+				
+				
 			}
 		}
 		
@@ -499,13 +504,14 @@ public class GenerateCandidatePatternsComposite {
 		 *
 		 */
 		private class PreviewPage extends WizardPage{
+			private Button moveToSelected, moveToAvailable;
 			
 			/**
 			 * This one reconstructs the data of the IWizardPage's lists
 			 */
 			public IWizardPage getPreviousPage(){
 				IWizardPage prevPage = super.getPreviousPage();
-				updateData();
+				updateCategories();
 				prevPage.getControl().redraw();
 				prevPage.getControl().update();
 				return prevPage;
@@ -514,23 +520,100 @@ public class GenerateCandidatePatternsComposite {
 			public void createControl(Composite parent) {
 				Composite composite = new Composite(parent, SWT.NONE);
 				composite.setLayout(new GridLayout(1, false));
-				new Label(composite, SWT.WRAP | SWT.CENTER | SWT.BOLD).setText("The patterns are ready to be evaluated.");
-				new Label(composite, SWT.WRAP | SWT.LEFT).setText("You have selected the following problems " +
-						"to evaluate.");
 				new Label(composite, SWT.WRAP | SWT.LEFT).setText("If you would like to modify the selection, you may click on the \"Back\" button now. ");
-				new Label(composite, SWT.WRAP | SWT.LEFT).setText("If you would like to proceed, please press Finish button. The wizard will close and you will be presented with evaluated pattern.");
-				previewSelectedList = new List(composite, SWT.BORDER | SWT.V_SCROLL);
-				previewSelectedList.setEnabled(false);
+				new Label(composite, SWT.WRAP | SWT.LEFT).setText("Select the patterns you would like to consider as alternatives for the decision. The details will be shown in a expandable tree.");
+				
 				GridData gridData = new GridData(GridData.HORIZONTAL_ALIGN_FILL | GridData.VERTICAL_ALIGN_FILL);
 				gridData.grabExcessHorizontalSpace = true;
 				gridData.horizontalAlignment = GridData.FILL;
-				previewSelectedList.setLayoutData(gridData);
+				
+				//This is the panel for the dual-selection list
+				Composite selectionComp = new Composite(composite, SWT.NONE);
+				selectionComp.setLayout(new GridLayout(5, true));
+				selectionComp.setLayoutData(gridData);
+				
+				
+				new Label(selectionComp, SWT.LEFT | SWT.WRAP).setText("Available Patterns");
+				new Label(selectionComp, SWT.NONE);
+				new Label(selectionComp, SWT.CENTER).setText(" ");
+				new Label(selectionComp, SWT.NONE);
+				new Label(selectionComp, SWT.RIGHT | SWT.WRAP).setText("Selected Patterns");
+				
+				availablePatternsList = new List(selectionComp, SWT.MULTI | SWT.BORDER | SWT.V_SCROLL);
+				gridData = new GridData(GridData.HORIZONTAL_ALIGN_FILL | GridData.VERTICAL_ALIGN_FILL);
+				gridData.grabExcessHorizontalSpace = true;
+				gridData.horizontalSpan=2;
+				gridData.horizontalAlignment = GridData.FILL;
+				availablePatternsList.setLayoutData(gridData);
+				
+				//This is panel for the two buttons in the middle of the d-s list
+				Composite buttonComp = new Composite(selectionComp, SWT.NONE);
+				buttonComp.setLayout(new GridLayout(1, true));
+				moveToSelected = new Button(buttonComp, SWT.PUSH | SWT.CENTER);
+				moveToAvailable = new Button(buttonComp, SWT.PUSH | SWT.CENTER);
+				moveToSelected.setText("=>");
+				moveToAvailable.setText("<=");
+				ButtonsListener listen = new ButtonsListener();
+				moveToSelected.addSelectionListener(listen);
+				moveToAvailable.addSelectionListener(listen);
+				
+				selectedPatternsList = new List(selectionComp, SWT.MULTI | SWT.BORDER | SWT.V_SCROLL);
+				gridData = new GridData(GridData.HORIZONTAL_ALIGN_FILL | GridData.VERTICAL_ALIGN_FILL);
+				gridData.grabExcessHorizontalSpace = true;
+				gridData.horizontalSpan=2;
+				gridData.horizontalAlignment = GridData.FILL;
+				selectedPatternsList.setLayoutData(gridData);
+				
+				new Label(composite, SWT.WRAP).setText("Details of the selected patterns are shown below.");
+				patternDetails = new Tree(composite, SWT.V_SCROLL | SWT.H_SCROLL);
+				gridData = new GridData(GridData.HORIZONTAL_ALIGN_FILL | GridData.VERTICAL_ALIGN_FILL);
+				gridData.grabExcessHorizontalSpace = true;
+				gridData.horizontalAlignment = GridData.FILL;
+				patternDetails.setLayoutData(gridData);
+				
+				
+				gridData = new GridData(GridData.HORIZONTAL_ALIGN_FILL | GridData.VERTICAL_ALIGN_FILL);
+				gridData.grabExcessHorizontalSpace = true;
+				gridData.horizontalAlignment = GridData.FILL;
 				setControl(composite);
 				setPageComplete(true);
 			}
 
 			public PreviewPage(){
 				super ("Ready to Match");
+			}
+			
+			private class ButtonsListener implements SelectionListener{
+
+				public void widgetSelected(SelectionEvent e) {
+					if (e.widget == moveToSelected){
+						String[] selectedItems = availablePatternsList.getSelection();
+						for (int i = 0; i < selectedItems.length; i++){
+							String tempName = new String(selectedItems[i]);
+							selectedPatternsList.add(tempName);
+							availablePatternsList.remove(tempName);
+						}
+					}
+					if (e.widget == moveToAvailable){
+						String[] selectedItems = selectedPatternsList.getSelection();
+						for (int i = 0; i < selectedItems.length; i++){
+							String tempName = new String (selectedItems[i]);
+							availablePatternsList.add(tempName);
+							selectedPatternsList.remove(tempName);
+						}
+					}
+					
+					patternDetails.removeAll();
+					for (String s: selectedPatternsList.getItems()){
+						constructPatternEvalSubtree(patternDetails, candidates.get(s));
+					}
+					
+				}
+
+				public void widgetDefaultSelected(SelectionEvent e) {
+					
+				}
+				
 			}
 
 		}

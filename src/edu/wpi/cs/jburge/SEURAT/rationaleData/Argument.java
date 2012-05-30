@@ -451,7 +451,8 @@ public class Argument extends RationaleElement implements Serializable
 	 */
 	public boolean isFor()
 	{
-		if ((type == ArgType.SATISFIES) || (type == ArgType.ADDRESSES) || (type == ArgType.SUPPORTS))
+		if ((type == ArgType.SATISFIES) || (type == ArgType.ADDRESSES) || (type == ArgType.SUPPORTS)
+				|| (type == ArgType.FACILITATES))
 		{
 			return true;
 		}
@@ -468,7 +469,7 @@ public class Argument extends RationaleElement implements Serializable
 	 */
 	public boolean isAgainst()
 	{
-		if ((type == ArgType.VIOLATES) || (type == ArgType.DENIES))
+		if ((type == ArgType.VIOLATES) || (type == ArgType.DENIES) || (type == ArgType.COMPLICATES))
 		{
 			return true;
 		}
@@ -522,6 +523,12 @@ public class Argument extends RationaleElement implements Serializable
 				{
 					impVal = 1.0; //want a strong argument against
 				}
+				else if (this.type == ArgType.COMPLICATES){
+					impVal = -0.5;
+				}
+				else if (this.type == ArgType.FACILITATES){
+					impVal = 0.5;
+				}
 				else
 				{
 					impVal = 0.0; //no effect
@@ -548,6 +555,12 @@ public class Argument extends RationaleElement implements Serializable
 				if (this.type == ArgType.OPPOSES)
 				{
 					impVal = 1.0; //want a strong argument against
+				}
+				else if (this.type == ArgType.COMPLICATES){
+					impVal = -0.5;
+				}
+				else if (this.type == ArgType.FACILITATES){
+					impVal = 0.5;
 				}
 				else
 				{

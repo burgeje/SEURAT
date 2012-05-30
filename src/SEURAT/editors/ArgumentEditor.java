@@ -1154,6 +1154,8 @@ public class ArgumentEditor extends RationaleEditorBase {
 //				typeChoice.addItem(ArgType.PRESUPPOSEDBY);
 				typeChoice.add(ArgType.OPPOSES.toString());
 //				typeChoice.addItem(ArgType.OPPOSEDBY);
+				typeChoice.add(ArgType.COMPLICATES.toString());
+				typeChoice.add(ArgType.FACILITATES.toString());
 			}
 			else if (getArgument().getCategory() == ArgCategory.NONE)
 			{

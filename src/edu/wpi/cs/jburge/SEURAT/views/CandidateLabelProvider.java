@@ -76,11 +76,13 @@ public class CandidateLabelProvider extends LabelProvider {
 			{		
 			descriptor = SEURATPlugin.getImageDescriptor("newArg.gif");
 			}
-			else if (ArgType.fromString(ourEle.getQualifier()) == ArgType.DENIES)
+			else if ( (ArgType.fromString(ourEle.getQualifier()) == ArgType.DENIES) || 
+					(ArgType.fromString(ourEle.getQualifier()) == ArgType.COMPLICATES))
 			{
 				descriptor = SEURATPlugin.getImageDescriptor("argAgainst.gif");
 			}
-			else if (ArgType.fromString(ourEle.getQualifier()) == ArgType.SUPPORTS)
+			else if ( (ArgType.fromString(ourEle.getQualifier()) == ArgType.SUPPORTS) ||
+					(ArgType.fromString(ourEle.getQualifier()) == ArgType.FACILITATES))
 			{
 				descriptor = SEURATPlugin.getImageDescriptor("argFor.gif");
 			}

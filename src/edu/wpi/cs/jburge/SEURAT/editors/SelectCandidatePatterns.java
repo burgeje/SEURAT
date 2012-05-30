@@ -42,6 +42,7 @@ import edu.wpi.cs.jburge.SEURAT.rationaleData.RationaleDB;
  * As such, there are two constructors for this class. I have a "setupForm" function to
  * set up the basic GUI, and then do the actions, depending on the input of available patterns
  * seperately in the constructor.
+ * @deprecated
  *
  */
 public class SelectCandidatePatterns {

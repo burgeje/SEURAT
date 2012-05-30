@@ -3,7 +3,7 @@
 <plugin
    id="SEURAT" 
    name="SEURAT Plug-in"
-   version="5.0.0.qualifier"
+   version="6.0.1.qualifier"
    provider-name="Janet Burge - Miami University"
    class="edu.wpi.cs.jburge.SEURAT.SEURATPlugin">
 

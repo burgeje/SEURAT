@@ -94,6 +94,13 @@ public final class ArgType implements Serializable {
 	ArgType("Opposed");
 //	public static final ArgType OPPOSEDBY = new 
 //	ArgType("Opposed-by");
+	
+	/**
+	 * New Argument type for alternatives.
+	 * (YQ)
+	 */
+	public static final ArgType COMPLICATES = new ArgType("Complicates"),
+			FACILITATES = new ArgType("Facilitates");
 	/**
 	 * The argument indicates that this alternative addresses a requirment. This
 	 * indicates support for the requirment but does not claim that by selecting

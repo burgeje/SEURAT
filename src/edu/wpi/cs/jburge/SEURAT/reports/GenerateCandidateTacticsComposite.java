@@ -73,10 +73,11 @@ public class GenerateCandidateTacticsComposite {
 
 		private ArrayList<Alternative> newAlternatives; //These are new tactic-alternatives to be added
 		private Vector<OntEntry> selectedCategories = null; //Which quality attribute the tactic should improve on?
+		private Vector<Alternative> selectedPatternAlts = null; //Which pattern alternatives should we try to generate score with?
 		private List selectedList, availableList, previewSelectedList;
 		private HashMap<String, Tactic> tactics;
-		private boolean considerParentPattern = false, recursiveParent = false;
 		private PreviewPage previewPage;
+		private List altList;
 
 		@Override
 		public boolean performFinish() {
@@ -94,7 +95,7 @@ public class GenerateCandidateTacticsComposite {
 				}
 				Alternative alt = new Alternative();
 				alt.setName(tacticName);
-				alt.generateFromTactic(dec, cur.getID(), considerParentPattern, recursiveParent);
+				alt.generateFromTactic(dec, cur, selectedPatternAlts);
 				newAlternatives.add(alt);
 			}
 			return true;
@@ -211,8 +212,6 @@ public class GenerateCandidateTacticsComposite {
 		}
 
 		private class PatternSelectionPage extends WizardPage{
-			private Button[] parentPatternRadio;
-			private Button[] recursiveRadio;
 			public PatternSelectionPage(){
 				super("Select Pattern");
 			}
@@ -220,97 +219,34 @@ public class GenerateCandidateTacticsComposite {
 			public void createControl(Composite parent) {
 				Composite composite = new Composite(parent, SWT.NONE);
 				composite.setLayout(new GridLayout(1, false));
+				selectedPatternAlts = new Vector<Alternative>();
 
-				//Test to see whether the parent of decision is generated from a pattern.
-				boolean parentPattern = true;
-				Decision decision = new Decision();
-				decision.fromDatabase(ourDecision);
-				if (decision.getID() < 0 || 
-						decision.getPtype() != RationaleElementType.ALTERNATIVE)
-					parentPattern = false;
-				Alternative patternAlternative = new Alternative();
-				patternAlternative.fromDatabase(decision.getParent());
-				if (patternAlternative.getID() < 0 || patternAlternative.getPatternID() < 0)
-					parentPattern = false;
+				//Get a vector of all alternatives generated from pattern
+				RationaleDB db = RationaleDB.getHandle();
+				Vector<Alternative> patternAlts = db.getAlternativesFromPattern();
 				
-				//Two Cases: If parentPattern = false, then nothing to do in this page. Otherwise, create radio buttons.
-				if (!parentPattern){
-					//Case 1: parentPattern = false.
-					new Label (composite, SWT.LEFT | SWT.WRAP).setText("The decision selected is at the top of the decision tree. " + 
-					"Therefore, it is not possible to evaluate against its parent patterns. Please click \"Next\" to skip this page.");
-					new Label (composite, SWT.LEFT | SWT.WRAP).setText("");
-					new Label (composite, SWT.LEFT | SWT.WRAP).setText("If you wish to evaluate against a pattern, please generate the pattern first. " + 
-					"Create a sub-decision for a generated pattern-alternative, and use this wizard under the sub-decision.");
+				//TODO
+				new Label(composite, SWT.LEFT | SWT.WRAP).setText("Select patterns that may affect the tactic. You must generate the patterns as alternatives first.");
+				altList = new List(composite, SWT.MULTI | SWT.BORDER | SWT.V_SCROLL);
+				GridData gridData = new GridData(GridData.HORIZONTAL_ALIGN_FILL | GridData.VERTICAL_ALIGN_FILL);
+				gridData.grabExcessHorizontalSpace = true;
+				gridData.horizontalAlignment = GridData.FILL;
+				altList.setLayoutData(gridData);
+				for (Alternative pa : patternAlts){
+					altList.add(pa.getName());
 				}
-
-				Composite selectionComp = new Composite(composite, SWT.NONE);
-				selectionComp.setLayout(new GridLayout(2, false));
-				parentPatternRadio = new Button[2];
-				recursiveRadio = new Button[2];
-
-				Composite parentPatternComp = new Composite(selectionComp, SWT.NONE);
-				parentPatternComp.setLayout(new GridLayout(1, false));
-				new Label(parentPatternComp, SWT.LEFT | SWT.WRAP).setText("Do you wish to evaluate against the parent pattern?");
-				parentPatternRadio[0] = new Button(parentPatternComp, SWT.RADIO);
-				parentPatternRadio[0].setText("Yes");
-				parentPatternRadio[1] = new Button(parentPatternComp, SWT.RADIO);
-				parentPatternRadio[1].setText("No");
-				parentPatternRadio[1].setSelection(true);
-
-				Composite recursiveComp = new Composite(selectionComp, SWT.NONE);
-				recursiveComp.setLayout(new GridLayout(1, false));
-				new Label(recursiveComp, SWT.LEFT | SWT.WRAP).setText("Do you wish to recursively evaluate all patterns?");
-				recursiveRadio[0] = new Button(recursiveComp, SWT.RADIO);
-				recursiveRadio[0].setText("Yes");
-				recursiveRadio[1] = new Button(recursiveComp, SWT.RADIO);
-				recursiveRadio[1].setText("No");
-				recursiveRadio[1].setSelection(true);
-				new Label(recursiveComp, SWT.LEFT | SWT.WRAP).setText("Only recommended for tactics with spreaded pattern participants such as redundancy and modifibility tactics");
-
-				parentPatternRadio[0].addSelectionListener(new SelectionAdapter() {
-					public void widgetSelected(SelectionEvent event){
-						recursiveRadio[0].setEnabled(true);
-						recursiveRadio[0].setSelection(false);
-						recursiveRadio[1].setEnabled(true);
-						recursiveRadio[1].setSelection(true);
-					}
-				});
-				parentPatternRadio[1].addSelectionListener(new SelectionAdapter() {
-					public void widgetSelected(SelectionEvent event){
-						recursiveRadio[0].setEnabled(false);
-						recursiveRadio[1].setEnabled(false);
-						recursiveRadio[0].setSelection(false);
-						recursiveRadio[1].setSelection(true);
-					}
-				});
-
-				parentPatternRadio[0].setEnabled(parentPattern);
-				parentPatternRadio[1].setEnabled(parentPattern);
-				recursiveRadio[0].setEnabled(parentPattern);
-				recursiveRadio[1].setEnabled(parentPattern);
+				
 
 				setControl(composite);
 
 			}
 
 			public IWizardPage getNextPage(){
-				if (!parentPatternRadio[0].getSelection() && !parentPatternRadio[1].getSelection()){
-					//Neither were selected. Ask the user to make a choice
-					MessageBox msgBox = new MessageBox(ourShell, SWT.ERROR);
-					msgBox.setText("Invalid Selection");
-					msgBox.setMessage("Please make a choice on whether you want to evaluate against parent pattern.");
-					msgBox.open();
-					return this;
+				for (String s : altList.getSelection()){
+					Alternative pa = new Alternative();
+					pa.fromDatabase(s);
+					selectedPatternAlts.add(pa);
 				}
-				if (!recursiveRadio[0].getSelection() && !recursiveRadio[1].getSelection()){
-					MessageBox msgBox = new MessageBox(ourShell, SWT.ERROR);
-					msgBox.setText("Invalid Selection");
-					msgBox.setMessage("Please make a choice on whether you want to recursively evaluate.");
-					msgBox.open();
-					return this;
-				}
-				considerParentPattern = parentPatternRadio[0].getSelection();
-				recursiveParent = recursiveRadio[0].getSelection();
 				updateData();
 				return super.getNextPage();
 			}

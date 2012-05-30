@@ -170,12 +170,12 @@ public class OntEntry extends RationaleElement implements Serializable
 		level = lev;
 	}
 	
-	public Vector getChildren()
+	public Vector<OntEntry> getChildren()
 	{
 		return children;
 	}
 	
-	public Vector getParents()
+	public Vector<OntEntry> getParents()
 	{
 		return parents;
 	}
@@ -559,6 +559,14 @@ public class OntEntry extends RationaleElement implements Serializable
 		String idref = ontE.getAttribute("id");
 		id = Integer.parseInt(idref.substring(1));
 		
+		/* Should we check for multiple parents? (YQ)
+		OntEntry dbEntry = new OntEntry();
+		dbEntry.fromDatabase(id);
+		if (dbEntry.getID() == id){
+			parents = dbEntry.getParents();
+			children = dbEntry.getChildren();
+		}
+		*/
 		
 		//get our name
 		name = ontE.getAttribute("name");

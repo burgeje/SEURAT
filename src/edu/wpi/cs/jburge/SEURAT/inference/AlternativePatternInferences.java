@@ -14,9 +14,11 @@ import edu.wpi.cs.jburge.SEURAT.rationaleData.*;
 /**
  * This class calculates the candidate pattern matching
  * scores, can be either exact or contribution matching.
+ * @deprecated
  */
 public class AlternativePatternInferences {
 	
+
 	/**
 	 * Calculate Scores of exact matching.
 	 * @param toBeMatchedPatterns
@@ -25,7 +27,7 @@ public class AlternativePatternInferences {
 	public Hashtable<Pattern, Double> exactMatching(ArrayList<Pattern> toBeMatchedPatterns){
 		RationaleDB db = RationaleDB.getHandle();
 		Vector<Requirement> ourRequirements = db.getNFRs();
-		
+
 		Hashtable<String, Double> pattern_values = new Hashtable<String, Double>(); 
 		//Vector<Pattern> allPatterns = db.getPatterns();
 		//Enumeration ap = toBeMatchedPatterns.elements();
@@ -46,7 +48,7 @@ public class AlternativePatternInferences {
 				}
 				if (matched){
 					if(q.getImportance().toString().compareTo(Importance.DEFAULT.toString()) == 0){
-						valueOfPattern = valueOfPattern + 1.0;
+						valueOfPattern = valueOfPattern + 0.5;
 					}else{
 						valueOfPattern = valueOfPattern + q.getImportance().getValue();
 					}				
@@ -59,7 +61,7 @@ public class AlternativePatternInferences {
 				}
 				if (matchedNeg){
 					if(q.getImportance().toString().compareTo(Importance.DEFAULT.toString()) == 0){
-						valueOfPattern = valueOfPattern - 1.0;
+						valueOfPattern = valueOfPattern - 0.5;
 					}else{
 						valueOfPattern = valueOfPattern - q.getImportance().getValue();
 					}			
@@ -70,15 +72,15 @@ public class AlternativePatternInferences {
 			System.out.println(valueOfPattern);
 		}
 		System.out.println("");
-		
-		
+
+
 		ArrayList myArrayList = new ArrayList(pattern_values.entrySet());
-		
+
 		Collections.sort(myArrayList, new MyComparator());
 		System.out.println("====================================");
 		System.out.println("Exact Matching Results after sorting");
 		System.out.println("------------------------------------");
-		
+
 		Iterator itr = myArrayList.iterator();
 		String key = "";
 		Double value = 0.0;
@@ -95,7 +97,7 @@ public class AlternativePatternInferences {
 
 		}
 		System.out.println("");
-		
+
 		//Vector<Pattern> candidatePattern = new Vector<Pattern>();
 		Hashtable<Pattern, Double> patterns_scores = new Hashtable<Pattern, Double>();
 		itr = myArrayList.iterator();
@@ -109,14 +111,14 @@ public class AlternativePatternInferences {
 		}
 		return patterns_scores;
 	}
-	
-	
+
+
 	public Hashtable<Pattern, Double> contributionMatching(ArrayList<Pattern> toBeMatchedPatterns){
 		RationaleDB db = RationaleDB.getHandle();
 		Vector<Requirement> ourRequirements = db.getNFRs();
-		
+
 		Vector<Pattern> candidatePattern = new Vector<Pattern>();
-		
+
 		Hashtable<String, Double> pattern_values = new Hashtable<String, Double>(); 
 		System.out.println("====================================");
 		System.out.println("Contribution Matching Results");
@@ -133,26 +135,40 @@ public class AlternativePatternInferences {
 						break;
 					}else{						
 						RationaleDB d = RationaleDB.getHandle();
-						Vector ontList = d.getOntologyElements(eo.getName());
+						Vector ontList = d.getOntologyDescendents(q.getOntology().getName());
 						Enumeration ontChildren = ontList.elements();
 						while (ontChildren.hasMoreElements()){
 							OntEntry ont = (OntEntry)ontChildren.nextElement();
-							if(ont.getName().compareTo(q.getOntology().getName()) == 0){
+							if(ont.getName().compareTo(eo.getName()) == 0){
 								matched = true;
 								break;
 							}
 						}
 						if (matched) break;
 					}
+					
+					if (!matched){
+						int level = db.findRelativeOntLevel(eo, q.getOntology());
+						if (level > 0){
+							int divisor = db.getOntologiesAtLevel(eo, level).size();
+							if (q.getImportance().toString().equals(Importance.DEFAULT.toString())){
+								valueOfPattern += ((double) 0.5) / divisor;
+							}
+							else {
+								valueOfPattern += q.getImportance().getValue() / divisor;
+							}
+							
+						}
+					}
 				}
 				if(matched){
 					if(q.getImportance().toString().compareTo(Importance.DEFAULT.toString()) == 0){
-						valueOfPattern = valueOfPattern + 1.0;
+						valueOfPattern = valueOfPattern + 0.5;
 					}else{
 						valueOfPattern = valueOfPattern + q.getImportance().getValue();
 					}	
 				}
-				
+
 				//Negatives...
 				for(OntEntry eo: (pattern.getNegaOnts())){
 					if(eo.getName().compareTo(q.getOntology().getName()) == 0){
@@ -160,21 +176,35 @@ public class AlternativePatternInferences {
 						break;
 					}else{						
 						RationaleDB d = RationaleDB.getHandle();
-						Vector<OntEntry> ontList = d.getOntologyElements(eo.getName());
+						Vector<OntEntry> ontList = d.getOntologyDescendents(q.getOntology().getName());
 						Enumeration<OntEntry> ontChildren = ontList.elements();
 						while (ontChildren.hasMoreElements()){
 							OntEntry ont = (OntEntry)ontChildren.nextElement();
-							if(ont.getName().compareTo(q.getOntology().getName()) == 0){
+							if(ont.getName().compareTo(eo.getName()) == 0){
 								matchedNeg = true;
 								break;
 							}
 						}
 						if (matchedNeg) break;
 					}
+					
+					if (!matchedNeg){
+						int level = db.findRelativeOntLevel(eo, q.getOntology());
+						if (level > 0){
+							int divisor = db.getOntologiesAtLevel(eo, level).size();
+							if (q.getImportance().toString().equals(Importance.DEFAULT.toString())){
+								valueOfPattern -= ((double) 0.5) / divisor;
+							}
+							else {
+								valueOfPattern -= q.getImportance().getValue() / divisor;
+							}
+							
+						}
+					}
 				}
 				if(matchedNeg){
 					if(q.getImportance().toString().compareTo(Importance.DEFAULT.toString()) == 0){
-						valueOfPattern = valueOfPattern - 1.0;
+						valueOfPattern = valueOfPattern - 0.5;
 					}else{
 						valueOfPattern = valueOfPattern - q.getImportance().getValue();
 					}	
@@ -185,10 +215,10 @@ public class AlternativePatternInferences {
 			System.out.println(valueOfPattern);
 		}
 		System.out.println("");
-		
-		
+
+
 		ArrayList myArrayList = new ArrayList(pattern_values.entrySet());
-		
+
 		Collections.sort(myArrayList, new MyComparator());
 
 		System.out.println("====================================");
@@ -205,13 +235,13 @@ public class AlternativePatternInferences {
 
 			key = (String)e.getKey();
 			value = ((Double)e.getValue()).doubleValue();
-			
+
 
 			System.out.println(key + "," + value);
 
 		}
 		System.out.println("");
-		
+
 		Hashtable patterns_scores = new Hashtable();
 		itr = myArrayList.iterator();
 		while(itr.hasNext()){
@@ -224,7 +254,7 @@ public class AlternativePatternInferences {
 		}
 		return patterns_scores;
 	}
-	
+
 	static class MyComparator implements Comparator{
 
 		public int compare(Object obj1, Object obj2){
@@ -241,11 +271,11 @@ public class AlternativePatternInferences {
 				String word1=(String)e1.getKey();
 				String word2=(String)e2.getKey();
 
-//				Sort String in an alphabetical order
+				//				Sort String in an alphabetical order
 				result=word1.compareToIgnoreCase(word2);
 
 			} else{
-//				Sort values in a descending order
+				//				Sort values in a descending order
 				result=value2.compareTo( value1 );
 			}
 
@@ -253,6 +283,6 @@ public class AlternativePatternInferences {
 		}
 	}
 
-	
-	
+
+
 }

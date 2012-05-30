@@ -569,6 +569,8 @@ public class EditArgument extends NewRationaleElementGUI implements Serializable
 				typeChoice.add(ArgType.PRESUPPOSES.toString());
 //				typeChoice.addItem(ArgType.PRESUPPOSEDBY);
 				typeChoice.add(ArgType.OPPOSES.toString());
+				typeChoice.add(ArgType.COMPLICATES.toString());
+				typeChoice.add(ArgType.FACILITATES.toString());
 //				typeChoice.addItem(ArgType.OPPOSEDBY);
 			}
 			else
