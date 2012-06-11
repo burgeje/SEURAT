@@ -77,6 +77,11 @@ public class RequirementEditor extends RationaleEditorBase {
 		 * last known enabled/disabled status
 		 */
 		boolean enabled;
+		
+		/**
+		 * The ontology description
+		 */
+		String ontDesc;
 	}
 	
 	/**
@@ -204,6 +209,10 @@ public class RequirementEditor extends RationaleEditorBase {
 		if( importanceBox != null )
 			dataCache.importance = importanceBox.getSelectionIndex();
 		
+		if (ontDesc != null){
+			dataCache.ontDesc = ontDesc.getText();
+		}
+		
 		//This dataCache field is used a bit differently...
 		dataCache.enabled = enableButton.getSelection();
 	}
@@ -219,6 +228,13 @@ public class RequirementEditor extends RationaleEditorBase {
 		
 		// Something Has Changed, Reload This Element From The DB
 		getRequirement().fromDatabase(getRequirement().getID());
+		
+		if ( ontDesc.getText().equals(dataCache.ontDesc)){
+			ontDesc.setText(getRequirement().getOntology().getName());
+			dataCache.ontDesc = ontDesc.getText();
+		}
+		else
+			l_dirty = true;
 		
 		if( nameField.getText().equals(dataCache.name) )
 		{
@@ -677,6 +693,10 @@ public class RequirementEditor extends RationaleEditorBase {
 					getRequirement().setOntology(newOnt);
 					ontDesc.setText(newOnt.toString());
 				}
+				RationaleUpdateEvent ue = new RationaleUpdateEvent();
+				ue.setElement(getRequirement());
+				ue.setModified(true);
+				onUpdate(getRequirement(), ue);
 				
 			}
 		});

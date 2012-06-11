@@ -223,7 +223,7 @@ public class GenerateCandidateTacticsComposite {
 
 				//Get a vector of all alternatives generated from pattern
 				RationaleDB db = RationaleDB.getHandle();
-				Vector<Alternative> patternAlts = db.getAlternativesFromPattern();
+				Vector<Alternative> patternAlts = db.getAlternativesFromPattern("Architecture");
 				
 				//TODO
 				new Label(composite, SWT.LEFT | SWT.WRAP).setText("Select patterns that may affect the tactic. You must generate the patterns as alternatives first.");
@@ -242,6 +242,7 @@ public class GenerateCandidateTacticsComposite {
 			}
 
 			public IWizardPage getNextPage(){
+				selectedPatternAlts.removeAllElements();
 				for (String s : altList.getSelection()){
 					Alternative pa = new Alternative();
 					pa.fromDatabase(s);

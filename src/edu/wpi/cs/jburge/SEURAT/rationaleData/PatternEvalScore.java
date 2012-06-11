@@ -62,6 +62,7 @@ public class PatternEvalScore implements Comparable<PatternEvalScore>{
 			for(OntEntry eo: (pattern.getPosiOnts())){
 				if(eo.getName().compareTo(q.getOntology().getName()) == 0){
 					exactSati.add(q);
+					matched = true;
 					break;
 				}else{						
 					RationaleDB d = RationaleDB.getHandle();
@@ -71,6 +72,7 @@ public class PatternEvalScore implements Comparable<PatternEvalScore>{
 						OntEntry ont = (OntEntry)ontChildren.nextElement();
 						if(ont.getName().compareTo(eo.getName()) == 0){
 							contribSati.add(q);
+							matched = true;
 							break;
 						}
 					}
@@ -89,6 +91,7 @@ public class PatternEvalScore implements Comparable<PatternEvalScore>{
 			for(OntEntry eo: (pattern.getNegaOnts())){
 				if(eo.getName().compareTo(q.getOntology().getName()) == 0){
 					exactViol.add(q);
+					matchedNeg = true;
 					break;
 				}else{						
 					RationaleDB d = RationaleDB.getHandle();
@@ -98,6 +101,7 @@ public class PatternEvalScore implements Comparable<PatternEvalScore>{
 						OntEntry ont = (OntEntry)ontChildren.nextElement();
 						if(ont.getName().compareTo(eo.getName()) == 0){
 							contribViol.add(q);
+							matchedNeg = true;
 							break;
 						}
 					}
@@ -135,7 +139,9 @@ public class PatternEvalScore implements Comparable<PatternEvalScore>{
 		if (comp != 0) return comp;
 		comp = possibleSati.size() - o.getPossibleSati().size();
 		if (comp != 0) return comp;
-		return 0;
+		
+		//If the scores are equal, order by lexicographical order of the pattern names.
+		return pattern.getName().compareTo(o.getPattern().getName());
 	}
 	
 	public int getNumSatisfactions(){
@@ -148,8 +154,8 @@ public class PatternEvalScore implements Comparable<PatternEvalScore>{
 	
 	public String toString(){
 		return pattern.getName() + 
-				"(Satisfactions: " + getNumSatisfactions() +
-				", Violations: " + getNumViolations() + ")";
+				"(A:" + getNumSatisfactions() +
+				", V:" + getNumViolations() + ")";
 	}
 
 

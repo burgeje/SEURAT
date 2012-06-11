@@ -611,7 +611,7 @@ public class DecisionEditor extends RationaleEditorBase {
 		statusBox.setLayoutData(gridData);
 		statusBox.addModifyListener(getNeedsSaveListener());
 		
-		new Label(parent, SWT.NONE).setText("DevelopmentPhase:");
+		new Label(parent, SWT.NONE).setText("Development Phase:");
 		
 		phaseBox = new Combo(parent, SWT.DROP_DOWN | SWT.READ_ONLY);
 		Enumeration phaseEnum = Phase.elements();

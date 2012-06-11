@@ -1500,7 +1500,7 @@ public class Alternative extends RationaleElement implements Serializable {
 					if (curChild.equals(nfrs.get(i).getOntology())){
 						isNegQAMatched[i] = true;
 						Argument arg = new Argument();
-						String argName = "Requirement Violation - " + curChild.getName();
+						String argName = "RV - " + curChild.getName();
 						while(RationaleDBUtil.isExist(argName, "Arguments")){
 							argName = argName + "~";
 						}
@@ -1518,13 +1518,13 @@ public class Alternative extends RationaleElement implements Serializable {
 
 			if (nfrs.get(i).getOntology().equals(t.getCategory())){
 				Argument arg = new Argument();
-				String argName = "Requirement Satisfication - " + t.getCategory().getName();
+				String argName = "RA - " + t.getCategory().getName();
 				while(RationaleDBUtil.isExist(argName, "Arguments")){
 					argName = argName + "~";
 				}
 				arg.setName(argName);
 				arg.setRequirement(nfrs.get(i));
-				arg.setType(ArgType.SATISFIES);
+				arg.setType(ArgType.ADDRESSES);
 				arg.setPlausibility(Plausibility.CERTAIN);
 				arg.setAmount(10);
 				arg.setImportance(Importance.ESSENTIAL);
@@ -1540,7 +1540,7 @@ public class Alternative extends RationaleElement implements Serializable {
 		if (!isCategoryMatched){
 			Argument arg = new Argument();
 			Claim c = new Claim();
-			String claimName = "Positive Quality Attribute - " + t.getCategory().getName();
+			String claimName = "PQA - " + t.getCategory().getName();
 			while(RationaleDBUtil.isExist(claimName, "Claims")){
 				claimName = claimName + "~";
 			}
@@ -1567,7 +1567,7 @@ public class Alternative extends RationaleElement implements Serializable {
 		for (int i = 0; i < isNegQAMatched.length; i++){
 			Argument arg = new Argument();
 			Claim c = new Claim();
-			String claimName = "Negative Quality Attribute - " + t.getBadEffects().get(i).getName();
+			String claimName = "NQA - " + t.getBadEffects().get(i).getName();
 			while(RationaleDBUtil.isExist(claimName, "Claims")){
 				claimName = claimName + "~";
 			}
@@ -1732,11 +1732,11 @@ public class Alternative extends RationaleElement implements Serializable {
 								Argument argu = new Argument();
 								String arguName = "";
 								if(pattern.getPosiOnts().contains(oe)){
-									arguName = "Requirement Satisfaction - " + oe.getName();
-									argu.setType(ArgType.SATISFIES);
+									arguName = "RA - " + oe.getName();
+									argu.setType(ArgType.ADDRESSES);
 
 								}else{
-									arguName = "Requirement Violation - " + oe.getName();
+									arguName = "RV - " + oe.getName();
 									argu.setType(ArgType.VIOLATES);
 								}
 								while(RationaleDBUtil.isExist(arguName, "Arguments")){
@@ -1758,11 +1758,11 @@ public class Alternative extends RationaleElement implements Serializable {
 								Argument argu = new Argument();
 								String arguName = "";
 								if(pattern.getPosiOnts().contains(oe)){
-									arguName = "Possible Requirement Satisfaction - " + oe.getName();
-									argu.setType(ArgType.SATISFIES);
+									arguName = "PRA - " + oe.getName();
+									argu.setType(ArgType.ADDRESSES);
 
 								}else{
-									arguName = "Possible Requirement Violation - " + oe.getName();
+									arguName = "PRV - " + oe.getName();
 									argu.setType(ArgType.VIOLATES);
 								}
 								while(RationaleDBUtil.isExist(arguName, "Arguments")){
@@ -1784,11 +1784,11 @@ public class Alternative extends RationaleElement implements Serializable {
 							Claim claim = new Claim();
 							String claimName = "";
 							if(pattern.getPosiOnts().contains(oe)){
-								claimName = "Positive Quality Attribute - " + oe.getName();
+								claimName = "PQA - " + oe.getName();
 								claim.setDirection(Direction.IS);
 								argu.setType(ArgType.SUPPORTS);
 							}else{
-								claimName = "Negative Quality Attribute - " + oe.getName();
+								claimName = "NQA - " + oe.getName();
 								claim.setDirection(Direction.NOT);
 								argu.setType(ArgType.DENIES);
 							}								

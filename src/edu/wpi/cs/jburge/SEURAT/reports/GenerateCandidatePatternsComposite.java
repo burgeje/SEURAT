@@ -84,15 +84,14 @@ public class GenerateCandidatePatternsComposite {
 	 */
 	public TreeItem constructPatternEvalSubtree(Tree parent, PatternEvalScore eval){
 		TreeItem ret = new TreeItem(parent, SWT.NONE);
-		ret.setText(eval.getPattern().getName());
 		
 		int numSati = eval.getNumSatisfactions();
 		int numViol = eval.getNumViolations();
 		if (numViol > 0) ret.setForeground(ourDisplay.getSystemColor(SWT.COLOR_RED));
-		ret.setText(ret.getText() + "(Satisfactions: " + numSati + ", Violations: " + numViol + ")");
+		ret.setText(eval.toString());
 		
 		TreeItem satiRoot = new TreeItem(ret, SWT.NONE);
-		satiRoot.setText("Satisfactions (" + numSati + ")");
+		satiRoot.setText("Addresses " + numSati + " Requirements");
 		TreeItem satiCat = new TreeItem(satiRoot, SWT.NONE);
 		satiCat.setText("Exact (" + eval.getExactSati().size() + ")");
 		for (Requirement req : eval.getExactSati()){
@@ -113,7 +112,7 @@ public class GenerateCandidatePatternsComposite {
 		}
 		
 		TreeItem violRoot = new TreeItem(ret, SWT.NONE);
-		violRoot.setText("Violations (" + numViol + ")");
+		violRoot.setText("Violates " + numViol +  " Requirements");
 		TreeItem violCat = new TreeItem(violRoot, SWT.NONE);
 		violCat.setText("Exact (" + eval.getExactViol().size() + ")");
 		for (Requirement req : eval.getExactViol()){
@@ -508,8 +507,8 @@ public class GenerateCandidatePatternsComposite {
 		
 		/**
 		 * This is the last page of the wizard.
-		 * Before this wizard passes the arguments to do various calculations, it is a good
-		 * idea to let the users to review what they have selected.
+		 * In this page, the user enters the patterns to be exported to the rationale explorer.
+		 * Scores will be displayed in a tree-structure.
 		 * @author yechen
 		 *
 		 */
@@ -579,6 +578,7 @@ public class GenerateCandidatePatternsComposite {
 				gridData = new GridData(GridData.HORIZONTAL_ALIGN_FILL | GridData.VERTICAL_ALIGN_FILL);
 				gridData.grabExcessHorizontalSpace = true;
 				gridData.horizontalAlignment = GridData.FILL;
+				gridData.heightHint = 200;
 				patternDetails.setLayoutData(gridData);
 				
 				

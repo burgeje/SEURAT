@@ -790,6 +790,10 @@ IPropertyChangeListener{
 
 					RationaleDB.createNewDB(dbName);
 					rebuildTree(false);
+					if (PatternLibrary.getHandle() != null)
+						PatternLibrary.getHandle().rebuildTree();
+					if (TacticLibrary.getHandle() != null)
+						TacticLibrary.getHandle().rebuildTree();
 				}
 
 			}
