@@ -1459,7 +1459,6 @@ public class Alternative extends RationaleElement implements Serializable {
 		TacticPattern tp = new TacticPattern();
 		tp.fromDatabase(TacticPattern.combineNames(p.getName(), t.getName()));
 		if (tp.getID() < 0) return 0;
-		if (tp.getStruct_change() == 0 || tp.getStruct_change() == 1) return -1;
 		return tp.getOverallScore();
 	}
 
@@ -1481,7 +1480,6 @@ public class Alternative extends RationaleElement implements Serializable {
 
 		RationaleDB db = RationaleDB.getHandle();
 		Vector<Requirement> nfrs = db.getNFRs();
-		boolean hasNoComplication = false;
 		boolean isCategoryMatched = false;
 		boolean[] isNegQAMatched = new boolean[t.getBadEffects().size()];
 		for (int i = 0; i < isNegQAMatched.length; i++){
@@ -1594,35 +1592,29 @@ public class Alternative extends RationaleElement implements Serializable {
 
 		//Check pattern compatibility
 		for (Alternative pa: patternAlts){
-			hasNoComplication = false;
 			if (pa.getPatternID() < 0) continue;
 			Pattern p = new Pattern();
 			p.fromDatabase(pa.getPatternID());
 			score = findTacticPatternScore(t, p);
-			if (score < 0){
-				hasNoComplication = true;
-			}
-			if (!hasNoComplication){
-				//Add impact score.
-				if (score > 0){
-					Argument arg = new Argument();
-					String argName = "Complication Caused by Pattern " + p.getName();
-					arg.setType(ArgType.COMPLICATES);
-					arg.setAlternative(pa);
+			//Add impact score.
+			if (score > 5){
+				Argument arg = new Argument();
+				String argName = "Complication Caused by Pattern " + p.getName();
+				arg.setType(ArgType.COMPLICATES);
+				arg.setAlternative(pa);
 
-					while(RationaleDBUtil.isExist(argName, "Arguments")){
-						argName = argName + "~";
-					}
-					arg.setName(argName);
-					arg.setPlausibility(Plausibility.HIGH);
-					arg.setDescription("");
-					arg.setAmount(score);
-					arg.setImportance(Importance.DEFAULT);
-					arg.setParent(this);	
-					arg.toDatabase(id, RationaleElementType.ALTERNATIVE);
+				while(RationaleDBUtil.isExist(argName, "Arguments")){
+					argName = argName + "~";
 				}
+				arg.setName(argName);
+				arg.setPlausibility(Plausibility.HIGH);
+				arg.setDescription("");
+				arg.setAmount(score - 5);
+				arg.setImportance(Importance.DEFAULT);
+				arg.setParent(this);	
+				arg.toDatabase(id, RationaleElementType.ALTERNATIVE);
 			}
-			else if (score == -1){
+			else if (score < 5){
 				Argument arg = new Argument();
 				String argName = "Compatible with " + p.getName();
 				arg.setType(ArgType.FACILITATES);
@@ -1634,7 +1626,7 @@ public class Alternative extends RationaleElement implements Serializable {
 				arg.setName(argName);
 				arg.setPlausibility(Plausibility.HIGH);
 				arg.setDescription("");
-				arg.setAmount(5);
+				arg.setAmount(5 - score);
 				arg.setImportance(Importance.DEFAULT);
 				arg.setParent(this);	
 				arg.toDatabase(id, RationaleElementType.ALTERNATIVE);
@@ -1691,131 +1683,131 @@ public class Alternative extends RationaleElement implements Serializable {
 				for(int i=0; i<pattern.getOntEntries().size(); i++){
 					OntEntry oe = pattern.getOntEntries().get(i);
 					//whether satisfied by this pattern
-						boolean isMatched = false, isWeaklyMatched = false;
-						ArrayList<Requirement> matchedRequirements = new ArrayList<Requirement>();
-						HashMap<Requirement, Integer> weaklyMatchedRequirements = new HashMap<Requirement, Integer>();
-						for (int k=0; k<nfrs.size(); k++){
-							//matchingMethod == 1 is the contribution matching method
-							
-								Requirement q = nfrs.get(k);
-								Vector<OntEntry> ontList = db.getOntologyDescendents(q.getOntology().getName());
-								Enumeration<OntEntry> ontChildren = ontList.elements();
-								while (ontChildren.hasMoreElements()){
-									OntEntry ont = (OntEntry)ontChildren.nextElement();
-									if(ont.getName().compareTo(oe.getName()) == 0){
-										isMatched = true;
-										matchedRequirements.add(q);
-									}
-								}
-								//Try weak match. i.e.: An NFR having quality attribute that is a child of pattern's quality attribute.
-								if (!isMatched){
-									int level = db.findRelativeOntLevel(oe, q.getOntology());
-									if (level > 0){
-										int divisor = db.getOntologiesAtLevel(oe, level).size();
-										isWeaklyMatched = true;
-										//Score for inferencing = claim score + certainty of the requirement satisifcation * 5
-										//This is done to make the score somewhere between 5 and 10.
-										double score = (((double) 5) / divisor + 5);
-										int finalScore = (int) score;
-										if (score - (int) (score) > 0.5) {
-											finalScore++;
-										}
-										if (finalScore > 10) finalScore = 10;
-										weaklyMatchedRequirements.put(q, finalScore);
-									}
+					boolean isMatched = false, isWeaklyMatched = false;
+					ArrayList<Requirement> matchedRequirements = new ArrayList<Requirement>();
+					HashMap<Requirement, Integer> weaklyMatchedRequirements = new HashMap<Requirement, Integer>();
+					for (int k=0; k<nfrs.size(); k++){
+						//matchingMethod == 1 is the contribution matching method
 
-								}
-							
-						}
-						if(isMatched && matchedRequirements.size() != 0){
-							for(Requirement matchedR: matchedRequirements){
-								Argument argu = new Argument();
-								String arguName = "";
-								if(pattern.getPosiOnts().contains(oe)){
-									arguName = "RA - " + oe.getName();
-									argu.setType(ArgType.ADDRESSES);
-
-								}else{
-									arguName = "RV - " + oe.getName();
-									argu.setType(ArgType.VIOLATES);
-								}
-								while(RationaleDBUtil.isExist(arguName, "Arguments")){
-									arguName = arguName + "~";
-								}
-								argu.setName(arguName);
-								argu.setRequirement(matchedR);
-								argu.setPlausibility(Plausibility.HIGH);
-								argu.setDescription("");
-								argu.setAmount(5);
-								argu.setImportance(Importance.ESSENTIAL);
-								argu.setParent(this);
-
-								argu.toDatabase(this.getID(), RationaleElementType.ALTERNATIVE);
-							}									
-						}
-						else if (isWeaklyMatched && weaklyMatchedRequirements.size() > 0){
-							for(Requirement matchedR: weaklyMatchedRequirements.keySet()){
-								Argument argu = new Argument();
-								String arguName = "";
-								if(pattern.getPosiOnts().contains(oe)){
-									arguName = "PRA - " + oe.getName();
-									argu.setType(ArgType.ADDRESSES);
-
-								}else{
-									arguName = "PRV - " + oe.getName();
-									argu.setType(ArgType.VIOLATES);
-								}
-								while(RationaleDBUtil.isExist(arguName, "Arguments")){
-									arguName = arguName + "~";
-								}
-								argu.setName(arguName);
-								argu.setRequirement(matchedR);
-								argu.setPlausibility(Plausibility.LOW);
-								argu.setDescription("");
-								argu.setAmount(5);
-								argu.setImportance(Importance.ESSENTIAL);
-								argu.setParent(this);
-
-								argu.toDatabase(this.getID(), RationaleElementType.ALTERNATIVE);
+						Requirement q = nfrs.get(k);
+						Vector<OntEntry> ontList = db.getOntologyDescendents(q.getOntology().getName());
+						Enumeration<OntEntry> ontChildren = ontList.elements();
+						while (ontChildren.hasMoreElements()){
+							OntEntry ont = (OntEntry)ontChildren.nextElement();
+							if(ont.getName().compareTo(oe.getName()) == 0){
+								isMatched = true;
+								matchedRequirements.add(q);
 							}
 						}
-						else{
+						//Try weak match. i.e.: An NFR having quality attribute that is a child of pattern's quality attribute.
+						if (!isMatched){
+							int level = db.findRelativeOntLevel(oe, q.getOntology());
+							if (level > 0){
+								int divisor = db.getOntologiesAtLevel(oe, level).size();
+								isWeaklyMatched = true;
+								//Score for inferencing = claim score + certainty of the requirement satisifcation * 5
+								//This is done to make the score somewhere between 5 and 10.
+								double score = (((double) 5) / divisor + 5);
+								int finalScore = (int) score;
+								if (score - (int) (score) > 0.5) {
+									finalScore++;
+								}
+								if (finalScore > 10) finalScore = 10;
+								weaklyMatchedRequirements.put(q, finalScore);
+							}
+
+						}
+
+					}
+					if(isMatched && matchedRequirements.size() != 0){
+						for(Requirement matchedR: matchedRequirements){
 							Argument argu = new Argument();
-							Claim claim = new Claim();
-							String claimName = "";
+							String arguName = "";
 							if(pattern.getPosiOnts().contains(oe)){
-								claimName = "PQA - " + oe.getName();
-								claim.setDirection(Direction.IS);
-								argu.setType(ArgType.SUPPORTS);
+								arguName = "RA - " + oe.getName();
+								argu.setType(ArgType.ADDRESSES);
+
 							}else{
-								claimName = "NQA - " + oe.getName();
-								claim.setDirection(Direction.NOT);
-								argu.setType(ArgType.DENIES);
-							}								
-							while(RationaleDBUtil.isExist(claimName, "Claims")){
-								claimName = claimName + "~";
+								arguName = "RV - " + oe.getName();
+								argu.setType(ArgType.VIOLATES);
 							}
-							claim.setName(claimName);
-
-							claim.setImportance(Importance.DEFAULT);
-							claim.setOntology(oe);
-							claim.setEnabled(true);
-							claim.toDatabase();
-
-							argu.setClaim(claim);
-							while(RationaleDBUtil.isExist(claimName, "Arguments")){
-								claimName = claimName + "~";
+							while(RationaleDBUtil.isExist(arguName, "Arguments")){
+								arguName = arguName + "~";
 							}
-							argu.setName(claimName);
+							argu.setName(arguName);
+							argu.setRequirement(matchedR);
 							argu.setPlausibility(Plausibility.HIGH);
 							argu.setDescription("");
 							argu.setAmount(5);
-							argu.setImportance(Importance.MODERATE);
+							argu.setImportance(Importance.ESSENTIAL);
+							argu.setParent(this);
+
+							argu.toDatabase(this.getID(), RationaleElementType.ALTERNATIVE);
+						}									
+					}
+					else if (isWeaklyMatched && weaklyMatchedRequirements.size() > 0){
+						for(Requirement matchedR: weaklyMatchedRequirements.keySet()){
+							Argument argu = new Argument();
+							String arguName = "";
+							if(pattern.getPosiOnts().contains(oe)){
+								arguName = "PRA - " + oe.getName();
+								argu.setType(ArgType.ADDRESSES);
+
+							}else{
+								arguName = "PRV - " + oe.getName();
+								argu.setType(ArgType.VIOLATES);
+							}
+							while(RationaleDBUtil.isExist(arguName, "Arguments")){
+								arguName = arguName + "~";
+							}
+							argu.setName(arguName);
+							argu.setRequirement(matchedR);
+							argu.setPlausibility(Plausibility.LOW);
+							argu.setDescription("");
+							argu.setAmount(5);
+							argu.setImportance(Importance.ESSENTIAL);
 							argu.setParent(this);
 
 							argu.toDatabase(this.getID(), RationaleElementType.ALTERNATIVE);
 						}
-					
+					}
+					else{
+						Argument argu = new Argument();
+						Claim claim = new Claim();
+						String claimName = "";
+						if(pattern.getPosiOnts().contains(oe)){
+							claimName = "PQA - " + oe.getName();
+							claim.setDirection(Direction.IS);
+							argu.setType(ArgType.SUPPORTS);
+						}else{
+							claimName = "NQA - " + oe.getName();
+							claim.setDirection(Direction.NOT);
+							argu.setType(ArgType.DENIES);
+						}								
+						while(RationaleDBUtil.isExist(claimName, "Claims")){
+							claimName = claimName + "~";
+						}
+						claim.setName(claimName);
+
+						claim.setImportance(Importance.DEFAULT);
+						claim.setOntology(oe);
+						claim.setEnabled(true);
+						claim.toDatabase();
+
+						argu.setClaim(claim);
+						while(RationaleDBUtil.isExist(claimName, "Arguments")){
+							claimName = claimName + "~";
+						}
+						argu.setName(claimName);
+						argu.setPlausibility(Plausibility.HIGH);
+						argu.setDescription("");
+						argu.setAmount(5);
+						argu.setImportance(Importance.MODERATE);
+						argu.setParent(this);
+
+						argu.toDatabase(this.getID(), RationaleElementType.ALTERNATIVE);
+					}
+
 				}
 			}
 
