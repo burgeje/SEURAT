@@ -123,6 +123,7 @@ ITreeContentProvider{
 	 * @return
 	 */
 	public TreeParent addPattern(TreeParent parent, Pattern pattern) {
+		
 		TreeParent child = new TreeParent(pattern.getName(), RationaleElementType.PATTERN);
 		parent.addChild(child);
 		
@@ -239,6 +240,7 @@ ITreeContentProvider{
 	 * @param parentType
 	 */
 	private void addArchitecturePatterns(TreeParent parent, String parentName, RationaleElementType parentType){
+		//System.out.println("Found something");
 		
 		RationaleDB d = RationaleDB.getHandle();
 		Vector<TreeParent> patternList = d.getArchitecturePatterns();
@@ -430,7 +432,7 @@ ITreeContentProvider{
 			child.addChild(decTop);
 			addSubDecisions(decTop, childName, parentName);
 		}		
-	}
+	} 
 
 	public Object[] getElements(Object parent) {
 		if (parent.equals(ResourcesPlugin.getWorkspace())) {

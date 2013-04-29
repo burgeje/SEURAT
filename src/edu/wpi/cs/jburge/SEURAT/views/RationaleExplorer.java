@@ -35,6 +35,7 @@ import org.eclipse.jface.window.Window;
 import org.eclipse.jface.action.*;
 import org.eclipse.jface.dialogs.InputDialog;
 import org.eclipse.jface.dialogs.MessageDialog;
+import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.util.IPropertyChangeListener;
 import org.eclipse.jface.util.PropertyChangeEvent;
 import org.eclipse.ui.*;
@@ -395,8 +396,8 @@ IPropertyChangeListener{
 	 */
 	private void contributeToActionBars() {
 		IActionBars bars = getViewSite().getActionBars();
-		fillLocalPullDown(bars.getMenuManager());
 		fillLocalToolBar(bars.getToolBarManager());
+		fillLocalPullDown(bars.getMenuManager());
 	}
 
 	/**

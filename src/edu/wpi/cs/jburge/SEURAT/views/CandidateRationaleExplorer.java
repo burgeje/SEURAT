@@ -1708,11 +1708,11 @@ IPropertyChangeListener {
 							decNode.appendChild(altNode);
 						}
 					}
-					else if(nextRat.elementType.toLowerCase().equals("argument")||nextRat.elementType.toLowerCase().equals("argument-for")||nextRat.elementType.equals("argument-against"))
+					else if(nextRat.elementType.toLowerCase().equals("argument")||nextRat.elementType.toLowerCase().equals("argument-for")||nextRat.elementType.toLowerCase().equals("argument-against"))
 					{
 						Element argNode=xmlDoc.createElementNS(nmSpace, "DR:argument");
 						argNode.setAttribute("name", nextRat.elementContents);
-						if(nextRat.elementContents.equals("argument-for"))
+						if(nextRat.elementType.toLowerCase().equals("argument-for"))
 						{
 							argNode.setAttribute("argtype", "Supports");
 						}
