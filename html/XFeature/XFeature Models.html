@@ -1,0 +1,81 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+	<title>XFeature Models</title>
+</head>
+
+<body>
+<h2 align ="center">XFeature Models</h2>
+<b>Family Models</b>: The model used while the project is on-going. This model contains all the 
+possible paths that the project could take and will have multiple options <p>&nbsp;</p>
+
+<p align="center"><img border="0" src="../pics/Family Model.png"> </p>
+
+<UL>
+	<LI>Creating a family model is essesntially the same as creating a normal XFeature Model. <br>
+	<LI>Open up Eclipse and in whatever project file you are using go to New -> Other -> XFeature<br> 
+			Product Family Modeling Tool -> XFeature Feature Model. Then hit the Next button. <br>
+	<LI>On this screen the file is named i.e. example.xfm (Do NOT forget the .xfm extension) and then hit Next.<br>
+	<LI>Here you will name the root node of the model (i.e. Example_One, remember that XFeature <br>
+			cannot handle spaces!) and then provide the base .xfmm and .xdm files for the model. <br>
+			If you don’t know what these files mean there is a handy chart in the XFeature  User Manual (
+			<a href = "http://www.pnp-software.com/XFeature/Manual.html"> here </a>). Also, these files are included with XFeature <br>
+			so you don’t need to create them. To find them go to wherever you downloaded Eclipse then go <br>
+			to plugins -> com.pnp.xfeature_2.1.3 -> src -> FD_configuration_files and there will be all 
+			the files needed.
+	<LI>Then hit Finish and your Family Model will have been made.<br>
+</UL>
+
+<p>
+<b> Application Models</b>: These models reflect the finished product. It is a streamlined version once 
+all the decisions for features have been made
+</p>
+
+<p align="center"><img border="0" src="../pics/AppModel.png"> </p>
+
+<UL>
+	<LI> -First of all, remember that application models are based off of an existing Family Model. If you 
+			do not have an existing model you will have to create it.
+</UL>
+<p> Project Files:</p>
+<UL>
+	<LI>-Once you are ready to make an Application File you will need to first create a project file. Go to 
+			New -> Other -> XFeature Product Family Modeling Tool -> XFeature Project File and hit Next. 
+	<LI>- Here you will name your project file (i.e. Project.xfp) and hit finish.
+	<LI>- Now that you’ve created the project file bring it up in the editor.
+</UL>
+
+<p align="center"><img border="0" src="../pics/project file.png"> </p>
+
+<UL>
+	<LI>- From here the meta-model, display model, and xsl files need to be specified.
+	<LI>- For the meta model and the display model go to the FD configuration files that come with the plugin and 		
+			select the .xfmm (meta-model) and the .xdm (display model).
+	<LI>- Next click Add for the Application Meta-Model Generator Files and select both the FdXfmmGenAddUniqueNames 
+			file and the FdXfmmGen file (these can be found with the FD configuration files)
+	<LI>- Then click Add for the Display Model Generator Files and select the FdXdmGen file. Save and you’re done creating the project file.
+</UL>
+
+<p>Validation:</p>
+<UL>
+	<LI>- Now that the project file has been built it is time to Validate the Family Model. Open the model in the editor 
+			and then select the red check mark at the top of your screen. If this is done correctly, a message should print on 
+			the console saying that the model was validated.
+	<LI>- Next generate the meta-model and display files needed for the application model by clicking the red arrow. If 
+			this works correctly the console should say BUILD SUCCESSFUL. Refresh the project to see the newly created files. 
+			(they will be named ExampleApp….)
+</UL>
+
+<p> Creation:</p>
+<UL>
+	<LI>-Now to create the actual application model, create a new XFeature Model using the newly created ExampleApp.xfmm and ExampleApp.xdm files.
+	<LI>- This model will be the model that SEURAT will export to.
+</UL>
+
+<p> If you're still having trouble creating an Application Model, watch the tutorial in the User Manual 
+(<a href = "http://www.pnp-software.com/XFeature/Manual.html"> here </a>) under the section <b>From Family to Application Modelling: Scripting </b>
+
+</body>
+</html>
