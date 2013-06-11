@@ -1,9 +1,4 @@
-/**
- * (c) Copyright Mirasol Op'nWorks Inc. 2002, 2003. 
- * http://www.opnworks.com
- * Created on Apr 2, 2003 by lgauthier@opnworks.com
- * 
- */
+
 /*	This code belongs to the SEURAT project as written by Dr. Janet Burge
     Copyright (C) 2013  Janet Burge
 

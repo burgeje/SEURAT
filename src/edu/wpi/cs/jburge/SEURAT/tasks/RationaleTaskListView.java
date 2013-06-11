@@ -1,11 +1,4 @@
-/**
- * (c) Copyright Mirasol Op'nWorks Inc. 2002, 2003. 
- * http://www.opnworks.com
- * Created on Apr 2, 2003 by lgauthier@opnworks.com
- * 
- * Modified 25 October, 2003 by Janet Burge for use in the SEURAT
- * plugin
- */
+
 /*	This code belongs to the SEURAT project as written by Dr. Janet Burge
     Copyright (C) 2013  Janet Burge
 
@@ -45,6 +38,8 @@ import org.eclipse.swt.widgets.*;
  * (c) Copyright Mirasol Op'nWorks Inc. 2002, 2003. 
  * http://www.opnworks.com
  * Created on Jun 11, 2003 by lgauthier@opnworks.com
+ * Modified 25 October, 2003 by Janet Burge for use in the SEURAT
+ * plugin
  */
 
 public class RationaleTaskListView implements ISelectionProvider {
