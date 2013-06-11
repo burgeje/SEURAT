@@ -1,9 +1,4 @@
-/**
- * (c) Copyright Mirasol Op'nWorks Inc. 2002, 2003. 
- * http://www.opnworks.com
- * Created on Apr 2, 2003 by lgauthier@opnworks.com
- * 
- */
+
 /*	This code belongs to the SEURAT project as written by Dr. Janet Burge
     Copyright (C) 2013  Janet Burge
 
@@ -20,6 +15,13 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>. */
 
+/**
+ * This paper was based on an example from an Eclipse Corner article
+ * (c) Copyright Mirasol Op'nWorks Inc. 2002, 2003. 
+ * http://www.opnworks.com
+ * Created on Apr 2, 2003 by lgauthier@opnworks.com
+ * 
+ */
 package edu.wpi.cs.jburge.SEURAT.queries;
 
 import java.text.DateFormat;
